@@ -8,9 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Since artisan migrate had issues before, apply via raw SQL to be safe
-        \Illuminate\Support\Facades\DB::statement('ALTER TABLE budget_plan_comments ADD COLUMN marked_at DATETIME NULL DEFAULT NULL');
-        \Illuminate\Support\Facades\DB::statement('ALTER TABLE budget_plan_comments ADD COLUMN marked_by INT NULL DEFAULT NULL');
+        if (!Schema::hasColumn('budget_plan_comments', 'marked_at')) {
+            \Illuminate\Support\Facades\DB::statement('ALTER TABLE budget_plan_comments ADD COLUMN marked_at DATETIME NULL DEFAULT NULL');
+        }
+        if (!Schema::hasColumn('budget_plan_comments', 'marked_by')) {
+            \Illuminate\Support\Facades\DB::statement('ALTER TABLE budget_plan_comments ADD COLUMN marked_by INT NULL DEFAULT NULL');
+        }
     }
 
     public function down(): void

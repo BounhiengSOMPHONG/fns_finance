@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('budget_plan_comments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('budget_plan_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->text('comment');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('budget_plan_comments')) {
+            Schema::create('budget_plan_comments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('budget_plan_id')->constrained()->onDelete('cascade');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->text('comment');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

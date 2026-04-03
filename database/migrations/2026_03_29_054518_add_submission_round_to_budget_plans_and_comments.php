@@ -8,13 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('budget_plans', function (Blueprint $table) {
-            $table->integer('submission_round')->default(0);
-        });
+        if (!Schema::hasColumn('budget_plans', 'submission_round')) {
+            Schema::table('budget_plans', function (Blueprint $table) {
+                $table->integer('submission_round')->default(0);
+            });
+        }
 
-        Schema::table('budget_plan_comments', function (Blueprint $table) {
-            $table->integer('submission_round')->default(1);
-        });
+        if (!Schema::hasColumn('budget_plan_comments', 'submission_round')) {
+            Schema::table('budget_plan_comments', function (Blueprint $table) {
+                $table->integer('submission_round')->default(1);
+            });
+        }
     }
 
     public function down(): void

@@ -27,7 +27,7 @@
             @endphp
             <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $s['class'] }}">{{ $s['label'] }}</span>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
             <a href="{{ route('head_of_finance.annual-budget.preview', $annualBudget) }}"
                 class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,34 +38,63 @@
                 </svg>
                 ພາບລວມ
             </a>
+
+            {{-- ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ — DRAFT / MODIFYING --}}
             @if(in_array($annualBudget->status, ['DRAFT', 'MODIFYING']))
-            <form action="{{ route('head_of_finance.annual-budget.submit', $annualBudget) }}" method="POST" class="inline"
-                onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການສົ່ງແຜນນີ້ໃຫ້ຫົວໜ້າພາກສ່ວນກວດສອບ?')">
+            <button type="button" onclick="openReviewerModal()"
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700">
+                📤 ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ
+            </button>
+            @endif
+
+            {{-- ເລີ່ມແກ້ໄຂ — PENDING_REVIEW --}}
+            @if($annualBudget->status === 'PENDING_REVIEW')
+            <form action="{{ route('head_of_finance.annual-budget.start-modifying', $annualBudget) }}" method="POST" class="inline"
+                onsubmit="return confirm('ເລີ່ມແກ້ໄຂແຜນ? ຜູ້ກວດສອບຈະບໍ່ສາມາດ comment ໄດ້ຈົນກວ່າທ່ານຈະສົ່ງກັບ.')">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700">
-                     {{ $annualBudget->status === 'MODIFYING' ? 'ສົ່ງໃໝ່ (Resubmit)' : 'ສົ່ງແບບຟອມ (Submit)' }}
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600">
+                    ✏️ ເລີ່ມແກ້ໄຂ
                 </button>
             </form>
             @endif
-            @if($annualBudget->status === 'PENDING_REVIEW')
-            <form action="{{ route('head_of_finance.annual-budget.unsubmit', $annualBudget) }}" method="POST" class="inline"
-                onsubmit="return confirm('ຍົກເລີກການສົ່ງ ແລະ ກັບໄປແກ້ໄຂບໍ?')">
+
+            {{-- ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ — MODIFYING --}}
+            @if($annualBudget->status === 'MODIFYING')
+            <form action="{{ route('head_of_finance.annual-budget.submit-final', $annualBudget) }}" method="POST" class="inline"
+                onsubmit="return confirm('ສົ່ງແຜນເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ?')">
                 @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600">
-                    ↩ ຍົກເລີກການສົ່ງ 
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700">
+                    🏛️ ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ
                 </button>
             </form>
             @endif
         </div>
     </div>
 
+    {{-- ── Reviewer info banner ── --}}
+    @if($annualBudget->reviewers->count() > 0 && in_array($annualBudget->status, ['PENDING_REVIEW', 'MODIFYING', 'PENDING_FINAL_APPROVAL']))
+    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p class="text-sm font-semibold text-blue-700 mb-1">👥 ຜູ້ກວດສອບທີ່ຖືກມອບໝາຍ:</p>
+        <div class="flex flex-wrap gap-2">
+            @foreach($annualBudget->reviewers as $reviewer)
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {{ $reviewer->user->full_name ?? 'User #' . $reviewer->user_id }}
+                @if($reviewer->user->role)
+                <span class="text-blue-500 ml-1">({{ $reviewer->user->role->role_name }})</span>
+                @endif
+            </span>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- ── MODIFYING warning banner ── --}}
     @if($annualBudget->status === 'MODIFYING')
     <div class="mb-4 p-4 bg-orange-50 border border-orange-300 rounded-lg flex items-start gap-3">
         <span class="text-orange-500 text-xl">⚠️</span>
         <div>
-            <p class="font-semibold text-orange-700">ແຜນນີ້ຖືກສົ່ງກັບໃຫ້ແກ້ໄຂ</p>
-            <p class="text-sm text-orange-600 mt-0.5">ກະລຸນາກວດສອບຄຳເຫັນຂ້າງລຸ່ມ, ແກ້ໄຂລາຍການ, ແລ້ວກົດ <strong>ສົ່ງໃໝ່ (Resubmit)</strong> ເພື່ອສົ່ງກັບໄປໃຫ້ຫົວໜ້າພາກສ່ວນ.</p>
+            <p class="font-semibold text-orange-700">ແຜນນີ້ຢູ່ໃນສະຖານະກຳລັງແກ້ໄຂ</p>
+            <p class="text-sm text-orange-600 mt-0.5">ທ່ານສາມາດແກ້ໄຂລາຍການ, ສົ່ງກັບໃຫ້ reviewer ຂໍຄວາມຄິດເຫັນ, ຫຼື ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ.</p>
         </div>
     </div>
     @endif
@@ -397,6 +426,46 @@
         </div>
     </div>
 
+    {{-- ── Reviewer Selection Modal ──────────────────────────────────────── --}}
+    <div id="reviewerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-base font-semibold text-gray-800 mb-2">📤 ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ</h3>
+            <p class="text-sm text-gray-500 mb-4">ເລືອກຫົວໜ້າພາກສ່ວນທີ່ຕ້ອງການໃຫ້ກວດສອບແຜນນີ້:</p>
+            <form action="{{ route('head_of_finance.annual-budget.submit', $annualBudget) }}" method="POST">
+                @csrf
+                <div class="space-y-2 max-h-60 overflow-y-auto mb-4">
+                    @foreach($availableReviewers as $reviewer)
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                        <input type="checkbox" name="reviewer_ids[]" value="{{ $reviewer->id }}"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            {{ $annualBudget->reviewers->contains('user_id', $reviewer->id) ? 'checked' : '' }}>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">{{ $reviewer->full_name }}</p>
+                            @if($reviewer->department)
+                            <p class="text-xs text-gray-400">{{ $reviewer->department->department_name }}</p>
+                            @endif
+                        </div>
+                    </label>
+                    @endforeach
+                    @if($availableReviewers->isEmpty())
+                    <p class="text-sm text-gray-400 text-center py-4">ບໍ່ມີຫົວໜ້າພາກສ່ວນທີ່ active ໃນລະບົບ</p>
+                    @endif
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit"
+                        class="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                        {{ $availableReviewers->isEmpty() ? 'disabled' : '' }}>
+                        ສົ່ງ
+                    </button>
+                    <button type="button" onclick="closeReviewerModal()"
+                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+                        ຍົກເລີກ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @push('scripts')
         <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
@@ -440,6 +509,21 @@
 
             document.getElementById('editYearModal').addEventListener('click', function (e) {
                 if (e.target === this) closeEditYearModal();
+            });
+
+            // ── Reviewer modal ──────────────────────────────────────────────────
+            function openReviewerModal() {
+                document.getElementById('reviewerModal').classList.remove('hidden');
+                document.getElementById('reviewerModal').classList.add('flex');
+            }
+
+            function closeReviewerModal() {
+                document.getElementById('reviewerModal').classList.add('hidden');
+                document.getElementById('reviewerModal').classList.remove('flex');
+            }
+
+            document.getElementById('reviewerModal').addEventListener('click', function (e) {
+                if (e.target === this) closeReviewerModal();
             });
 
             // ── Bulk-add dynamic rows ──────────────────────────────────────────────

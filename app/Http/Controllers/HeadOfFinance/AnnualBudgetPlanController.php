@@ -7,8 +7,12 @@ use App\Models\BudgetLineItem;
 use App\Models\BudgetPlan;
 use App\Models\BudgetPlanComment;
 use App\Models\ChartOfAccount;
+use App\Models\User;
+use App\Notifications\BudgetPlanReviewRequested;
+use App\Notifications\BudgetPlanFinalApprovalRequested;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class AnnualBudgetPlanController extends Controller
@@ -45,9 +49,15 @@ class AnnualBudgetPlanController extends Controller
     public function show(BudgetPlan $annualBudget)
     {
         $accounts = ChartOfAccount::orderBy('account_code')->get();
-        $annualBudget->load(['lineItems.account', 'lineItems.periodAllocations', 'comments.user.role', 'comments.markedBy']);
+        $annualBudget->load(['lineItems.account', 'lineItems.periodAllocations', 'comments.user.role', 'comments.markedBy', 'reviewers.user.role']);
         $annualBudget->setRelation('lineItems', $this->sortLineItemsHierarchically($annualBudget->lineItems));
-        return view('head_of_finance.annual-budget.show', compact('annualBudget', 'accounts'));
+
+        // Get available reviewers (users with role = head_of_department)
+        $availableReviewers = User::whereHas('role', function ($q) {
+            $q->where('role_name', 'head_of_department');
+        })->where('is_active', true)->get();
+
+        return view('head_of_finance.annual-budget.show', compact('annualBudget', 'accounts', 'availableReviewers'));
     }
 
     public function preview(BudgetPlan $annualBudget)
@@ -130,21 +140,87 @@ class AnnualBudgetPlanController extends Controller
             ->with('success', 'ລຶບແຜນງົບປະມານສຳເລັດ!');
     }
 
-    public function submit(BudgetPlan $annualBudget)
+    // ─── Workflow actions ─────────────────────────────────────────────────
+
+    /**
+     * ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ — DRAFT/MODIFYING → PENDING_REVIEW
+     */
+    public function submit(Request $request, BudgetPlan $annualBudget)
     {
         $allowed = ['DRAFT', 'MODIFYING'];
         if (!in_array(strtoupper($annualBudget->status), $allowed)) {
             return back()->with('error', 'ສະຖານະບໍ່ຖືກຕ້ອງ');
         }
 
-        $annualBudget->update([
-            'status' => 'PENDING_REVIEW',
-            'submission_round' => $annualBudget->submission_round + 1,
+        $request->validate([
+            'reviewer_ids' => 'required|array|min:1',
+            'reviewer_ids.*' => 'exists:users,id',
+        ], [
+            'reviewer_ids.required' => 'ກະລຸນາເລືອກຜູ້ກວດສອບຢ່າງໜ້ອຍ 1 ຄົນ',
         ]);
 
-        return back()->with('success', 'ສົ່ງແຜນງົບປະມານສຳເລັດ!');
+        DB::transaction(function () use ($request, $annualBudget) {
+            // Clear old reviewers and set new ones
+            $annualBudget->reviewers()->delete();
+
+            foreach ($request->reviewer_ids as $userId) {
+                $annualBudget->reviewers()->create([
+                    'user_id' => $userId,
+                    'assigned_by' => auth()->id(),
+                ]);
+            }
+
+            $annualBudget->update([
+                'status' => 'PENDING_REVIEW',
+                'submission_round' => $annualBudget->submission_round + 1,
+            ]);
+        });
+
+        // Send notification to all assigned reviewers
+        $reviewerUsers = User::whereIn('id', $request->reviewer_ids)->get();
+        Notification::send($reviewerUsers, new BudgetPlanReviewRequested($annualBudget));
+
+        return back()->with('success', 'ສົ່ງແຜນງົບປະມານເພື່ອຂໍຄວາມຄິດເຫັນສຳເລັດ!');
     }
 
+    /**
+     * ເລີ່ມແກ້ໄຂ — PENDING_REVIEW → MODIFYING
+     */
+    public function startModifying(BudgetPlan $annualBudget)
+    {
+        if (strtoupper($annualBudget->status) !== 'PENDING_REVIEW') {
+            return back()->with('error', 'ສະຖານະບໍ່ຖືກຕ້ອງ');
+        }
+
+        $annualBudget->update(['status' => 'MODIFYING']);
+
+        return back()->with('success', 'ເລີ່ມແກ້ໄຂແຜນງົບປະມານ — ທ່ານສາມາດແກ້ໄຂລາຍການໄດ້ແລ້ວ.');
+    }
+
+    /**
+     * ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ — MODIFYING → PENDING_FINAL_APPROVAL
+     */
+    public function submitForFinalApproval(BudgetPlan $annualBudget)
+    {
+        if (strtoupper($annualBudget->status) !== 'MODIFYING') {
+            return back()->with('error', 'ສະຖານະບໍ່ຖືກຕ້ອງ — ຕ້ອງຢູ່ໃນສະຖານະກຳລັງແກ້ໄຂ');
+        }
+
+        $annualBudget->update(['status' => 'PENDING_FINAL_APPROVAL']);
+
+        // Send notification to all Head of Faculty users
+        $headOfFacultyUsers = User::whereHas('role', function ($q) {
+            $q->where('role_name', 'head_of_faculty');
+        })->where('is_active', true)->get();
+
+        Notification::send($headOfFacultyUsers, new BudgetPlanFinalApprovalRequested($annualBudget));
+
+        return back()->with('success', 'ສົ່ງແຜນເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍສຳເລັດ!');
+    }
+
+    /**
+     * ຍົກເລີກການສົ່ງ — PENDING_REVIEW → MODIFYING
+     */
     public function unsubmit(BudgetPlan $annualBudget)
     {
         if (strtoupper($annualBudget->status) !== 'PENDING_REVIEW') {
@@ -196,7 +272,7 @@ class AnnualBudgetPlanController extends Controller
         try {
             $account = \App\Models\ChartOfAccount::findOrFail($request->account_id);
             if ($account->children()->exists()) {
-                throw ValidationException::withMessages(['account_id' => 'ບໍ່ສາມາດບັນທຶກໃນໝວດຫຼັກໄດ້, ກະລຸນາເລືອກໝວดย่อยທີ່ສຸດ']);
+                throw ValidationException::withMessages(['account_id' => 'ບໍ່ສາມາດບັນທຶກໃນໝວດຫຼັກໄດ້, ກະລຸນາເລືອກໝວດย่อยທີ່ສຸດ']);
             }
 
             DB::transaction(function () use ($request, $annualBudget) {

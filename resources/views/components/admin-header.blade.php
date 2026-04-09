@@ -24,24 +24,49 @@
                     </svg>
                 </button>
                 <a href="#" class="font-semibold text-gray-800">FNS</a>
-                {{-- <a href="{{ route('admin.index') }}" class="font-semibold text-gray-800">Admin Dashboard</a> --}}
             </div>
             <div class="hidden md:flex items-center space-x-4">
                 @auth
-                    {{-- Notification component will be added here --}}
-                @else
-                    <div class="relative inline-block">
-                        <button class="p-2 rounded-full hover:bg-gray-200 relative">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 64 64">
-                                <path
-                                    d="M 32 10 C 29.662 10 28.306672 11.604938 27.638672 13.085938 C 24.030672 13.809937 17.737984 16.956187 16.958984 24.742188 C 16.665984 29.334188 16.1185 37.883781 13.0625 39.300781 C 12.8505 39.398781 12.655234 39.533219 12.490234 39.699219 C 12.235234 39.954219 10 42.294 10 46 C 10 47.104 10.896 48 12 48 L 25.257812 48 C 25.652433 51.372928 28.522752 54 32 54 C 35.477248 54 38.347567 51.372928 38.742188 48 L 52 48 C 53.104 48 54 47.104 54 46 C 54 42.294 51.764766 39.954219 51.509766 39.699219 C 51.344766 39.534219 51.1495 39.397828 50.9375 39.298828 C 47.8825 37.881828 47.333203 29.333922 47.033203 24.669922 C 46.258203 16.945922 39.966375 13.806984 36.359375 13.083984 C 35.692375 11.603984 34.338 10 32 10 z M 32 14 C 32.603 14 32.766719 14.619859 32.886719 15.255859 C 33.063719 16.190859 33.884422 16.914062 34.857422 16.914062 C 34.931422 16.914063 42.311828 17.650047 43.048828 24.998047 C 43.557828 32.932047 44.389891 40.250797 48.837891 42.716797 C 49.024891 42.956797 49.333937 43.401 49.585938 44 L 14.414062 44 C 14.667063 43.397 14.976203 42.95375 15.158203 42.71875 C 19.609203 40.25475 20.442312 32.935313 20.945312 25.070312 C 21.688313 17.650312 29.068578 16.914062 29.142578 16.914062 C 30.099578 16.914062 30.934375 16.156391 31.109375 15.275391 C 31.232375 14.660391 31.396 14 32 14 z M 29.335938 48 L 34.664062 48 C 34.319789 49.152328 33.262739 50 32 50 C 30.737261 50 29.680211 49.152328 29.335938 48 z">
-                                </path>
+                    {{-- Notification Bell --}}
+                    <div x-data="notificationBell()" x-init="fetchNotifications()" class="relative inline-block">
+                        <button @click="open = !open" class="p-2 rounded-full hover:bg-gray-200 relative focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                             </svg>
-                            <span
-                                class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                                0
+                            <span x-show="unreadCount > 0" x-text="unreadCount"
+                                class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full min-w-[18px]">
                             </span>
                         </button>
+
+                        {{-- Dropdown --}}
+                        <div x-show="open" @click.away="open = false" x-transition
+                            class="absolute right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden" style="width: 350px;">
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                                <h3 class="text-sm font-semibold text-gray-800">ການແຈ້ງເຕືອນ</h3>
+                                <button @click="markAllRead()"
+                                    class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                    x-show="unreadCount > 0">
+                                    ອ່ານທັງໝົດ
+                                </button>
+                            </div>
+                            <div class="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                                <template x-if="notifications.length === 0">
+                                    <div class="px-4 py-8 text-center text-gray-400 text-sm">
+                                        ບໍ່ມີການແຈ້ງເຕືອນ
+                                    </div>
+                                </template>
+                                <template x-for="n in notifications" :key="n.id">
+                                    <a :href="n.url" @click="markRead(n)"
+                                        class="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                                        :class="{ 'bg-blue-50': !n.read, 'opacity-60': n.read }">
+                                        <p class="text-sm text-gray-700 line-clamp-2" x-text="n.message"></p>
+                                        <p class="text-xs text-gray-400 mt-1" x-text="n.time"></p>
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
                     </div>
                 @endauth
                 <span class="text-sm text-gray-500">{{ now()->format('d/m/Y') }}</span>
@@ -57,3 +82,54 @@
         </div>
     </div>
 </header>
+
+@push('scripts')
+<script>
+function notificationBell() {
+    return {
+        open: false,
+        unreadCount: 0,
+        notifications: [],
+        async fetchNotifications() {
+            try {
+                const res = await fetch('{{ route("notifications.data") }}', {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                this.unreadCount = data.unread_count;
+                this.notifications = data.notifications;
+            } catch (e) {
+                console.error('Failed to fetch notifications', e);
+            }
+        },
+        async markRead(n) {
+            if (n.read) return;
+            try {
+                await fetch('/notifications/' + n.id + '/read', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                });
+                n.read = true;
+                this.unreadCount = Math.max(0, this.unreadCount - 1);
+            } catch (e) {}
+        },
+        async markAllRead() {
+            try {
+                await fetch('{{ route("notifications.read-all") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    }
+                });
+                this.unreadCount = 0;
+                this.notifications.forEach(n => n.read = true);
+            } catch (e) {}
+        }
+    };
+}
+</script>
+@endpush

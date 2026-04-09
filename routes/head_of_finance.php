@@ -22,8 +22,14 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::resource('annual-budget', AnnualBudgetPlanController::class);
         Route::get('annual-budget/{annualBudget}/pdf', [AnnualBudgetPlanController::class, 'exportPdf'])->name('annual-budget.pdf');
         Route::get('annual-budget/{annualBudget}/preview', [AnnualBudgetPlanController::class, 'preview'])->name('annual-budget.preview');
+
+        // Workflow actions
         Route::post('annual-budget/{annualBudget}/submit', [AnnualBudgetPlanController::class, 'submit'])->name('annual-budget.submit');
         Route::post('annual-budget/{annualBudget}/unsubmit', [AnnualBudgetPlanController::class, 'unsubmit'])->name('annual-budget.unsubmit');
+        Route::post('annual-budget/{annualBudget}/start-modifying', [AnnualBudgetPlanController::class, 'startModifying'])->name('annual-budget.start-modifying');
+        Route::post('annual-budget/{annualBudget}/submit-final', [AnnualBudgetPlanController::class, 'submitForFinalApproval'])->name('annual-budget.submit-final');
+
+        // Comments
         Route::post('annual-budget/{annualBudget}/comments/{comment}/mark', [AnnualBudgetPlanController::class, 'markComment'])->name('annual-budget.comments.mark');
 
         // Line item sub-routes

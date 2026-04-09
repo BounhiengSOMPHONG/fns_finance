@@ -74,10 +74,20 @@
     <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="budget-table-wrapper">
 
         {{-- Document Header --}}
-        <div class="text-center py-4 border-b border-gray-200">
+        <div class="text-center py-4 border-b border-gray-200 relative">
             <p class="text-xs text-gray-500">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</p>
             <p class="text-xs text-gray-500">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນາຖາວອນ</p>
-            <p class="text-sm font-bold mt-2">ແຜນງົບປະມານປະຈຳປີ {{ $annualBudget->fiscal_year }}</p>
+            <div class="flex items-center justify-center gap-2 mt-2">
+                <p class="text-sm font-bold">ແຜນງົບປະມານປະຈຳປີ {{ $annualBudget->fiscal_year }}</p>
+                @if(in_array($annualBudget->status, ['DRAFT', 'MODIFYING']))
+                <button type="button" onclick="openEditYearModal({{ $annualBudget->fiscal_year }})" class="text-yellow-600 hover:text-yellow-800" title="ແກ້ໄຂສົກປີ">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </button>
+                @endif
+            </div>
         </div>
 
         @php
@@ -360,6 +370,33 @@
         </div>
     </div>
 
+    {{-- ── Edit Year Modal ────────────────────────────────────────────────── --}}
+    <div id="editYearModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-base font-semibold text-gray-800 mb-4">ແກ້ໄຂສົກປີແຜນງົບປະມານ</h3>
+            <form id="editYearForm" action="{{ route('head_of_finance.annual-budget.update', $annualBudget) }}" method="POST">
+                @csrf @method('PUT')
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">ສົກປີ</label>
+                        <input type="number" name="fiscal_year" id="edit_fiscal_year" min="2000" max="2100" required
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-5">
+                    <button type="submit"
+                        class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+                        ບັນທຶກ
+                    </button>
+                    <button type="button" onclick="closeEditYearModal()"
+                        class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm">
+                        ຍົກເລີກ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @push('scripts')
         <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
@@ -387,6 +424,22 @@
 
             document.getElementById('editItemModal').addEventListener('click', function (e) {
                 if (e.target === this) closeEditModal();
+            });
+
+            // ── Edit-year modal ────────────────────────────────────────────────────
+            function openEditYearModal(year) {
+                document.getElementById('edit_fiscal_year').value = year;
+                document.getElementById('editYearModal').classList.remove('hidden');
+                document.getElementById('editYearModal').classList.add('flex');
+            }
+
+            function closeEditYearModal() {
+                document.getElementById('editYearModal').classList.add('hidden');
+                document.getElementById('editYearModal').classList.remove('flex');
+            }
+
+            document.getElementById('editYearModal').addEventListener('click', function (e) {
+                if (e.target === this) closeEditYearModal();
             });
 
             // ── Bulk-add dynamic rows ──────────────────────────────────────────────
@@ -446,12 +499,13 @@
                                 </td>`;
                 tbody.appendChild(tr);
                 
-                const tsOptions = allAccounts.map(acc => ({
-                    value: String(acc.id),
-                    text: acc.code + ' — ' + acc.name,
-                    raw: acc.raw,
-                    disabled: usedIds.has(acc.id) || acc.is_parent
-                }));
+                const tsOptions = allAccounts
+                    .filter(acc => !acc.is_parent && !usedIds.has(acc.id))
+                    .map(acc => ({
+                        value: String(acc.id),
+                        text: acc.code + ' — ' + acc.name,
+                        raw: acc.raw
+                    }));
 
                 // Initialize TomSelect on the new select element
                 const ts = new TomSelect(`#${selectId}`, {

@@ -110,10 +110,9 @@ class AnnualBudgetPlanController extends Controller
     {
         $request->validate([
             'fiscal_year' => 'required|integer|min:2000|max:2100|unique:budget_plans,fiscal_year,' . $annualBudget->id,
-            'status' => 'required|in:DRAFT,PENDING_REVIEW,MODIFYING,PENDING_FINAL_APPROVAL,APPROVED',
         ]);
 
-        $annualBudget->update($request->only('fiscal_year', 'status'));
+        $annualBudget->update($request->only('fiscal_year'));
 
         return redirect()->route('head_of_finance.annual-budget.show', $annualBudget)
             ->with('success', 'ອັບເດດແຜນງົບປະມານສຳເລັດ!');

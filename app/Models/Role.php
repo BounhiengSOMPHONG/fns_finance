@@ -20,4 +20,26 @@ class Role extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * Get the role name mapped to Lao language.
+     */
+    public function getRoleNameLaoAttribute()
+    {
+        $map = [
+            'admin' => 'ຜູ້ເບິ່ງແຍງລະບົບ',
+            'head_of_department' => 'ຫົວໜ້າພາກສ່ວນ',
+            'head_of_finance' => 'ຫົວໜ້າການເງິນ',
+            'deputy_head_of_faculty' => 'ຮອງຄະນະບໍດີ',
+            'head_of_faculty' => 'ຄະນະບໍດີ',
+            'accountant' => 'ນັກບັນຊີ',
+            'requester' => 'ຜູ້ສະເໜີຂໍ',
+            'cashier' => 'ແຄັດເຊຍ / ຜູ້ຈ່າຍເງິນ',
+            'revenue_officer' => 'ເຈົ້າໜ້າທີ່ລາຍຮັບ',
+            'treasurer' => 'ຜູ້ຮັກສາຄັງເງິນ',
+            'treasury_reconciliation_officer' => 'ເຈົ້າໜ້າທີ່ກວດສອບຄັງເງິນ',
+        ];
+
+        return $map[$this->role_name] ?? $this->role_name;
+    }
 }

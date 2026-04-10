@@ -427,13 +427,19 @@
     </div>
 
     {{-- ── Reviewer Selection Modal ──────────────────────────────────────── --}}
-    <div id="reviewerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
-        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <h3 class="text-base font-semibold text-gray-800 mb-2">📤 ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ</h3>
-            <p class="text-sm text-gray-500 mb-4">ເລືອກຫົວໜ້າພາກສ່ວນທີ່ຕ້ອງການໃຫ້ກວດສອບແຜນນີ້:</p>
-            <form action="{{ route('head_of_finance.annual-budget.submit', $annualBudget) }}" method="POST">
+    <div id="reviewerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40" style="display:none;">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col" style="max-height: 80vh;">
+            {{-- Header (fixed) --}}
+            <div class="p-6 pb-2">
+                <h3 class="text-base font-semibold text-gray-800 mb-2">📤 ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ</h3>
+                <p class="text-sm text-gray-500">ເລືອກຜູ້ທີ່ຕ້ອງການໃຫ້ກວດສອບແຜນນີ້:</p>
+            </div>
+
+            {{-- Scrollable user list --}}
+            <form action="{{ route('head_of_finance.annual-budget.submit', $annualBudget) }}" method="POST"
+                class="flex flex-col flex-1 overflow-hidden">
                 @csrf
-                <div class="space-y-2 max-h-60 overflow-y-auto mb-4">
+                <div class="flex-1 overflow-y-auto px-6 py-2 space-y-2">
                     @foreach($availableReviewers as $reviewer)
                     <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
                         <input type="checkbox" name="reviewer_ids[]" value="{{ $reviewer->id }}"
@@ -441,17 +447,22 @@
                             {{ $annualBudget->reviewers->contains('user_id', $reviewer->id) ? 'checked' : '' }}>
                         <div>
                             <p class="text-sm font-medium text-gray-700">{{ $reviewer->full_name }}</p>
-                            @if($reviewer->department)
-                            <p class="text-xs text-gray-400">{{ $reviewer->department->department_name }}</p>
-                            @endif
+                            <p class="text-xs text-gray-400">
+                                {{ $reviewer->role->role_name_lao ?? '' }}
+                                @if($reviewer->department)
+                                    · {{ $reviewer->department->department_name }}
+                                @endif
+                            </p>
                         </div>
                     </label>
                     @endforeach
                     @if($availableReviewers->isEmpty())
-                    <p class="text-sm text-gray-400 text-center py-4">ບໍ່ມີຫົວໜ້າພາກສ່ວນທີ່ active ໃນລະບົບ</p>
+                    <p class="text-sm text-gray-400 text-center py-4">ບໍ່ມີຜູ້ໃຊ້ທີ່ active ໃນລະບົບ</p>
                     @endif
                 </div>
-                <div class="flex gap-3">
+
+                {{-- Buttons (always visible at bottom) --}}
+                <div class="flex gap-3 p-6 pt-4 border-t border-gray-100">
                     <button type="submit"
                         class="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
                         {{ $availableReviewers->isEmpty() ? 'disabled' : '' }}>
@@ -513,13 +524,17 @@
 
             // ── Reviewer modal ──────────────────────────────────────────────────
             function openReviewerModal() {
-                document.getElementById('reviewerModal').classList.remove('hidden');
-                document.getElementById('reviewerModal').classList.add('flex');
+                const m = document.getElementById('reviewerModal');
+                m.style.display = 'flex';
+                m.classList.remove('hidden');
+                m.classList.add('flex');
             }
 
             function closeReviewerModal() {
-                document.getElementById('reviewerModal').classList.add('hidden');
-                document.getElementById('reviewerModal').classList.remove('flex');
+                const m = document.getElementById('reviewerModal');
+                m.style.display = 'none';
+                m.classList.add('hidden');
+                m.classList.remove('flex');
             }
 
             document.getElementById('reviewerModal').addEventListener('click', function (e) {

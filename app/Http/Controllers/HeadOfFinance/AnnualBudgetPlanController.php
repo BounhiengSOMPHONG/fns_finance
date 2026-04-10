@@ -51,11 +51,25 @@ class AnnualBudgetPlanController extends Controller
         $accounts = ChartOfAccount::orderBy('account_code')->get();
         $annualBudget->load(['lineItems.account', 'lineItems.periodAllocations', 'comments.user.role', 'comments.markedBy', 'reviewers.user.role']);
         $annualBudget->setRelation('lineItems', $this->sortLineItemsHierarchically($annualBudget->lineItems));
-
-        // Get available reviewers (users with role = head_of_department)
-        $availableReviewers = User::whereHas('role', function ($q) {
-            $q->where('role_name', 'head_of_department');
-        })->where('is_active', true)->get();
+        //ຄົນທີ່ຈະມາເຫັນແຜນງົບປະມານ
+        // Get available reviewers — all active users except HoF themselves and admins
+        $availableReviewers = User::where('is_active', true)
+            ->where('id', '!=', auth()->id())
+            ->whereHas('role', function ($q) {
+                $q->whereNotIn('role_name', [
+                    'admin',
+                    'head_of_faculty',
+                    'deputy_head_of_faculty',
+                    'requester',
+                    'cashier',
+                    'revenue_officer',
+                    'treasurer',
+                    'treasury_reconciliation_officer'
+                ]);
+            })
+            ->with(['role', 'department'])
+            ->orderBy('full_name')
+            ->get();
 
         return view('head_of_finance.annual-budget.show', compact('annualBudget', 'accounts', 'availableReviewers'));
     }
@@ -241,9 +255,9 @@ class AnnualBudgetPlanController extends Controller
         if ($comment->isMarked()) {
             $comment->update(['marked_at' => null, 'marked_by' => null]);
             return response()->json([
-                'marked'    => false,
-                'markedBy'  => null,
-                'markedAt'  => null,
+                'marked' => false,
+                'markedBy' => null,
+                'markedAt' => null,
             ]);
         } else {
             $comment->update([
@@ -252,7 +266,7 @@ class AnnualBudgetPlanController extends Controller
             ]);
             $comment->load('markedBy');
             return response()->json([
-                'marked'   => true,
+                'marked' => true,
                 'markedBy' => $comment->markedBy->full_name ?? 'HoF',
                 'markedAt' => $comment->marked_at->format('d/m/Y H:i'),
             ]);
@@ -312,8 +326,9 @@ class AnnualBudgetPlanController extends Controller
                 $accounts = \App\Models\ChartOfAccount::with('children')->get()->keyBy('id');
 
                 foreach ($request->items as $row) {
-                    if (empty($row['account_id'])) continue;
-                    
+                    if (empty($row['account_id']))
+                        continue;
+
                     $acc = $accounts->get($row['account_id']);
                     if ($acc && $acc->children->count() > 0) {
                         continue; // Skip parent accounts
@@ -338,7 +353,8 @@ class AnnualBudgetPlanController extends Controller
             });
 
             $msg = "ເພີ່ມ {$added} ລາຍການສຳເລັດ!";
-            if ($skipped > 0) $msg .= " (ຂ້າມ {$skipped} ລາຍການທີ່ຊ້ຳ)";
+            if ($skipped > 0)
+                $msg .= " (ຂ້າມ {$skipped} ລາຍການທີ່ຊ້ຳ)";
             return back()->with('success', $msg);
 
         } catch (ValidationException $e) {
@@ -384,14 +400,14 @@ class AnnualBudgetPlanController extends Controller
     {
         $allAccounts = \App\Models\ChartOfAccount::orderBy('account_code')->get();
         $accountMap = $allAccounts->keyBy('id');
-        
+
         $childrenMap = [];
         foreach ($allAccounts as $acc) {
             if ($acc->parent_id) {
                 $childrenMap[$acc->parent_id][] = $acc->id;
             }
         }
-        
+
         $aggregated = [];
         foreach ($lineItems as $item) {
             $aggregated[$item->account_id] = [
@@ -400,14 +416,15 @@ class AnnualBudgetPlanController extends Controller
                 'original_item' => $item,
             ];
         }
-        
-        $computeSum = function($accountId) use (&$computeSum, &$aggregated, $childrenMap) {
+
+        $computeSum = function ($accountId) use (&$computeSum, &$aggregated, $childrenMap) {
             $reg = $aggregated[$accountId]['amount_regular'] ?? 0;
             $acad = $aggregated[$accountId]['amount_academic'] ?? 0;
             $hasItems = isset($aggregated[$accountId]['original_item']);
-            
+
             if (isset($childrenMap[$accountId])) {
-                $reg = 0; $acad = 0; // Parent's own DB amount is overridden by children sum
+                $reg = 0;
+                $acad = 0; // Parent's own DB amount is overridden by children sum
                 foreach ($childrenMap[$accountId] as $childId) {
                     $childSums = $computeSum($childId);
                     $reg += $childSums['reg'];
@@ -419,25 +436,25 @@ class AnnualBudgetPlanController extends Controller
                 $aggregated[$accountId]['amount_regular'] = $reg;
                 $aggregated[$accountId]['amount_academic'] = $acad;
             }
-            
+
             $aggregated[$accountId]['should_render'] = $hasItems || $reg > 0 || $acad > 0;
             return ['reg' => $reg, 'acad' => $acad, 'hasItems' => $hasItems];
         };
-        
+
         $roots = $allAccounts->whereNull('parent_id');
         foreach ($roots as $root) {
             $computeSum($root->id);
         }
-        
+
         $syntheticItems = collect();
         foreach ($allAccounts as $acc) {
             $shouldRender = $aggregated[$acc->id]['should_render'] ?? false;
-            
+
             if ($shouldRender) {
                 $reg = $aggregated[$acc->id]['amount_regular'] ?? 0;
                 $acad = $aggregated[$acc->id]['amount_academic'] ?? 0;
                 $isParent = isset($childrenMap[$acc->id]);
-                
+
                 if (isset($aggregated[$acc->id]['original_item'])) {
                     $item = $aggregated[$acc->id]['original_item'];
                     $item->amount_regular = $reg;
@@ -457,7 +474,7 @@ class AnnualBudgetPlanController extends Controller
                 }
             }
         }
-        
+
         return $syntheticItems;
     }
 

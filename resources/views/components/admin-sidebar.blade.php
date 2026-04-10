@@ -80,7 +80,7 @@
                 </div>
                 @endcan
                 
-                @can ("head_of_department")
+                @if (auth()->user()->reviewerAssignments()->exists() && !in_array(auth()->user()->role?->role_name, ['deputy_head_of_faculty', 'head_of_faculty']))
                 <div class="space-y-1 mt-4">
                     <a href="{{ route('head_of_department.annual-budget.index') }}"
                         class="{{ request()->routeIs('head_of_department.annual-budget.*') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
@@ -92,7 +92,7 @@
                         ກວດສອບແຜນງົບປະມານ
                     </a>
                 </div>
-                @endcan
+                @endif
 
                 @can ("deputy_head_of_faculty")
                 <div class="space-y-1 mt-4">
@@ -103,7 +103,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
-                        ກວດສອບແຜນງົບປະມານ
+                        ພິຈາລະນາແຜນງົບປະມານ
                     </a>
                 </div>
                 @endcan

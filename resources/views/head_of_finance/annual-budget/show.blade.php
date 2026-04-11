@@ -19,7 +19,7 @@
                 $statusMap = [
                     'DRAFT' => ['label' => 'ຮ່າງ', 'class' => 'bg-gray-100 text-gray-700'],
                     'PENDING_REVIEW' => ['label' => 'ລໍຖ້າຫົວໜ້າພາກສ່ວນ', 'class' => 'bg-yellow-100 text-yellow-700'],
-                    'PENDING_FINAL_APPROVAL' => ['label' => 'ລໍຖ້າຮອງຄະນະບໍດີ', 'class' => 'bg-blue-100 text-blue-700'],
+                    'PENDING_FINAL_APPROVAL' => ['label' => 'ລໍຖ້າຄະນະບໍດີ', 'class' => 'bg-blue-100 text-blue-700'],
                     'APPROVED' => ['label' => 'ອະນຸມັດ', 'class' => 'bg-green-100 text-green-700'],
                     'MODIFYING' => ['label' => 'ກຳລັງແກ້ໄຂ', 'class' => 'bg-orange-100 text-orange-700'],
                 ];

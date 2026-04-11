@@ -182,10 +182,6 @@
                             oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     </div>
                     <div class="flex flex-wrap gap-3 justify-end">
-                        <button type="submit" name="action" value="comment"
-                            class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            💬 ສົ່ງຄວາມຄິດເຫັນ
-                        </button>
                         <button type="submit" name="action" value="reject"
                             onclick="return confirm('ສົ່ງແຜນກັບໃຫ້ແກ້ໄຂ?')"
                             class="px-5 py-2.5 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500">

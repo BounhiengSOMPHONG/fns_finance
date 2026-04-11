@@ -33,7 +33,7 @@
   - CRUD แผนงบ (BudgetPlan)
   - เพิ่ม/แก้ไข/ลบ line items (เดี่ยว + bulk)
   - Bottom-Up roll-up: คำนวณยอดรวม parent จาก leaf nodes (`synthesizeTreeAndRollUp`)
-  - Submit workflow: เลือก reviewer (**ทุก user ที่ active ยกเว้น HoF เอง, Admin, deputy_head_of_faculty, head_of_faculty และกลุ่มระดับปฏิบัติการ**) ผ่าน modal (scroll ได้, ปุ่มอยู่ล่างสุดเสมอ) → บันทึกลง `budget_plan_reviewers` → ส่ง notification
+  - Submit workflow (**เฉพาะหน้า show เท่านั้น**, ลบปุ่ม submit ออกจากหน้า index แล้ว): เลือก reviewer (**ทุก user ที่ active ยกเว้น HoF เอง, Admin, deputy_head_of_faculty, head_of_faculty และกลุ่มระดับปฏิบัติการ**) ผ่าน modal (scroll ได้, ปุ่มอยู่ล่างสุดเสมอ) → บันทึกลง `budget_plan_reviewers` → ส่ง notification
   - `startModifying()` — PENDING_REVIEW → MODIFYING
   - `submitForFinalApproval()` — MODIFYING → PENDING_FINAL_APPROVAL + ส่ง notification ให้ Head of Faculty
   - Mark/Unmark comments (toggle ผ่าน AJAX)
@@ -95,7 +95,7 @@
 3. **แผนงบประมาณประจำปี (Head of Finance)** — สร้าง/แก้ไข/ลบแผน, เพิ่ม line items, เลือก reviewer + submit, startModifying, submitForFinalApproval, preview, export PDF, mark comments
 4. **ກວດສອບແຜນງົບ (Assigned Reviewer ทุก role)** — **เห็นเฉพาะแผนที่ถูก assign** + ให้ comment, เมนูในซอยด์บาร์ขึ้นเมื่อมี `reviewerAssignments` (ยกเว้น deputy/faculty ใช้เมนูของตัวเองแทน)
 5. **อนุมัติแผนงบ (Deputy Head of Faculty)** — approve/reject + comment
-6. **อนุมัติขั้นสุดท้าย (Head of Faculty)** — **NEW** — ดูแผน PENDING_FINAL_APPROVAL/APPROVED + approve/reject + comment + ส่ง notification กลับ HoF
+6. **อนุมัติขั้นสุดท้าย (Head of Faculty)** — ดูแผน PENDING_FINAL_APPROVAL/APPROVED + **2 ปุ่ม: ປັບປຸງ (reject+comment รวมกัน) / ອະນຸມັດ** + ส่ง notification กลับ HoF
 7. **Role-based access control** — แยก route ตาม role, sidebar แสดงเมนูตาม role
 8. **Bottom-Up budget roll-up** — คำนวณยอดรวม parent categories จาก leaf nodes อัตโนมัติ
 9. **ระบบ Notification (In-app)** — **NEW** — กระดิ่งแจ้งเตือนใน header สำหรับทุก role, แสดง unread count, mark as read

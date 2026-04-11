@@ -10,12 +10,22 @@ class BudgetReviewController extends Controller
 {
     public function index()
     {
-        $plans = BudgetPlan::where('status', '!=', 'DRAFT')->orderByDesc('fiscal_year')->get();
+        // Show only plans where the current deputy is explicitly assigned as reviewer
+        $plans = BudgetPlan::whereHas('reviewers', function ($q) {
+            $q->where('user_id', auth()->id());
+        })->orderByDesc('fiscal_year')->get();
+
         return view('deputy_head_of_faculty.annual-budget.index', compact('plans'));
     }
 
     public function show(BudgetPlan $annualBudget)
     {
+        // Block direct URL access if this deputy is not assigned on the plan
+        $isReviewer = $annualBudget->reviewers()->where('user_id', auth()->id())->exists();
+        if (!$isReviewer) {
+            abort(403, 'ທ່ານບໍ່ໄດ້ຮັບມອບໝາຍໃຫ້ກວດສອບແຜນນີ້');
+        }
+
         $annualBudget->load(['lineItems.account', 'comments.user.role', 'comments.markedBy']);
         $annualBudget->setRelation('lineItems', $this->sortLineItemsHierarchically($annualBudget->lineItems));
 
@@ -24,6 +34,12 @@ class BudgetReviewController extends Controller
 
     public function review(Request $request, BudgetPlan $annualBudget)
     {
+        // Block action if this deputy is not assigned on the plan
+        $isReviewer = $annualBudget->reviewers()->where('user_id', auth()->id())->exists();
+        if (!$isReviewer) {
+            abort(403, 'ທ່ານບໍ່ໄດ້ຮັບມອບໝາຍໃຫ້ກວດສອບແຜນນີ້');
+        }
+
         if ($annualBudget->status === 'MODIFYING') {
             return back()->with('error', 'ບໍ່ສາມາດໃຫ້ຄຳເຫັນໃນຂະນະທີ່ແຜນກຳລັງຖືກແກ້ໄຂ');
         }

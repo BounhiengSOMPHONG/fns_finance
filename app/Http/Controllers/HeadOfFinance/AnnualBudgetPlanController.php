@@ -59,7 +59,6 @@ class AnnualBudgetPlanController extends Controller
                 $q->whereNotIn('role_name', [
                     'admin',
                     'head_of_faculty',
-                    'deputy_head_of_faculty',
                     'requester',
                     'cashier',
                     'revenue_officer',

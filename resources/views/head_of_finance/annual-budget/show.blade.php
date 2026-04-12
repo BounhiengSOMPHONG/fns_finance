@@ -408,7 +408,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm text-gray-600 mb-1">ສົກປີ</label>
-                        <input type="number" name="fiscal_year" id="edit_fiscal_year" min="2000" max="2100" required
+                        <input type="number" name="fiscal_year" id="edit_fiscal_year" min="2000" max="9999" required
                             class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>

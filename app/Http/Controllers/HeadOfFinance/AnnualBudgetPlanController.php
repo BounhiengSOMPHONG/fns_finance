@@ -33,7 +33,7 @@ class AnnualBudgetPlanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'fiscal_year' => 'required|integer|min:2000|max:2100|unique:budget_plans,fiscal_year',
+            'fiscal_year' => 'required|integer|min:2000|max:9999|unique:budget_plans,fiscal_year',
         ]);
 
         BudgetPlan::create([
@@ -132,7 +132,7 @@ class AnnualBudgetPlanController extends Controller
     public function update(Request $request, BudgetPlan $annualBudget)
     {
         $request->validate([
-            'fiscal_year' => 'required|integer|min:2000|max:2100|unique:budget_plans,fiscal_year,' . $annualBudget->id,
+            'fiscal_year' => 'required|integer|min:2000|max:9999|unique:budget_plans,fiscal_year,' . $annualBudget->id,
         ]);
 
         $annualBudget->update($request->only('fiscal_year'));

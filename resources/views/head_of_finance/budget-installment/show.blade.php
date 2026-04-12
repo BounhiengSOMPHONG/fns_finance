@@ -62,9 +62,18 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
+                        @php
+                            $rootParts = [];
+                            foreach ($budgetPlan->lineItems as $item) {
+                                if (str_ends_with($item->account->account_code ?? '', '000000')) {
+                                    $rootParts[] = substr($item->account->account_code, 0, 2);
+                                }
+                            }
+                            $rootEquation = count($rootParts) > 0 ? implode('+', array_unique($rootParts)) : '';
+                        @endphp
                         {{-- Top Total Row --}}
                         <tr class="bg-green-100 font-bold text-gray-900 relative z-10 transition-colors">
-                            <td colspan="5" class="border border-green-200 px-4 py-2 text-right">ລວມຍອດແຜ່ນພາກສ່ວນ</td>
+                            <td colspan="5" class="border border-green-200 px-4 py-2 text-right">ລວມຍອດສ່ວນ({{ $rootEquation }})=</td>
                             <td class="border border-green-200 px-3 py-2 text-right tabular-nums">{{ number_format($totalAnnual, 2) }}</td>
                             <td class="border border-green-200 px-3 py-2 text-right tabular-nums text-green-700" id="grand_p1">{{ number_format($totalP1, 2) }}</td>
                             <td class="border border-green-200 px-3 py-2 text-right tabular-nums text-green-700" id="grand_p2">{{ number_format($totalP2, 2) }}</td>
@@ -76,9 +85,9 @@
                             @php
                                 $code = $item->account->account_code ?? '';
                                 $part1 = substr($code, 0, 2);
-                                $part2 = substr($code, 2, 2) === '00' ? '' : substr($code, 2, 2);
-                                $part3 = substr($code, 4, 2) === '00' ? '' : substr($code, 4, 2);
-                                $part4 = substr($code, 6, 2) === '00' ? '' : substr($code, 6, 2);
+                                $part2 = substr($code, 2, 2);
+                                $part3 = substr($code, 4, 2);
+                                $part4 = substr($code, 6, 2);
 
                                 $isParent = $item->is_parent ?? false;
                                 

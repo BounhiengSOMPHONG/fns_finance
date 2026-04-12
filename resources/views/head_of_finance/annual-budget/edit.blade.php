@@ -15,7 +15,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">ສົກປີ <span
                         class="text-red-500">*</span></label>
                 <input type="number" name="fiscal_year" value="{{ old('fiscal_year', $annualBudget->fiscal_year) }}"
-                    min="2000" max="2100"
+                    min="2000" max="9999"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 @error('fiscal_year') border-red-400 @enderror">
                 @error('fiscal_year')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>

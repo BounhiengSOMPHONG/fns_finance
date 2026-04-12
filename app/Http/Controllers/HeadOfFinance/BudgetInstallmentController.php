@@ -105,14 +105,16 @@ class BudgetInstallmentController extends Controller
 
         $aggregated = [];
         foreach ($lineItems as $item) {
-            $period1 = $item->periodAllocations->where('period_name', 'ງວດ1')->first()->allocated_amount ?? 0;
-            $period2 = $item->periodAllocations->where('period_name', 'ງວດ2')->first()->allocated_amount ?? 0;
+            $palloc1 = $item->periodAllocations->where('period_name', 'ງວດ1')->first();
+            $palloc2 = $item->periodAllocations->where('period_name', 'ງວດ2')->first();
+            
+            $annual = ($item->amount_regular ?? 0) + ($item->amount_academic ?? 0);
 
             $aggregated[$item->account_id] = [
                 'amount_regular' => $item->amount_regular,
                 'amount_academic' => $item->amount_academic,
-                'period_1' => $period1,
-                'period_2' => $period2,
+                'period_1' => $palloc1 ? $palloc1->allocated_amount : ($annual / 4),
+                'period_2' => $palloc2 ? $palloc2->allocated_amount : ($annual / 4),
                 'original_item' => $item,
             ];
         }

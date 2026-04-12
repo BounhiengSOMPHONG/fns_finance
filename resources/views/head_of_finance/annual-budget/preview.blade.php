@@ -62,16 +62,22 @@
             }
             $totalLuam = $totalRegular + $totalOther;
 
-            function previewGetRowType($code) {
-                if (!$code) return 'detail';
+            function previewGetRowType($code)
+            {
+                if (!$code)
+                    return 'detail';
                 $parts = explode('-', $code);
-                if (count($parts) !== 4) return 'detail';
-                if ($parts[1] === '00' && $parts[2] === '00' && $parts[3] === '00') return 'main';
-                if ($parts[2] === '00' && $parts[3] === '00') return 'sub';
+                if (count($parts) !== 4)
+                    return 'detail';
+                if ($parts[1] === '00' && $parts[2] === '00' && $parts[3] === '00')
+                    return 'main';
+                if ($parts[2] === '00' && $parts[3] === '00')
+                    return 'sub';
                 return 'detail';
             }
 
-            function previewFormatNumber($number) {
+            function previewFormatNumber($number)
+            {
                 return number_format($number, 2, '.', ',');
             }
         @endphp
@@ -93,8 +99,10 @@
                         <th class="border border-gray-400 px-2 py-2 text-center font-semibold text-xs">ຮ່ວງ.ລູກຮ່ວງ</th>
                         <th class="border border-gray-400 px-2 py-2 text-center font-semibold text-xs">ລາຍການຈ່າຍ</th>
                         <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ແຜນລວມ</th>
-                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ງົບປະມານປົກກະຕິ</th>
-                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ງົບປະມານອື່ນການ</th>
+                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ງົບປະມານປົກກະຕິ
+                        </th>
+                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ງົບປະມານວິຊາການ
+                        </th>
                     </tr>
                     {{-- Row 3: Column numbers --}}
                     <tr class="bg-gray-100 text-gray-500 text-xs font-bold text-center">
@@ -110,9 +118,12 @@
                     <tr class="bg-green-50 font-bold text-gray-900">
                         <td class="border border-gray-400 px-3 py-2 text-center"></td>
                         <td class="border border-gray-400 px-3 py-2"></td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ previewFormatNumber($totalLuam) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ previewFormatNumber($totalRegular) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ previewFormatNumber($totalOther) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ previewFormatNumber($totalLuam) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ previewFormatNumber($totalRegular) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ previewFormatNumber($totalOther) }}</td>
                     </tr>
 
                     @forelse ($annualBudget->lineItems as $item)
@@ -121,9 +132,9 @@
                             $rowType = previewGetRowType($code);
                             $itemLuam = ($item->amount_regular ?? 0) + ($item->amount_academic ?? 0);
 
-                            $trClass = match($rowType) {
+                            $trClass = match ($rowType) {
                                 'main' => 'bg-blue-100 font-bold text-blue-800',
-                                'sub'  => 'bg-purple-50 font-semibold text-gray-800',
+                                'sub' => 'bg-purple-50 font-semibold text-gray-800',
                                 default => 'bg-white text-gray-700 hover:bg-gray-50',
                             };
                         @endphp
@@ -132,9 +143,12 @@
                             <td class="border border-gray-400 px-3 py-1.5">
                                 @if($rowType === 'detail')- @endif{{ $item->account->account_name ?? '-' }}
                             </td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ previewFormatNumber($itemLuam) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ previewFormatNumber($item->amount_regular ?? 0) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ previewFormatNumber($item->amount_academic ?? 0) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ previewFormatNumber($itemLuam) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ previewFormatNumber($item->amount_regular ?? 0) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ previewFormatNumber($item->amount_academic ?? 0) }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -166,10 +180,11 @@
                     print-color-adjust: exact !important;
                 }
 
-                html, body {
+                html,
+                body {
                     background-color: #fff !important;
                 }
-                
+
                 main {
                     padding: 0 !important;
                     margin: 0 !important;
@@ -188,7 +203,8 @@
 
                 @page {
                     size: A4 portrait;
-                    margin: 0; /* Set to 0 to hide browser headers/footers */
+                    margin: 0;
+                    /* Set to 0 to hide browser headers/footers */
                 }
             }
         </style>

@@ -182,16 +182,22 @@
         // XX-00-00-00 = main category
         // XX-XX-00-00 = sub-category
         // XX-XX-XX-00 = detail item
-        function getRowType($code) {
-            if (!$code) return 'detail';
+        function getRowType($code)
+        {
+            if (!$code)
+                return 'detail';
             $parts = explode('-', $code);
-            if (count($parts) !== 4) return 'detail';
-            if ($parts[1] === '00' && $parts[2] === '00' && $parts[3] === '00') return 'main';
-            if ($parts[2] === '00' && $parts[3] === '00') return 'sub';
+            if (count($parts) !== 4)
+                return 'detail';
+            if ($parts[1] === '00' && $parts[2] === '00' && $parts[3] === '00')
+                return 'main';
+            if ($parts[2] === '00' && $parts[3] === '00')
+                return 'sub';
             return 'detail';
         }
 
-        function formatLaoNumber($number) {
+        function formatLaoNumber($number)
+        {
             return number_format($number, 2, '.', ',');
         }
 
@@ -221,7 +227,7 @@
                 <th class="col-num-header" style="font-size: 10px;">ລາຍການຈ່າຍ</th>
                 <th class="col-num-header" style="width: 110px;">ແຜນລວມ</th>
                 <th class="col-num-header" style="width: 110px;">ງົບປະມານປົກກະຕິ</th>
-                <th class="col-num-header" style="width: 110px;">ງົບປະມານອື່ນການ</th>
+                <th class="col-num-header" style="width: 110px;">ງົບປະມານວິຊາການ</th>
             </tr>
             <tr class="number-row">
                 <td>4</td>
@@ -246,9 +252,9 @@
                     $code = $item->account->formatted_code ?? '';
                     $rowType = getRowType($code);
                     $itemLuam = ($item->amount_regular ?? 0) + ($item->amount_academic ?? 0);
-                    $rowClass = match($rowType) {
+                    $rowClass = match ($rowType) {
                         'main' => 'row-main-category',
-                        'sub'  => 'row-sub-category',
+                        'sub' => 'row-sub-category',
                         default => 'row-detail',
                     };
                 @endphp

@@ -52,4 +52,9 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             'annual-budget/{annualBudget}/items/{item}',
             [AnnualBudgetPlanController::class, 'destroyItem']
         )->name('annual-budget.items.destroy');
+        
+        // ── Budget Period Installments ──────────────────────────────────
+        Route::get('budget-installment', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'index'])->name('budget-installment.index');
+        Route::get('budget-installment/{budgetPlan}', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'show'])->name('budget-installment.show');
+        Route::post('budget-installment/{budgetPlan}/save', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'save'])->name('budget-installment.save');
     });

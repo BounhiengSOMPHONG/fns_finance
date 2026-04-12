@@ -40,6 +40,23 @@ class BudgetInstallmentController extends Controller
     }
 
     /**
+     * Show the official document preview for the budget installment.
+     */
+    public function preview(BudgetPlan $budgetPlan)
+    {
+        if ($budgetPlan->status !== 'APPROVED') {
+            return redirect()->route('head_of_finance.budget-installment.index')
+                ->with('error', 'ສາມາດເບິ່ງພາບລວມໄດ້ສະເພາະແຜນທີ່ອະນຸມັດແລ້ວເທົ່ານັ້ນ');
+        }
+
+        $budgetPlan->load(['lineItems.account', 'lineItems.periodAllocations']);
+        $synthesizedItems = $this->synthesizeTreeAndRollUp($budgetPlan->lineItems);
+        $budgetPlan->setRelation('lineItems', $synthesizedItems);
+
+        return view('head_of_finance.budget-installment.preview', compact('budgetPlan'));
+    }
+
+    /**
      * Save the period allocations.
      */
     public function save(Request $request, BudgetPlan $budgetPlan)

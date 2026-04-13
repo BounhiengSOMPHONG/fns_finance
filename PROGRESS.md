@@ -43,9 +43,9 @@
 - `app/Http/Controllers/HeadOfDepartment/BudgetReviewController.php` — **ดูเฉพาะแผนที่ถูก assign เป็น reviewer** + ให้ comment (ตรวจสิทธิ์ก่อน show/review)
 - `app/Http/Controllers/DeputyHeadOfFaculty/BudgetReviewController.php` — ดูแผน + approve/reject (PENDING_FINAL_APPROVAL → APPROVED/MODIFYING)
 - `app/Http/Controllers/HeadOfFaculty/BudgetApprovalController.php` — **ดูแผน PENDING_FINAL_APPROVAL/APPROVED + approve/reject/comment + ส่ง notification กลับ HoF**
-- `app/Http/Controllers/HeadOfFinance/BudgetInstallmentController.php` — **NEW** — จัดการแผนงวด (จัดสรรงวด 1 และ งวด 2 สำหรับแผนที่ APPROVED แล้ว พร้อม auto-calculate 6 เดือนและ 6 เดือนท้ายปี) + **สร้างหน้า Document Preview รูปแบบทางการพร้อมโลโก้ภาครัฐ**
+- `app/Http/Controllers/HeadOfFinance/BudgetInstallmentController.php` — **NEW** — จัดการแผนงวด (จัดสรรงวด 1 และ งวด 2 สำหรับแผนที่ APPROVED แล้ว พร้อม auto-calculate 6 เดือนและ 6 เดือนท้ายปี) + **การปรับแก้โครงสร้างงบประมาณงวด 3-4** (รอบ 6 เดือนหลัง) พร้อมระบบคำนวณ real-time JavaScript สำหรับการเพิ่ม/ลดยอดงบประมาณ + **สร้างหน้า Document Preview รูปแบบทางการพร้อมโลโก้ภาครัฐ**
 - Views: `resources/views/head_of_finance/annual-budget/{index,create,edit,show,preview,pdf}`
-- Views: `resources/views/head_of_finance/budget-installment/{index,show,preview}`
+- Views: `resources/views/head_of_finance/budget-installment/{index,show,preview,show34,preview34}`
 - Views: `resources/views/head_of_department/annual-budget/{index,show}`
 - Views: `resources/views/deputy_head_of_faculty/annual-budget/{index,show}`
 - Views: `resources/views/head_of_faculty/annual-budget/{index,show}`
@@ -104,6 +104,7 @@
 9. **ระบบ Notification (In-app)** — **NEW** — กระดิ่งแจ้งเตือนใน header สำหรับทุก role, แสดง unread count, mark as read
 10. **Reviewer Assignment** — **NEW** — HoF เลือก HoD เป็น reviewer ผ่าน modal ก่อน submit
 11. **แผนงวดงบประมาณ (Budget Period Allocations)** — **NEW** — จัดสรรงบประมาณรายงวด (งวด 1, งวด 2) สำหรับแผนที่เป็น APPROVED พร้อมการคำนวณ 6 เดือนต้นปี/ท้ายปี อัตโนมัติ และฟังก์ชัน **"ภาพรวม" (Preview)** ที่พิมพ์ออกมาเป็นเอกสารทางการได้ทันที
+12. **การปรับแก้งวด 3-4 (Budget Revision)** — **NEW** — ระบบให้ Head of Finance ปรับแก้งบฯ ในช่วง 6 เดือนหลัง (งวด 3, 4) โดยมีหน้าสำหรับประเมินและทบทวนงบประมาณแบบ Real-time (JavaScript) ป้องกันงบประมาณเกินกรอบ (Budget Inflation Validation) พร้อมหน้าจอ Document Preview 3-4
 
 ### 🔄 Workflow งบประมาณ (ใหม่):
 ```

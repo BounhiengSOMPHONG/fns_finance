@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'ພາບລວມ ແຜນງວດງົບປະມານ ' . $budgetPlan->fiscal_year)
-@section('page-title', 'ພາບລວມ ແຜນງວດງົບປະມານປະຈຳປີ ' . $budgetPlan->fiscal_year)
+@section('page-title', 'ພາບລວມ ແຜນງວດງົບປະມານ 1, 2 ຕົ້ນປີ ' . $budgetPlan->fiscal_year)
 
 @section('content')
 
@@ -96,26 +96,36 @@
                 <thead>
                     {{-- Row 1: Main grouped headers --}}
                     <tr class="bg-gray-100 text-gray-800">
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">ພາກ</th>
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">ພາກ<br>ສ່ວນ</th>
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">ຮ່ວງ</th>
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">ລູກ<br>ຮ່ວງ</th>
-                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold" style="min-width: 180px;">ເນື້ອໃນລາຍຈ່າຍ</th>
-                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold" style="width: 120px;">
+                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                            ພາກ</th>
+                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                            ພາກ<br>ສ່ວນ</th>
+                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                            ຮ່ວງ</th>
+                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                            ລູກ<br>ຮ່ວງ</th>
+                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold"
+                            style="min-width: 180px;">ເນື້ອໃນລາຍຈ່າຍ</th>
+                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold"
+                            style="width: 120px;">
                             ແຜນການ<br>ປີ {{ $budgetPlan->fiscal_year }}
                         </th>
                         <th colspan="3" class="border border-gray-400 px-3 py-2 text-center font-bold">
                             ແຜນ 06 ເດືອນຕົ້ນປີ {{ $budgetPlan->fiscal_year }}
                         </th>
-                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold" style="width: 120px;">
+                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold"
+                            style="width: 120px;">
                             ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $budgetPlan->fiscal_year }}
                         </th>
                     </tr>
                     {{-- Row 2: Sub-headers under "ແຜນ 06 ເດືອນຕົ້ນປີ" --}}
                     <tr class="bg-gray-50 text-gray-700">
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ1</th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ2</th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນ 06 ເດືອນ</th>
+                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ1
+                        </th>
+                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ2
+                        </th>
+                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນ 06
+                            ເດືອນ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,11 +134,16 @@
                         <td colspan="5" class="border border-gray-400 px-3 py-2 text-right font-bold">
                             ລວມຍອດສ່ວນ({{ $rootEquation }})=
                         </td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ installmentPreviewFormat($totalAnnual) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ installmentPreviewFormat($totalP1) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ installmentPreviewFormat($totalP2) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ installmentPreviewFormat($total6Months) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">{{ installmentPreviewFormat($total6MonthsEnd) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ installmentPreviewFormat($totalAnnual) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ installmentPreviewFormat($totalP1) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ installmentPreviewFormat($totalP2) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ installmentPreviewFormat($total6Months) }}</td>
+                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                            {{ installmentPreviewFormat($total6MonthsEnd) }}</td>
                     </tr>
 
                     @forelse ($budgetPlan->lineItems as $item)
@@ -165,10 +180,14 @@
                             <td class="border border-gray-400 px-3 py-1.5">
                                 @if(!$isParent && !$isRoot && !$isSub)- @endif{{ $item->account->account_name ?? '-' }}
                             </td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat($annualAmount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat($p1Amount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat($p2Amount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat($m6Amount) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat($annualAmount) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat($p1Amount) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat($p2Amount) }}</td>
+                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat($m6Amount) }}</td>
                             <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
                                 @if($m6endAmount < 0)
                                     <span class="text-red-600">{{ installmentPreviewFormat($m6endAmount) }}</span>
@@ -179,7 +198,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="border border-gray-400 px-6 py-10 text-center text-gray-400">ບໍ່ມີລາຍການ</td>
+                            <td colspan="10" class="border border-gray-400 px-6 py-10 text-center text-gray-400">ບໍ່ມີລາຍການ
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

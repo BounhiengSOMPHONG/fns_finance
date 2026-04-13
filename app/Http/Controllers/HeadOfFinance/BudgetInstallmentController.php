@@ -115,6 +115,8 @@ class BudgetInstallmentController extends Controller
     }
 
     /**
+     * Show preview.
+     */
     public function preview(BudgetPlan $budgetPlan)
     {
         if ($budgetPlan->status !== 'APPROVED') {

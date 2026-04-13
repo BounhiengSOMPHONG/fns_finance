@@ -73,11 +73,11 @@
                     $p1 = $item->period_1_amount ?? 0;
                     $p2 = $item->period_2_amount ?? 0;
                     $plan6M = $annualAmount - $p1 - $p2;
-                    
+
                     $reduce = $item->reduce_amount ?? 0;
                     $incr = $item->increase_amount ?? 0;
                     $revised6M = $plan6M - $reduce + $incr;
-                    
+
                     $p3 = $item->period_3_amount ?? 0;
                     $p4 = $item->period_4_amount ?? 0;
                     $execute = $annualAmount - $reduce + $incr;
@@ -108,11 +108,14 @@
             if (!function_exists('installmentPreviewFormat')) {
                 function installmentPreviewFormat($number)
                 {
-                    if ($number == 0) return '0';
+                    if ($number == 0)
+                        return '0';
                     return number_format($number, 3, '.', ','); // Often documents use 3 decimals if 0.000 or trailing, we use 3 like original? Original had formatLaoCurrency 2
                 }
-                function installmentPreviewFormat2($number) {
-                    if ($number == 0) return '0';
+                function installmentPreviewFormat2($number)
+                {
+                    if ($number == 0)
+                        return '0';
                     // Strip trailing zeros after rendering 3 decimals
                     return rtrim(rtrim(number_format($number, 3, '.', ','), '0'), '.');
                 }
@@ -125,37 +128,59 @@
                 <thead>
                     <tr class="bg-gray-100 text-gray-800">
                         <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ພ/ສ</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ<br>ສ່ວນ
+                        </th>
                         <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ຮ່ວງ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ລູກ<br>ຮ່ອງ</th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-bold" style="min-width: 140px;">ເນື້ອໃນລາຍຈ່າຍສະເພາະວິຊາການ</th>
-                        
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນອະນຸມັດ<br>{{ $budgetPlan->fiscal_year }}</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນ 6 ເດືອນ<br>ທ້າຍປີ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນດັດແກ້ຫຼຸດ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນດັດແກ້<br>ເພີ່ມ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນດັດແກ້ 6<br>ເດືອນທ້າຍປີ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 3</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 4</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນປະຕິບັດໝົດ<br>ປີ {{ $budgetPlan->fiscal_year }}</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 45px;">ທຽບເປີເຊັນ</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ລູກ<br>ຮ່ວງ
+                        </th>
+                        <th class="border border-gray-400 px-2 py-2 text-center font-bold" style="min-width: 140px;">
+                           ເນື້ອໃນລາຍຈ່າຍ</th>
+
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                            ແຜນອະນຸມັດ<br>{{ $budgetPlan->fiscal_year }}</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນ 6
+                            ເດືອນ<br>ທ້າຍປີ</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                            ແຜນດັດແກ້ຫຼຸດ</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                            ແຜນດັດແກ້<br>ເພີ່ມ</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນດັດແກ້
+                            6<br>ເດືອນທ້າຍປີ</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 3
+                        </th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 4
+                        </th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                            ແຜນປະຕິບັດໝົດ<br>ປີ {{ $budgetPlan->fiscal_year }}</th>
+                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 45px;">ທຽບເປີເຊັນ
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {{-- Grand Totals Row --}}
-                    <tr class="bg-cyan-100 font-bold text-gray-900 border-2 border-black" style="background-color: #e0f2fe;">
+                    <tr class="bg-cyan-100 font-bold text-gray-900 border-2 border-black"
+                        style="background-color: #e0f2fe;">
                         <td colspan="5" class="border border-black px-2 py-2 text-right font-bold text-blue-900 underline">
                             ລວມຍອດເງິນພາກສ່ວນ({{ $rootEquation }}) =
                         </td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">{{ installmentPreviewFormat2($totalAnnual) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">{{ installmentPreviewFormat2($totalPlan6M) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">{{ installmentPreviewFormat2($totalReduce) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">{{ installmentPreviewFormat2($totalIncrease) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">{{ installmentPreviewFormat2($totalRevised6M) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums text-blue-900 underline">{{ installmentPreviewFormat2($totalP3) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums text-blue-900 underline">{{ installmentPreviewFormat2($totalP4) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">{{ installmentPreviewFormat2($totalExecute) }}</td>
-                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">{{ number_format($gPercent, 2) }}%</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">
+                            {{ installmentPreviewFormat2($totalAnnual) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($totalPlan6M) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($totalReduce) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($totalIncrease) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($totalRevised6M) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums text-blue-900 underline">
+                            {{ installmentPreviewFormat2($totalP3) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums text-blue-900 underline">
+                            {{ installmentPreviewFormat2($totalP4) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">
+                            {{ installmentPreviewFormat2($totalExecute) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">
+                            {{ number_format($gPercent, 2) }}%</td>
                     </tr>
 
                     @forelse ($budgetPlan->lineItems as $item)
@@ -180,7 +205,7 @@
                             $p3Amount = $item->period_3_amount ?? 0;
                             $p4Amount = $item->period_4_amount ?? 0;
                             $executeAmount = $annualAmount - $reduceAmount + $incrAmount;
-                            
+
                             $percent = $annualAmount > 0 ? ($executeAmount / $annualAmount) * 100 : 0;
 
                             // Determine row type for coloring
@@ -188,11 +213,11 @@
                             $isSub = $part2 !== '00' && $part3 === '00' && $part4 === '00';  // XX-XX-00-00
 
                             $trClass = $isRoot
-                                ? 'bg-green-100 font-bold border-2 border-black underline' 
+                                ? 'bg-green-100 font-bold border-2 border-black underline'
                                 : ($isSub
                                     ? 'bg-gray-50'
                                     : 'bg-white text-gray-800');
-                                    
+
                             if ($isRoot) {
                                 $trStyle = "background-color: #dcfce7;"; // light green
                             } else {
@@ -200,22 +225,37 @@
                             }
                         @endphp
                         <tr class="{{ $trClass }} border border-black" style="{{ $trStyle }}">
-                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part1 === '00' ? '' : $part1 }}</td>
-                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part2 === '00' ? '' : $part2 }}</td>
-                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part3 === '00' ? '' : $part3 }}</td>
-                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part4 === '00' ? '' : $part4 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">
+                                {{ $part1 === '00' ? '' : $part1 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">
+                                {{ $part2 === '00' ? '' : $part2 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">
+                                {{ $part3 === '00' ? '' : $part3 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">
+                                {{ $part4 === '00' ? '' : $part4 }}</td>
                             <td class="border border-black px-2 py-1.5 {{ $isRoot ? 'underline' : '' }}">
                                 @if(!$isParent && !$isRoot && !$isSub)- @endif{{ $item->account->account_name ?? '-' }}
                             </td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat2($annualAmount) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat2($plan6M) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums {{ $isRoot ? '' : ($reduceAmount > 0 ? 'underline' : '') }}">{{ installmentPreviewFormat2($reduceAmount) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums {{ $isRoot ? '' : ($incrAmount > 0 ? 'underline' : '') }}">{{ installmentPreviewFormat2($incrAmount) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat2($revised6M) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat2($p3Amount) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat2($p4Amount) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ installmentPreviewFormat2($executeAmount) }}</td>
-                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">{{ number_format($percent, 2) }}%</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($annualAmount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($plan6M) }}</td>
+                            <td
+                                class="border border-black px-1 py-1.5 text-right tabular-nums {{ $isRoot ? '' : ($reduceAmount > 0 ? 'underline' : '') }}">
+                                {{ installmentPreviewFormat2($reduceAmount) }}</td>
+                            <td
+                                class="border border-black px-1 py-1.5 text-right tabular-nums {{ $isRoot ? '' : ($incrAmount > 0 ? 'underline' : '') }}">
+                                {{ installmentPreviewFormat2($incrAmount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($revised6M) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($p3Amount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($p4Amount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($executeAmount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ number_format($percent, 2) }}%</td>
                         </tr>
                     @empty
                         <tr>
@@ -267,13 +307,15 @@
                 #preview-installment-table {
                     font-size: 8px !important;
                 }
-                
-                #preview-installment-table th, #preview-installment-table td {
+
+                #preview-installment-table th,
+                #preview-installment-table td {
                     padding: 4px 2px !important;
                 }
 
                 @page {
-                    size: auto; /* Uses printer settings which we expect to be A4 landscape */
+                    size: auto;
+                    /* Uses printer settings which we expect to be A4 landscape */
                     margin: 0;
                 }
             }

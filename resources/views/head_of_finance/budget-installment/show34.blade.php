@@ -177,7 +177,7 @@
                                             value="{{ rtrim(rtrim(number_format($reduceAmount, 2, '.', ''), '0'), '.') }}" 
                                             min="0" step="0.01"
                                             class="reduce-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-purple-500" 
-                                            oninput="recalculate()">
+                                            oninput="autoAdjustPeriods(this); recalculate()">
                                     @endif
                                 </td>
 
@@ -190,7 +190,7 @@
                                             value="{{ rtrim(rtrim(number_format($increaseAmount, 2, '.', ''), '0'), '.') }}" 
                                             min="0" step="0.01"
                                             class="increase-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-purple-500" 
-                                            oninput="recalculate()">
+                                            oninput="autoAdjustPeriods(this); recalculate()">
                                     @endif
                                 </td>
 
@@ -256,6 +256,28 @@
     <script>
         function formatLaoCurrency(num) {
             return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function autoAdjustPeriods(input) {
+            const tr = input.closest('tr');
+            if (tr.dataset.isParent === '1') return;
+
+            const plan6m = parseFloat(tr.dataset.plan6m) || 0;
+            const reduce = parseFloat(tr.querySelector('.reduce-input').value) || 0;
+            const increase = parseFloat(tr.querySelector('.increase-input').value) || 0;
+            
+            const revised6m = plan6m - reduce + increase;
+            
+            const p3Input = tr.querySelector('.p3-input');
+            const p4Input = tr.querySelector('.p4-input');
+            
+            const half = (revised6m / 2).toFixed(2);
+            
+            // Format to drop trailing zeros for clean input display
+            const cleanHalf = parseFloat(half).toString(); 
+            
+            p3Input.value = cleanHalf;
+            p4Input.value = cleanHalf;
         }
 
         function recalculate() {

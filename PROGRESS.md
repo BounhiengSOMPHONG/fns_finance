@@ -33,6 +33,7 @@
   - CRUD แผนงบ (BudgetPlan)
   - เพิ่ม/แก้ไข/ลบ line items (เดี่ยว + bulk)
   - Bottom-Up roll-up: คำนวณยอดรวม parent จาก leaf nodes (`synthesizeTreeAndRollUp`)
+  - **Refactor:** ใช้ `$item->is_parent` ในกระบวนการ Roll-up สำหรับการแสดงผล Hyphen (-) หน้าชื่อบัญชีย่อยอย่างถูกต้อง แทนการตัด String
   - Submit workflow (**เฉพาะหน้า show เท่านั้น**, ลบปุ่ม submit ออกจากหน้า index แล้ว): เลือก reviewer (**ทุก user ที่ active ยกเว้น HoF เอง, Admin, deputy_head_of_faculty, head_of_faculty และกลุ่มระดับปฏิบัติการ**) ผ่าน modal (scroll ได้, ปุ่มอยู่ล่างสุดเสมอ) → บันทึกลง `budget_plan_reviewers` → ส่ง notification
   - `startModifying()` — PENDING_REVIEW → MODIFYING
   - `submitForFinalApproval()` — MODIFYING → PENDING_FINAL_APPROVAL + ส่ง notification ให้ Head of Faculty

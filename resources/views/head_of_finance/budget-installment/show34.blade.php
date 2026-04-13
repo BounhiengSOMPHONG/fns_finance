@@ -42,7 +42,7 @@
             @csrf
             
             <div id="validation-error" class="hidden mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded relative">
-                <strong>ຂໍ້ຜິດພາດ:</strong> ຜົນລວມຂອງ ແຜນງວດ 3 + ແຜນງວດ 4 ຕ້ອງເທົ່າກັບ ແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ ສຳລັບທຸກລາຍການ!
+                <strong>ຂໍ້ຜິດພາດ:</strong> <span id="error-text">ຜົນລວມຂອງ ແຜນງວດ 3 + ແຜນງວດ 4 ຕ້ອງເທົ່າກັບ ແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ ສຳລັບທຸກລາຍການ!</span>
             </div>
 
             <div class="overflow-x-auto pb-4">
@@ -403,8 +403,25 @@
 
             // Show hide error logic
             const errBox = document.getElementById('validation-error');
+            const errText = document.getElementById('error-text');
             const saveBtn = document.getElementById('saveBtn');
+            
+            // Validate that we don't manufacture budget out of thin air
+            // You can only increase up to the total amount you reduced elsewhere.
+            let isOverBudget = false;
+            // Use 0.05 buffer for float precision
+            if ((grandIncrease - grandReduce) > 0.05) {
+                isValid = false;
+                isOverBudget = true;
+            }
+
             if (!isValid) {
+                if (isOverBudget) {
+                    errText.textContent = "ຍອດລວມຂອງ 'ແຜນດັດແກ້ເພີ່ມ' ຕ້ອງບໍ່ໃຫ້ເກີນກວ່າ ຍອດລວມຂອງ 'ແຜນດັດແກ້ຫຼຸດ'!";
+                } else {
+                    errText.textContent = "ຜົນລວມຂອງ ແຜນງວດ 3 + ແຜນງວດ 4 ຕ້ອງເທົ່າກັບ ແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ ສຳລັບລາຍການທີ່ຖຶກໃສ່ສີແດງ!";
+                }
+                
                 errBox.classList.remove('hidden');
                 saveBtn.disabled = true;
                 saveBtn.classList.add('opacity-50', 'cursor-not-allowed');

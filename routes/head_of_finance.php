@@ -58,4 +58,9 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('budget-installment/{budgetPlan}', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'show'])->name('budget-installment.show');
         Route::get('budget-installment/{budgetPlan}/preview', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'preview'])->name('budget-installment.preview');
         Route::post('budget-installment/{budgetPlan}/save', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'save'])->name('budget-installment.save');
+        
+        // Budget Period Installments 3-4
+        Route::get('budget-installment-34/{budgetPlan}', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'show34'])->name('budget-installment-34.show');
+        Route::get('budget-installment-34/{budgetPlan}/preview', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'preview34'])->name('budget-installment-34.preview');
+        Route::post('budget-installment-34/{budgetPlan}/save', [\App\Http\Controllers\HeadOfFinance\BudgetInstallmentController::class, 'save34'])->name('budget-installment-34.save');
     });

@@ -40,8 +40,81 @@ class BudgetInstallmentController extends Controller
     }
 
     /**
-     * Show the official document preview for the budget installment.
+     * Show the detailed allocation table for period 3 & 4.
      */
+    public function show34(BudgetPlan $budgetPlan)
+    {
+        if ($budgetPlan->status !== 'APPROVED') {
+            return redirect()->route('head_of_finance.budget-installment.index')
+                ->with('error', 'ສາມາດຈັດການແຜນງວດໄດ້ສະເພາະແຜນທີ່ອະນຸມັດແລ້ວເທົ່ານັ້ນ');
+        }
+
+        $budgetPlan->load(['lineItems.account', 'lineItems.periodAllocations']);
+        
+        $synthesizedItems = $this->synthesizeTreeAndRollUp($budgetPlan->lineItems);
+        $budgetPlan->setRelation('lineItems', $synthesizedItems);
+
+        return view('head_of_finance.budget-installment.show34', compact('budgetPlan'));
+    }
+
+    /**
+     * Save the period 3 & 4 allocations.
+     */
+    public function save34(Request $request, BudgetPlan $budgetPlan)
+    {
+        if ($budgetPlan->status !== 'APPROVED') {
+            return back()->with('error', 'ສາມາດຈັດການແຜນງວດໄດ້ສະເພາະແຜນທີ່ອະນຸມັດແລ້ວເທົ່ານັ້ນ');
+        }
+
+        $request->validate([
+            'allocations' => 'array',
+            'allocations.*.reduce' => 'nullable|numeric|min:0',
+            'allocations.*.increase' => 'nullable|numeric|min:0',
+            'allocations.*.period_3' => 'nullable|numeric|min:0',
+            'allocations.*.period_4' => 'nullable|numeric|min:0',
+        ]);
+
+        $allocationsList = $request->input('allocations', []);
+
+        DB::transaction(function () use ($allocationsList) {
+            foreach ($allocationsList as $lineItemId => $amounts) {
+                // We use standard period names for saving these custom values
+                $fields = [
+                    'ດັດແກ້ຫຼຸດ' => empty($amounts['reduce']) ? 0 : (float)$amounts['reduce'],
+                    'ດັດແກ້ເພີ່ມ' => empty($amounts['increase']) ? 0 : (float)$amounts['increase'],
+                    'ງວດ3' => empty($amounts['period_3']) ? 0 : (float)$amounts['period_3'],
+                    'ງວດ4' => empty($amounts['period_4']) ? 0 : (float)$amounts['period_4'],
+                ];
+
+                foreach ($fields as $periodName => $val) {
+                    BudgetPeriodAllocation::updateOrCreate(
+                        [
+                            'budget_line_item_id' => $lineItemId,
+                            'period_name' => $periodName,
+                        ],
+                        [
+                            'allocated_amount' => $val,
+                        ]
+                    );
+                }
+            }
+        });
+
+        return back()->with('success', 'ບັນທຶກແຜນງວດ 3-4 ແລະການດັດແກ້ສຳເລັດ!');
+    }
+
+    /**
+     * Show the official document preview for period 3 & 4.
+     */
+    public function preview34(BudgetPlan $budgetPlan)
+    {
+        $budgetPlan->load(['lineItems.account', 'lineItems.periodAllocations']);
+        $synthesizedItems = $this->synthesizeTreeAndRollUp($budgetPlan->lineItems);
+        $budgetPlan->setRelation('lineItems', $synthesizedItems);
+        return view('head_of_finance.budget-installment.preview34', compact('budgetPlan'));
+    }
+
+    /**
     public function preview(BudgetPlan $budgetPlan)
     {
         if ($budgetPlan->status !== 'APPROVED') {
@@ -124,14 +197,30 @@ class BudgetInstallmentController extends Controller
         foreach ($lineItems as $item) {
             $palloc1 = $item->periodAllocations->where('period_name', 'ງວດ1')->first();
             $palloc2 = $item->periodAllocations->where('period_name', 'ງວດ2')->first();
+            $pallocReduce = $item->periodAllocations->where('period_name', 'ດັດແກ້ຫຼຸດ')->first();
+            $pallocIncrease = $item->periodAllocations->where('period_name', 'ດັດແກ້ເພີ່ມ')->first();
+            $palloc3 = $item->periodAllocations->where('period_name', 'ງວດ3')->first();
+            $palloc4 = $item->periodAllocations->where('period_name', 'ງວດ4')->first();
             
             $annual = ($item->amount_regular ?? 0) + ($item->amount_academic ?? 0);
+            
+            $p1 = $palloc1 ? $palloc1->allocated_amount : ($annual / 4);
+            $p2 = $palloc2 ? $palloc2->allocated_amount : ($annual / 4);
+            $plan6M = $annual - $p1 - $p2;
+            
+            $reduce = $pallocReduce ? $pallocReduce->allocated_amount : 0;
+            $increase = $pallocIncrease ? $pallocIncrease->allocated_amount : 0;
+            $revised6M = $plan6M - $reduce + $increase;
 
             $aggregated[$item->account_id] = [
                 'amount_regular' => $item->amount_regular,
                 'amount_academic' => $item->amount_academic,
-                'period_1' => $palloc1 ? $palloc1->allocated_amount : ($annual / 4),
-                'period_2' => $palloc2 ? $palloc2->allocated_amount : ($annual / 4),
+                'period_1' => $p1,
+                'period_2' => $p2,
+                'reduce' => $reduce,
+                'increase' => $increase,
+                'period_3' => $palloc3 ? $palloc3->allocated_amount : ($revised6M / 2),
+                'period_4' => $palloc4 ? $palloc4->allocated_amount : ($revised6M / 2),
                 'original_item' => $item,
             ];
         }
@@ -141,19 +230,24 @@ class BudgetInstallmentController extends Controller
             $acad = $aggregated[$accountId]['amount_academic'] ?? 0;
             $p1 = $aggregated[$accountId]['period_1'] ?? 0;
             $p2 = $aggregated[$accountId]['period_2'] ?? 0;
+            $reduce = $aggregated[$accountId]['reduce'] ?? 0;
+            $increase = $aggregated[$accountId]['increase'] ?? 0;
+            $p3 = $aggregated[$accountId]['period_3'] ?? 0;
+            $p4 = $aggregated[$accountId]['period_4'] ?? 0;
             $hasItems = isset($aggregated[$accountId]['original_item']);
 
             if (isset($childrenMap[$accountId])) {
-                $reg = 0;
-                $acad = 0;
-                $p1 = 0;
-                $p2 = 0;
+                $reg = 0; $acad = 0; $p1 = 0; $p2 = 0; $reduce = 0; $increase = 0; $p3 = 0; $p4 = 0;
                 foreach ($childrenMap[$accountId] as $childId) {
                     $childSums = $computeSum($childId);
                     $reg += $childSums['reg'];
                     $acad += $childSums['acad'];
                     $p1 += $childSums['p1'];
                     $p2 += $childSums['p2'];
+                    $reduce += $childSums['reduce'];
+                    $increase += $childSums['increase'];
+                    $p3 += $childSums['p3'];
+                    $p4 += $childSums['p4'];
                     if ($childSums['hasItems']) {
                         $hasItems = true;
                     }
@@ -162,10 +256,14 @@ class BudgetInstallmentController extends Controller
                 $aggregated[$accountId]['amount_academic'] = $acad;
                 $aggregated[$accountId]['period_1'] = $p1;
                 $aggregated[$accountId]['period_2'] = $p2;
+                $aggregated[$accountId]['reduce'] = $reduce;
+                $aggregated[$accountId]['increase'] = $increase;
+                $aggregated[$accountId]['period_3'] = $p3;
+                $aggregated[$accountId]['period_4'] = $p4;
             }
 
             $aggregated[$accountId]['should_render'] = $hasItems || $reg > 0 || $acad > 0;
-            return ['reg' => $reg, 'acad' => $acad, 'p1' => $p1, 'p2' => $p2, 'hasItems' => $hasItems];
+            return ['reg' => $reg, 'acad' => $acad, 'p1' => $p1, 'p2' => $p2, 'reduce' => $reduce, 'increase' => $increase, 'p3' => $p3, 'p4' => $p4, 'hasItems' => $hasItems];
         };
 
         $roots = $allAccounts->whereNull('parent_id');
@@ -182,10 +280,10 @@ class BudgetInstallmentController extends Controller
                 $acad = $aggregated[$acc->id]['amount_academic'] ?? 0;
                 $p1 = $aggregated[$acc->id]['period_1'] ?? 0;
                 $p2 = $aggregated[$acc->id]['period_2'] ?? 0;
-                
-                // Fallback for period reads below
-                $p1Value = $aggregated[$acc->id]['period_1'] ?? 0;
-                $p2Value = $aggregated[$acc->id]['period_2'] ?? 0;
+                $reduce = $aggregated[$acc->id]['reduce'] ?? 0;
+                $increase = $aggregated[$acc->id]['increase'] ?? 0;
+                $p3 = $aggregated[$acc->id]['period_3'] ?? 0;
+                $p4 = $aggregated[$acc->id]['period_4'] ?? 0;
                 
                 $isParent = isset($childrenMap[$acc->id]);
 
@@ -193,8 +291,12 @@ class BudgetInstallmentController extends Controller
                     $item = $aggregated[$acc->id]['original_item'];
                     $item->amount_regular = $reg;
                     $item->amount_academic = $acad;
-                    $item->period_1_amount = $p1Value;
-                    $item->period_2_amount = $p2Value;
+                    $item->period_1_amount = $p1;
+                    $item->period_2_amount = $p2;
+                    $item->reduce_amount = $reduce;
+                    $item->increase_amount = $increase;
+                    $item->period_3_amount = $p3;
+                    $item->period_4_amount = $p4;
                     $item->is_parent = $isParent;
                     $item->setRelation('account', $acc);
                     $syntheticItems->push($item);
@@ -204,8 +306,12 @@ class BudgetInstallmentController extends Controller
                         'amount_regular' => $reg,
                         'amount_academic' => $acad,
                     ]);
-                    $syntheticItem->period_1_amount = $p1Value;
-                    $syntheticItem->period_2_amount = $p2Value;
+                    $syntheticItem->period_1_amount = $p1;
+                    $syntheticItem->period_2_amount = $p2;
+                    $syntheticItem->reduce_amount = $reduce;
+                    $syntheticItem->increase_amount = $increase;
+                    $syntheticItem->period_3_amount = $p3;
+                    $syntheticItem->period_4_amount = $p4;
                     $syntheticItem->is_parent = $isParent;
                     $syntheticItem->setRelation('account', $acc);
                     $syntheticItems->push($syntheticItem);

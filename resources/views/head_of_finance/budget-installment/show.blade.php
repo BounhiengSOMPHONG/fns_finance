@@ -19,8 +19,22 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
-            ພາບລວມ
+            ພາບລວມ 1-2
         </a>
+    </div>
+
+    {{-- Tabs ─────────────────────────────────────────────────────────── --}}
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex gap-6">
+            <a href="{{ route('head_of_finance.budget-installment.show', $budgetPlan) }}"
+                class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium border-blue-500 text-blue-600">
+                ແຜນງວດ 1 ແລະ 2
+            </a>
+            <a href="{{ route('head_of_finance.budget-installment-34.show', $budgetPlan) }}"
+                class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                ແຜນງວດ 3 ແລະ 4
+            </a>
+        </nav>
     </div>
 
     <div class="bg-white rounded-lg shadow-sm overflow-hidden p-6 w-full max-w-[1400px] mx-auto">

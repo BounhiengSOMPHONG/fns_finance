@@ -261,7 +261,7 @@
                 <tr class="{{ $rowClass }}">
                     <td class="col-code">{{ $code ?: '-' }}</td>
                     <td class="col-name">
-                        @if($rowType === 'detail')- @endif{{ $item->account->account_name ?? '-' }}
+                        @if(!$item->is_parent)- @endif{{ $item->account->account_name ?? '-' }}
                     </td>
                     <td class="col-number">{{ formatLaoNumber($itemLuam) }}</td>
                     <td class="col-number">{{ formatLaoNumber($item->amount_regular ?? 0) }}</td>

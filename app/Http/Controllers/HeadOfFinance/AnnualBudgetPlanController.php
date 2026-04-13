@@ -76,14 +76,14 @@ class AnnualBudgetPlanController extends Controller
     public function preview(BudgetPlan $annualBudget)
     {
         $annualBudget->load(['lineItems.account']);
-        $annualBudget->setRelation('lineItems', $this->sortLineItemsHierarchically($annualBudget->lineItems));
+        $annualBudget->setRelation('lineItems', $this->synthesizeTreeAndRollUp($annualBudget->lineItems));
         return view('head_of_finance.annual-budget.preview', compact('annualBudget'));
     }
 
     public function exportPdf(BudgetPlan $annualBudget)
     {
         $annualBudget->load(['lineItems.account', 'lineItems.periodAllocations']);
-        $annualBudget->setRelation('lineItems', $this->sortLineItemsHierarchically($annualBudget->lineItems));
+        $annualBudget->setRelation('lineItems', $this->synthesizeTreeAndRollUp($annualBudget->lineItems));
 
         $html = view('head_of_finance.annual-budget.pdf', compact('annualBudget'))->render();
 

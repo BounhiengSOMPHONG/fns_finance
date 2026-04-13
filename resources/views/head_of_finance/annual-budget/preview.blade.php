@@ -141,7 +141,7 @@
                         <tr class="{{ $trClass }}">
                             <td class="border border-gray-400 px-3 py-1.5 text-center font-mono text-xs">{{ $code ?: '-' }}</td>
                             <td class="border border-gray-400 px-3 py-1.5">
-                                @if($rowType === 'detail')- @endif{{ $item->account->account_name ?? '-' }}
+                                @if(!$item->is_parent) - @endif{{ $item->account->account_name ?? '-' }}
                             </td>
                             <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
                                 {{ previewFormatNumber($itemLuam) }}</td>

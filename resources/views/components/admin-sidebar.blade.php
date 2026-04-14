@@ -120,6 +120,17 @@
 
                 @can ("head_of_faculty")
                 <div class="space-y-1 mt-4">
+                    <a href="{{ route('head_of_faculty.home') }}"
+                        class="{{ request()->routeIs('head_of_faculty.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-purple-100 text-purple-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-6 mr-2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                        </svg>
+                        ພາບລວມງົບປະມານ
+                    </a>
                     <a href="{{ route('head_of_faculty.annual-budget.index') }}"
                         class="{{ request()->routeIs('head_of_faculty.annual-budget.*') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"

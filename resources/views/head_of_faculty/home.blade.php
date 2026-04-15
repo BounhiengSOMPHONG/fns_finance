@@ -139,7 +139,7 @@
         </div>
     </section>
 
-    <section class="grid gap-6 xl:grid-cols-2">
+    <section class="grid gap-6">
         <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <header class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                 <h3 class="flex items-center gap-2 text-sm font-bold text-slate-700">
@@ -176,58 +176,6 @@
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p class="text-sm text-slate-400">ບໍ່ມີແຜນທີ່ລໍຖ້າອະນຸມັດ</p>
-                    </div>
-                @endforelse
-            </div>
-        </article>
-
-        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <header class="border-b border-slate-100 px-6 py-4">
-                <h3 class="flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    ການເຄື່ອນໄຫວຫຼ້າສຸດ (ເບີກເງິນ)
-                </h3>
-            </header>
-
-            <div>
-                @forelse($recentAdvances as $adv)
-                    @php
-                        $statusClass = match($adv->status) {
-                            'pending' => 'bg-amber-100 text-amber-800',
-                            'approved' => 'bg-blue-100 text-blue-800',
-                            'cleared' => 'bg-emerald-100 text-emerald-700',
-                            'rejected' => 'bg-red-100 text-red-700',
-                            default => 'bg-slate-100 text-slate-700',
-                        };
-
-                        $statusLabel = match($adv->status) {
-                            'pending' => 'ລໍຖ້າ',
-                            'approved' => 'ອະນຸມັດ',
-                            'cleared' => 'ສຳເລັດ',
-                            'rejected' => 'ປະຕິເສດ',
-                            default => $adv->status,
-                        };
-                    @endphp
-                    <div class="border-b border-slate-100 px-6 py-4 transition hover:bg-slate-50 last:border-b-0">
-                        <div class="mb-1 flex items-center justify-between gap-3">
-                            <p class="text-sm font-medium text-slate-800">{{ $adv->description ?: 'ການເບີກເງິນ #' . $adv->id }}</p>
-                            <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClass }}">{{ $statusLabel }}</span>
-                        </div>
-                        <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>{{ $adv->requester_name ?? '-' }} · {{ $adv->department_name ?? '-' }}</span>
-                            <span class="font-mono tabular-nums text-slate-600">{{ number_format($adv->requested_amount, 2) }}</span>
-                        </div>
-                    </div>
-                @empty
-                    <div class="px-6 py-10 text-center">
-                        <svg class="mx-auto mb-2 h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                        </svg>
-                        <p class="text-sm text-slate-400">ຍັງບໍ່ມີການເຄື່ອນໄຫວ</p>
                     </div>
                 @endforelse
             </div>

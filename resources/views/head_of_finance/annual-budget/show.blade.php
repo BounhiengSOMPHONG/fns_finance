@@ -135,20 +135,20 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm border-collapse">
                 <thead>
-                    <tr class="bg-orange-400 text-white text-center">
-                        <th class="border border-orange-300 px-3 py-2 w-32">ພາກ.ພາກສ່ວນ.</th>
-                        <th class="border border-orange-300 px-3 py-2">ເນື້ອໃນ</th>
-                        <th colspan="3" class="border border-orange-300 px-3 py-2">ແຜນປີ {{ $annualBudget->fiscal_year }}
+                    <tr class="bg-blue-600 text-white text-center">
+                        <th class="border border-blue-500 px-3 py-2 w-32">ພາກ.ພາກສ່ວນ.</th>
+                        <th class="border border-blue-500 px-3 py-2">ເນື້ອໃນ</th>
+                        <th colspan="3" class="border border-blue-500 px-3 py-2">ແຜນປີ {{ $annualBudget->fiscal_year }}
                         </th>
-                        <th rowspan="2" class="border border-orange-300 px-3 py-2 w-24">ການດໍາ<br>ເນີນງານ</th>
+                        <th rowspan="2" class="border border-blue-500 px-3 py-2 w-24">ການດໍາ<br>ເນີນງານ</th>
                     </tr>
-                    <tr class="bg-orange-400 text-white text-center">
-                        <th class="border border-orange-300 px-3 py-2 text-xs">ຮ່ວງ.ລູກຮ່ວງ</th>
-                        <th class="border border-orange-300 px-3 py-2">ລາຍການຈ່າຍ</th>
-                        <th class="border border-orange-300 px-3 py-2 text-xs font-bold">ແຜນລວມ<br><span
+                    <tr class="bg-blue-600 text-white text-center">
+                        <th class="border border-blue-500 px-3 py-2 text-xs">ຮ່ວງ.ລູກຮ່ວງ</th>
+                        <th class="border border-blue-500 px-3 py-2">ລາຍການຈ່າຍ</th>
+                        <th class="border border-blue-500 px-3 py-2 text-xs font-bold">ແຜນລວມ<br><span
                                 class="font-normal">(6)</span></th>
-                        <th class="border border-orange-300 px-3 py-2 text-xs">ງົບປະມານ<br>ປົກກະຕິ (7)</th>
-                        <th class="border border-orange-300 px-3 py-2 text-xs">ງົບປະມານ<br>ວິຊາການ (8=6-7)</th>
+                        <th class="border border-blue-500 px-3 py-2 text-xs">ງົບປະມານ<br>ປົກກະຕິ (7)</th>
+                        <th class="border border-blue-500 px-3 py-2 text-xs">ງົບປະມານ<br>ວິຊາການ (8=6-7)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -218,21 +218,21 @@
 
                     {{-- Totals row --}}
                     @if ($annualBudget->lineItems->count() > 0)
-                        <tr class="bg-orange-100 font-bold">
-                            <td colspan="2" class="border border-orange-200 px-4 py-2 text-right">ລວມທັງໝົດ</td>
+                        <tr class="bg-blue-50 font-bold">
+                            <td colspan="2" class="border border-blue-200 px-4 py-2 text-right">ລວມທັງໝົດ</td>
                             {{-- ຄໍ 6: ແຜນລວມ --}}
-                            <td class="border border-orange-200 px-3 py-2 text-right tabular-nums text-blue-800">
+                            <td class="border border-blue-200 px-3 py-2 text-right tabular-nums text-blue-800">
                                 {{ number_format($totalLuam, 2) }}
                             </td>
                             {{-- ຄໍ 7: ງົບປົກກະຕິ --}}
-                            <td class="border border-orange-200 px-3 py-2 text-right tabular-nums text-orange-800">
+                            <td class="border border-blue-200 px-3 py-2 text-right tabular-nums text-blue-800">
                                 {{ number_format($totalRegular, 2) }}
                             </td>
                             {{-- ຄໍ 8: ງົບວິຊາການ --}}
-                            <td class="border border-orange-200 px-3 py-2 text-right tabular-nums text-orange-800">
+                            <td class="border border-blue-200 px-3 py-2 text-right tabular-nums text-blue-800">
                                 {{ number_format($totalAcademic, 2) }}
                             </td>
-                            <td class="border border-orange-200"></td>
+                            <td class="border border-blue-200"></td>
                         </tr>
                     @endif
                 </tbody>

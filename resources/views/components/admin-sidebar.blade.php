@@ -1,17 +1,34 @@
 <aside id="admin-sidebar" class="w-64 bg-white border-r min-h-screen md:sticky md:top-0">
     <nav class="p-4 space-y-4">
         <!-- Dashboard Section -->
-        <!-- <div class="space-y-1">
-            <a href="#" {{-- <a href="{{ route('admin.index') }}" --}}
-                class="{{ request()->routeIs('admin.index') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+        <div class="space-y-1">
+            @if (auth()->user()->role?->role_name === 'admin')
+                <a href="{{ route('admin.home') }}"
+                    class="{{ request()->routeIs('admin.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+            @elseif (auth()->user()->role?->role_name === 'head_of_finance')
+                <a href="{{ route('head_of_finance.home') }}"
+                    class="{{ request()->routeIs('head_of_finance.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+            @elseif (auth()->user()->role?->role_name === 'head_of_department')
+                <a href="{{ route('head_of_department.home') }}"
+                    class="{{ request()->routeIs('head_of_department.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+            @elseif (auth()->user()->role?->role_name === 'deputy_head_of_faculty')
+                <a href="{{ route('deputy_head_of_faculty.home') }}"
+                    class="{{ request()->routeIs('deputy_head_of_faculty.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+            @elseif (auth()->user()->role?->role_name === 'head_of_faculty')
+                <a href="{{ route('head_of_faculty.home') }}"
+                    class="{{ request()->routeIs('head_of_faculty.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+            @else
+                <a href="{{ route('accountant.home') }}"
+                    class="{{ request()->routeIs('accountant.home') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">
+            @endif
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
                 </svg>
-                ແດຊບອດ
+                Dashboard
             </a>
-        </div> -->
+        </div>
 
         <!-- Divider Line -->
         <hr class="border-gray-200">

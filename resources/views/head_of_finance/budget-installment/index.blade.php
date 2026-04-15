@@ -7,7 +7,7 @@
     <div class="bg-white rounded-lg shadow-sm w-full">
         <div class="p-6 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-800">ລາຍການແຜນງົບປະມານທີ່ອະນຸມັດແລ້ວ (ສຳລັບຈັດສັນງວດ)</h2>
-            <p class="text-sm text-gray-500 mt-1">ເລືອກແຜນງົບປະມານປະຈຳປີເພື່ອແບ່ງງົບປະມານເປັນແຜນງວດ 1 ແລະ ແຜນງວດ 2</p>
+            <p class="text-sm text-gray-500 mt-1">ເລືອກແຜນງົບປະມານປະຈຳປີເພື່ອແບ່ງງົບປະມານເປັນແຜນງວດ</p>
         </div>
 
         <div class="overflow-x-auto">

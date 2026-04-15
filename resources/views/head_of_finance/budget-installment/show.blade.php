@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'ແຜນງວດງົບປະມານ ' . $budgetPlan->fiscal_year)
-@section('page-title', 'ແຜນງວດງົບປະມານປະຈຳປີ ' . $budgetPlan->fiscal_year)
+@section('page-title', 'ແຜນງວດງົບປະມານປະຈຳປີ (ງວດ 1 ແລະ 2)  ' . $budgetPlan->fiscal_year)
 
 @section('content')
 
@@ -42,7 +42,7 @@
             <h2 class="text-xl font-bold text-gray-900">
                 ຕາຕະລາງແຜນງວດງົບປະມານປະຈຳປີ {{ $budgetPlan->fiscal_year }}
             </h2>
-            <p class="text-sm text-gray-500 mt-1">ກະລຸນາໃສ່ຈຳນວນເງິນແຜນງວດ 1 ແລະ ແຜນງວດ 2 (ແຜນງວດ = ງົບປົກກະຕິ + ງົບວິຊາການ)</p>
+            <p class="text-sm text-gray-500 mt-1">ກະລຸນາໃສ່ຈຳນວນເງິນແຜນງວດ 1 ແລະ ແຜນງວດ 2</p>
         </div>
 
         @php

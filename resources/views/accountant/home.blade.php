@@ -1,15 +1,20 @@
-<x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h1 class="text-2xl font-bold text-green-600 mb-2">📊 Accountant Dashboard</h1>
-                <p class="text-gray-600">Welcome, <strong>{{ auth()->user()->full_name }}</strong></p>
-                <p class="mt-2">Role: <span
-                        class="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-semibold">{{ auth()->user()->role?->role_name }}</span>
-                </p>
-                <hr class="my-4">
-                <p class="text-gray-500 text-sm">You can manage transactions, receipts, and financial records here.</p>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+@extends('layouts.admin')
+
+@section('title', 'Dashboard ນັກບັນຊີ')
+@section('page-title', 'ແດຊບອດນັກບັນຊີ')
+
+@section('content')
+<div class="space-y-6">
+    <section class="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-600 to-green-500 p-6 text-white shadow-sm">
+        <p class="text-sm text-emerald-100">ຍິນດີຕ້ອນຮັບ</p>
+        <h2 class="mt-1 text-2xl font-semibold">{{ auth()->user()->full_name }}</h2>
+        <p class="mt-2 text-sm text-emerald-50">ສ່ວນງານນີ້ເຕີມໂຕໄດ້ຕໍ່ໃນຂັ້ນຕໍ່ໄປສຳລັບທຸລະກຳ ແລະ ບັນຊີລາຍວັນ.</p>
+    </section>
+
+    <section class="rounded-2xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Coming Soon</p>
+        <h3 class="mt-1 text-lg font-semibold text-slate-900">ຟີເຈີ Accountant ກຳລັງພັດທະນາ</h3>
+        <p class="mt-2 text-sm text-slate-600">ໃນຮອບຕໍ່ໄປຈະເພີ່ມລະບົບບັນທຶກທຸລະກຳ, ການແນບເອກະສານ, ແລະ ການກະທົບຍອດເງິນ.</p>
+    </section>
+</div>
+@endsection

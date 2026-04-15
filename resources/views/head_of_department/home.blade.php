@@ -1,15 +1,23 @@
-<x-app-layout>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h1 class="text-2xl font-bold text-blue-600 mb-2">🏛️ Head of Department Dashboard</h1>
-                <p class="text-gray-600">Welcome, <strong>{{ auth()->user()->full_name }}</strong></p>
-                <p class="mt-2">Role: <span
-                        class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-semibold">{{ auth()->user()->role?->role_name }}</span>
-                </p>
-                <hr class="my-4">
-                <p class="text-gray-500 text-sm">You can review and manage department-level requests here.</p>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+@extends('layouts.admin')
+
+@section('title', 'Dashboard ຫົວໜ້າພາກສ່ວນ')
+@section('page-title', 'ແດຊບອດຫົວໜ້າພາກສ່ວນ')
+
+@section('content')
+<div class="space-y-6">
+    <section class="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-600 to-blue-500 p-6 text-white shadow-sm">
+        <p class="text-sm text-indigo-100">ຍິນດີຕ້ອນຮັບ</p>
+        <h2 class="mt-1 text-2xl font-semibold">{{ auth()->user()->full_name }}</h2>
+        <p class="mt-2 text-sm text-indigo-50">ກວດສອບ ແລະ ໃຫ້ຄຳເຫັນຕໍ່ແຜນງົບປະມານທີ່ຖືກມອບໝາຍ.</p>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Assigned Reviews</p>
+        <p class="mt-2 text-lg font-semibold text-slate-900">ລາຍການແຜນງົບທີ່ຕ້ອງກວດສອບ</p>
+        <p class="mt-2 text-sm text-slate-600">ເຂົ້າໄປກວດສອບຂໍ້ມູນ ແລະ ບັນທຶກຄຳເຫັນໄດ້ທັນທີ.</p>
+        <a href="{{ route('head_of_department.annual-budget.index') }}" class="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            ເປີດລາຍການກວດສອບ
+        </a>
+    </section>
+</div>
+@endsection

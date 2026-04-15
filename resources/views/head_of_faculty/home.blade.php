@@ -4,239 +4,234 @@
 @section('page-title', 'Dashboard ຫົວໜ້າຄະນະ')
 
 @section('content')
+@php
+    $usedPercent = $totalBudget > 0 ? (($totalCommitted + $totalSpent) / $totalBudget) * 100 : 0;
+    $spentPercent = $totalBudget > 0 ? ($totalSpent / $totalBudget) * 100 : 0;
+    $committedPercent = $totalBudget > 0 ? ($totalCommitted / $totalBudget) * 100 : 0;
 
-    {{-- ── Welcome Banner ──────────────────────────────────────────── --}}
-    <div class="relative overflow-hidden rounded-2xl text-white p-8 mb-8"
-        style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);">
-        <div class="absolute -top-10 -right-10 w-52 h-52 rounded-full" style="background: rgba(255,255,255,0.08); filter: blur(40px);"></div>
-        <div class="absolute -bottom-16 -left-16 w-64 h-64 rounded-full" style="background: rgba(255,255,255,0.05); filter: blur(60px);"></div>
-        <div class="relative flex items-center justify-between" style="z-index: 2;">
+    $spentBar = min($spentPercent, 100);
+    $committedBar = min($committedPercent, max(0, 100 - $spentBar));
+    $remainingPercent = max(100 - $usedPercent, 0);
+@endphp
+
+<div class="space-y-8">
+    <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 p-6 text-white shadow-lg sm:p-8">
+        <div class="absolute -top-14 -right-10 h-56 w-56 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-12 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
+
+        <div class="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-bold mb-1">🎓 ສະບາຍດີ, {{ auth()->user()->full_name }}</h1>
-                <p style="color: rgba(255,255,255,0.8);" class="text-sm">ພາບລວມການນຳໃຊ້ງົບປະມານ ປະຈຳປີ {{ $fiscalYear }}</p>
+                <h1 class="text-2xl font-bold">ສະບາຍດີ, {{ auth()->user()->full_name }}</h1>
+                <p class="mt-1 text-sm text-white/80">ພາບລວມການນຳໃຊ້ງົບປະມານ ປະຈຳປີ {{ $fiscalYear }}</p>
             </div>
-            <div class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px);">
-                <svg class="w-5 h-5" style="color: rgba(255,255,255,0.8);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            <div class="hidden items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur sm:inline-flex">
+                <svg class="h-5 w-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span class="text-sm font-medium">{{ now()->format('d/m/Y') }}</span>
+                <span>{{ now()->format('d/m/Y') }}</span>
             </div>
         </div>
-    </div>
+    </section>
 
-    {{-- ── 4 Metric Cards ──────────────────────────────────────────── --}}
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-
-        {{-- 1. ຍອດງົບປະມານ --}}
-        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-            <div style="height: 4px; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+    <section class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="h-1.5 bg-gradient-to-r from-blue-500 to-sky-400"></div>
             <div class="p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex items-center justify-center" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 12px rgba(59,130,246,0.3);">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-200">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400" style="letter-spacing: 0.05em; text-transform: uppercase;">ຍອດງົບປະມານ</p>
-                    </div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">ຍອດງົບປະມານ</p>
                 </div>
-                <p class="text-2xl font-bold text-gray-900" style="font-variant-numeric: tabular-nums;">{{ number_format($totalBudget, 2) }}</p>
-                <p class="text-xs text-gray-400 mt-2">ແຜນງົບປະມານທີ່ອະນຸມັດ (ລ້ານກີບ)</p>
+                <p class="text-2xl font-bold tabular-nums text-slate-900">{{ number_format($totalBudget, 2) }}</p>
+                <p class="mt-2 text-xs text-slate-400">ແຜນງົບປະມານທີ່ອະນຸມັດ</p>
             </div>
-        </div>
+        </article>
 
-        {{-- 2. ຍອດຜູກພັນ --}}
-        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-            <div style="height: 4px; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="h-1.5 bg-gradient-to-r from-amber-500 to-yellow-400"></div>
             <div class="p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex items-center justify-center" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 12px rgba(245,158,11,0.3);">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 shadow-md shadow-amber-200">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400" style="letter-spacing: 0.05em; text-transform: uppercase;">ຍອດຜູກພັນ</p>
-                    </div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">ຍອດຜູກພັນ</p>
                 </div>
-                <p class="text-2xl font-bold" style="color: #d97706; font-variant-numeric: tabular-nums;">{{ number_format($totalCommitted, 2) }}</p>
-                <p class="text-xs text-gray-400 mt-2">ກຳລັງດຳເນີນການ / ຍັງບໍ່ທັນຈ່າຍ</p>
+                <p class="text-2xl font-bold tabular-nums text-amber-600">{{ number_format($totalCommitted, 2) }}</p>
+                <p class="mt-2 text-xs text-slate-400">ກຳລັງດຳເນີນການ / ຍັງບໍ່ທັນຈ່າຍ</p>
             </div>
-        </div>
+        </article>
 
-        {{-- 3. ຍອດໃຊ້ຈ່າຍຈິງ --}}
-        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-            <div style="height: 4px; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="h-1.5 bg-gradient-to-r from-rose-500 to-red-400"></div>
             <div class="p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex items-center justify-center" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239,68,68,0.3);">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-700 shadow-md shadow-rose-200">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400" style="letter-spacing: 0.05em; text-transform: uppercase;">ຍອດໃຊ້ຈ່າຍຈິງ</p>
-                    </div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">ຍອດໃຊ້ຈ່າຍຈິງ</p>
                 </div>
-                <p class="text-2xl font-bold" style="color: #dc2626; font-variant-numeric: tabular-nums;">{{ number_format($totalSpent, 2) }}</p>
-                <p class="text-xs text-gray-400 mt-2">ທຸລະກຳ + ການເບີກທີ່ cleared ແລ້ວ</p>
+                <p class="text-2xl font-bold tabular-nums text-red-600">{{ number_format($totalSpent, 2) }}</p>
+                <p class="mt-2 text-xs text-slate-400">ທຸລະກຳ + ການເບີກທີ່ cleared ແລ້ວ</p>
             </div>
-        </div>
+        </article>
 
-        {{-- 4. ຍອດຄົງເຫຼືອ --}}
-        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-            <div style="height: 4px; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="h-1.5 bg-gradient-to-r from-emerald-500 to-green-400"></div>
             <div class="p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="flex items-center justify-center" style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-md shadow-emerald-200">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400" style="letter-spacing: 0.05em; text-transform: uppercase;">ຍອດຄົງເຫຼືອ</p>
-                    </div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">ຍອດຄົງເຫຼືອ</p>
                 </div>
-                <p class="text-2xl font-bold" style="color: {{ $totalRemaining >= 0 ? '#059669' : '#dc2626' }}; font-variant-numeric: tabular-nums;">{{ number_format($totalRemaining, 2) }}</p>
-                <p class="text-xs text-gray-400 mt-2">ງົບປະມານ - ຜູກພັນ - ໃຊ້ຈ່າຍຈິງ</p>
+                <p class="text-2xl font-bold tabular-nums {{ $totalRemaining >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                    {{ number_format($totalRemaining, 2) }}
+                </p>
+                <p class="mt-2 text-xs text-slate-400">ງົບປະມານ - ຜູກພັນ - ໃຊ້ຈ່າຍຈິງ</p>
             </div>
-        </div>
-    </div>
+        </article>
+    </section>
 
-    {{-- ── Budget Utilization Progress ──────────────────────────────── --}}
-    @php
-        $usedPercent = $totalBudget > 0 ? (($totalCommitted + $totalSpent) / $totalBudget) * 100 : 0;
-        $spentPercent = $totalBudget > 0 ? ($totalSpent / $totalBudget) * 100 : 0;
-        $committedPercent = $totalBudget > 0 ? ($totalCommitted / $totalBudget) * 100 : 0;
-    @endphp
-    <div class="bg-white rounded-2xl p-6 mb-8" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-        <h2 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5" style="color: #6366f1;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-700">
+            <svg class="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             ອັດຕາການນຳໃຊ້ງົບປະມານ
         </h2>
 
-        {{-- Stacked progress bar --}}
-        <div class="relative rounded-full overflow-hidden mb-3" style="height: 20px; background: #f3f4f6;">
-            <div class="absolute top-0 left-0 h-full rounded-l-full" style="width: {{ min($spentPercent, 100) }}%; background: linear-gradient(90deg, #ef4444, #f87171); transition: width 0.7s;"></div>
-            <div class="absolute top-0 h-full" style="left: {{ min($spentPercent, 100) }}%; width: {{ min($committedPercent, 100 - min($spentPercent, 100)) }}%; background: linear-gradient(90deg, #fbbf24, #f59e0b); transition: width 0.7s;"></div>
+        <div class="relative mb-3 h-5 overflow-hidden rounded-full bg-slate-100">
+            <div class="absolute inset-y-0 left-0 rounded-l-full bg-gradient-to-r from-rose-500 to-red-400 transition-all duration-700"
+                style="width: {{ $spentBar }}%;"></div>
+            <div class="absolute inset-y-0 bg-gradient-to-r from-amber-300 to-amber-500 transition-all duration-700"
+                style="left: {{ $spentBar }}%; width: {{ $committedBar }}%;"></div>
         </div>
 
-        <div class="flex flex-wrap gap-6 text-xs text-gray-600">
+        <div class="flex flex-wrap gap-6 text-xs text-slate-600">
             <div class="flex items-center gap-2">
-                <span class="inline-block rounded-full" style="width: 12px; height: 12px; background: #ef4444;"></span>
+                <span class="h-3 w-3 rounded-full bg-rose-500"></span>
                 ໃຊ້ຈ່າຍຈິງ: {{ number_format($spentPercent, 1) }}%
             </div>
             <div class="flex items-center gap-2">
-                <span class="inline-block rounded-full" style="width: 12px; height: 12px; background: #f59e0b;"></span>
+                <span class="h-3 w-3 rounded-full bg-amber-500"></span>
                 ຜູກພັນ: {{ number_format($committedPercent, 1) }}%
             </div>
             <div class="flex items-center gap-2">
-                <span class="inline-block rounded-full" style="width: 12px; height: 12px; background: #e5e7eb;"></span>
-                ຄົງເຫຼືອ: {{ number_format(max(100 - $usedPercent, 0), 1) }}%
+                <span class="h-3 w-3 rounded-full bg-slate-300"></span>
+                ຄົງເຫຼືອ: {{ number_format($remainingPercent, 1) }}%
             </div>
         </div>
-    </div>
+    </section>
 
-    {{-- ── Bottom Grid: Pending Plans + Recent Activity ─────────────── --}}
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
-
-        {{-- Pending Approval --}}
-        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-            <div class="px-6 py-4 flex items-center justify-between" style="border-bottom: 1px solid #f3f4f6;">
-                <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <svg class="w-5 h-5" style="color: #8b5cf6;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <section class="grid gap-6 xl:grid-cols-2">
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <header class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                <h3 class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <svg class="h-5 w-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     ແຜນງົບລໍຖ້າອະນຸມັດ
                 </h3>
-                @if($pendingPlans->count() > 0)
-                    <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background: #f3e8ff; color: #7c3aed;">{{ $pendingPlans->count() }}</span>
+
+                @if ($pendingPlans->isNotEmpty())
+                    <span class="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">
+                        {{ $pendingPlans->count() }}
+                    </span>
                 @endif
-            </div>
+            </header>
+
             <div>
                 @forelse($pendingPlans as $plan)
                     <a href="{{ route('head_of_faculty.annual-budget.show', $plan) }}"
-                        class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid #fafafa; transition: background 0.15s;"
-                        onmouseover="this.style.background='#faf5ff'" onmouseout="this.style.background='transparent'">
+                        class="flex items-center justify-between border-b border-slate-100 px-6 py-4 transition hover:bg-violet-50 last:border-b-0">
                         <div>
-                            <p class="text-sm font-semibold text-gray-800">ແຜນປະຈຳປີ {{ $plan->fiscal_year }}</p>
-                            <p class="text-xs text-gray-400">ສະຖານະ: ລໍຖ້າອະນຸມັດຂັ້ນສຸດທ້າຍ</p>
+                            <p class="text-sm font-semibold text-slate-800">ແຜນປະຈຳປີ {{ $plan->fiscal_year }}</p>
+                            <p class="text-xs text-slate-400">ສະຖານະ: ລໍຖ້າອະນຸມັດຂັ້ນສຸດທ້າຍ</p>
                         </div>
-                        <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </a>
                 @empty
                     <div class="px-6 py-10 text-center">
-                        <svg class="w-10 h-10 mx-auto mb-2" style="color: #e5e7eb;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg class="mx-auto mb-2 h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p class="text-sm text-gray-400">ບໍ່ມີແຜນທີ່ລໍຖ້າອະນຸມັດ</p>
+                        <p class="text-sm text-slate-400">ບໍ່ມີແຜນທີ່ລໍຖ້າອະນຸມັດ</p>
                     </div>
                 @endforelse
             </div>
-        </div>
+        </article>
 
-        {{-- Recent Advance Requests --}}
-        <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #f3f4f6;">
-            <div class="px-6 py-4" style="border-bottom: 1px solid #f3f4f6;">
-                <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <svg class="w-5 h-5" style="color: #3b82f6;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <header class="border-b border-slate-100 px-6 py-4">
+                <h3 class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     ການເຄື່ອນໄຫວຫຼ້າສຸດ (ເບີກເງິນ)
                 </h3>
-            </div>
+            </header>
+
             <div>
                 @forelse($recentAdvances as $adv)
                     @php
-                        $statusStyle = match($adv->status) {
-                            'pending'  => 'background: #fef3c7; color: #92400e;',
-                            'approved' => 'background: #dbeafe; color: #1e40af;',
-                            'cleared'  => 'background: #d1fae5; color: #065f46;',
-                            'rejected' => 'background: #fee2e2; color: #991b1b;',
-                            default    => 'background: #f3f4f6; color: #374151;',
+                        $statusClass = match($adv->status) {
+                            'pending' => 'bg-amber-100 text-amber-800',
+                            'approved' => 'bg-blue-100 text-blue-800',
+                            'cleared' => 'bg-emerald-100 text-emerald-700',
+                            'rejected' => 'bg-red-100 text-red-700',
+                            default => 'bg-slate-100 text-slate-700',
                         };
+
                         $statusLabel = match($adv->status) {
-                            'pending'  => 'ລໍຖ້າ',
+                            'pending' => 'ລໍຖ້າ',
                             'approved' => 'ອະນຸມັດ',
-                            'cleared'  => 'ສຳເລັດ',
+                            'cleared' => 'ສຳເລັດ',
                             'rejected' => 'ປະຕິເສດ',
-                            default    => $adv->status,
+                            default => $adv->status,
                         };
                     @endphp
-                    <div class="px-6 py-4" style="border-bottom: 1px solid #fafafa; transition: background 0.15s;"
-                        onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
-                        <div class="flex items-center justify-between mb-1">
-                            <p class="text-sm font-medium text-gray-800">{{ $adv->description ?: 'ການເບີກເງິນ #' . $adv->id }}</p>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="{{ $statusStyle }}">{{ $statusLabel }}</span>
+                    <div class="border-b border-slate-100 px-6 py-4 transition hover:bg-slate-50 last:border-b-0">
+                        <div class="mb-1 flex items-center justify-between gap-3">
+                            <p class="text-sm font-medium text-slate-800">{{ $adv->description ?: 'ການເບີກເງິນ #' . $adv->id }}</p>
+                            <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClass }}">{{ $statusLabel }}</span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-gray-400">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
                             <span>{{ $adv->requester_name ?? '-' }} · {{ $adv->department_name ?? '-' }}</span>
-                            <span class="text-gray-600" style="font-variant-numeric: tabular-nums; font-family: monospace;">{{ number_format($adv->requested_amount, 2) }}</span>
+                            <span class="font-mono tabular-nums text-slate-600">{{ number_format($adv->requested_amount, 2) }}</span>
                         </div>
                     </div>
                 @empty
                     <div class="px-6 py-10 text-center">
-                        <svg class="w-10 h-10 mx-auto mb-2" style="color: #e5e7eb;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        <svg class="mx-auto mb-2 h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                         </svg>
-                        <p class="text-sm text-gray-400">ຍັງບໍ່ມີການເຄື່ອນໄຫວ</p>
+                        <p class="text-sm text-slate-400">ຍັງບໍ່ມີການເຄື່ອນໄຫວ</p>
                     </div>
                 @endforelse
             </div>
-        </div>
-    </div>
-
+        </article>
+    </section>
+</div>
 @endsection

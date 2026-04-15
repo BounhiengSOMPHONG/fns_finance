@@ -71,11 +71,11 @@
                 <table class="w-full text-sm border-collapse" id="installmentTable">
                     <thead>
                         <tr class="bg-blue-600 text-white text-center">
-                            <th class="border border-blue-500 px-2 py-2" style="width: 50px;">ພາກ</th>
-                            <th class="border border-blue-500 px-2 py-2" style="width: 50px;">ພາກສ່ວນ</th>
-                            <th class="border border-blue-500 px-2 py-2" style="width: 50px;">ຮ່ວງ</th>
-                            <th class="border border-blue-500 px-2 py-2" style="width: 50px;">ລູກຮ່ວງ</th>
-                            <th class="border border-blue-500 px-3 py-2 text-left" style="min-width: 200px;">ເນື້ອໃນລາຍຈ່າຍ</th>
+                            <th class="w-[50px] border border-blue-500 px-2 py-2">ພາກ</th>
+                            <th class="w-[50px] border border-blue-500 px-2 py-2">ພາກສ່ວນ</th>
+                            <th class="w-[50px] border border-blue-500 px-2 py-2">ຮ່ວງ</th>
+                            <th class="w-[50px] border border-blue-500 px-2 py-2">ລູກຮ່ວງ</th>
+                            <th class="min-w-[200px] border border-blue-500 px-3 py-2 text-left">ເນື້ອໃນລາຍຈ່າຍ</th>
                             <th class="border border-blue-500 px-3 py-2 w-32 font-medium text-xs">ແຜນງົບປະມານ<br>ປະຈຳປີ</th>
                             <th class="border border-blue-500 px-3 py-2 w-32">ແຜນງວດ 1</th>
                             <th class="border border-blue-500 px-3 py-2 w-32">ແຜນງວດ 2</th>

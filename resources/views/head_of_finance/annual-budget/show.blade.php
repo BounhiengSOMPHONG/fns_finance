@@ -427,8 +427,8 @@
     </div>
 
     {{-- ── Reviewer Selection Modal ──────────────────────────────────────── --}}
-    <div id="reviewerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40" style="display:none;">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col" style="max-height: 80vh;">
+    <div id="reviewerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+        <div class="flex max-h-[80vh] w-full max-w-md flex-col rounded-xl bg-white shadow-xl">
             {{-- Header (fixed) --}}
             <div class="p-6 pb-2">
                 <h3 class="text-base font-semibold text-gray-800 mb-2">📤 ສົ່ງເພື່ອຂໍຄວາມຄິດເຫັນ</h3>

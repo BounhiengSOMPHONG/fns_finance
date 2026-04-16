@@ -195,12 +195,21 @@
                 #preview-container {
                     box-shadow: none !important;
                     border-radius: 0 !important;
-                    padding: 15mm !important;
+                    padding: 10mm !important;
                     max-width: 100% !important;
                 }
 
-                #preview-budget-table {
+                #preview-budget-table,
+                #preview-budget-table th,
+                #preview-budget-table td {
                     font-size: 10px !important;
+                    padding: 4px 4px !important;
+                }
+
+                /* Prevent first column from taking too much space */
+                #preview-budget-table th:first-child,
+                #preview-budget-table td:first-child {
+                    width: 70px !important;
                 }
 
                 @page {

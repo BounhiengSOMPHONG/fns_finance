@@ -76,34 +76,45 @@
 
         {{-- Budget Table --}}
         <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-sm" id="preview-budget-table">
+            <table class="w-full border-collapse text-sm border-black" id="preview-budget-table">
                 <thead>
-                    <tr class="bg-blue-100 text-gray-800">
-                        <th class="border border-gray-400 px-3 py-2 w-28 text-center font-bold">ພາກ.ພາກສ່ວນ.</th>
-                        <th class="border border-gray-400 px-3 py-2 font-bold text-center">ເນື້ອໃນ</th>
-                        <th colspan="3" class="border border-gray-400 px-3 py-2 text-center font-bold">
+                    {{-- Row 1: Main headers --}}
+                    <tr class="bg-orange-300 text-gray-900 border-black" style="background-color: #fca5a5;">
+                        <th class="border border-black px-3 py-2 w-28 text-center font-bold" style="background-color: #fdba74;">ພາກ.ພາກສ່ວນ.</th>
+                        <th class="border border-black px-3 py-2 font-bold text-center" style="background-color: #fdba74;">ເນື້ອໃນ</th>
+                        <th colspan="3" class="border border-black px-3 py-2 text-center font-bold" style="background-color: #fdba74;">
                             ແຜນປີ {{ $annualBudget->fiscal_year }}
                         </th>
                     </tr>
-                    <tr class="bg-blue-50 text-gray-700">
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold text-xs">ຮ່ວງ.ລູກຮ່ວງ</th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold text-xs">ລາຍການຈ່າຍ</th>
-                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ແຜນລວມ</th>
-                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ງົບປະມານປົກກະຕິ
+                    {{-- Row 2: Sub headers --}}
+                    <tr class="bg-orange-200 text-gray-900">
+                        <th class="border border-black px-2 py-2 text-center font-bold text-xs" style="background-color: #fed7aa;">ຮ່ວງ.ລູກຮ່ວງ</th>
+                        <th class="border border-black px-2 py-2 text-center font-bold text-xs" style="background-color: #fed7aa;">ລາຍການຈ່າຍ</th>
+                        <th class="border border-black px-3 py-2 w-32 text-center font-bold text-xs" style="background-color: #fed7aa;">ແຜນລວມ</th>
+                        <th class="border border-black px-3 py-2 w-32 text-center font-bold text-xs" style="background-color: #fed7aa;">ງົບປະມານປົກກະຕິ
                         </th>
-                        <th class="border border-gray-400 px-3 py-2 w-32 text-center font-semibold text-xs">ງົບປະມານວິຊາການ
+                        <th class="border border-black px-3 py-2 w-32 text-center font-bold text-xs" style="background-color: #fed7aa;">ງົບປະມານວິຊາການ
                         </th>
+                    </tr>
+                    {{-- Row 3: Column numbers --}}
+                    <tr class="bg-indigo-300 text-gray-900 text-sm font-bold text-center">
+                        <td class="border border-black px-2 py-1" style="background-color: #c4b5fd;">4</td>
+                        <td class="border border-black px-2 py-1" style="background-color: #c4b5fd;">5</td>
+                        <td class="border border-black px-2 py-1" style="background-color: #c4b5fd;">6</td>
+                        <td class="border border-black px-2 py-1" style="background-color: #c4b5fd;">7</td>
+                        <td class="border border-black px-2 py-1" style="background-color: #c4b5fd;">8=6-7</td>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="bg-green-50 font-bold text-gray-900">
-                        <td class="border border-gray-400 px-3 py-2 text-center"></td>
-                        <td class="border border-gray-400 px-3 py-2"></td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                    {{-- Grand Totals Row --}}
+                    <tr class="bg-cyan-100 font-bold text-gray-900 border border-black" style="background-color: #a5f3fc;">
+                        <td class="border border-black px-3 py-2 text-center"></td>
+                        <td class="border border-black px-3 py-2"></td>
+                        <td class="border border-black px-3 py-2 text-right tabular-nums text-700 underline">
                             {{ hofacFormatNumber($totalLuam) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                        <td class="border border-black px-3 py-2 text-right tabular-nums text-700 underline">
                             {{ hofacFormatNumber($totalRegular) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
+                        <td class="border border-black px-3 py-2 text-right tabular-nums text-700 underline">
                             {{ hofacFormatNumber($totalOther) }}</td>
                     </tr>
 
@@ -112,22 +123,25 @@
                             $code = $item->account->formatted_code ?? '';
                             $rowType = hofacGetRowType($code);
                             $itemLuam = ($item->amount_regular ?? 0) + ($item->amount_academic ?? 0);
+
                             $trClass = match ($rowType) {
-                                'main' => 'bg-blue-100 font-bold text-blue-800',
-                                'sub' => 'bg-purple-50 font-semibold text-gray-800',
-                                default => 'bg-white text-gray-700 hover:bg-gray-50',
+                                'main' => 'bg-cyan-100 font-bold text-gray-900 border border-black',
+                                'sub' => 'bg-white font-bold text-gray-900 border border-black',
+                                default => 'bg-white text-gray-800 hover:bg-gray-50 border border-black',
                             };
+                            
+                            $trStyle = ($rowType === 'main') ? 'background-color: #a5f3fc;' : '';
                         @endphp
-                        <tr class="{{ $trClass }}">
-                            <td class="border border-gray-400 px-3 py-1.5 text-center font-mono text-xs">{{ $code ?: '-' }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5">
+                        <tr class="{{ $trClass }}" style="{{ $trStyle }}">
+                            <td class="border border-black px-3 py-1.5 text-center font-mono text-xs">{{ $code ?: '-' }}</td>
+                            <td class="border border-black px-3 py-1.5">
                                 @if(!$item->is_parent) - @endif{{ $item->account->account_name ?? '-' }}
                             </td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                            <td class="border border-black px-3 py-1.5 text-right tabular-nums">
                                 {{ hofacFormatNumber($itemLuam) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                            <td class="border border-black px-3 py-1.5 text-right tabular-nums">
                                 {{ hofacFormatNumber($item->amount_regular ?? 0) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                            <td class="border border-black px-3 py-1.5 text-right tabular-nums">
                                 {{ hofacFormatNumber($item->amount_academic ?? 0) }}</td>
                         </tr>
                     @empty

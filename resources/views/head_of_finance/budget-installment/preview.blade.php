@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'ພາບລວມ ແຜນງວດງົບປະມານ ' . $budgetPlan->fiscal_year)
+@section('title', 'ພາບລວມ ແຜນງວດງົບປະມານ 1, 2  ' . $budgetPlan->fiscal_year)
 @section('page-title', 'ພາບລວມ ແຜນງວດງົບປະມານ 1, 2 ຕົ້ນປີ ' . $budgetPlan->fiscal_year)
 
 @section('content')

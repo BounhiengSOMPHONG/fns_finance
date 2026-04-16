@@ -14,7 +14,7 @@
             ກັບຄືນພາກສ່ວນຈັດສັນແຜນງວດ
         </a>
         <a href="{{ route('head_of_finance.budget-installment-34.preview', $budgetPlan) }}"
-            class="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition">
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -31,7 +31,7 @@
                 ແຜນງວດ 1 ແລະ 2
             </a>
             <a href="{{ route('head_of_finance.budget-installment-34.show', $budgetPlan) }}"
-                class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium border-purple-500 text-purple-600">
+                class="whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium border-blue-500 text-blue-600">
                 ແຜນງວດ 3 ແລະ 4 + ການດັດແກ້
             </a>
         </nav>
@@ -44,28 +44,33 @@
             <div id="validation-error" class="hidden mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded relative">
                 <strong>ຂໍ້ຜິດພາດ:</strong> <span id="error-text">ຜົນລວມຂອງ ແຜນງວດ 3 + ແຜນງວດ 4 ຕ້ອງເທົ່າກັບ ແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ ສຳລັບທຸກລາຍການ!</span>
             </div>
-
-            <div class="overflow-x-auto pb-4">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold text-gray-900">
+                    ຕາຕະລາງແຜນງວດງົບປະມານປະຈຳປີ {{ $budgetPlan->fiscal_year }}
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">ກະລຸນາໃສ່ຈຳນວນເງິນແຜນງວດ 3 ແລະ ແຜນງວດ 4</p>
+            </div>
+            <div class="overflow-x-auto border rounded-sm mb-6">
                 <table class="w-full text-xs border-collapse" id="installmentTable">
                     <thead>
-                        <tr class="bg-purple-100 text-gray-800 text-center border border-gray-300">
-                            <th rowspan="2" class="border border-gray-300 px-1 py-2 w-8">ພາກ</th>
-                            <th rowspan="2" class="border border-gray-300 px-1 py-2 w-8">ພ/ສ</th>
-                            <th rowspan="2" class="border border-gray-300 px-1 py-2 w-8">ຮ່ວງ</th>
-                            <th rowspan="2" class="border border-gray-300 px-1 py-2 w-8">ລູກຮ່ວງ</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2">ເນື້ອໃນລາຍຈ່າຍ</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24">ແຜນອະນຸມັດປີ 2025</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24">ແຜນ 6 ເດືອນທ້າຍປີ</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24 text-red-700">ແຜນດັດແກ້ຫຼຸດ</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24 text-blue-700">ແຜນດັດແກ້ເພີ່ມ</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24">ແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24">ແຜນງວດ 3</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24">ແຜນງວດ 4</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-2 w-24 bg-green-50">ແຜນປະຕິບັດໝົດປີ</th>
-                            <th rowspan="2" class="border border-gray-300 px-1 py-2 w-16">ທຽບເປີເຊັນ</th>
+                        <tr class="bg-blue-600 text-white text-center border border-blue-600">
+                            <th rowspan="2" class="w-[50px] border border-blue-500 px-1 py-2">ພາກ</th>
+                            <th rowspan="2" class="w-[50px] border border-blue-500 px-1 py-2">ພາກສ່ວນ</th>
+                            <th rowspan="2" class="w-[50px] border border-blue-500 px-1 py-2">ຮ່ວງ</th>
+                            <th rowspan="2" class="w-[50px] border border-blue-500 px-1 py-2">ລູກຮ່ວງ</th>
+                            <th rowspan="2" class="min-w-[150px] border border-blue-500 px-2 py-2">ເນື້ອໃນລາຍຈ່າຍ</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24 font-medium">ແຜນອະນຸມັດປີ 2025</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24 font-medium">ແຜນ 6 ເດືອນທ້າຍປີ</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24 text-red-200 font-medium">ແຜນດັດແກ້ຫຼຸດ</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24 text-blue-200 font-medium">ແຜນດັດແກ້ເພີ່ມ</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24 font-medium">ແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24">ແຜນງວດ 3</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24">ແຜນງວດ 4</th>
+                            <th rowspan="2" class="border border-blue-500 px-2 py-2 w-24 bg-blue-700 font-medium">ແຜນປະຕິບັດໝົດປີ</th>
+                            <th rowspan="2" class="border border-blue-500 px-1 py-2 w-16 font-medium">ທຽບເປີເຊັນ</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 table-group-divider border border-gray-300">
+                    <tbody class="divide-y divide-gray-200">
                         @php
                             $totalAnnual = 0;
                             $totalPlan6M = 0;
@@ -75,9 +80,11 @@
                             $totalP3 = 0;
                             $totalP4 = 0;
                             $totalExecute = 0;
+                            $rootParts = [];
 
                             foreach ($budgetPlan->lineItems as $item) {
                                 if (str_ends_with($item->account->formatted_code ?? '', '-00-00-00')) {
+                                    $rootParts[] = substr($item->account->account_code, 0, 2);
                                     $annualAmount = ($item->amount_regular ?? 0) + ($item->amount_academic ?? 0);
                                     $p1 = $item->period_1_amount ?? 0;
                                     $p2 = $item->period_2_amount ?? 0;
@@ -102,19 +109,20 @@
                                 }
                             }
                             $gPercent = $totalAnnual > 0 ? ($totalExecute / $totalAnnual) * 100 : 0;
+                            $rootEquation = count($rootParts) > 0 ? implode('+', array_unique($rootParts)) : '';
                         @endphp
                         {{-- Grand Total Line --}}
-                        <tr class="bg-purple-50 font-bold">
-                            <td colspan="5" class="border border-purple-200 px-3 py-2 text-right">ລວມຍອດເງິນທຸກພາກສ່ວນ:</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-purple-800" id="grand_annual">{{ number_format($totalAnnual, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-gray-700" id="grand_plan6m">{{ number_format($totalPlan6M, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-red-700" id="grand_reduce">{{ number_format($totalReduce, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-blue-700" id="grand_increase">{{ number_format($totalIncrease, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-purple-700" id="grand_revised6m">{{ number_format($totalRevised6M, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-green-700" id="grand_p3">{{ number_format($totalP3, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-green-700" id="grand_p4">{{ number_format($totalP4, 2) }}</td>
-                            <td class="border border-purple-200 px-2 py-2 text-right tabular-nums text-green-800" id="grand_execute">{{ number_format($totalExecute, 2) }}</td>
-                            <td class="border border-purple-200 px-1 py-2 text-center tabular-nums text-blue-800" id="grand_percent">{{ number_format($gPercent, 2) }}%</td>
+                        <tr class="bg-green-100 font-bold text-gray-900 relative z-10 transition-colors">
+                            <td colspan="5" class="border border-green-200 px-4 py-2 text-right">ລວມຍອດສ່ວນ({{ $rootEquation }})=</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums" id="grand_annual">{{ number_format($totalAnnual, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums text-blue-700" id="grand_plan6m">{{ number_format($totalPlan6M, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums text-red-700" id="grand_reduce">{{ number_format($totalReduce, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums text-blue-700" id="grand_increase">{{ number_format($totalIncrease, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums text-purple-700" id="grand_revised6m">{{ number_format($totalRevised6M, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums text-green-700" id="grand_p3">{{ number_format($totalP3, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums text-green-700" id="grand_p4">{{ number_format($totalP4, 2) }}</td>
+                            <td class="border border-green-200 px-2 py-2 text-right tabular-nums font-semibold text-green-800" id="grand_execute">{{ number_format($totalExecute, 2) }}</td>
+                            <td class="border border-green-200 px-1 py-2 text-center tabular-nums text-blue-800" id="grand_percent">{{ number_format($gPercent, 2) }}%</td>
                         </tr>
 
                         @forelse ($budgetPlan->lineItems as $item)
@@ -141,7 +149,7 @@
                                 $executeAmount = $annualAmount - $reduceAmount + $increaseAmount;
                                 $percent = $annualAmount > 0 ? ($executeAmount / $annualAmount) * 100 : 0;
 
-                                $trClass = $isParent ? 'bg-purple-50 font-semibold' : 'bg-white hover:bg-gray-50';
+                                $trClass = $isParent ? 'bg-blue-50 font-semibold' : 'bg-white hover:bg-gray-50';
                                 $parentId = $item->account->parent_id ?? '';
                             @endphp
                             <tr class="{{ $trClass }}" 
@@ -176,7 +184,7 @@
                                         <input type="number" name="allocations[{{ $item->id }}][reduce]" 
                                             value="{{ rtrim(rtrim(number_format($reduceAmount, 2, '.', ''), '0'), '.') }}" 
                                             min="0" step="0.01"
-                                            class="reduce-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-purple-500" 
+                                            class="reduce-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-blue-500" 
                                             oninput="autoAdjustPeriods(this); recalculate()">
                                     @endif
                                 </td>
@@ -189,7 +197,7 @@
                                         <input type="number" name="allocations[{{ $item->id }}][increase]" 
                                             value="{{ rtrim(rtrim(number_format($increaseAmount, 2, '.', ''), '0'), '.') }}" 
                                             min="0" step="0.01"
-                                            class="increase-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-purple-500" 
+                                            class="increase-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-blue-500" 
                                             oninput="autoAdjustPeriods(this); recalculate()">
                                     @endif
                                 </td>
@@ -206,7 +214,7 @@
                                         <input type="number" name="allocations[{{ $item->id }}][period_3]" 
                                             value="{{ rtrim(rtrim(number_format($p3Amount, 2, '.', ''), '0'), '.') }}" 
                                             min="0" step="0.01"
-                                            class="p3-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-purple-500" 
+                                            class="p3-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-blue-500" 
                                             oninput="recalculate()">
                                     @endif
                                 </td>
@@ -219,7 +227,7 @@
                                         <input type="number" name="allocations[{{ $item->id }}][period_4]" 
                                             value="{{ rtrim(rtrim(number_format($p4Amount, 2, '.', ''), '0'), '.') }}" 
                                             min="0" step="0.01"
-                                            class="p4-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-purple-500" 
+                                            class="p4-input w-full px-1 py-1 border border-gray-300 rounded text-right text-xs focus:ring-1 focus:ring-blue-500" 
                                             oninput="recalculate()">
                                     @endif
                                 </td>
@@ -242,7 +250,7 @@
             </div>
 
             <div class="flex justify-end mt-4 mb-2">
-                <button type="submit" id="saveBtn" class="inline-flex items-center px-6 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                <button type="submit" id="saveBtn" class="inline-flex items-center px-6 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>

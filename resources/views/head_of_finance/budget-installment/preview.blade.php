@@ -27,7 +27,7 @@
     </div>
 
     {{-- ── Preview Container (mimics the official document layout) ───── --}}
-    <div class="bg-white rounded-xl shadow-lg p-8 mx-auto" style="max-width: 1200px;" id="preview-container">
+    <div class="bg-white rounded-xl shadow-lg p-8 mx-auto" style="max-width: 1300px;" id="preview-container">
 
         {{-- Document Header with Logo --}}
         <div class="text-center mb-1">
@@ -45,7 +45,7 @@
             </div>
             <div class="text-right">
                 <p>ເລກທີ ............../ຄວທ</p>
-                <p>ນະຄອນຫຼວງວຽງຈັນ ວັນທີ ......... {{ $budgetPlan->fiscal_year - 1 }}</p>
+                <p>ນະຄອນຫຼວງວຽງຈັນ ວັນທີ ........./........./ {{ $budgetPlan->fiscal_year - 1 }}</p>
             </div>
         </div>
 
@@ -85,65 +85,74 @@
             if (!function_exists('installmentPreviewFormat')) {
                 function installmentPreviewFormat($number)
                 {
-                    return number_format($number, 2, '.', ',');
+                    if ($number == 0)
+                        return '0';
+                    return number_format($number, 3, '.', ',');
+                }
+                function installmentPreviewFormat2($number)
+                {
+                    if ($number == 0)
+                        return '0';
+                    return rtrim(rtrim(number_format($number, 3, '.', ','), '0'), '.');
                 }
             }
         @endphp
 
         {{-- Budget installment Table --}}
         <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-xs" id="preview-installment-table">
+            <table class="w-full border-collapse" style="font-size: 10px;" id="preview-installment-table">
                 <thead>
                     {{-- Row 1: Main grouped headers --}}
                     <tr class="bg-gray-100 text-gray-800">
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                        <th rowspan="2" class="border border-black px-2 py-2 text-center font-bold" style="width: 40px;">
                             ພາກ</th>
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                        <th rowspan="2" class="border border-black px-2 py-2 text-center font-bold" style="width: 40px;">
                             ພາກ<br>ສ່ວນ</th>
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                        <th rowspan="2" class="border border-black px-2 py-2 text-center font-bold" style="width: 40px;">
                             ຮ່ວງ</th>
-                        <th rowspan="2" class="border border-gray-400 px-2 py-2 text-center font-bold" style="width: 40px;">
+                        <th rowspan="2" class="border border-black px-2 py-2 text-center font-bold" style="width: 40px;">
                             ລູກ<br>ຮ່ວງ</th>
-                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold"
+                        <th rowspan="2" class="border border-black px-3 py-2 text-center font-bold"
                             style="min-width: 180px;">ເນື້ອໃນລາຍຈ່າຍ</th>
-                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold"
+                        <th rowspan="2" class="border border-black px-3 py-2 text-center font-bold"
                             style="width: 120px;">
                             ແຜນການ<br>ປີ {{ $budgetPlan->fiscal_year }}
                         </th>
-                        <th colspan="3" class="border border-gray-400 px-3 py-2 text-center font-bold">
+                        <th colspan="3" class="border border-black px-3 py-2 text-center font-bold">
                             ແຜນ 06 ເດືອນຕົ້ນປີ {{ $budgetPlan->fiscal_year }}
                         </th>
-                        <th rowspan="2" class="border border-gray-400 px-3 py-2 text-center font-bold"
+                        <th rowspan="2" class="border border-black px-3 py-2 text-center font-bold"
                             style="width: 120px;">
                             ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $budgetPlan->fiscal_year }}
                         </th>
                     </tr>
                     {{-- Row 2: Sub-headers under "ແຜນ 06 ເດືອນຕົ້ນປີ" --}}
                     <tr class="bg-gray-50 text-gray-700">
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ1
+                        <th class="border border-black px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ1
                         </th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ2
+                        <th class="border border-black px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນງວດ2
                         </th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນ 06
+                        <th class="border border-black px-2 py-2 text-center font-semibold" style="width: 120px;">ແຜນ 06
                             ເດືອນ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{-- Grand Totals Row --}}
-                    <tr class="bg-green-50 font-bold text-gray-900">
-                        <td colspan="5" class="border border-gray-400 px-3 py-2 text-right font-bold">
-                            ລວມຍອດສ່ວນ({{ $rootEquation }})=
+                    <tr class="bg-cyan-100 font-bold text-gray-900 border border-black"
+                        style="background-color: #e0f2fe;">
+                        <td colspan="5" class="border border-black px-2 py-2 text-right font-bold text-blue-900 underline">
+                            ລວມຍອດເງິນພາກສ່ວນ({{ $rootEquation }}) =
                         </td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
-                            {{ installmentPreviewFormat($totalAnnual) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
-                            {{ installmentPreviewFormat($totalP1) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
-                            {{ installmentPreviewFormat($totalP2) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
-                            {{ installmentPreviewFormat($total6Months) }}</td>
-                        <td class="border border-gray-400 px-3 py-2 text-right tabular-nums">
-                            {{ installmentPreviewFormat($total6MonthsEnd) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums text-green-900 underline">
+                            {{ installmentPreviewFormat2($totalAnnual) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($totalP1) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($totalP2) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($total6Months) }}</td>
+                        <td class="border border-black px-1 py-2 text-right tabular-nums underline">
+                            {{ installmentPreviewFormat2($total6MonthsEnd) }}</td>
                     </tr>
 
                     @forelse ($budgetPlan->lineItems as $item)
@@ -167,38 +176,44 @@
                             $isSub = $part2 !== '00' && $part3 === '00' && $part4 === '00';  // XX-XX-00-00
 
                             $trClass = $isRoot
-                                ? 'bg-blue-50 font-bold text-blue-800'
+                                ? 'bg-green-100 font-bold border border-black underline'
                                 : ($isSub
-                                    ? 'bg-purple-50 font-semibold text-gray-800'
-                                    : 'bg-white text-gray-700');
+                                    ? 'bg-gray-50'
+                                    : 'bg-white text-gray-800');
+
+                            if ($isRoot) {
+                                $trStyle = "background-color: #dcfce7;"; // light green
+                            } else {
+                                $trStyle = "";
+                            }
                         @endphp
-                        <tr class="{{ $trClass }}">
-                            <td class="border border-gray-400 px-2 py-1.5 text-center font-mono">{{ $part1 }}</td>
-                            <td class="border border-gray-400 px-2 py-1.5 text-center font-mono">{{ $part2 }}</td>
-                            <td class="border border-gray-400 px-2 py-1.5 text-center font-mono">{{ $part3 }}</td>
-                            <td class="border border-gray-400 px-2 py-1.5 text-center font-mono">{{ $part4 }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5">
+                        <tr class="{{ $trClass }} border border-black" style="{{ $trStyle }}">
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part1 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part2 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part3 }}</td>
+                            <td class="border border-black px-1 py-1.5 text-center font-mono">{{ $part4 }}</td>
+                            <td class="border border-black px-2 py-1.5 {{ $isRoot ? 'underline' : '' }}">
                                 @if(!$isParent && !$isRoot && !$isSub)- @endif{{ $item->account->account_name ?? '-' }}
                             </td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
-                                {{ installmentPreviewFormat($annualAmount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
-                                {{ installmentPreviewFormat($p1Amount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
-                                {{ installmentPreviewFormat($p2Amount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
-                                {{ installmentPreviewFormat($m6Amount) }}</td>
-                            <td class="border border-gray-400 px-3 py-1.5 text-right tabular-nums">
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($annualAmount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($p1Amount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($p2Amount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
+                                {{ installmentPreviewFormat2($m6Amount) }}</td>
+                            <td class="border border-black px-1 py-1.5 text-right tabular-nums">
                                 @if($m6endAmount < 0)
-                                    <span class="text-red-600">{{ installmentPreviewFormat($m6endAmount) }}</span>
+                                    <span class="text-red-600">{{ installmentPreviewFormat2($m6endAmount) }}</span>
                                 @else
-                                    {{ installmentPreviewFormat($m6endAmount) }}
+                                    {{ installmentPreviewFormat2($m6endAmount) }}
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="border border-gray-400 px-6 py-10 text-center text-gray-400">ບໍ່ມີລາຍການ
+                            <td colspan="10" class="border border-black px-6 py-10 text-center text-gray-400">ບໍ່ມີລາຍການ
                             </td>
                         </tr>
                     @endforelse
@@ -207,7 +222,7 @@
         </div>
 
         {{-- Signatures Footer --}}
-        <div class="flex justify-between mt-12 mb-8 px-4 sm:px-12 text-gray-800">
+        <div class="flex justify-between mt-12 mb-8 px-4 sm:px-12 text-gray-800" style="font-size: 14px;">
             <div class="text-center font-bold">
                 <p>ຫົວໜ້າຄະນະວິຊາ</p>
                 <br><br><br>
@@ -240,16 +255,22 @@
                 #preview-container {
                     box-shadow: none !important;
                     border-radius: 0 !important;
-                    padding: 10mm !important;
+                    padding: 8mm !important;
                     max-width: 100% !important;
                 }
 
                 #preview-installment-table {
-                    font-size: 9px !important;
+                    font-size: 8px !important;
+                }
+
+                #preview-installment-table th,
+                #preview-installment-table td {
+                    padding: 4px 2px !important;
                 }
 
                 @page {
-                    size: A4 landscape;
+                    size: auto;
+                    /* Uses printer settings which we expect to be A4 landscape */
                     margin: 0;
                 }
             }

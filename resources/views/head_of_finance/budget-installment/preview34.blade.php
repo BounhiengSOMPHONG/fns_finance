@@ -45,7 +45,7 @@
             </div>
             <div class="text-right">
                 <p>ເລກທີ ............../ຄວທ</p>
-                <p>ນະຄອນຫຼວງວຽງຈັນ ວັນທີ ......... {{ $budgetPlan->fiscal_year - 1 }}</p>
+                <p>ນະຄອນຫຼວງວຽງຈັນ ວັນທີ ........./........./  {{ $budgetPlan->fiscal_year - 1 }}</p>
             </div>
         </div>
 
@@ -158,7 +158,7 @@
                 </thead>
                 <tbody>
                     {{-- Grand Totals Row --}}
-                    <tr class="bg-cyan-100 font-bold text-gray-900 border-2 border-black"
+                    <tr class="bg-cyan-100 font-bold text-gray-900 border border-black"
                         style="background-color: #e0f2fe;">
                         <td colspan="5" class="border border-black px-2 py-2 text-right font-bold text-blue-900 underline">
                             ລວມຍອດເງິນພາກສ່ວນ({{ $rootEquation }}) =
@@ -213,7 +213,7 @@
                             $isSub = $part2 !== '00' && $part3 === '00' && $part4 === '00';  // XX-XX-00-00
 
                             $trClass = $isRoot
-                                ? 'bg-green-100 font-bold border-2 border-black underline'
+                                ? 'bg-green-100 font-bold border border-black underline'
                                 : ($isSub
                                     ? 'bg-gray-50'
                                     : 'bg-white text-gray-800');
@@ -226,13 +226,13 @@
                         @endphp
                         <tr class="{{ $trClass }} border border-black" style="{{ $trStyle }}">
                             <td class="border border-black px-1 py-1.5 text-center font-mono">
-                                {{ $part1 === '00' ? '' : $part1 }}</td>
+                                {{ $part1 }}</td>
                             <td class="border border-black px-1 py-1.5 text-center font-mono">
-                                {{ $part2 === '00' ? '' : $part2 }}</td>
+                                {{ $part2 }}</td>
                             <td class="border border-black px-1 py-1.5 text-center font-mono">
-                                {{ $part3 === '00' ? '' : $part3 }}</td>
+                                {{ $part3 }}</td>
                             <td class="border border-black px-1 py-1.5 text-center font-mono">
-                                {{ $part4 === '00' ? '' : $part4 }}</td>
+                                {{ $part4 }}</td>
                             <td class="border border-black px-2 py-1.5 {{ $isRoot ? 'underline' : '' }}">
                                 @if(!$isParent && !$isRoot && !$isSub)- @endif{{ $item->account->account_name ?? '-' }}
                             </td>

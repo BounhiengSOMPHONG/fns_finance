@@ -49,24 +49,16 @@
 
             {{-- ເລີ່ມແກ້ໄຂ — PENDING_REVIEW --}}
             @if($annualBudget->status === 'PENDING_REVIEW')
-            <form action="{{ route('head_of_finance.annual-budget.start-modifying', $annualBudget) }}" method="POST" class="inline"
-                onsubmit="return confirm('ເລີ່ມແກ້ໄຂແຜນ? ຜູ້ກວດສອບຈະບໍ່ສາມາດ comment ໄດ້ຈົນກວ່າທ່ານຈະສົ່ງກັບ.')">
-                @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600">
-                    ✏️ ເລີ່ມແກ້ໄຂ
-                </button>
-            </form>
+            <button type="button" onclick="openStartModifyingModal()" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 shadow-sm transition">
+                ✏️ ເລີ່ມແກ້ໄຂ
+            </button>
             @endif
 
             {{-- ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ — MODIFYING --}}
             @if($annualBudget->status === 'MODIFYING')
-            <form action="{{ route('head_of_finance.annual-budget.submit-final', $annualBudget) }}" method="POST" class="inline"
-                onsubmit="return confirm('ສົ່ງແຜນເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ?')">
-                @csrf
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700">
-                    🏛️ ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ
-                </button>
-            </form>
+            <button type="button" onclick="openSubmitFinalModal()" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 shadow-sm transition">
+                🏛️ ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ
+            </button>
             @endif
         </div>
     </div>
@@ -477,6 +469,64 @@
         </div>
     </div>
 
+    {{-- ── Start Modifying Modal ────────────────────────────────────────── --}}
+    @if($annualBudget->status === 'PENDING_REVIEW')
+    <div id="startModifyingModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm scale-95 transform transition-transform duration-300" id="startModifyingModalBody">
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-orange-100/50 rounded-full ring-4 ring-orange-50">
+                <span class="text-orange-500 text-3xl">✏️</span>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">ຍືນຍັນການເລີ່ມແກ້ໄຂແຜນ</h3>
+            <p class="text-sm text-center text-gray-600 mb-6 leading-relaxed">
+                ທ່ານຕ້ອງການດຶງແຜນນີ້ກັບມາແກ້ໄຂແທ້ບໍ່?<br>
+                <span class="inline-block mt-2 px-3 py-1 bg-red-50 text-red-600 text-xs font-medium rounded-md border border-red-100">
+                    ໝາຍເຫດ: ຜູ້ກວດສອບຈະບໍ່ສາມາດສະແດງຄວາມຄິດເຫັນໄດ້ ຈົນກວ່າທ່ານຈະສົ່ງແຜນນີ້ໃຫ້ກວດສອບອີກຄັ້ງ.
+                </span>
+            </p>
+            <form action="{{ route('head_of_finance.annual-budget.start-modifying', $annualBudget) }}" method="POST" class="flex gap-3">
+                @csrf
+                <button type="button" onclick="closeStartModifyingModal()"
+                    class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors focus:ring-4 focus:ring-gray-100">
+                    ຍົກເລີກ
+                </button>
+                <button type="submit"
+                    class="flex-1 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 font-semibold shadow-sm transition-colors focus:ring-4 focus:ring-orange-200">
+                    ຍືນຍັນການແກ້ໄຂ
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── Submit Final Modal ────────────────────────────────────────── --}}
+    @if($annualBudget->status === 'MODIFYING')
+    <div id="submitFinalModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm scale-95 transform transition-transform duration-300" id="submitFinalModalBody">
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-purple-100/50 rounded-full ring-4 ring-purple-50">
+                <span class="text-purple-600 text-3xl">🏛️</span>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">ຢືນຢັນການສົ່ງແຜນ</h3>
+            <p class="text-sm text-center text-gray-600 mb-6 leading-relaxed">
+                ທ່ານຕ້ອງການສົ່ງແຜນງົບປະມານນີ້ເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍແທ້ບໍ່?<br>
+                <span class="inline-block mt-2 px-3 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-md border border-purple-100">
+                    ເອກະສານຈະຖືກສົ່ງໄປຫາຄະນະບໍດີເພື່ອອະນຸມັດ ແລະ ຈະບໍ່ສາມາດແກ້ໄຂໄດ້ອີກຈົນກວ່າຈະຖືກສົ່ງກັບຄືນ.
+                </span>
+            </p>
+            <form action="{{ route('head_of_finance.annual-budget.submit-final', $annualBudget) }}" method="POST" class="flex gap-3">
+                @csrf
+                <button type="button" onclick="closeSubmitFinalModal()"
+                    class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors focus:ring-4 focus:ring-gray-100">
+                    ຍົກເລີກ
+                </button>
+                <button type="submit"
+                    class="flex-1 py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-semibold shadow-sm transition-colors focus:ring-4 focus:ring-purple-200">
+                    ຍືນຍັນການສົ່ງ
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
+
     @push('scripts')
         <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
@@ -537,8 +587,70 @@
                 m.classList.remove('flex');
             }
 
-            document.getElementById('reviewerModal').addEventListener('click', function (e) {
+            document.getElementById('reviewerModal')?.addEventListener('click', function (e) {
                 if (e.target === this) closeReviewerModal();
+            });
+
+            // ── Start Modifying Modal ─────────────────────────────────────────
+            function openStartModifyingModal() {
+                const m = document.getElementById('startModifyingModal');
+                const b = document.getElementById('startModifyingModalBody');
+                if(!m) return;
+                m.style.display = 'flex';
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+                setTimeout(() => {
+                    b.classList.remove('scale-95');
+                    b.classList.add('scale-100');
+                }, 10);
+            }
+
+            function closeStartModifyingModal() {
+                const m = document.getElementById('startModifyingModal');
+                const b = document.getElementById('startModifyingModalBody');
+                if(!m) return;
+                b.classList.remove('scale-100');
+                b.classList.add('scale-95');
+                setTimeout(() => {
+                    m.style.display = 'none';
+                    m.classList.add('hidden');
+                    m.classList.remove('flex');
+                }, 150); // slight delay for animation
+            }
+
+            document.getElementById('startModifyingModal')?.addEventListener('click', function (e) {
+                if (e.target === this) closeStartModifyingModal();
+            });
+
+            // ── Submit Final Modal ─────────────────────────────────────────
+            function openSubmitFinalModal() {
+                const m = document.getElementById('submitFinalModal');
+                const b = document.getElementById('submitFinalModalBody');
+                if(!m) return;
+                m.style.display = 'flex';
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+                setTimeout(() => {
+                    b.classList.remove('scale-95');
+                    b.classList.add('scale-100');
+                }, 10);
+            }
+
+            function closeSubmitFinalModal() {
+                const m = document.getElementById('submitFinalModal');
+                const b = document.getElementById('submitFinalModalBody');
+                if(!m) return;
+                b.classList.remove('scale-100');
+                b.classList.add('scale-95');
+                setTimeout(() => {
+                    m.style.display = 'none';
+                    m.classList.add('hidden');
+                    m.classList.remove('flex');
+                }, 150);
+            }
+
+            document.getElementById('submitFinalModal')?.addEventListener('click', function (e) {
+                if (e.target === this) closeSubmitFinalModal();
             });
 
             // ── Bulk-add dynamic rows ──────────────────────────────────────────────

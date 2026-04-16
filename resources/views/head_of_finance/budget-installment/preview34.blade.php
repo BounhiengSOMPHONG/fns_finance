@@ -127,32 +127,32 @@
             <table class="w-full border-collapse" style="font-size: 12px;" id="preview-installment-table">
                 <thead>
                     <tr class="bg-gray-100 text-gray-800">
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ<br>ສ່ວນ
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ</th>
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ<br>ສ່ວນ
                         </th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ຮ່ວງ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 25px;">ລູກ<br>ຮ່ວງ
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 25px;">ຮ່ວງ</th>
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 25px;">ລູກ<br>ຮ່ວງ
                         </th>
-                        <th class="border border-gray-400 px-2 py-2 text-center font-bold" style="min-width: 140px;">
+                        <th class="border border-black px-2 py-2 text-center font-bold" style="min-width: 140px;">
                            ເນື້ອໃນລາຍຈ່າຍ</th>
 
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">
                             ແຜນອະນຸມັດ<br>{{ $budgetPlan->fiscal_year }}</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນ 6
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນ 6
                             ເດືອນ<br>ທ້າຍປີ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">
                             ແຜນດັດແກ້ຫຼຸດ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">
                             ແຜນດັດແກ້<br>ເພີ່ມ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນດັດແກ້
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນດັດແກ້
                             6<br>ເດືອນທ້າຍປີ</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 3
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 3
                         </th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 4
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">ແຜນງວດ 4
                         </th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 60px;">
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 60px;">
                             ແຜນປະຕິບັດໝົດ<br>ປີ {{ $budgetPlan->fiscal_year }}</th>
-                        <th class="border border-gray-400 px-1 py-2 text-center font-bold" style="width: 45px;">ທຽບເປີເຊັນ
+                        <th class="border border-black px-1 py-2 text-center font-bold" style="width: 45px;">ທຽບເປີເຊັນ
                         </th>
                     </tr>
                 </thead>

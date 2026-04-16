@@ -124,7 +124,7 @@
 
         {{-- Budget installment Table --}}
         <div class="overflow-x-auto">
-            <table class="w-full border-collapse" style="font-size: 12px;" id="preview-installment-table">
+            <table class="w-full border-collapse" style="font-size: 8px;" id="preview-installment-table">
                 <thead>
                     <tr class="bg-gray-100 text-gray-800">
                         <th class="border border-black px-1 py-2 text-center font-bold" style="width: 25px;">ພາກ</th>

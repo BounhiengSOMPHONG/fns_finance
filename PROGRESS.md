@@ -105,7 +105,7 @@
 3. **แผนงบประมาณประจำปี (Head of Finance)** — สร้าง/แก้ไข/ลบแผน, เพิ่ม line items, เลือก reviewer + submit, startModifying, submitForFinalApproval, preview, export PDF, mark comments
 4. **ກວດສອບແຜນງົບ (Assigned Reviewer ทุก role)** — **เห็นเฉพาะแผนที่ถูก assign** + ให้ comment, เมนูในซอยด์บาร์ขึ้นเมื่อมี `reviewerAssignments` (ยกเว้น deputy/faculty ใช้เมนูของตัวเองแทน)
 5. **อนุมัติแผนงบ (Deputy Head of Faculty)** — approve/reject + comment
-6. **อนุมัติขั้นสุดท้าย (Head of Faculty)** — ดูแผน PENDING_FINAL_APPROVAL/APPROVED + **2 ปุ่ม: ປັບປຸງ (reject+comment รวมกัน) / ອະນຸມັດ** + ส่ง notification กลับ HoF
+6. **อนุมัติขั้นสุดท้าย (Head of Faculty)** — ดูแผน PENDING_FINAL_APPROVAL/APPROVED + **2 ปุ่ม: ປັບປຸງ (reject+comment รวมกัน) / ອະນຸມັດ** + ส่ง notification กลับ HoF — **ปุ่มทั้งสองใช้ Popup Modal แทน confirm()**
 7. **Role-based access control** — แยก route ตาม role, sidebar แสดงเมนูตาม role
 8. **Bottom-Up budget roll-up** — คำนวณยอดรวม parent categories จาก leaf nodes อัตโนมัติ
 9. **ระบบ Notification (In-app)** — **NEW** — กระดิ่งแจ้งเตือนใน header สำหรับทุก role, แสดง unread count, mark as read
@@ -125,6 +125,15 @@
     - ลบ inline styles ทั้งหมด ใช้ Tailwind CSS utility classes อย่างถูกต้อง
     - ปรับ Tailwind class order ให้ตรงกับ Prettier format
 17. **🎨 Header Component Refactoring** — `resources/views/components/admin-header.blade.php` — ทำความเรียบร้อย จัดเรียง Tailwind classes อย่างถูกต้อง ปรับปรุง responsive design
+18. **🎨 Popup Modal UI Upgrade (ແທນ confirm())** — **เสร็จสิ้น** — ปรับปรุง UX ทุกปุ่มยืนยันจาก `confirm()` แบบเก่าเป็น Tailwind CSS Popup Modal สวยงาม มี backdrop blur, scale animation, ไอคอนสีตามธีม (เขียว/ส้ม/ม่วง):
+    - **`head_of_finance/annual-budget/show.blade.php`** — ปุ่ม ✏️ ເລີ່ມແກ້ໄຂ (สีส้ม), 🏛️ ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ (สีม่วง)
+    - **`head_of_faculty/annual-budget/show.blade.php`** — ปุ่ม ✅ ອະນຸມັດ (สีเขียว), ↩ ປັບປຸງ (สีส้ม) — พร้อม sync comment จาก textarea เข้า hidden field ใน modal
+19. **🎨 Table Color Standardization** — **เสร็จสิ้น** — ปรับสีตาราง ພາບລວມ ແຜນງົບປະມານປະຈຳປີ ให้เหมือนกันทุก role:
+    - หัวตาราง: สีส้ม `#fdba74` / `#fed7aa`
+    - แถวเลขคอลัมน์: สีม่วง `#c4b5fd`
+    - แถวรวมยอด + แถวหมวดหลัก: สีฟ้า Cyan `#a5f3fc`
+    - เส้นตาราง: `border-black`
+    - อัพเดตทุก role: `head_of_finance`, `head_of_faculty`, `deputy_head_of_faculty`, `head_of_department`
 
 ### 🔄 Workflow งบประมาณ (ใหม่):
 ```

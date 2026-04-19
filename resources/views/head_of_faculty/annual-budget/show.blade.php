@@ -205,26 +205,23 @@
 
             @if($annualBudget->status === 'PENDING_FINAL_APPROVAL')
                 <p class="text-sm text-gray-500 mb-4">ກະລຸນາກວດສອບແຜນງົບປະມານ ແລ້ວຕັດສິນໃຈ:</p>
-                <form action="{{ route('head_of_faculty.annual-budget.review', $annualBudget) }}" method="POST">
-                    @csrf
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ຄວາມຄິດເຫັນ (ຈຳເປັນສຳລັບການສົ່ງກັບ):</label>
-                        <textarea name="comment" rows="3"
-                            class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 overflow-hidden resize-none"
-                            placeholder="ພິມຄວາມຄິດເຫັນຂອງທ່ານ..."
-                            oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                    </div>
-                    <div class="flex flex-wrap gap-3 justify-end">
-                        <button type="submit" name="action" value="reject" onclick="return confirm('ສົ່ງແຜນກັບໃຫ້ແກ້ໄຂ?')"
-                            class="px-5 py-2.5 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                            ↩ ປັບປຸງ
-                        </button>
-                        <button type="submit" name="action" value="approve" onclick="return confirm('ອະນຸມັດແຜນງົບປະມານນີ້?')"
-                            class="px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            ✅ ອະນຸມັດ
-                        </button>
-                    </div>
-                </form>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ຄວາມຄິດເຫັນ (ຈຳເປັນສຳລັບການສົ່ງກັບ):</label>
+                    <textarea id="mainComment" rows="3"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 overflow-hidden resize-none"
+                        placeholder="ພິມຄວາມຄິດເຫັນຂອງທ່ານ..."
+                        oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                </div>
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="button" onclick="openRejectModal()"
+                        class="px-5 py-2.5 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm transition">
+                        ↩ ປັບປຸງ
+                    </button>
+                    <button type="button" onclick="openApproveModal()"
+                        class="px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm transition">
+                        ✅ ອະນຸມັດ
+                    </button>
+                </div>
             @elseif($annualBudget->status === 'APPROVED')
                 <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                     <span class="text-2xl">✅</span>
@@ -243,5 +240,119 @@
             @endif
         </div>
     </div>
+
+    {{-- ── Approve Modal ──────────────────────────────────────────────── --}}
+    @if($annualBudget->status === 'PENDING_FINAL_APPROVAL')
+    <div id="approveModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm scale-95 transform transition-transform duration-300" id="approveModalBody">
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-green-100/50 rounded-full ring-4 ring-green-50">
+                <span class="text-green-600 text-3xl">✅</span>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">ຢືນຢັນການອະນຸມັດ</h3>
+            <p class="text-sm text-center text-gray-600 mb-6 leading-relaxed">
+                ທ່ານຕ້ອງການອະນຸມັດແຜນງົບປະມານນີ້ແທ້ບໍ່?<br>
+                <span class="inline-block mt-2 px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-md border border-green-100">
+                    ແຜນຈະຖືກອະນຸມັດ ແລະ ສາມາດນຳໄປໃຊ້ງານໄດ້ທັນທີ.
+                </span>
+            </p>
+            <form action="{{ route('head_of_faculty.annual-budget.review', $annualBudget) }}" method="POST" class="flex gap-3">
+                @csrf
+                <input type="hidden" name="action" value="approve">
+                <input type="hidden" name="comment" id="approveCommentField" value="">
+                <button type="button" onclick="closeApproveModal()"
+                    class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors focus:ring-4 focus:ring-gray-100">
+                    ຍົກເລີກ
+                </button>
+                <button type="submit"
+                    class="flex-1 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-semibold shadow-sm transition-colors focus:ring-4 focus:ring-green-200">
+                    ຢືນຢັນອະນຸມັດ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{-- ── Reject Modal ───────────────────────────────────────────────── --}}
+    <div id="rejectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm scale-95 transform transition-transform duration-300" id="rejectModalBody">
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-orange-100/50 rounded-full ring-4 ring-orange-50">
+                <span class="text-orange-500 text-3xl">↩</span>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 mb-2">ຢືນຢັນການສົ່ງກັບ</h3>
+            <p class="text-sm text-center text-gray-600 mb-6 leading-relaxed">
+                ທ່ານຕ້ອງການສົ່ງແຜນກັບໃຫ້ແກ້ໄຂແທ້ບໍ່?<br>
+                <span class="inline-block mt-2 px-3 py-1 bg-red-50 text-red-600 text-xs font-medium rounded-md border border-red-100">
+                    ໝາຍເຫດ: ແຜນຈະກັບໄປສະຖານະ "ກຳລັງແກ້ໄຂ" ແລະ ຫົວໜ້າການເງິນຈະຕ້ອງແກ້ໄຂ ແລ້ວສົ່ງມາໃໝ່ອີກຄັ້ງ.
+                </span>
+            </p>
+            <form action="{{ route('head_of_faculty.annual-budget.review', $annualBudget) }}" method="POST" class="flex gap-3">
+                @csrf
+                <input type="hidden" name="action" value="reject">
+                <input type="hidden" name="comment" id="rejectCommentField" value="">
+                <button type="button" onclick="closeRejectModal()"
+                    class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors focus:ring-4 focus:ring-gray-100">
+                    ຍົກເລີກ
+                </button>
+                <button type="submit"
+                    class="flex-1 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 font-semibold shadow-sm transition-colors focus:ring-4 focus:ring-orange-200">
+                    ຢືນຢັນສົ່ງກັບ
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    @push('scripts')
+    <script>
+        // ── Approve Modal ─────────────────────────────────────────────
+        function openApproveModal() {
+            const comment = document.getElementById('mainComment')?.value || '';
+            document.getElementById('approveCommentField').value = comment;
+            const m = document.getElementById('approveModal');
+            const b = document.getElementById('approveModalBody');
+            if(!m) return;
+            m.style.display = 'flex';
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            setTimeout(() => { b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        }
+
+        function closeApproveModal() {
+            const m = document.getElementById('approveModal');
+            const b = document.getElementById('approveModalBody');
+            if(!m) return;
+            b.classList.remove('scale-100'); b.classList.add('scale-95');
+            setTimeout(() => { m.style.display = 'none'; m.classList.add('hidden'); m.classList.remove('flex'); }, 150);
+        }
+
+        document.getElementById('approveModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeApproveModal();
+        });
+
+        // ── Reject Modal ──────────────────────────────────────────────
+        function openRejectModal() {
+            const comment = document.getElementById('mainComment')?.value || '';
+            document.getElementById('rejectCommentField').value = comment;
+            const m = document.getElementById('rejectModal');
+            const b = document.getElementById('rejectModalBody');
+            if(!m) return;
+            m.style.display = 'flex';
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            setTimeout(() => { b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+        }
+
+        function closeRejectModal() {
+            const m = document.getElementById('rejectModal');
+            const b = document.getElementById('rejectModalBody');
+            if(!m) return;
+            b.classList.remove('scale-100'); b.classList.add('scale-95');
+            setTimeout(() => { m.style.display = 'none'; m.classList.add('hidden'); m.classList.remove('flex'); }, 150);
+        }
+
+        document.getElementById('rejectModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeRejectModal();
+        });
+    </script>
+    @endpush
 
 @endsection

@@ -11,9 +11,12 @@ class BudgetReviewController extends Controller
     public function index()
     {
         // Show only plans where the current deputy is explicitly assigned as reviewer
-        $plans = BudgetPlan::whereHas('reviewers', function ($q) {
-            $q->where('user_id', auth()->id());
-        })->orderByDesc('fiscal_year')->get();
+        $plans = BudgetPlan::where('status', 'PENDING_REVIEW')
+            ->whereHas('reviewers', function ($q) {
+                $q->where('user_id', auth()->id());
+            })
+            ->orderByDesc('fiscal_year')
+            ->get();
 
         return view('deputy_head_of_faculty.annual-budget.index', compact('plans'));
     }
@@ -34,7 +37,7 @@ class BudgetReviewController extends Controller
 
     public function review(Request $request, BudgetPlan $annualBudget)
     {
-        // Block action if this deputy is not assigned on the plan
+        // Check that the current user is assigned as a reviewer
         $isReviewer = $annualBudget->reviewers()->where('user_id', auth()->id())->exists();
         if (!$isReviewer) {
             abort(403, 'ທ່ານບໍ່ໄດ້ຮັບມອບໝາຍໃຫ້ກວດສອບແຜນນີ້');
@@ -45,13 +48,9 @@ class BudgetReviewController extends Controller
         }
 
         $request->validate([
-            'action' => 'required|in:approve,reject,comment',
+            'action' => 'required|in:comment',
             'comment' => 'nullable|string|max:1000'
         ]);
-
-        if ($request->action !== 'comment' && $annualBudget->status !== 'PENDING_FINAL_APPROVAL') {
-            return back()->with('error', 'ສະຖານະບໍ່ຖືກຕ້ອງສຳລັບການກວດສອບນີ້');
-        }
 
         if ($request->filled('comment')) {
             $annualBudget->comments()->create([
@@ -61,18 +60,7 @@ class BudgetReviewController extends Controller
             ]);
         }
 
-        if ($request->action === 'approve') {
-            $annualBudget->update(['status' => 'APPROVED']);
-            $msg = 'ອະນຸມັດແຜນສຳເລັດ!';
-        } elseif ($request->action === 'reject') {
-            $annualBudget->update(['status' => 'MODIFYING']);
-            $msg = 'ປະຕິເສດແຜນສຳເລັດ!';
-        } else {
-            $msg = 'ເພີ່ມຄວາມຄິດເຫັນສຳເລັດ!';
-            return back()->with('success', $msg);
-        }
-
-        return redirect()->route('deputy_head_of_faculty.annual-budget.index')->with('success', $msg);
+        return back()->with('success', 'ເພີ່ມຄວາມຄິດເຫັນສຳເລັດ!');
     }
 
     protected function synthesizeTreeAndRollUp($lineItems)

@@ -195,14 +195,15 @@
         @endif
 
         {{-- ── Review Actions ────────────────────────────────────────── --}}
-        <div class="p-6 bg-white rounded-xl shadow-md border-t-4 {{ $annualBudget->status === 'PENDING_FINAL_APPROVAL' ? 'border-blue-500' : 'border-gray-300' }}">
+        <div class="p-6 bg-white rounded-xl shadow-md border-t-4 {{ $annualBudget->status === 'PENDING_REVIEW' ? 'border-blue-500' : 'border-gray-300' }}">
             <h3 class="text-lg font-bold text-gray-800 mb-2">📋 ການກວດສອບ</h3>
 
-            @if(in_array($annualBudget->status, ['PENDING_REVIEW', 'PENDING_FINAL_APPROVAL']))
+            @if($annualBudget->status === 'PENDING_REVIEW')
                 <p class="text-sm text-gray-500 mb-4">ກະນຸນາໃຫ້ຄຳເຫັນໃສ່ແຜນງົບປະມານລຸ່ມນີ້:</p>
                 <form action="{{ route('deputy_head_of_faculty.annual-budget.review', $annualBudget) }}" method="POST">
                     @csrf
                     <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ຄວາມຄິດເຫັນ :</label>
                         <textarea name="comment" rows="3"
                             class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 overflow-hidden resize-none"
                             placeholder="ພິມຄວາມຄິດເຫັນຂອງທ່ານ..."

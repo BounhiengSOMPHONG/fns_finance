@@ -120,7 +120,7 @@
                 @endif
 
                 @can ("deputy_head_of_faculty")
-                @if (auth()->user()->reviewerAssignments()->exists())
+                @if (auth()->user()->reviewerAssignments()->whereHas('budgetPlan', function ($q) { $q->where('status', 'PENDING_REVIEW'); })->exists())
                 <div class="space-y-1 mt-4">
                     <a href="{{ route('deputy_head_of_faculty.annual-budget.index') }}"
                         class="{{ request()->routeIs('deputy_head_of_faculty.annual-budget.*') ? 'flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-gray-900' : 'flex items-center px-3 py-2 rounded-md text-sm text-gray-900' }}">

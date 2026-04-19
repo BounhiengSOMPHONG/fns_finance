@@ -2,7 +2,7 @@
     <!-- Page Title -->
     <div>
         <h1 class="text-xl font-semibold text-gray-800">
-            @yield('page-title', 'ແດຊບອດ')
+            @yield('page-title', 'Dashboard')
         </h1>
     </div>
 

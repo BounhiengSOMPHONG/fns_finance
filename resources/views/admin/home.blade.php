@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Dashboard Admin')
-@section('page-title', 'ແດຊບອດຜູ້ດູແລລະບົບ')
+@section('page-title', 'Dashboard ຜູ້ດູແລລະບົບ')
 
 @section('content')
 <div class="space-y-6">

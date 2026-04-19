@@ -182,8 +182,6 @@
                                         <div class="flex justify-between items-start mb-1">
                                             <span class="font-semibold text-sm text-gray-700">
                                                 {{ $comment->user->full_name ?? 'User' }}
-                                                <span
-                                                    class="font-normal text-gray-400 text-xs">({{ $comment->user->role->role_name ?? '' }})</span>
                                             </span>
                                             <span
                                                 class="text-xs text-gray-400 shrink-0">{{ $comment->created_at->format('d/m/Y H:i') }}</span>

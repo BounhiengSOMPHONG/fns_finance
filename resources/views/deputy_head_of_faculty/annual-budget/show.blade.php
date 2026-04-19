@@ -172,7 +172,6 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <span class="font-semibold text-sm text-gray-700">
                                             {{ $comment->user->full_name ?? 'User' }}
-                                            <span class="font-normal text-gray-400 text-xs">({{ $comment->user->role->role_name ?? '' }})</span>
                                         </span>
                                         @if($comment->isMarked())
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">

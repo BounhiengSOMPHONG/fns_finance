@@ -314,7 +314,6 @@
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-semibold text-sm text-gray-700">
                                     {{ $comment->user->full_name ?? 'User' }}
-                                    <span class="font-normal text-gray-400 text-xs">({{ $comment->user->role->role_name ?? '' }})</span>
                                 </span>
                                 {{-- Acknowledged badge (toggles via JS) --}}
                                 <span id="badge-{{ $comment->id }}"
@@ -440,7 +439,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-700">{{ $reviewer->full_name }}</p>
                             <p class="text-xs text-gray-400">
-                                {{ $reviewer->role->role_name_lao ?? '' }}
+                                {{ $reviewer->role?->role_name_lao ?? '' }}
                                 @if($reviewer->department)
                                     · {{ $reviewer->department->department_name }}
                                 @endif

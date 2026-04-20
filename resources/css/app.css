@@ -7,22 +7,30 @@
 /* ─── Design Tokens ───────────────────────────────────────────────── */
 :root {
   /* Brand */
-  --color-primary:        #2D55C8;
-  --color-primary-light:  #EEF3FF;
-  --color-primary-hover:  #2448B0;
-  --color-primary-muted:  #5570C2;
+  --color-primary:        #2563EB; /* Enterprise Blue */
+  --color-primary-light:  #EFF6FF;
+  --color-primary-hover:  #1D4ED8;
+  --color-primary-muted:  #60A5FA;
 
   /* Neutrals */
-  --color-bg-page:        #F8F9FB;
+  --color-bg-page:        #F8FAFC; /* Slate 50 */
   --color-bg-white:       #FFFFFF;
-  --color-bg-surface:     #F3F4F6;
-  --color-bg-hover:       #F0F2F5;
+  --color-bg-surface:     #F1F5F9; /* Slate 100 */
+  --color-bg-hover:       #E2E8F0; /* Slate 200 */
 
   /* Text */
-  --color-text-primary:   #111827;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary:  #9CA3AF;
-  --color-text-link:      #2D55C8;
+  --color-text-primary:   #0F172A; /* Slate 900 */
+  --color-text-secondary: #475569; /* Slate 600 */
+  --color-text-tertiary:  #94A3B8; /* Slate 400 */
+  --color-text-link:      #2563EB;
+
+  /* Sidebar Theme (Dark Slate) */
+  --color-sidebar-bg:     #1E293B; /* Slate 800 */
+  --color-sidebar-text:   #94A3B8; /* Slate 400 */
+  --color-sidebar-heading:#CBD5E1; /* Slate 300 */
+  --color-sidebar-hover:  #334155; /* Slate 700 */
+  --color-sidebar-active-bg: #2563EB; /* Indigo/Blue */
+  --color-sidebar-active-text: #FFFFFF;
 
   /* Borders */
   --color-border:         #E5E7EB;
@@ -49,22 +57,24 @@
   --radius-xl:  16px;
 
   /* Shadows */
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-dropdown: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-dropdown: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  --shadow-topbar: 0 1px 3px 0 rgba(0,0,0,0.03);
 
   /* Layout */
-  --sidebar-width: 220px;
-  --topbar-height: 52px;
+  --sidebar-width: 250px;
+  --topbar-height: 64px;
 
   /* Typography */
   --font-sans: 'Noto Sans Lao', 'Inter', system-ui, sans-serif;
-  --font-size-xs:   11px;
-  --font-size-sm:   12px;
-  --font-size-base: 13px;
-  --font-size-md:   14px;
-  --font-size-lg:   16px;
-  --font-size-xl:   18px;
-  --font-size-2xl:  22px;
+  --font-size-xs:   12px;
+  --font-size-sm:   13px;
+  --font-size-base: 14px;
+  --font-size-md:   15px;
+  --font-size-lg:   18px;
+  --font-size-xl:   20px;
+  --font-size-2xl:  24px;
 }
 
 @layer base {
@@ -88,8 +98,7 @@
   /* ── Sidebar ─────────────────────────────────────────────────────── */
   .sidebar {
     width: var(--sidebar-width);
-    background: var(--color-bg-white);
-    border-right: 1px solid var(--color-border);
+    background: var(--color-sidebar-bg);
     height: 100vh;
     position: fixed;
     top: 0;
@@ -98,89 +107,93 @@
     flex-direction: column;
     overflow-y: auto;
     z-index: 200;
+    box-shadow: 2px 0 8px 0 rgba(0,0,0,0.05); /* subtle shadow for separation */
   }
 
   .sidebar-logo {
-    height: var(--topbar-height);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 0 16px;
-    border-bottom: 1px solid var(--color-border);
+    justify-content: center;
+    gap: 12px;
+    padding: 24px 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
   }
 
   .sidebar-logo img {
-    width: 32px;
-    height: 32px;
+    width: 45px;
+    height: auto;
     object-fit: contain;
-    border-radius: 50%;
-    flex-shrink: 0;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 
   .sidebar-logo-text {
-    font-size: 13px;
+    font-size: var(--font-size-md);
     font-weight: 600;
-    color: var(--color-text-primary);
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: #FFFFFF;
+    letter-spacing: 0.01em;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.3;
   }
 
   .sidebar-nav {
-    padding: 8px 0;
+    padding: 16px 0;
     flex: 1;
   }
 
   .sidebar-section-label {
     font-size: var(--font-size-xs);
-    font-weight: 500;
-    color: var(--color-text-tertiary);
+    font-weight: 600;
+    color: var(--color-sidebar-heading);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 20px 20px 6px;
+    padding: 24px 20px 8px;
+    opacity: 0.8;
   }
 
   .sidebar-divider {
     border: none;
-    border-top: 1px solid var(--color-border);
-    margin: 4px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 8px 16px;
   }
 
   .nav-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    margin: 1px 8px;
-    border-radius: var(--radius-md);
+    gap: 12px;
+    padding: 10px 16px;
+    margin: 2px 12px;
+    border-radius: var(--radius-sm);
     font-size: var(--font-size-base);
-    color: var(--color-text-secondary);
+    color: var(--color-sidebar-text);
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
+    transition: background 0.2s, color 0.2s;
     text-decoration: none;
-  }
-
-  .nav-item:hover {
-    background: var(--color-bg-hover);
-    color: var(--color-text-primary);
-  }
-
-  .nav-item.active {
-    background: var(--color-primary-light);
-    color: var(--color-primary);
     font-weight: 500;
   }
 
-  .nav-item svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    opacity: 0.7;
+  .nav-item:hover {
+    background: var(--color-sidebar-hover);
+    color: #FFFFFF;
   }
 
-  .nav-item.active svg {
+  .nav-item.active {
+    background: var(--color-sidebar-active-bg);
+    color: var(--color-sidebar-active-text);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  }
+
+  .nav-item svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  .nav-item:hover svg, .nav-item.active svg {
     opacity: 1;
   }
 
@@ -193,6 +206,7 @@
     height: var(--topbar-height);
     background: var(--color-bg-white);
     border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-topbar);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -201,29 +215,32 @@
   }
 
   .topbar-title {
-    font-size: var(--font-size-md);
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--color-text-primary);
   }
 
   .topbar-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
   }
 
   .topbar-date {
     font-size: var(--font-size-sm);
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    padding-right: 16px;
+    border-right: 1px solid var(--color-border);
   }
 
   .topbar-avatar {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: var(--color-primary);
-    color: #fff;
-    font-size: 11px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: 13px;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -233,24 +250,25 @@
 
   .topbar-username {
     font-size: var(--font-size-sm);
-    font-weight: 500;
+    font-weight: 600;
     color: var(--color-text-primary);
   }
 
   .btn-logout {
     font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    border: 1px solid var(--color-border);
-    padding: 4px 12px;
-    border-radius: var(--radius-md);
+    color: #DC2626;
+    border: 1px solid #DC2626;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
     background: transparent;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background 0.15s;
     font-family: var(--font-sans);
+    font-weight: 500;
   }
 
   .btn-logout:hover {
-    background: var(--color-bg-surface);
+    background: #FEF2F2;
   }
 
   /* Main content area */

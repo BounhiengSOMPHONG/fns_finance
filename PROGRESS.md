@@ -139,6 +139,13 @@
     - แถวรวมยอด + แถวหมวดหลัก: สีฟ้า Cyan `#a5f3fc`
     - เส้นตาราง: `border-black`
     - อัพเดตทุก role: `head_of_finance`, `head_of_faculty`, `deputy_head_of_faculty`, `head_of_department`
+20. **🎨 Enterprise UI Redesign (Dark Sidebar)** — **เสร็จสิ้น** — ปรับโครงสร้าง CSS และ Blade components ใหม่ให้เข้ากับแพทเทิร์น Admin Dashboard ยอดนิยม (เช่น AdminLTE, Tabler):
+    - อัปเดต Color Tokens เป็นโทนสี Deep Blue / Slate (`#1E293B`, `#2563EB`) ใน `app.css`
+    - Sidebar กลายเป็นสีเข้ม ตัวอักษรสีอ่อน (Dark Theme Sidebar) พร้อม Hover effect เน้นความชัดเจน
+    - จัดวาง Logo Layout ใหม่ใน `admin-sidebar.blade.php` ให้อยู่แบบ Column-centered ขนาดโลโก้ 45px พร้อมข้อความ "ມະຫາວິທະຍາໄລແຫ່ງຊາດ" เด่นชัด
+    - Navbar ด้านบนเป็นสีขาวสะอาดตา พร้อมเพิ่ม Box Shadow (`--shadow-topbar`) ให้ Card และ Navbar ดูมีมิติและสวยงามระดับองค์กร
+    - ออกแบบหน้าต่าง Login ใหม่เอี่ยม (`resources/views/layouts/guest.blade.php`, `login.blade.php`) ให้อิงตัวแปร CSS ของระบบ (Shadow, Radius) สะอาดตา แฝงความ Enterprise และแปลภาษาลาวทั้งหมด
+    - ทุกข้อความถูกบังคับให้เป็นภาษาลาว (ພາສາລາວ) ตามความต้องการของ User เต็มร้อยเปอร์เซ็นต์
 20. **🎨 Master UI Redesign (Phases 1-5)** — **เสร็จสิ้น** — ปรับปรุง UI ทั้งระบบให้กลายเป็น Minimal & Clean:
     - สร้าง Design Tokens (CSS Variables) และ Reusable Component Classes (เช่น `.card`, `.btn`, `.table-wrapper`, `.form-section`) ใน `app.css`
     - เปลี่ยน Layout Shell ใหม่ให้เป็น Fixed Sidebar + Topbar (`layouts/admin.blade.php`, `admin-sidebar.blade.php`, `admin-header.blade.php`)

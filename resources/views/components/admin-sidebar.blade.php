@@ -1,8 +1,11 @@
 <aside id="admin-sidebar" class="sidebar">
     {{-- Logo Area --}}
     <div class="sidebar-logo">
-        <img src="{{ asset('storage/logofns.jpg') }}" alt="FNS Logo" />
-        <span class="sidebar-logo-text">ລະບົບງົບປະມານ FNS</span>
+        <img src="{{ asset('storage/logofns.jpg') }}" alt="NUOL Logo" />
+        <div class="sidebar-logo-text">
+            ມະຫາວິທະຍາໄລແຫ່ງຊາດ<br>
+            <span style="font-size: 12px; font-weight: 400; color: var(--color-sidebar-text);">ລະບົບງົບປະມານ FNS</span>
+        </div>
     </div>
 
     {{-- Navigation --}}

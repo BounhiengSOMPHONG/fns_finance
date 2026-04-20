@@ -125,9 +125,14 @@
     - ลบ inline styles ทั้งหมด ใช้ Tailwind CSS utility classes อย่างถูกต้อง
     - ปรับ Tailwind class order ให้ตรงกับ Prettier format
 17. **🎨 Header Component Refactoring** — `resources/views/components/admin-header.blade.php` — ทำความเรียบร้อย จัดเรียง Tailwind classes อย่างถูกต้อง ปรับปรุง responsive design
-18. **🎨 Popup Modal UI Upgrade (ແທນ confirm())** — **เสร็จสิ้น** — ปรับปรุง UX ทุกปุ่มยืนยันจาก `confirm()` แบบเก่าเป็น Tailwind CSS Popup Modal สวยงาม มี backdrop blur, scale animation, ไอคอนสีตามธีม (เขียว/ส้ม/ม่วง):
+18. **🎨 Popup Modal UI Upgrade (ແທນ confirm())** — **เสร็จสิ้น** — ปรับปรุง UX ทุกปุ่มยืนยันจาก `confirm()` แบบเก่าเป็น Tailwind CSS Popup Modal สวยงาม มี backdrop blur, scale animation, ไอคอนสีตามธีม (เขียว/ส้ม/ม่วง/แดง):
     - **`head_of_finance/annual-budget/show.blade.php`** — ปุ่ม ✏️ ເລີ່ມແກ້ໄຂ (สีส้ม), 🏛️ ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ (สีม่วง)
     - **`head_of_faculty/annual-budget/show.blade.php`** — ปุ่ม ✅ ອະນຸມັດ (สีเขียว), ↩ ປັບປຸງ (สีส้ม) — พร้อม sync comment จาก textarea เข้า hidden field ใน modal
+    - **`admin/users/index.blade.php`** — ปุ่ม 🗑️ ລົບຜູ້ໃຊ້ (สีแดง) — แสดงชื่อเต็มผู้ที่จะลบใน modal
+    - **`admin/roles/index.blade.php`** — ปุ่ม 🗑️ ລົບບົດບາດ (สีแดง) — แสดงชื่อ role ใน modal
+    - **`admin/departments/index.blade.php`** — ปุ่ม 🗑️ ລົບພະແນກ (สีแดง) — แสดงชื่อแผนกใน modal
+    - **`admin/chart-of-accounts/index.blade.php`** — ปุ่ม 🗑️ ລົບບັນຊີ (สีแดง) — แสดงรหัส+ชื่อบัญชีใน modal
+    - ทุก modal ใช้ reusable pattern: form action ถูกเซ็ตแบบ dynamic ผ่าน JS, รองรับหลาย rows ในตาราง
 19. **🎨 Table Color Standardization** — **เสร็จสิ้น** — ปรับสีตาราง ພາບລວມ ແຜນງົບປະມານປະຈຳປີ ให้เหมือนกันทุก role:
     - หัวตาราง: สีส้ม `#fdba74` / `#fed7aa`
     - แถวเลขคอลัมน์: สีม่วง `#c4b5fd`

@@ -94,15 +94,11 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </a>
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບຜູ້ໃຊ້ນີ້?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900" title="ລົບ">
+                                <button type="button" onclick="openDeleteModal('{{ route('admin.users.destroy', $user) }}', '{{ $user->full_name }}')" class="text-red-600 hover:text-red-900" title="ລົບ">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </button>
-                                </form>
                             </div>
                         </td>
                     </tr>
@@ -124,4 +120,58 @@
         </div>
     @endif
 </div>
+
+{{-- ── Delete Confirmation Modal ──────────────────────────────────── --}}
+<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm scale-95 transform transition-transform duration-300" id="deleteModalBody">
+        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100/50 rounded-full ring-4 ring-red-50">
+            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-center text-gray-900 mb-2">ຢືນຢັນການລົບ</h3>
+        <p class="text-sm text-center text-gray-600 mb-2">ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບຜູ້ໃຊ້ນີ້?</p>
+        <p class="text-center mb-6">
+            <span id="deleteItemName" class="inline-block px-3 py-1 bg-red-50 text-red-700 text-sm font-semibold rounded-md border border-red-100"></span>
+        </p>
+        <form id="deleteForm" method="POST" class="flex gap-3">
+            @csrf
+            @method('DELETE')
+            <button type="button" onclick="closeDeleteModal()"
+                class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors focus:ring-4 focus:ring-gray-100">
+                ຍົກເລີກ
+            </button>
+            <button type="submit"
+                class="flex-1 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold shadow-sm transition-colors focus:ring-4 focus:ring-red-200">
+                ຢືນຢັນລົບ
+            </button>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    function openDeleteModal(actionUrl, itemName) {
+        document.getElementById('deleteForm').action = actionUrl;
+        document.getElementById('deleteItemName').textContent = itemName;
+        const m = document.getElementById('deleteModal');
+        const b = document.getElementById('deleteModalBody');
+        m.style.display = 'flex';
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        setTimeout(() => { b.classList.remove('scale-95'); b.classList.add('scale-100'); }, 10);
+    }
+
+    function closeDeleteModal() {
+        const m = document.getElementById('deleteModal');
+        const b = document.getElementById('deleteModalBody');
+        b.classList.remove('scale-100'); b.classList.add('scale-95');
+        setTimeout(() => { m.style.display = 'none'; m.classList.add('hidden'); m.classList.remove('flex'); }, 150);
+    }
+
+    document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+@endpush
 @endsection

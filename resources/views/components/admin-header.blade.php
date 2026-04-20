@@ -1,67 +1,70 @@
-<header class="border-b bg-white">
-    <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <button id="sidebar-toggle" class="rounded p-2 hover:bg-gray-100 md:hidden">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
+<header class="topbar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="sidebar-toggle" class="btn-icon" style="display: none;">
+            <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
+    </div>
+
+    <div class="topbar-right">
+        @auth
+            {{-- Notification Bell --}}
+            <div x-data="notificationBell()" x-init="fetchNotifications()" class="relative inline-block">
+                <button @click="open = !open" class="btn-icon" style="border: none; position: relative;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                     </svg>
+                    <span x-show="unreadCount > 0" x-text="unreadCount"
+                        style="position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; font-size:10px; font-weight:600; background:#DC2626; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0 4px;">
+                    </span>
                 </button>
-                <a href="#" class="font-semibold text-gray-800">FNS</a>
-            </div>
 
-            <div class="hidden items-center space-x-4 md:flex">
-                @auth
-                    <div x-data="notificationBell()" x-init="fetchNotifications()" class="relative inline-block">
-                        <button @click="open = !open" class="relative rounded-full p-2 hover:bg-gray-200 focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                            </svg>
-                            <span x-show="unreadCount > 0" x-text="unreadCount"
-                                class="absolute -right-0.5 -top-0.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold leading-none text-white">
-                            </span>
+                <div x-show="open" @click.away="open = false" x-transition
+                    style="position:absolute; right:0; z-index:50; margin-top:8px; width:360px; max-width:90vw; overflow:hidden; border-radius:var(--radius-lg); border:1px solid var(--color-border); background:var(--color-bg-white); box-shadow:var(--shadow-dropdown);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--color-border); padding:12px 16px;">
+                        <span style="font-size:var(--font-size-md); font-weight:500; color:var(--color-text-primary);">ການແຈ້ງເຕືອນ</span>
+                        <button @click="markAllRead()" style="font-size:var(--font-size-sm); color:var(--color-primary); background:none; border:none; cursor:pointer;"
+                            x-show="unreadCount > 0">
+                            ອ່ານທັງໝົດ
                         </button>
-
-                        <div x-show="open" @click.away="open = false" x-transition
-                            class="absolute right-0 z-50 mt-2 w-80 max-w-[22rem] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-96">
-                            <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-                                <h3 class="text-sm font-semibold text-gray-800">ການແຈ້ງເຕືອນ</h3>
-                                <button @click="markAllRead()" class="text-xs font-medium text-blue-600 hover:text-blue-800"
-                                    x-show="unreadCount > 0">
-                                    ອ່ານທັງໝົດ
-                                </button>
-                            </div>
-                            <div class="max-h-72 divide-y divide-gray-100 overflow-y-auto">
-                                <template x-if="notifications.length === 0">
-                                    <div class="px-4 py-8 text-center text-sm text-gray-400">
-                                        ບໍ່ມີການແຈ້ງເຕືອນ
-                                    </div>
-                                </template>
-                                <template x-for="n in notifications" :key="n.id">
-                                    <a :href="n.url" @click="markRead(n)"
-                                        class="block px-4 py-3 transition-colors hover:bg-gray-50"
-                                        :class="{ 'bg-blue-50': !n.read, 'opacity-60': n.read }">
-                                        <p class="line-clamp-2 text-sm text-gray-700" x-text="n.message"></p>
-                                        <p class="mt-1 text-xs text-gray-400" x-text="n.time"></p>
-                                    </a>
-                                </template>
-                            </div>
-                        </div>
                     </div>
-                @endauth
-
-                <span class="text-sm text-gray-500">{{ now()->format('d/m/Y') }}</span>
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm">{{ Auth::user()->full_name ?? 'Admin' }}</span>
-                    <form method="POST" action="{{ route('logout') }}" class="logout-form">
-                        @csrf
-                        <button type="submit" class="rounded-md bg-gray-100 px-3 py-1.5 text-sm hover:bg-gray-200">Logout</button>
-                    </form>
+                    <div style="max-height:280px; overflow-y:auto;">
+                        <template x-if="notifications.length === 0">
+                            <div style="padding:32px 16px; text-align:center; font-size:var(--font-size-sm); color:var(--color-text-tertiary);">
+                                ບໍ່ມີການແຈ້ງເຕືອນ
+                            </div>
+                        </template>
+                        <template x-for="n in notifications" :key="n.id">
+                            <a :href="n.url" @click="markRead(n)"
+                                style="display:block; padding:12px 16px; border-bottom:1px solid var(--color-border); transition:background 0.12s; text-decoration:none;"
+                                :style="{ background: !n.read ? 'var(--color-primary-light)' : 'transparent', opacity: n.read ? 0.6 : 1 }"
+                                onmouseover="this.style.background=!this.style.background.includes('transparent') ? this.style.background : 'var(--color-bg-hover)'"
+                                >
+                                <p style="font-size:var(--font-size-base); color:var(--color-text-primary); margin:0;" x-text="n.message"></p>
+                                <p style="font-size:var(--font-size-xs); color:var(--color-text-tertiary); margin-top:4px;" x-text="n.time"></p>
+                            </a>
+                        </template>
+                    </div>
                 </div>
             </div>
+        @endauth
+
+        <span class="topbar-date">{{ now()->format('d/m/Y') }}</span>
+
+        {{-- User Info --}}
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div class="topbar-avatar">
+                {{ strtoupper(substr(Auth::user()->full_name ?? 'A', 0, 2)) }}
+            </div>
+            <span class="topbar-username">{{ Auth::user()->full_name ?? 'Admin' }}</span>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
         </div>
     </div>
 </header>

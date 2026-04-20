@@ -4,37 +4,51 @@
 @section('page-title', 'Dashboard ຜູ້ດູແລລະບົບ')
 
 @section('content')
-<div class="space-y-6">
-    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p class="text-sm text-slate-500">ຍິນດີຕ້ອນຮັບ</p>
-        <h2 class="mt-1 text-2xl font-semibold text-slate-900">{{ auth()->user()->full_name }}</h2>
-        <p class="mt-2 text-sm text-slate-600">ໜ້ານີ້ໃຊ້ສຳລັບຈັດການຂໍ້ມູນພື້ນຖານຂອງລະບົບການເງິນ.</p>
-    </section>
+<div>
+    {{-- Welcome Banner --}}
+    <div class="welcome-banner">
+        <div>
+            <div class="welcome-label">ຍິນດີຕ້ອນຮັບ</div>
+            <div class="welcome-name">{{ auth()->user()->full_name }}</div>
+            <div class="welcome-desc">ໜ້ານີ້ໃຊ້ສຳລັບຈັດການຂໍ້ມູນພື້ນຖານຂອງລະບົບການເງິນ.</div>
+        </div>
+        <div class="welcome-icon">
+            <svg style="width:24px;height:24px;color:#2D55C8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+            </svg>
+        </div>
+    </div>
 
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <a href="{{ route('admin.users.index') }}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <p class="text-sm font-medium text-slate-500">ຜູ້ໃຊ້</p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">ຈັດການບັນຊີຜູ້ໃຊ້</p>
-            <p class="mt-3 text-xs text-blue-600">ເປີດໜ້າ Users</p>
+    {{-- Navigation Cards --}}
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+        <a href="{{ route('admin.users.index') }}" class="card">
+            <div class="card-badge blue">CRUD</div>
+            <div class="card-title">ຜູ້ໃຊ້</div>
+            <div class="card-desc">ຈັດການບັນຊີຜູ້ໃຊ້</div>
+            <div class="card-link">ເປີດໜ້າ Users →</div>
         </a>
 
-        <a href="{{ route('admin.roles.index') }}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <p class="text-sm font-medium text-slate-500">ບົດບາດ</p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">ກຳນົດສິດທິໃນລະບົບ</p>
-            <p class="mt-3 text-xs text-blue-600">ເປີດໜ້າ Roles</p>
+        <a href="{{ route('admin.roles.index') }}" class="card">
+            <div class="card-badge green">CRUD</div>
+            <div class="card-title">ບົດບາດ</div>
+            <div class="card-desc">ກຳນົດສິດທິໃນລະບົບ</div>
+            <div class="card-link">ເປີດໜ້າ Roles →</div>
         </a>
 
-        <a href="{{ route('admin.departments.index') }}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <p class="text-sm font-medium text-slate-500">ພະແນກ</p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">ຂໍ້ມູນໜ່ວຍງານ</p>
-            <p class="mt-3 text-xs text-blue-600">ເປີດໜ້າ Departments</p>
+        <a href="{{ route('admin.departments.index') }}" class="card">
+            <div class="card-badge orange">CRUD</div>
+            <div class="card-title">ພະແນກ</div>
+            <div class="card-desc">ຂໍ້ມູນໜ່ວຍງານ</div>
+            <div class="card-link">ເປີດໜ້າ Departments →</div>
         </a>
 
-        <a href="{{ route('admin.chart-of-accounts.index') }}" class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <p class="text-sm font-medium text-slate-500">ແຜນບັນຊີ</p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">ໂຄງສ້າງລະຫັດບັນຊີ</p>
-            <p class="mt-3 text-xs text-blue-600">ເປີດໜ້າ Chart of Accounts</p>
+        <a href="{{ route('admin.chart-of-accounts.index') }}" class="card">
+            <div class="card-badge gray">CRUD</div>
+            <div class="card-title">ແຜນບັນຊີ</div>
+            <div class="card-desc">ໂຄງສ້າງລະຫັດບັນຊີ</div>
+            <div class="card-link">ເປີດໜ້າ Chart of Accounts →</div>
         </a>
-    </section>
+    </div>
 </div>
 @endsection

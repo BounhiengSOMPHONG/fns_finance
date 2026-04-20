@@ -139,6 +139,12 @@
     - แถวรวมยอด + แถวหมวดหลัก: สีฟ้า Cyan `#a5f3fc`
     - เส้นตาราง: `border-black`
     - อัพเดตทุก role: `head_of_finance`, `head_of_faculty`, `deputy_head_of_faculty`, `head_of_department`
+20. **🎨 Master UI Redesign (Phases 1-5)** — **เสร็จสิ้น** — ปรับปรุง UI ทั้งระบบให้กลายเป็น Minimal & Clean:
+    - สร้าง Design Tokens (CSS Variables) และ Reusable Component Classes (เช่น `.card`, `.btn`, `.table-wrapper`, `.form-section`) ใน `app.css`
+    - เปลี่ยน Layout Shell ใหม่ให้เป็น Fixed Sidebar + Topbar (`layouts/admin.blade.php`, `admin-sidebar.blade.php`, `admin-header.blade.php`)
+    - รีดีไซน์ Home Pages ทั้ง 6 roles ลบ gradient ออก ใช้สีพื้นเรียบ พร้อม `.welcome-banner` และ badge สีต่างๆ
+    - รีดีไซน์ CRUD Index Pages (Users, Roles, Departments, Chart of Accounts) ใช้ `.table-wrapper` แบบใหม่
+    - รีดีไซน์ CRUD Create/Edit/Show Pages ทั้งหมดให้เข้ากับ design system ใหม่ (grid forms, badges)
 
 ### 🔄 Workflow งบประมาณ (ใหม่):
 ```

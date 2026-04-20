@@ -4,22 +4,28 @@
 @section('page-title', 'Dashboard ຮອງຫົວໜ້າຄະນະ')
 
 @section('content')
-<div class="space-y-6">
-    <section class="rounded-2xl border border-amber-100 bg-gradient-to-r from-amber-500 to-yellow-500 p-6 text-white shadow-sm">
-        <p class="text-sm text-amber-100">ຍິນດີຕ້ອນຮັບ</p>
-        <h2 class="mt-1 text-2xl font-semibold">{{ auth()->user()->full_name }}</h2>
-        <p class="mt-2 text-sm text-amber-50">ກວດສອບ ແລະ ໃຫ້ຄຳເຫັນຕໍ່ແຜນງົບປະມານທີ່ຖືກມອບໝາຍ.</p>
-    </section>
+<div>
+    {{-- Welcome Banner --}}
+    <div class="welcome-banner">
+        <div>
+            <div class="welcome-label">ຍິນດີຕ້ອນຮັບ</div>
+            <div class="welcome-name">{{ auth()->user()->full_name }}</div>
+            <div class="welcome-desc">ກວດສອບ ແລະ ໃຫ້ຄຳເຫັນຕໍ່ແຜນງົບປະມານທີ່ຖືກມອບໝາຍ.</div>
+        </div>
+        <div class="welcome-icon">
+            <svg style="width:24px;height:24px;color:#2D55C8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+            </svg>
+        </div>
+    </div>
 
     @if($hasPendingReview)
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Budget Review</p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">ເຂົ້າໄປພິຈາລະນາແຜນງົບປະມານ</p>
-            <p class="mt-2 text-sm text-slate-600">ເບິ່ງລາຍການທີ່ລໍຖ້າການກວດສອບ ແລະ ສົ່ງຄວາມຄິດເຫັນ.</p>
-            <a href="{{ route('deputy_head_of_faculty.annual-budget.index') }}" class="mt-4 inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600">
-                ເປີດລາຍການພິຈາລະນາ
-            </a>
-        </section>
+        <a href="{{ route('deputy_head_of_faculty.annual-budget.index') }}" class="card" style="max-width:420px;">
+            <div class="card-badge orange">BUDGET REVIEW</div>
+            <div class="card-title">ເຂົ້າໄປພິຈາລະນາແຜນງົບປະມານ</div>
+            <div class="card-desc">ເບິ່ງລາຍການທີ່ລໍຖ້າການກວດສອບ ແລະ ສົ່ງຄວາມຄິດເຫັນ.</div>
+            <div class="card-link">ເປີດລາຍການພິຈາລະນາ →</div>
+        </a>
     @endif
 </div>
 @endsection

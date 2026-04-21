@@ -126,6 +126,7 @@
     - ปรับ Tailwind class order ให้ตรงกับ Prettier format
 17. **🎨 Header Component Refactoring** — `resources/views/components/admin-header.blade.php` — ทำความเรียบร้อย จัดเรียง Tailwind classes อย่างถูกต้อง ปรับปรุง responsive design
 18. **🎨 Popup Modal UI Upgrade (ແທນ confirm())** — **เสร็จสิ้น** — ปรับปรุง UX ทุกปุ่มยืนยันจาก `confirm()` แบบเก่าเป็น Tailwind CSS Popup Modal สวยงาม มี backdrop blur, scale animation, ไอคอนสีตามธีม (เขียว/ส้ม/ม่วง/แดง):
+    - **`head_of_finance/annual-budget/index.blade.php`** — ปุ่ม 🗑️ ລຶບ (สีแดง) — แสดง "ສົກປີ" ใน modal
     - **`head_of_finance/annual-budget/show.blade.php`** — ปุ่ม ✏️ ເລີ່ມແກ້ໄຂ (สีส้ม), 🏛️ ສົ່ງເພື່ອຂໍອະນຸມັດຂັ້ນສຸດທ້າຍ (สีม่วง)
     - **`head_of_faculty/annual-budget/show.blade.php`** — ปุ่ม ✅ ອະນຸມັດ (สีเขียว), ↩ ປັບປຸງ (สีส้ม) — พร้อม sync comment จาก textarea เข้า hidden field ใน modal
     - **`admin/users/index.blade.php`** — ปุ่ม 🗑️ ລົບຜູ້ໃຊ້ (สีแดง) — แสดงชื่อเต็มผู้ที่จะลบใน modal

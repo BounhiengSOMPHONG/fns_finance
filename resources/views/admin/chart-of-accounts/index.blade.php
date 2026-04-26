@@ -7,14 +7,20 @@
 <div class="table-wrapper">
     <div class="table-header">
         <span class="table-title">ລາຍການບັນຊີ</span>
-        <a href="{{ route('admin.chart-of-accounts.create') }}" class="btn btn-primary">
-            <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            ເພີ່ມບັນຊີ
-        </a>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" id="bulkDeleteBtn" class="btn btn-danger" style="display: none;" onclick="openBulkDeleteModal('{{ route('admin.chart-of-accounts.bulk_destroy') }}')">
+                <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                ລຶບລາຍການທີ່ເລືອກ (<span id="selectedCount">0</span>)
+            </button>
+            <a href="{{ route('admin.chart-of-accounts.create') }}" class="btn btn-primary">
+                <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                ເພີ່ມບັນຊີ
+            </a>
+        </div>
     </div>
 
     <div class="filter-bar">
-        <form id="filter-form" method="GET" action="{{ route('admin.chart-of-accounts.index') }}" style="display:flex; flex-wrap:wrap; gap:12px; width:100%;">
+        <form id="filter-form" method="GET" action="{{ route('admin.chart-of-accounts.index') }}" style="display:flex; flex-wrap:wrap; gap:12px; width:100%; align-items:center;">
             <div style="flex:1; min-width:200px;">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="ຄົ້ນຫາລະຫັດ ຫຼື ຊື່ບັນຊີ..." class="form-input" onkeydown="if(event.key==='Enter'){this.form.submit();}">
             </div>
@@ -26,12 +32,20 @@
                     </option>
                 @endforeach
             </select>
+            <select name="per_page" onchange="this.form.submit()" class="form-input" style="width:auto; min-width:160px; margin-left:auto;">
+                <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>Number of rows: 10</option>
+                <option value="25" {{ request('per_page', 25) == '25' ? 'selected' : '' }}>Number of rows: 25</option>
+                <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>Number of rows: 50</option>
+                <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>Number of rows: 100</option>
+                <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Show all</option>
+            </select>
         </form>
     </div>
 
     <table>
         <thead>
             <tr>
+                <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAll" class="form-checkbox"></th>
                 <th>ID</th>
                 <th>ລະຫັດບັນຊີ</th>
                 <th>ຊື່ບັນຊີ</th>
@@ -42,6 +56,7 @@
         <tbody>
             @forelse ($chartOfAccounts as $account)
                 <tr>
+                    <td style="text-align: center;"><input type="checkbox" class="rowCheckbox form-checkbox" value="{{ $account->id }}"></td>
                     <td>{{ $account->id }}</td>
                     <td style="font-family:monospace; font-weight:500">{{ $account->account_code }}</td>
                     <td>{{ $account->account_name }}</td>
@@ -67,7 +82,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5"><div class="empty-state"><div class="empty-title">ບໍ່ພົບຂໍ້ມູນບັນຊີ</div></div></td></tr>
+                <tr><td colspan="6"><div class="empty-state"><div class="empty-title">ບໍ່ພົບຂໍ້ມູນບັນຊີ</div></div></td></tr>
             @endforelse
         </tbody>
     </table>
@@ -94,11 +109,75 @@
     </div>
 </div>
 
+{{-- Bulk Delete Modal --}}
+<div id="bulkDeleteModal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-body" style="text-align:center; padding:28px 24px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--color-danger-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg style="width:24px;height:24px;color:#DC2626" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <h3 style="font-size:var(--font-size-lg);font-weight:600;color:var(--color-text-primary);margin-bottom:8px;">ຢືນຢັນການລຶບກຸ່ມ</h3>
+            <p style="font-size:var(--font-size-base);color:var(--color-text-secondary);margin-bottom:8px;">ທ່ານແນ່ໃຈບໍ່ວ່າຈະລຶບ <span id="bulkDeleteCountDisplay" style="font-weight:bold;">0</span> ລາຍການທີ່ເລືອກ?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeBulkDeleteModal()" class="btn btn-secondary">ຍົກເລີກ</button>
+            <form id="bulkDeleteForm" method="POST" style="margin:0;">
+                @csrf @method('DELETE')
+                <div id="bulkDeleteInputs"></div>
+                <button type="submit" class="btn btn-danger">ຢືນຢັນລຶບ</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 function openDeleteModal(u, n) { document.getElementById('deleteForm').action=u; document.getElementById('deleteItemName').textContent=n; document.getElementById('deleteModal').style.display='flex'; }
 function closeDeleteModal() { document.getElementById('deleteModal').style.display='none'; }
 document.getElementById('deleteModal')?.addEventListener('click', function(e) { if(e.target===this) closeDeleteModal(); });
+</script>
+<script>
+const selectAll = document.getElementById('selectAll');
+const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+const selectedCountSpan = document.getElementById('selectedCount');
+
+function updateBulkDeleteBtn() {
+    const checkedCount = document.querySelectorAll('.rowCheckbox:checked').length;
+    if (checkedCount > 0) {
+        bulkDeleteBtn.style.display = 'inline-flex';
+        selectedCountSpan.textContent = checkedCount;
+    } else {
+        bulkDeleteBtn.style.display = 'none';
+    }
+    if(selectAll) selectAll.checked = checkedCount === rowCheckboxes.length && rowCheckboxes.length > 0;
+}
+
+if (selectAll) {
+    selectAll.addEventListener('change', function() {
+        rowCheckboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkDeleteBtn();
+    });
+}
+rowCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkDeleteBtn));
+
+function openBulkDeleteModal(actionUrl) {
+    const checkedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');
+    const deleteInputsContainer = document.getElementById('bulkDeleteInputs');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+    
+    deleteInputsContainer.innerHTML = '';
+    checkedCheckboxes.forEach(cb => {
+        const input = document.createElement('input'); input.type = 'hidden'; input.name = 'ids[]'; input.value = cb.value;
+        deleteInputsContainer.appendChild(input);
+    });
+    
+    document.getElementById('bulkDeleteCountDisplay').textContent = checkedCheckboxes.length;
+    bulkDeleteForm.action = actionUrl;
+    document.getElementById('bulkDeleteModal').style.display = 'flex';
+}
+function closeBulkDeleteModal() { document.getElementById('bulkDeleteModal').style.display = 'none'; }
+document.getElementById('bulkDeleteModal')?.addEventListener('click', function(e) { if (e.target === this) closeBulkDeleteModal(); });
 </script>
 @endpush
 @endsection

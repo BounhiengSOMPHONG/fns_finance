@@ -43,7 +43,13 @@ class UserController extends Controller
             $query->where('is_active', (int) $request->is_active);
         }
 
-        $users = $query->latest('id')->paginate(10)->withQueryString();
+        $perPage = request('per_page', 25);
+        if ($perPage === 'all') {
+            $perPage = $query->count() > 0 ? $query->count() : 1;
+        } else {
+            $perPage = (int) $perPage;
+        }
+        $users = $query->latest('id')->paginate($perPage)->withQueryString();
         $roles = Role::orderBy('role_name')->get();
         $departments = Department::orderBy('department_name')->get();
 
@@ -152,5 +158,29 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'ລຶບຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
+    }
+    /**
+     * Remove the specified resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+        ]);
+
+        $ids = $request->ids;
+        
+        // Prevent deleting yourself
+        if (in_array(auth()->id(), $ids)) {
+            $ids = array_diff($ids, [auth()->id()]);
+            if (empty($ids)) {
+                return redirect()->route('admin.users.index')->with('error', 'ບໍ່ສາມາດລຶບບັນຊີຕົວເອງໄດ້');
+            }
+        }
+
+        User::whereIn('id', $ids)->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'ລຶບຜູ້ໃຊ້ທີ່ເລືອກສຳເລັດແລ້ວ.');
     }
 }

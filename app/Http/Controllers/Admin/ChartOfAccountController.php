@@ -30,7 +30,13 @@ class ChartOfAccountController extends Controller
             $query->where('parent_id', (int) $request->parent_id);
         }
 
-        $chartOfAccounts = $query->orderBy('account_code')->paginate(10)->withQueryString();
+        $perPage = request('per_page', 25);
+        if ($perPage === 'all') {
+            $perPage = $query->count() > 0 ? $query->count() : 1;
+        } else {
+            $perPage = (int) $perPage;
+        }
+        $chartOfAccounts = $query->orderBy('account_code')->paginate($perPage)->withQueryString();
         $parentAccounts = ChartOfAccount::has('children')->orderBy('account_code')->get();
 
         return view('admin.chart-of-accounts.index', compact('chartOfAccounts', 'parentAccounts'));
@@ -108,5 +114,19 @@ class ChartOfAccountController extends Controller
         return redirect()
             ->route('admin.chart-of-accounts.index')
             ->with('success', 'ลบบัญชีสำเร็จ');
+    }
+    /**
+     * Remove the specified resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:chart_of_accounts,id',
+        ]);
+
+        ChartOfAccount::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.chart-of-accounts.index')->with('success', 'ລຶບບັນຊີທີ່ເລືອກສຳເລັດ');
     }
 }

@@ -20,6 +20,12 @@ Route::middleware(['auth', 'check.active', 'role:admin'])
 
         Route::get('/home', [HomeController::class, 'index'])->name('home');
 
+        // Bulk Delete Routes
+        Route::delete('users/bulk-delete', [UserController::class, 'bulkDestroy'])->name('users.bulk_destroy');
+        Route::delete('roles/bulk-delete', [RoleController::class, 'bulkDestroy'])->name('roles.bulk_destroy');
+        Route::delete('departments/bulk-delete', [DepartmentController::class, 'bulkDestroy'])->name('departments.bulk_destroy');
+        Route::delete('chart-of-accounts/bulk-delete', [ChartOfAccountController::class, 'bulkDestroy'])->name('chart-of-accounts.bulk_destroy');
+
         // CRUD Resources
         Route::resource('users', UserController::class);
         Route::resource('roles', RoleController::class);

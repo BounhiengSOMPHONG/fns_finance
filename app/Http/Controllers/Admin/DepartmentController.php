@@ -30,7 +30,13 @@ class DepartmentController extends Controller
             $query->where('department_type', $request->department_type);
         }
 
-        $departments = $query->withCount('users')->latest('id')->paginate(10)->withQueryString();
+        $perPage = request('per_page', 25);
+        if ($perPage === 'all') {
+            $perPage = $query->count() > 0 ? $query->count() : 1;
+        } else {
+            $perPage = (int) $perPage;
+        }
+        $departments = $query->withCount('users')->latest('id')->paginate($perPage)->withQueryString();
         
         // Get unique department types for filter (cached for 1 hour)
         $departmentTypes = cache()->remember('department_types', 3600, function () {
@@ -122,5 +128,40 @@ class DepartmentController extends Controller
         return redirect()
             ->route('admin.departments.index')
             ->with('success', 'ลบแผนกสำเร็จ');
+    }
+    /**
+     * Remove the specified resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:departments,id',
+        ]);
+
+        $ids = $request->ids;
+        $deletedCount = 0;
+        $failedCount = 0;
+
+        foreach ($ids as $id) {
+            $department = Department::find($id);
+            if ($department) {
+                if ($department->users()->count() > 0) {
+                    $failedCount++;
+                } else {
+                    $department->delete();
+                    $deletedCount++;
+                }
+            }
+        }
+
+        cache()->forget('department_types');
+
+        $message = "ລຶບພະແນກທີ່ເລືອກສຳເລັດ $deletedCount ລາຍການ.";
+        if ($failedCount > 0) {
+            $message .= " (ບໍ່ສາມາດລຶບ $failedCount ລາຍການເນື່ອງຈາກຍັງມີຜູ້ໃຊ້ງານຢຸ່)";
+        }
+
+        return redirect()->route('admin.departments.index')->with('success', $message);
     }
 }

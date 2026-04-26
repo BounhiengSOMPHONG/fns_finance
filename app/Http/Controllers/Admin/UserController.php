@@ -82,7 +82,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'สร้างผู้ใช้งานสำเร็จ');
+            ->with('success', 'ສ້າງຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
     }
 
     /**
@@ -132,7 +132,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'อัปเดตผู้ใช้งานสำเร็จ');
+            ->with('success', 'ອັບເດດຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
     }
 
     /**
@@ -144,13 +144,13 @@ class UserController extends Controller
         if (auth()->id() === $user->id) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', 'ไม่สามารถลบบัญชีตัวเองได้');
+                ->with('error', 'ບໍ່ສາມາດລຶບບັນຊີຕົວເອງໄດ້');
         }
 
         $user->delete();
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'ลบผู้ใช้งานสำเร็จ');
+            ->with('success', 'ລຶບຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
     }
 }

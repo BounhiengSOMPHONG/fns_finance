@@ -55,6 +55,13 @@ $yearLabels = [
                 </svg>
                 ຕັ້ງຄ່າ
             </button>
+            <button type="button" onclick="document.getElementById('loadDefaultsModal').style.display='flex'"
+                class="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-100 gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                ໂຫຼດຄ່າເລີ່ມຕົ້ນ
+            </button>
             <a href="{{ route('head_of_finance.academic_income.summary', $plan) }}"
                 class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,19 +231,26 @@ $yearLabels = [
                 </div>
 
                 @if ($credit)
+                @php $codeId = str_replace('.','_',$code); @endphp
                     <div class="flex flex-col gap-1">
                         <label class="text-xs text-gray-500">ນ/ສ *</label>
                         <input type="number" name="num_persons" min="0" placeholder="0"
                             class="px-2 py-1.5 border border-gray-300 rounded text-xs w-20 focus:ring-1 focus:ring-blue-400">
                     </div>
-                    <div class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1" id="add_credits_{{ $codeId }}">
                         <label class="text-xs text-gray-500">ໜ່ວຍກິດ *</label>
                         <input type="number" name="num_credits" min="0" placeholder="0"
                             class="px-2 py-1.5 border border-gray-300 rounded text-xs w-20 focus:ring-1 focus:ring-blue-400">
                     </div>
+                    <div class="flex flex-col gap-1" id="add_rate_{{ $codeId }}" style="display:none;">
+                        <label class="text-xs text-gray-500">ອັດຕາ/ຄົນ (ກີບ) *</label>
+                        <input type="number" name="rate_per_person" min="0" placeholder="0"
+                            class="px-2 py-1.5 border border-gray-300 rounded text-xs w-28 focus:ring-1 focus:ring-blue-400">
+                    </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-xs text-gray-500">ປະເພດ *</label>
                         <select name="student_year"
+                            onchange="toggleAddCreditFields('{{ $codeId }}', this.value)"
                             class="px-2 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-400">
                             @foreach ($yearLabels as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
@@ -440,31 +454,74 @@ $yearLabels = [
     </div>
 </div>
 
+{{-- ─── Load Defaults Modal ─── --}}
+<div id="loadDefaultsModal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-body" style="text-align:center; padding:28px 24px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg style="width:24px;height:24px;color:#4f46e5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+            </div>
+            <h3 style="font-size:var(--font-size-lg);font-weight:600;margin-bottom:8px;">ໂຫຼດຄ່າເລີ່ມຕົ້ນ</h3>
+            <p style="font-size:var(--font-size-sm);color:var(--color-text-secondary);">
+                ການດຳເນີນງານນີ້ຈະ<strong>ລຶບລາຍການທັງໝົດ</strong>ທີ່ມີຢູ່ ແລະ ໂຫຼດຂໍ້ມູນຈາກ Planning 2026.xls ແທນ. ທ່ານແນ່ໃຈບໍ່?
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="document.getElementById('loadDefaultsModal').style.display='none'"
+                class="btn btn-secondary">ຍົກເລີກ</button>
+            <form action="{{ route('head_of_finance.academic_income.load_defaults', $plan) }}" method="POST" style="margin:0;">
+                @csrf
+                <button type="submit" class="btn btn-primary">ໂຫຼດຄ່າເລີ່ມຕົ້ນ</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const YEAR_LABELS = @json($yearLabels);
+let editSectionIsCredit = false;
+
+function toggleAddCreditFields(codeId, yearValue) {
+    const creditsDiv = document.getElementById('add_credits_' + codeId);
+    const rateDiv    = document.getElementById('add_rate_' + codeId);
+    if (yearValue === 'masters_phd') {
+        creditsDiv.style.display = 'none';
+        rateDiv.style.display    = '';
+    } else {
+        creditsDiv.style.display = '';
+        rateDiv.style.display    = 'none';
+    }
+}
 
 function openEditModal(item, sectionCode) {
-    const isCredit = ['1.1', '1.3'].includes(sectionCode);
+    editSectionIsCredit = ['1.1', '1.3'].includes(sectionCode);
     const form = document.getElementById('editForm');
 
-    // Set action URL
     form.action = `/head-of-finance/academic-income/{{ $plan->id }}/items/${item.id}`;
 
-    document.getElementById('edit_item_name').value      = item.item_name  ?? '';
-    document.getElementById('edit_num_persons').value    = item.num_persons ?? 0;
+    document.getElementById('edit_item_name').value       = item.item_name  ?? '';
+    document.getElementById('edit_num_persons').value     = item.num_persons ?? 0;
     document.getElementById('edit_nuol_percentage').value = item.nuol_percentage ?? 0.17;
 
     const creditsDiv = document.getElementById('edit_credits_div');
     const rateDiv    = document.getElementById('edit_rate_div');
     const yearDiv    = document.getElementById('edit_year_div');
 
-    if (isCredit) {
-        document.getElementById('edit_num_credits').value  = item.num_credits ?? 0;
+    if (editSectionIsCredit) {
         document.getElementById('edit_student_year').value = item.student_year ?? '1';
-        creditsDiv.style.display = '';
-        rateDiv.style.display    = 'none';
-        yearDiv.style.display    = '';
+        yearDiv.style.display = '';
+        if (item.student_year === 'masters_phd') {
+            document.getElementById('edit_rate_per_person').value = item.rate_per_person ?? 0;
+            creditsDiv.style.display = 'none';
+            rateDiv.style.display    = '';
+        } else {
+            document.getElementById('edit_num_credits').value = item.num_credits ?? 0;
+            creditsDiv.style.display = '';
+            rateDiv.style.display    = 'none';
+        }
     } else {
         document.getElementById('edit_rate_per_person').value = item.rate_per_person ?? 0;
         creditsDiv.style.display = 'none';
@@ -474,6 +531,19 @@ function openEditModal(item, sectionCode) {
 
     document.getElementById('editModal').style.display = 'flex';
 }
+
+document.getElementById('edit_student_year').addEventListener('change', function() {
+    if (!editSectionIsCredit) return;
+    const creditsDiv = document.getElementById('edit_credits_div');
+    const rateDiv    = document.getElementById('edit_rate_div');
+    if (this.value === 'masters_phd') {
+        creditsDiv.style.display = 'none';
+        rateDiv.style.display    = '';
+    } else {
+        creditsDiv.style.display = '';
+        rateDiv.style.display    = 'none';
+    }
+});
 
 function openDeleteItemModal(url) {
     document.getElementById('deleteItemForm').action = url;
@@ -490,7 +560,7 @@ function closeDeleteModal() {
 }
 
 // Close modals on backdrop click
-['settingsModal','editModal','deleteItemModal','deleteModal'].forEach(id => {
+['settingsModal','editModal','deleteItemModal','deleteModal','loadDefaultsModal'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', function(e) {
         if (e.target === this) this.style.display = 'none';
     });

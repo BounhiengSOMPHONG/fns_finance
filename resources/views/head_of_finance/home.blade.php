@@ -34,6 +34,13 @@
             <div class="card-desc">ຄິດໄລ່ ແລະ ປັບແຜນງວດ</div>
             <div class="card-link">ເປີດໜ້າ Installments →</div>
         </a>
+
+        <a href="{{ route('head_of_finance.academic_income.index') }}" class="card">
+            <div class="card-badge" style="background:#4f46e5;color:#fff;">INCOME</div>
+            <div class="card-title">ລາຍຮັບວິຊາການ</div>
+            <div class="card-desc">ປ້ອນລາຍຮັບ ແລະ ສ້າງຮ່າງສັງລວມ</div>
+            <div class="card-link">ເປີດໜ້າ Academic Income →</div>
+        </a>
     </div>
 </div>
 @endsection

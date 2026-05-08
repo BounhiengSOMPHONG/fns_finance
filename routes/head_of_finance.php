@@ -5,6 +5,7 @@
 // Only users with role_name = 'head_of_finance' can access these.
 // ─────────────────────────────────────────────────────
 
+use App\Http\Controllers\HeadOfFinance\AcademicIncomeController;
 use App\Http\Controllers\HeadOfFinance\AnnualBudgetPlanController;
 use App\Http\Controllers\HeadOfFinance\HomeController;
 use App\Http\Controllers\HeadOfFinance\PlansCtrl;
@@ -17,6 +18,19 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
 
         Route::get('/home', [HomeController::class, 'index'])->name('home');
         Route::get('/plans', [PlansCtrl::class, 'plans'])->name('plans');
+
+        // ── Academic Income (ຮ່າງສັງລວມລາຍຮັບວິຊາການ) ─────────────────────
+        Route::get('academic-income',                                       [AcademicIncomeController::class, 'index'])       ->name('academic_income.index');
+        Route::get('academic-income/create',                                [AcademicIncomeController::class, 'create'])      ->name('academic_income.create');
+        Route::post('academic-income',                                      [AcademicIncomeController::class, 'store'])       ->name('academic_income.store');
+        Route::post('academic-income/settings',                             [AcademicIncomeController::class, 'saveSetting'])->name('academic_income.settings');
+        Route::get('academic-income/{plan}',                                [AcademicIncomeController::class, 'show'])        ->name('academic_income.show');
+        Route::delete('academic-income/{plan}',                             [AcademicIncomeController::class, 'destroy'])     ->name('academic_income.destroy');
+        Route::get('academic-income/{plan}/summary',                        [AcademicIncomeController::class, 'summary'])     ->name('academic_income.summary');
+        Route::get('academic-income/{plan}/pdf',                            [AcademicIncomeController::class, 'exportPdf'])   ->name('academic_income.pdf');
+        Route::post('academic-income/{plan}/items',                         [AcademicIncomeController::class, 'storeItem'])   ->name('academic_income.items.store');
+        Route::put('academic-income/{plan}/items/{item}',                   [AcademicIncomeController::class, 'updateItem'])  ->name('academic_income.items.update');
+        Route::delete('academic-income/{plan}/items/{item}',                [AcademicIncomeController::class, 'destroyItem']) ->name('academic_income.items.destroy');
 
         // ── Annual Budget Plans ──────────────────────────────────────────
         Route::resource('annual-budget', AnnualBudgetPlanController::class);

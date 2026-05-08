@@ -9,6 +9,6 @@ class PlansCtrl extends Controller
 {
     public function plans()
     {
-        return view('head_of_finance.plans');
+        return redirect()->route('head_of_finance.academic_income.index');
     }
 }

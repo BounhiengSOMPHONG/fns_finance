@@ -28,6 +28,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('academic-income/defaults',                              [AcademicIncomeController::class, 'defaults'])       ->name('academic_income.defaults');
         Route::post('academic-income/defaults',                             [AcademicIncomeController::class, 'storeDefault'])   ->name('academic_income.defaults.store');
         Route::delete('academic-income/defaults/{default}',                 [AcademicIncomeController::class, 'destroyDefault']) ->name('academic_income.defaults.destroy');
+        Route::post('academic-income/defaults/reorder',                      [AcademicIncomeController::class, 'reorderDefaults'])->name('academic_income.defaults.reorder');
         Route::get('academic-income/{plan}',                                [AcademicIncomeController::class, 'show'])           ->name('academic_income.show');
         Route::delete('academic-income/{plan}',                             [AcademicIncomeController::class, 'destroy'])        ->name('academic_income.destroy');
         Route::get('academic-income/{plan}/summary',                        [AcademicIncomeController::class, 'summary'])        ->name('academic_income.summary');

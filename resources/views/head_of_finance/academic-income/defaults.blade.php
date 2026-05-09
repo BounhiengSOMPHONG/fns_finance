@@ -17,9 +17,14 @@
             </a>
             <div>
                 <h2 class="text-lg font-bold text-gray-900">ຈັດການ Default ລາຍການ</h2>
-                <p class="text-xs text-gray-500 mt-0.5">ລາຍການເຫຼົ່ານີ້ຈະຖືກໂຫຼດອັດຕະໂນມັດເມື່ອສ້າງແຜນໃໝ່</p>
+                <p class="text-xs text-gray-500 mt-0.5">ລາຍການເຫຼົ່ານີ້ຈະຖືກໂຫຼດອັດຕະໂນມັດເມື່ອສ້າງແຜນໃໝ່ — ລາກແຖວເພື່ອຈັດລຳດັບ</p>
             </div>
         </div>
+    </div>
+
+    {{-- Toast --}}
+    <div id="reorder-toast" class="hidden fixed top-4 right-4 z-50 px-4 py-2 bg-green-600 text-white text-sm rounded-lg shadow-lg transition-opacity">
+        ບັນທຶກລຳດັບສຳເລັດ
     </div>
 
     @if (session('success'))
@@ -35,22 +40,21 @@
 
     @foreach (['1.1','1.2','1.3','1.4'] as $code)
     @php
-        $codeId    = str_replace('.', '_', $code);
-        $items     = $grouped[$code] ?? collect();
-        $isCredit  = in_array($code, ['1.1', '1.3']);
+        $codeId   = str_replace('.', '_', $code);
+        $items    = $grouped[$code] ?? collect();
+        $isCredit = in_array($code, ['1.1', '1.3']);
     @endphp
 
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        {{-- Section header --}}
         <div class="px-5 py-3 bg-slate-700 text-white text-sm font-semibold">
             {{ $sectionTitles[$code] }}
         </div>
 
-        {{-- Existing items table --}}
         <div class="overflow-x-auto">
             <table class="w-full text-xs">
                 <thead class="bg-slate-100 text-gray-600 uppercase">
                     <tr>
+                        <th class="px-2 py-2 w-8"></th>{{-- drag handle --}}
                         <th class="px-3 py-2 text-center w-8">#</th>
                         <th class="px-3 py-2 text-left">ລາຍການ / ຫຼັກສູດ</th>
                         @if ($isCredit)
@@ -58,13 +62,25 @@
                             <th class="px-3 py-2 text-right">ໜ່ວຍກິດ</th>
                         @endif
                         <th class="px-3 py-2 text-center">% ມຊ</th>
-                        <th class="px-3 py-2 text-center w-20">ລຶບ</th>
+                        <th class="px-3 py-2 text-center w-16">ລຶບ</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody id="sortable_{{ $codeId }}"
+                    class="divide-y divide-gray-100"
+                    data-reorder-url="{{ route('head_of_finance.academic_income.defaults.reorder') }}"
+                    data-csrf="{{ csrf_token() }}">
                     @forelse ($items as $item)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-3 py-2 text-center text-gray-400">{{ $loop->iteration }}</td>
+                    <tr class="hover:bg-gray-50 select-none" data-id="{{ $item->id }}">
+                        <td class="px-2 py-2 text-center">
+                            <span class="drag-handle cursor-grab text-gray-300 hover:text-gray-500 active:cursor-grabbing">
+                                <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="9"  cy="6"  r="1.5"/><circle cx="15" cy="6"  r="1.5"/>
+                                    <circle cx="9"  cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                                    <circle cx="9"  cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+                                </svg>
+                            </span>
+                        </td>
+                        <td class="px-3 py-2 text-center text-gray-400 row-num">{{ $loop->iteration }}</td>
                         <td class="px-3 py-2 text-gray-800">{{ $item->item_name }}</td>
                         @if ($isCredit)
                             <td class="px-3 py-2 text-center">
@@ -101,8 +117,8 @@
                         </td>
                     </tr>
                     @empty
-                        <tr>
-                            <td colspan="{{ $isCredit ? 6 : 4 }}"
+                        <tr class="empty-row">
+                            <td colspan="{{ $isCredit ? 7 : 5 }}"
                                 class="px-4 py-4 text-center text-gray-400 italic text-xs">
                                 ຍັງບໍ່ມີ default ລາຍການ
                             </td>
@@ -164,7 +180,9 @@
     @endforeach
 
 </div>
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 <script>
 function toggleCreditsField(codeId, yearValue) {
     const wrap = document.getElementById('credits_wrap_' + codeId);
@@ -179,6 +197,45 @@ function toggleCreditsField(codeId, yearValue) {
         wrap.style.pointerEvents = '';
     }
 }
+
+let toastTimer;
+function showToast(msg, ok = true) {
+    const t = document.getElementById('reorder-toast');
+    t.textContent = msg;
+    t.className = `fixed top-4 right-4 z-50 px-4 py-2 text-white text-sm rounded-lg shadow-lg transition-opacity ${ok ? 'bg-green-600' : 'bg-red-500'}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className += ' opacity-0'; }, 2000);
+}
+
+function renumberRows(tbody) {
+    let i = 1;
+    tbody.querySelectorAll('tr:not(.empty-row) .row-num').forEach(cell => {
+        cell.textContent = i++;
+    });
+}
+
+document.querySelectorAll('[id^="sortable_"]').forEach(tbody => {
+    Sortable.create(tbody, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'bg-blue-50',
+        onEnd() {
+            renumberRows(tbody);
+            const ids = [...tbody.querySelectorAll('tr[data-id]')].map(tr => tr.dataset.id);
+            fetch(tbody.dataset.reorderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': tbody.dataset.csrf,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ items: ids }),
+            })
+            .then(r => r.ok ? showToast('ບັນທຶກລຳດັບສຳເລັດ') : showToast('ເກີດຂໍ້ຜິດພາດ', false))
+            .catch(() => showToast('ເກີດຂໍ້ຜິດພາດ', false));
+        },
+    });
+});
 </script>
 @endpush
 @endsection

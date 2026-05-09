@@ -318,6 +318,17 @@ class AcademicIncomeController extends Controller
         return back()->with('success', 'ລຶບ Default ສຳເລັດ!');
     }
 
+    public function reorderDefaults(Request $request)
+    {
+        $request->validate(['items' => 'required|array', 'items.*' => 'integer']);
+
+        foreach ($request->items as $order => $id) {
+            AcademicIncomeDefault::where('id', $id)->update(['sort_order' => $order]);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     // ─── Bulk save all items in a plan ───────────────────────────────────────
 
     public function saveAll(Request $request, AcademicIncomePlan $plan)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\HeadOfFinance;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicIncomeDefault;
 use App\Models\AcademicIncomeItem;
 use App\Models\AcademicIncomePlan;
 use App\Models\AppSetting;
@@ -37,6 +38,8 @@ class AcademicIncomeController extends Controller
             'status'      => 'DRAFT',
             'created_by'  => auth()->id(),
         ]);
+
+        $this->seedDefaults($plan);
 
         return redirect()->route('head_of_finance.academic_income.show', $plan)
             ->with('success', 'ສ້າງແຜນລາຍຮັບວິຊາການສຳເລັດ!');
@@ -255,155 +258,115 @@ class AcademicIncomeController extends Controller
         return back()->with('success', 'ບັນທຶກການຕັ້ງຄ່າສຳເລັດ!');
     }
 
-    // ─── Load Defaults ────────────────────────────────────────────────────────
+    // ─── Defaults management ─────────────────────────────────────────────────
 
-    public function loadDefaults(AcademicIncomePlan $plan)
+    public function defaults()
     {
-        $plan->items()->delete();
+        $sectionTitles = [
+            '1.1' => '1.1  ລາຍຮັບຄ່າໜ່ວຍກິດ ປີ 2-4 ແລະ ປ.ໂທ/ເອກ',
+            '1.2' => '1.2  ຄ່າລົງທະບຽນ ປີ 2-4',
+            '1.3' => '1.3  ລາຍຮັບຄ່າໜ່ວຍກິດ ປີ 1 ແລະ ປ.ໂທ/ເອກ',
+            '1.4' => '1.4  ຄ່າລົງທະບຽນ ປີ 1',
+        ];
+        $yearLabels = [
+            '1'           => 'ປີ 1',
+            '2'           => 'ປີ 2',
+            '3'           => 'ປີ 3',
+            '4'           => 'ປີ 4',
+            'masters_phd' => 'ປ.ໂທ / ເອກ',
+        ];
+        $grouped = AcademicIncomeDefault::orderBy('section_code')->orderBy('sort_order')
+            ->get()->groupBy('section_code');
 
-        $defaults = $this->defaultItems();
-        $counters  = [];
+        return view('head_of_finance.academic-income.defaults',
+            compact('grouped', 'sectionTitles', 'yearLabels'));
+    }
 
-        foreach ($defaults as $d) {
-            $code = $d['section_code'];
+    public function storeDefault(Request $request)
+    {
+        $isCredit = in_array($request->section_code, ['1.1', '1.3']);
+        $rules = [
+            'section_code'    => 'required|in:1.1,1.2,1.3,1.4',
+            'item_name'       => 'required|string|max:255',
+            'nuol_percentage' => 'required|numeric|min:0|max:1',
+        ];
+        if ($isCredit) {
+            $rules['student_year'] = 'required|in:1,2,3,4,masters_phd';
+            if ($request->student_year !== 'masters_phd') {
+                $rules['num_credits'] = 'required|integer|min:0';
+            }
+        }
+        $request->validate($rules);
+
+        $maxOrder = AcademicIncomeDefault::where('section_code', $request->section_code)->max('sort_order') ?? -1;
+
+        AcademicIncomeDefault::create([
+            'section_code'    => $request->section_code,
+            'sort_order'      => $maxOrder + 1,
+            'item_name'       => $request->item_name,
+            'num_credits'     => ($isCredit && $request->student_year !== 'masters_phd') ? $request->num_credits : null,
+            'nuol_percentage' => $request->nuol_percentage,
+            'student_year'    => $isCredit ? $request->student_year : null,
+        ]);
+
+        return back()->with('success', 'ເພີ່ມ Default ສຳເລັດ!');
+    }
+
+    public function destroyDefault(AcademicIncomeDefault $default)
+    {
+        $default->delete();
+        return back()->with('success', 'ລຶບ Default ສຳເລັດ!');
+    }
+
+    // ─── Bulk save all items in a plan ───────────────────────────────────────
+
+    public function saveAll(Request $request, AcademicIncomePlan $plan)
+    {
+        foreach ($request->input('items', []) as $id => $data) {
+            $item = AcademicIncomeItem::where('plan_id', $plan->id)->find($id);
+            if (!$item) continue;
+
+            $isCredit  = in_array($item->section_code, ['1.1', '1.3']);
+            $isMasters = $isCredit && $item->student_year === 'masters_phd';
+
+            $item->update([
+                'num_persons'     => max(0, (int) ($data['num_persons'] ?? 0)),
+                'num_credits'     => ($isCredit && !$isMasters)
+                    ? max(0, (int) ($data['num_credits'] ?? $item->num_credits ?? 0))
+                    : $item->num_credits,
+                'rate_per_person' => (!$isCredit || $isMasters)
+                    ? max(0, (float) ($data['rate_per_person'] ?? 0))
+                    : $item->rate_per_person,
+                'nuol_percentage' => min(1, max(0, (float) ($data['nuol_percentage'] ?? $item->nuol_percentage))),
+            ]);
+        }
+
+        return back()->with('success', 'ບັນທຶກສຳເລັດ!');
+    }
+
+    // ─── Seed defaults on create ─────────────────────────────────────────────
+
+    private function seedDefaults(AcademicIncomePlan $plan): void
+    {
+        $counters = [];
+        foreach (AcademicIncomeDefault::orderBy('section_code')->orderBy('sort_order')->get() as $d) {
+            $code = $d->section_code;
             $counters[$code] = ($counters[$code] ?? -1) + 1;
 
             AcademicIncomeItem::create([
                 'plan_id'         => $plan->id,
                 'section_code'    => $code,
                 'sort_order'      => $counters[$code],
-                'item_name'       => $d['item_name'],
-                'num_credits'     => $d['num_credits']    ?? null,
-                'rate_per_person' => $d['rate_per_person'] ?? null,
-                'num_persons'     => $d['num_persons'],
-                'nuol_percentage' => $d['nuol_percentage'],
-                'student_year'    => $d['student_year']   ?? null,
+                'item_name'       => $d->item_name,
+                'num_credits'     => $d->num_credits,
+                'rate_per_person' => null,
+                'num_persons'     => 0,
+                'nuol_percentage' => $d->nuol_percentage,
+                'student_year'    => $d->student_year,
             ]);
         }
-
-        return redirect()->route('head_of_finance.academic_income.show', $plan)
-            ->with('success', 'ໂຫຼດຂໍ້ມູນເລີ່ມຕົ້ນຈາກ Planning 2026.xls ສຳເລັດ!');
     }
 
-    private function defaultItems(): array
-    {
-        // Credits = rate / 35,000 for bachelor (all divide exactly).
-        // Masters/PhD use rate_per_person directly (does not divide evenly by 35,000).
-        return [
-            // ─── 1.1 Credit fees year 2-4 + masters/PhD ───────────────────────
-            // Year 2
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ວິທະຍາສາດຄອມ',                  'num_credits'=>37,'num_persons'=>60, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ພັດທະນາໂປຣແກຣມ',                'num_credits'=>37,'num_persons'=>70, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ພັດທະນາເວບໄຊ້',                 'num_credits'=>37,'num_persons'=>60, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຕໍ່ເນື່ອງວິທະຍາສາດຄອມ',          'num_credits'=>27,'num_persons'=>8,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຄະນິດສາດນໍາໃຊ້',                'num_credits'=>37,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ',        'num_credits'=>37,'num_persons'=>6,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຄະນິດສາດສະຖິຕິ',                'num_credits'=>37,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຊີວະທົ່ວໄປ',                     'num_credits'=>31,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ເທັກໂນໂລຍີ່ຊີວະພາບ',             'num_credits'=>31,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ເຄມີທົ່ວໄປ',                     'num_credits'=>35,'num_persons'=>7,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ເຄມີສິ່ງແວດລ້ອມ',                'num_credits'=>35,'num_persons'=>6,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຟີຊິກທົ່ວໄປ',                    'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ທໍລະນີຟີຊິກ',                    'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ວັດສະດຸສາດ',                     'num_credits'=>37,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'2','item_name'=>'ປີ 2 ຟິຊິກນິວເຄຣຍ',                  'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            // Year 3
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ວິທະຍາສາດຄອມ',                  'num_credits'=>33,'num_persons'=>60, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ພັດທະນາໂປຣແກຣມ',                'num_credits'=>38,'num_persons'=>35, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ພັດທະນາເວບໄຊ້',                 'num_credits'=>42,'num_persons'=>45, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ຄະນິດທົ່ວໄປ',                   'num_credits'=>39,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ',        'num_credits'=>39,'num_persons'=>12, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ຄະນິດສາດສະຖິຕິ',                'num_credits'=>37,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ຊີວະວິທະຍາທົ່ວໄປ',               'num_credits'=>36,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ເທັກໂນໂລຍີ່ຊີວະພາບ',             'num_credits'=>33,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ເຄມີສາດທົ່ວໄປ',                  'num_credits'=>35,'num_persons'=>5,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ເຄມີສິ່ງແວດລ້ອມ',                'num_credits'=>36,'num_persons'=>3,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ຟີຊິກສາດທົ່ວໄປ',                 'num_credits'=>34,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ທໍລະນີຟີຊິກ',                    'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ວັດສະດຸສາດ',                     'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'3','item_name'=>'ປີ 3 ຟິຊິກນິວເຄຣຍ',                  'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            // Year 4
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ວິທະຍາສາດຄອມ',                  'num_credits'=>27,'num_persons'=>55, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ພັດທະນາໂປຣແກຣມ',                'num_credits'=>30,'num_persons'=>30, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ພັດທະນາເວບໄຊ້',                 'num_credits'=>27,'num_persons'=>40, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ຄະນິດທົ່ວໄປ',                   'num_credits'=>24,'num_persons'=>2,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ',        'num_credits'=>27,'num_persons'=>21, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ຄະນິດສາດສະຖິຕິ',                'num_credits'=>27,'num_persons'=>11, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ຊີວະວິທະຍາທົ່ວໄປ',               'num_credits'=>25,'num_persons'=>3,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ເທັກໂນໂລຍີ່ຊີວະພາບ',             'num_credits'=>23,'num_persons'=>3,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ເຄມີສາດທົ່ວໄປ',                  'num_credits'=>23,'num_persons'=>16, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ເຄມີສິ່ງແວດລ້ອມ',                'num_credits'=>22,'num_persons'=>5,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ຟີຊິກສາດທົ່ວໄປ',                 'num_credits'=>27,'num_persons'=>2,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ທໍລະນີຟີຊິກ',                    'num_credits'=>30,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ວັດສະດຸສາດ',                     'num_credits'=>27,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.1','student_year'=>'4','item_name'=>'ປີ 4 ຟິຊິກນິວເຄຣຍ',                  'num_credits'=>28,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            // Masters/PhD — rate_per_person (rate does not divide evenly by 35,000)
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທຟິຊິກນໍາໃຊ້',       'rate_per_person'=>10800000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທຄະນິດສາດ',          'rate_per_person'=>11040000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປິລິນຍາໂທຊີວະວິທະຍາ',         'rate_per_person'=>9840000, 'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທເຄມີ',               'rate_per_person'=>11040000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທວິທະຍາສາດຄອມ',       'rate_per_person'=>11040000,'num_persons'=>3, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ຟີຊິກສາດຮູບແບບຄົ້ນຄວ້າ',       'rate_per_person'=>11040000,'num_persons'=>3, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ເຄມີສາດຮູບແບບຄົ້ນຄວ້າ',        'rate_per_person'=>11040000,'num_persons'=>7, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ຊີວະວິທະຍາຮູບແບບຄົ້ນຄວ້າ',     'rate_per_person'=>11040000,'num_persons'=>3, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາເອກຟິຊິກ',              'rate_per_person'=>22800000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.1','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາເອກຊີວະວິທະຍາ',         'rate_per_person'=>24000000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-
-            // ─── 1.2 Registration fees year 2-4 (705 students) ────────────────
-            ['section_code'=>'1.2','item_name'=>'ຄ່າທຳນຽມນັກສຶກສາລົງທະບຽນ',             'rate_per_person'=>10000, 'num_persons'=>705,'nuol_percentage'=>0.25],
-            ['section_code'=>'1.2','item_name'=>'ຄ່າອະນາໄມຫ້ອງຮຽນ',                       'rate_per_person'=>25000, 'num_persons'=>705,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.2','item_name'=>'ບຳລຸງອຸປະກອນການຮຽນ-ການສອນ',              'rate_per_person'=>20000, 'num_persons'=>705,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.2','item_name'=>'ບຳລຸງກິດຈະກຳນັກສຶກສາ',                   'rate_per_person'=>30000, 'num_persons'=>705,'nuol_percentage'=>0.30],
-            ['section_code'=>'1.2','item_name'=>'ບຳລຸງວິທະຍາເຂດ',                          'rate_per_person'=>30000, 'num_persons'=>705,'nuol_percentage'=>0.40],
-            ['section_code'=>'1.2','item_name'=>'ອຸດໜູນວຽກປ້ອງກັນ',                        'rate_per_person'=>20000, 'num_persons'=>705,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.2','item_name'=>'ບຳລຸງຫ້ອງອ່ານ',                           'rate_per_person'=>30000, 'num_persons'=>705,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.2','item_name'=>'ບຳລຸງຫ້ອງທົດລອງ',                         'rate_per_person'=>15000, 'num_persons'=>705,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.2','item_name'=>'ບໍລິການສອບເສັງ',                           'rate_per_person'=>25000, 'num_persons'=>705,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.2','item_name'=>'ບໍລິການການລົງທະບຽນລາຍວິຊາ',               'rate_per_person'=>5000,  'num_persons'=>705,'nuol_percentage'=>0.00],
-
-            // ─── 1.3 Credit fees year 1 + masters/PhD ─────────────────────────
-            // Year 1 bachelor
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ວິທະຍາສາດຄອມພິວເຕີ ປີ 1',          'num_credits'=>37,'num_persons'=>60, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ການພັດທະນາໂປຣແກຣມ ປີ 1',            'num_credits'=>38,'num_persons'=>60, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ການພັດທະນາເວບໄຊ້ ປີ 1',              'num_credits'=>38,'num_persons'=>60, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມ ປີ 1',          'num_credits'=>37,'num_persons'=>10, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຄະນິດສາດສົດ ປີ 1',                   'num_credits'=>37,'num_persons'=>10, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ ປີ 1',       'num_credits'=>36,'num_persons'=>20, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຄະນິດສາດສະຖິຕິ ປີ 1',                'num_credits'=>36,'num_persons'=>0,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຊີວະສາດທົ່ວໄປ ປີ 1',                 'num_credits'=>37,'num_persons'=>5,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ເທັກໂນໂລຍີ່ຊີວະພາບ ປີ 1',             'num_credits'=>37,'num_persons'=>5,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ເຄມີທົ່ວໄປ ປີ 1',                     'num_credits'=>39,'num_persons'=>10, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ເຄມີສິ່ງແວດລ້ອມ ປີ 1',                'num_credits'=>39,'num_persons'=>10, 'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຟິຊິກທົ່ວໄປ ປີ 1',                    'num_credits'=>35,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ທໍລະນີຟິຊິກ ປີ 1',                    'num_credits'=>35,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ວັດສະດຸສາດ ປີ 1',                     'num_credits'=>35,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            ['section_code'=>'1.3','student_year'=>'1','item_name'=>'ຟິຊິກນິວເຄຣຍ ປີ 1',                  'num_credits'=>35,'num_persons'=>1,  'nuol_percentage'=>0.17],
-            // Masters/PhD year-1 rates
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທຟິຊິກນໍາໃຊ້(ພະລັງງາທົດແທນ)','rate_per_person'=>15840000,'num_persons'=>4, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທຄະນິດສາດ',                    'rate_per_person'=>16560000,'num_persons'=>4, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປິລິນຍາໂທຊີວະວິທະຍາ',                    'rate_per_person'=>14760000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທເຄມີ',                           'rate_per_person'=>16560000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາໂທວິທະຍາສາດຄອມ',                  'rate_per_person'=>16560000,'num_persons'=>5, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ຟີຊິກສາດຮູບແບບຄົ້ນຄວ້າ ປີ 1',            'rate_per_person'=>16560000,'num_persons'=>4, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ເຄມີສາດຮູບແບບຄົ້ນຄວ້າ ປີ 1',             'rate_per_person'=>16560000,'num_persons'=>5, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ຊີວະວິທະຍາຮູບແບບຄົ້ນຄວ້າ ປີ 1',          'rate_per_person'=>16560000,'num_persons'=>4, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາເອກຟິຊິກ',                          'rate_per_person'=>34200000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-            ['section_code'=>'1.3','student_year'=>'masters_phd','item_name'=>'ປະລິນຍາເອກຊີວະວິທະຍາ',                     'rate_per_person'=>36000000,'num_persons'=>0, 'nuol_percentage'=>0.10],
-
-            // ─── 1.4 Registration fees year 1 (324 students) ─────────────────
-            ['section_code'=>'1.4','item_name'=>'ຄ່າທຳນຽມລົງທະບຽນປະຈໍາປີ',                'rate_per_person'=>15000,'num_persons'=>324,'nuol_percentage'=>1.00],
-            ['section_code'=>'1.4','item_name'=>'ຄ່າຊຸດເອກະສານລົງທະບຽນ ນ/ສ ໃໝ່',          'rate_per_person'=>15000,'num_persons'=>324,'nuol_percentage'=>1.00],
-            ['section_code'=>'1.4','item_name'=>'ຄ່າອະນາໄມຫ້ອງຮຽນ',                        'rate_per_person'=>25000,'num_persons'=>324,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.4','item_name'=>'ບຳລຸງອຸປະກອນການຮຽນ-ການສອນ',               'rate_per_person'=>20000,'num_persons'=>324,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.4','item_name'=>'ບຳລຸງກິດຈະກຳນັກສຶກສາ',                    'rate_per_person'=>30000,'num_persons'=>324,'nuol_percentage'=>0.30],
-            ['section_code'=>'1.4','item_name'=>'ບຳລຸງວິທະຍາເຂດ',                           'rate_per_person'=>30000,'num_persons'=>324,'nuol_percentage'=>0.40],
-            ['section_code'=>'1.4','item_name'=>'ອຸດໜູນວຽກປ້ອງກັນ',                         'rate_per_person'=>20000,'num_persons'=>324,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.4','item_name'=>'ບຳລຸງຫ້ອງອ່ານ',                            'rate_per_person'=>10000,'num_persons'=>324,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.4','item_name'=>'ບຳລຸງຫ້ອງທົດລອງ',                          'rate_per_person'=>15000,'num_persons'=>324,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.4','item_name'=>'ບໍລິການສອບເສັງ',                            'rate_per_person'=>25000,'num_persons'=>324,'nuol_percentage'=>0.00],
-            ['section_code'=>'1.4','item_name'=>'ບໍລິການການລົງທະບຽນລາຍວິຊາ',                'rate_per_person'=>5000, 'num_persons'=>324,'nuol_percentage'=>0.00],
-        ];
-    }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 

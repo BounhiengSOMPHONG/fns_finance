@@ -46,15 +46,17 @@ $yearLabels = [
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <button type="button" onclick="document.getElementById('settingsModal').style.display='flex'"
-                class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                ຕັ້ງຄ່າ
-            </button>
+            @if ($plan->status === 'DRAFT')
+                <button type="button" onclick="document.getElementById('settingsModal').style.display='flex'"
+                    class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    ຕັ້ງຄ່າ
+                </button>
+            @endif
             <a href="{{ route('head_of_finance.academic_income.summary', $plan) }}"
                 class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,15 +65,37 @@ $yearLabels = [
                 </svg>
                 ເບິ່ງສັງລວມ
             </a>
-            <button type="button"
-                onclick="openDeleteModal('{{ route('head_of_finance.academic_income.destroy', $plan) }}', 'ສົກ {{ $plan->fiscal_year }}')"
-                class="inline-flex items-center px-3 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                ລຶບ
-            </button>
+            @if ($plan->status === 'DRAFT')
+                <button type="button"
+                    onclick="openApproveModal()"
+                    class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    ອະນຸມັດ
+                </button>
+                <button type="button"
+                    onclick="openDeleteModal('{{ route('head_of_finance.academic_income.destroy', $plan) }}', 'ສົກ {{ $plan->fiscal_year }}')"
+                    class="inline-flex items-center px-3 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    ລຶບ
+                </button>
+            @else
+                <form method="POST" action="{{ route('head_of_finance.academic_income.revert_draft', $plan) }}" style="margin:0;">
+                    @csrf
+                    <button type="submit"
+                        class="inline-flex items-center px-3 py-2 bg-orange-50 text-orange-600 text-sm font-medium rounded-lg hover:bg-orange-100 gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                        ຍ້ອນກັບຮ່າງ
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 
@@ -89,8 +113,17 @@ $yearLabels = [
     {{-- Price info banner --}}
     <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-700">
         ລາຄາຕໍ່ໜ່ວຍກິດ: <strong>{{ fmtNum($pricePerCredit) }} ກີບ / ໜ່ວຍ</strong>
-        — ປ່ຽນໄດ້ໂດຍກົດ "ຕັ້ງຄ່າ"
+        @if ($plan->status === 'DRAFT')— ປ່ຽນໄດ້ໂດຍກົດ "ຕັ້ງຄ່າ"@endif
     </div>
+
+    @if ($plan->status === 'APPROVED')
+    <div class="bg-green-50 border border-green-300 rounded-lg px-4 py-3 text-sm text-green-800 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        ແຜນນີ້ຖືກ<strong class="mx-1">ອະນຸມັດ</strong>ແລ້ວ — ຕາຕະລາງຢູ່ໃນໂໝດອ່ານຢ່າງດຽວ. ກົດ "ຍ້ອນກັບຮ່າງ" ເພື່ອແກ້ໄຂ.
+    </div>
+    @endif
 
     {{-- ─── Save-All Form wrapping all 4 sections ─── --}}
     <form id="saveAllForm" method="POST"
@@ -259,7 +292,8 @@ $yearLabels = [
 </div>{{-- end space-y / pb-24 --}}
 
 
-{{-- ─── Floating Save Button ─── --}}
+{{-- ─── Floating Save Button (DRAFT only) ─── --}}
+@if ($plan->status === 'DRAFT')
 <div class="fixed bottom-6 right-6 z-50">
     <button type="submit" form="saveAllForm"
         class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all">
@@ -270,7 +304,31 @@ $yearLabels = [
         ບັນທຶກ
     </button>
 </div>
+@endif
 
+
+{{-- ─── Approve Modal ─── --}}
+<div id="approveModal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+        <div class="modal-body" style="text-align:center; padding:28px 24px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg style="width:24px;height:24px;color:#16a34a" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 style="font-size:var(--font-size-lg);font-weight:600;color:var(--color-text-primary);margin-bottom:8px;">ຢືນຢັນການອະນຸມັດ</h3>
+            <p style="font-size:var(--font-size-base);color:var(--color-text-secondary);margin-bottom:4px;">ອະນຸມັດແຜນລາຍຮັບວິຊາການ ສົກ <strong>{{ $plan->fiscal_year }}</strong>?</p>
+            <p style="font-size:var(--font-size-sm);color:var(--color-text-muted);">ຫຼັງຈາກອະນຸມັດ ຕາຕະລາງຈະຖືກລັອກ (ບໍ່ສາມາດແກ້ໄຂໄດ້)</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="document.getElementById('approveModal').style.display='none'" class="btn btn-secondary">ຍົກເລີກ</button>
+            <form method="POST" action="{{ route('head_of_finance.academic_income.approve', $plan) }}" style="margin:0;">
+                @csrf
+                <button type="submit" class="btn btn-primary" style="background:#16a34a;">ອະນຸມັດ</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 {{-- ─── Settings Modal ─── --}}
 <div id="settingsModal" class="modal-overlay" style="display:none;">
@@ -414,7 +472,18 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
 }
 
-['settingsModal','deleteModal'].forEach(id => {
+@if ($plan->status === 'APPROVED')
+document.querySelectorAll('#saveAllForm input').forEach(el => {
+    el.disabled = true;
+    el.classList.add('bg-gray-50', 'cursor-not-allowed');
+});
+@endif
+
+function openApproveModal() {
+    document.getElementById('approveModal').style.display = 'flex';
+}
+
+['settingsModal','deleteModal','approveModal'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', function(e) {
         if (e.target === this) this.style.display = 'none';
     });

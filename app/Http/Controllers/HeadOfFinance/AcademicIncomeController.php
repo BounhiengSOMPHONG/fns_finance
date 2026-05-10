@@ -241,6 +241,24 @@ class AcademicIncomeController extends Controller
             ->header('Content-Disposition', 'inline; filename="ຮ່າງສັງລວມລາຍຮັບວິຊາການ_' . $plan->fiscal_year . '.pdf"');
     }
 
+    // ─── Approve / Revert ─────────────────────────────────────────────────────
+
+    public function approve(AcademicIncomePlan $plan)
+    {
+        $plan->update(['status' => 'APPROVED']);
+
+        return redirect()->route('head_of_finance.academic_income.show', $plan)
+            ->with('success', 'ອະນຸມັດແຜນລາຍຮັບວິຊາການສຳເລັດ!');
+    }
+
+    public function revertDraft(AcademicIncomePlan $plan)
+    {
+        $plan->update(['status' => 'DRAFT']);
+
+        return redirect()->route('head_of_finance.academic_income.show', $plan)
+            ->with('success', 'ຍ້ອນກັບສູ່ຮ່າງສຳເລັດ!');
+    }
+
     // ─── Settings ─────────────────────────────────────────────────────────────
 
     public function saveSetting(Request $request)

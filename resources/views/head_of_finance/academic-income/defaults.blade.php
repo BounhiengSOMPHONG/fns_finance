@@ -101,19 +101,14 @@
                             {{ ($item->nuol_percentage * 100) }}%
                         </td>
                         <td class="px-3 py-2 text-center">
-                            <form method="POST"
-                                action="{{ route('head_of_finance.academic_income.defaults.destroy', $item) }}"
-                                onsubmit="return confirm('ຢືນຢັນລຶບ?')"
-                                style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-500 hover:text-red-700">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </form>
+                            <button type="button"
+                                onclick="openDeleteModal('{{ route('head_of_finance.academic_income.defaults.destroy', $item) }}', '{{ addslashes($item->item_name) }}')"
+                                class="text-red-500 hover:text-red-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
                         </td>
                     </tr>
                     @empty
@@ -181,9 +176,46 @@
 
 </div>
 
+{{-- Delete Modal --}}
+<div id="deleteModal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-body" style="text-align:center; padding:28px 24px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--color-danger-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg style="width:24px;height:24px;color:#DC2626" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <h3 style="font-size:var(--font-size-lg);font-weight:600;color:var(--color-text-primary);margin-bottom:8px;">ຢືນຢັນການລຶບ</h3>
+            <p style="font-size:var(--font-size-base);color:var(--color-text-secondary);margin-bottom:8px;">ທ່ານແນ່ໃຈບໍ່ວ່າຈະລຶບ default ລາຍການນີ້?</p>
+            <span id="deleteItemName" style="display:inline-block;padding:4px 12px;background:var(--color-danger-bg);color:var(--color-danger-text);font-size:var(--font-size-sm);font-weight:500;border-radius:var(--radius-md);border:1px solid var(--color-danger-border);"></span>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary">ຍົກເລີກ</button>
+            <form id="deleteForm" method="POST" style="margin:0;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger">ຢືນຢັນລຶບ</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 <script>
+function openDeleteModal(url, name) {
+    document.getElementById('deleteForm').action = url;
+    document.getElementById('deleteItemName').textContent = name;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
+
 function toggleCreditsField(codeId, yearValue) {
     const wrap = document.getElementById('credits_wrap_' + codeId);
     const inp  = document.getElementById('credits_input_' + codeId);

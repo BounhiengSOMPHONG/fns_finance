@@ -9,26 +9,16 @@ use Illuminate\Validation\Rule;
 
 class DegreeProgramController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = DegreeProgram::query();
+        // All programs, ordered; grouping + filtering happens in the view (instant, client-side).
+        $programs = DegreeProgram::orderBy('level')
+            ->orderByRaw('study_year IS NULL')
+            ->orderBy('study_year')
+            ->orderBy('name')
+            ->get();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('level')) {
-            $query->where('level', $request->level);
-        }
-
-        $programs = $query->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->paginate(20)->withQueryString();
-        $grouped = DegreeProgram::orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get()->groupBy('level');
-
-        return view('dashboards.finance_head.settings.degree-programs.index', compact('programs', 'grouped'));
+        return view('dashboards.finance_head.settings.degree-programs.index', compact('programs'));
     }
 
     public function create()

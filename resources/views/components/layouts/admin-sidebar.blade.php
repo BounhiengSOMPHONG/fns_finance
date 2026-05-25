@@ -98,15 +98,10 @@
                         <x-icons.building-office />
                         ສາຂາວິຊາ
                     </a>
-                    <a href="{{ route('head_of_finance.settings.credit-unit-price.index') }}"
-                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.credit-unit-price.*') ? 'active' : '' }}">
-                        <x-icons.calendar />
-                        ລາຄາຄ່າໜ່ວຍກິດ
-                    </a>
                     <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
-                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') ? 'active' : '' }}">
+                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') ? 'active' : '' }}">
                         <x-icons.book-open />
-                        ໜ່ວຍກິດຕາມຫຼັກສູດ
+                        ລາຄາ & ໜ່ວຍກິດ
                     </a>
                     <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">

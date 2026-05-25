@@ -8,22 +8,10 @@ use Illuminate\Http\Request;
 
 class CreditUnitPriceController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = CreditUnitPriceSetting::query();
-
-        if ($request->filled('level')) {
-            $query->where('level', $request->level);
-        }
-
-        $settings = $query->orderByDesc('start_year')->orderBy('level')->paginate(15)->withQueryString();
-
-        return view('dashboards.finance_head.settings.credit-unit-price.index', compact('settings'));
-    }
-
-    public function edit(CreditUnitPriceSetting $creditUnitPrice)
-    {
-        return view('dashboards.finance_head.settings.credit-unit-price.edit', compact('creditUnitPrice'));
+        // Merged into the course-credits settings page.
+        return redirect()->route('head_of_finance.settings.course-credits.index');
     }
 
     public function update(Request $request, CreditUnitPriceSetting $creditUnitPrice)
@@ -38,7 +26,7 @@ class CreditUnitPriceController extends Controller
         $creditUnitPrice->update($validated);
 
         return redirect()
-            ->route('head_of_finance.settings.credit-unit-price.index')
+            ->route('head_of_finance.settings.course-credits.index')
             ->with('success', 'ອັບເດດລາຄາຄ່າໜ່ວຍກິດສຳເລັດ');
     }
 }

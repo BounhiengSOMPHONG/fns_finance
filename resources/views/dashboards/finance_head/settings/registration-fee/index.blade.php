@@ -7,12 +7,6 @@
 
 <div class="fns-toolbar">
     <span style="font-size:0.8rem; color:var(--fns-gray-400);">ຕັ້ງຄ່າຄ່າລົງທະບຽນ ສຳລັບ ນ/ສ ປີ 1 ແລະ ປີ 2–4</span>
-    <div class="fns-toolbar-right">
-        <a href="{{ route('head_of_finance.settings.registration-fee.create') }}" class="fns-btn fns-btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/></svg>
-            ເພີ່ມຄ່າລົງທະບຽນ
-        </a>
-    </div>
 </div>
 
 @forelse($settings as $s)
@@ -33,11 +27,6 @@
         </div>
         <div style="display:flex; gap:0.35rem;">
             <a href="{{ route('head_of_finance.settings.registration-fee.edit', $s) }}" class="fns-btn fns-btn-sm fns-btn-secondary">ແກ້ໄຂ</a>
-            <form method="POST" action="{{ route('head_of_finance.settings.registration-fee.destroy', $s) }}" style="display:inline;"
-                onsubmit="return confirm('ລຶບລາຍການນີ້ບໍ?')">
-                @csrf @method('DELETE')
-                <button type="submit" class="fns-btn fns-btn-sm fns-btn-danger">ລຶບ</button>
-            </form>
         </div>
     </div>
     <table class="fns-table" style="border:1px solid var(--fns-gray-200); border-radius:8px; overflow:hidden;">
@@ -71,8 +60,7 @@
 @empty
 <div class="fns-card" style="text-align:center; padding:2.5rem;">
     <div style="font-size:2rem; opacity:0.2; margin-bottom:0.75rem;">💰</div>
-    <p style="color:var(--fns-gray-400); font-size:0.88rem; margin-bottom:1rem;">ຍັງບໍ່ມີຂໍ້ມູນ</p>
-    <a href="{{ route('head_of_finance.settings.registration-fee.create') }}" class="fns-btn fns-btn-primary">ເພີ່ມຄ່າລົງທະບຽນ</a>
+    <p style="color:var(--fns-gray-400); font-size:0.88rem;">ຍັງບໍ່ມີຂໍ້ມູນ</p>
 </div>
 @endforelse
 

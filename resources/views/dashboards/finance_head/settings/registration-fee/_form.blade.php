@@ -43,19 +43,23 @@
     </table>
 </div>
 
-@push('scripts')
-<script>
-(function() {
-    const initialItems = @json(
-        old('items',
-            isset($fee) ? $fee->items->map(fn($i) => [
+@php
+    // Computed here (not inside @json) — Blade's @json splits its argument on the
+    // first comma, which would mangle this multi-line expression.
+    $initialFeeItems = old('items',
+        isset($fee)
+            ? $fee->items->map(fn($i) => [
                 'name'     => $i->name,
                 'amount'   => $i->amount,
                 'nuol_pct' => number_format($i->nuol_pct * 100, 2, '.', ''),
             ])->toArray()
-            : [['name'=>'','amount'=>'','nuol_pct'=>'0']]
-        )
+            : [['name' => '', 'amount' => '', 'nuol_pct' => '0']]
     );
+@endphp
+@push('scripts')
+<script>
+(function() {
+    const initialItems = @json($initialFeeItems);
 
     let rowIndex = 0;
     const tbody = document.getElementById('items-body');

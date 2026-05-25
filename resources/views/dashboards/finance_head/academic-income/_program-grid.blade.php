@@ -1,5 +1,5 @@
 @php $useYear1Unit = $useYear1Unit ?? false; @endphp
-<div class="ai-pg-grid">
+<div class="ai-rows">
 @forelse($programs as $p)
     @php
         $creditUnit = $useYear1Unit
@@ -8,20 +8,18 @@
         $price    = $creditPrices[$p->level]?->credit_unit_price ?? null;
         $warn     = !$creditUnit || !$price;
         $existing = $existingItems->get($section . '_' . $p->id);
+        $val      = (int) old($inputPrefix . '.' . $p->id, $existing?->student_count ?? 0);
     @endphp
-    <label class="ai-pg @if($warn) ai-pg-warn @endif" title="{{ $p->name }}">
-        <div class="ai-pg-info">
-            <div class="ai-pg-name">{{ $p->name }}@if($warn) <span style="color:#d97706;" title="ຍັງບໍ່ຕັ້ງຄ່າໜ່ວຍກິດ/ລາຄາ">⚠</span>@endif</div>
-            <div class="ai-pg-sub">
-                <span class="fns-badge {{ $p->level==='bachelor'?'fns-badge-blue':($p->level==='master'?'fns-badge-green':'fns-badge-purple') }}" style="font-size:0.58rem; padding:0.08rem 0.4rem;">{{ $p->level_label }}</span>
-                <span>{{ $p->study_year ? 'ປີ '.$p->study_year : '—' }}</span>
-            </div>
-        </div>
-        <input type="number" name="{{ $inputPrefix }}[{{ $p->id }}]" min="0"
-            value="{{ old($inputPrefix.'.'.$p->id, $existing?->student_count ?? 0) }}"
-            class="fns-input ai-pg-input">
+    <label class="ai-row @if($warn) is-warn @endif @if($val<=0) is-zero @endif"
+           data-name="{{ \Illuminate\Support\Str::lower($p->name) }}">
+        <span class="ai-row-name">
+            @if($warn)<span class="ai-warn-dot" title="ຍັງບໍ່ໄດ້ຕັ້ງຄ່າໜ່ວຍກິດ / ລາຄາ"></span>@endif
+            <span class="ai-row-txt" title="{{ $p->name }}">{{ $p->name }}</span>
+        </span>
+        <input type="number" name="{{ $inputPrefix }}[{{ $p->id }}]" min="0" inputmode="numeric"
+            value="{{ $val }}" class="ai-num" data-sec="{{ $section }}">
     </label>
 @empty
-    <div style="grid-column:1/-1; text-align:center; padding:1.25rem; color:var(--fns-gray-400); border:1px dashed var(--fns-gray-200); border-radius:8px;">ບໍ່ມີສາຂາວິຊາ — ກະລຸນາຕັ້ງຄ່າ</div>
+    <div class="ai-empty">ບໍ່ມີສາຂາວິຊາ — ກະລຸນາຕັ້ງຄ່າກ່ອນ</div>
 @endforelse
 </div>

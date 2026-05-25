@@ -1,0 +1,90 @@
+@extends('layouts.admin')
+
+@section('title', 'ສາຂາວິຊາ')
+@section('page-title', 'ຈັດການສາຂາວິຊາ')
+
+@section('content')
+
+<div class="fns-toolbar">
+    <div class="fns-toolbar-left">
+        <form method="GET" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="ຄົ້ນຫາລະຫັດ / ຊື່..."
+                class="fns-input" style="width:210px;">
+            <select name="level" class="fns-input" style="width:150px;">
+                <option value="">ທຸກລະດັບ</option>
+                <option value="bachelor" @selected(request('level')==='bachelor')>ປ.ຕີ</option>
+                <option value="master" @selected(request('level')==='master')>ປ.ໂທ</option>
+                <option value="phd" @selected(request('level')==='phd')>ປ.ເອກ</option>
+            </select>
+            <button type="submit" class="fns-btn fns-btn-secondary">ຄົ້ນຫາ</button>
+            @if(request('search') || request('level'))
+                <a href="{{ route('head_of_finance.settings.degree-programs.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
+            @endif
+        </form>
+    </div>
+    <div class="fns-toolbar-right">
+        <a href="{{ route('head_of_finance.settings.degree-programs.create') }}" class="fns-btn fns-btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/></svg>
+            ເພີ່ມສາຂາວິຊາ
+        </a>
+    </div>
+</div>
+
+<div class="fns-table-wrap">
+    <table class="fns-table">
+        <thead>
+            <tr>
+                <th style="width:3rem; text-align:center;">#</th>
+                <th style="width:8rem;">ລະຫັດ</th>
+                <th>ຊື່ສາຂາວິຊາ</th>
+                <th style="width:8rem;">ລະດັບ</th>
+                <th style="width:6rem; text-align:center;">ຊັ້ນປີ</th>
+                <th style="width:7rem;">ສະຖານະ</th>
+                <th style="width:9rem;">ຈັດການ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($programs as $p)
+            <tr>
+                <td style="text-align:center; font-size:0.75rem; color:var(--fns-gray-400);">{{ $programs->firstItem() + $loop->index }}</td>
+                <td>
+                    <span style="font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; color:var(--fns-navy); letter-spacing:0.04em;">{{ $p->code }}</span>
+                </td>
+                <td style="font-size:0.87rem;">{{ $p->name }}</td>
+                <td>
+                    <span class="fns-badge {{ $p->level === 'bachelor' ? 'fns-badge-blue' : ($p->level === 'master' ? 'fns-badge-green' : 'fns-badge-purple') }}">
+                        {{ $p->level_label }}
+                    </span>
+                </td>
+                <td style="text-align:center; font-size:0.85rem; color:var(--fns-gray-600);">
+                    {{ $p->study_year ? 'ປີ '.$p->study_year : '—' }}
+                </td>
+                <td>
+                    <span class="fns-badge {{ $p->is_active ? 'fns-badge-green' : 'fns-badge-gray' }}">
+                        {{ $p->is_active ? 'ໃຊ້ງານ' : 'ປິດ' }}
+                    </span>
+                </td>
+                <td>
+                    <div style="display:flex; gap:0.35rem;">
+                        <a href="{{ route('head_of_finance.settings.degree-programs.edit', $p) }}" class="fns-btn fns-btn-sm fns-btn-secondary">ແກ້ໄຂ</a>
+                        <form method="POST" action="{{ route('head_of_finance.settings.degree-programs.destroy', $p) }}" style="display:inline;"
+                            onsubmit="return confirm('ລຶບ {{ $p->name }} ບໍ?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="fns-btn fns-btn-sm fns-btn-danger">ລຶບ</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="7" style="text-align:center; padding:2.5rem; color:var(--fns-gray-400);">ບໍ່ມີຂໍ້ມູນ</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+    @if($programs->hasPages())
+    <div style="padding:0.75rem 1rem; border-top:1px solid var(--fns-gray-200);">{{ $programs->links() }}</div>
+    @endif
+</div>
+
+@endsection

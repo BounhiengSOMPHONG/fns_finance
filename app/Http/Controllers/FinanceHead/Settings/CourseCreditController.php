@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Http\Controllers\FinanceHead\Settings;
+
+use App\Http\Controllers\Controller;
+use App\Models\CourseCreditSetting;
+use App\Models\CreditUnitPriceSetting;
+use App\Models\DegreeProgram;
+use Illuminate\Http\Request;
+
+class CourseCreditController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = CourseCreditSetting::with('degreeProgram');
+
+        if ($request->filled('degree_program_id')) {
+            $query->where('degree_program_id', $request->degree_program_id);
+        }
+
+        $settings = $query->orderByDesc('start_year')
+            ->orderBy('degree_program_id')
+            ->paginate(15)
+            ->withQueryString();
+
+        $programs = DegreeProgram::orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
+
+        return view('dashboards.finance_head.settings.course-credits.index', compact('settings', 'programs'));
+    }
+
+    public function create()
+    {
+        $programs = DegreeProgram::where('is_active', true)->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
+        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
+            ->get()->groupBy('level')->map(fn($i) => (float) $i->first()->credit_unit_price);
+
+        return view('dashboards.finance_head.settings.course-credits.create', compact('programs', 'creditPrices'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'degree_program_id'  => 'required|exists:degree_programs,id',
+            'course_credit_unit' => 'required|numeric|min:1|max:999',
+            'year1_credit_unit'  => 'nullable|numeric|min:0|max:999',
+            'gov_doc_id'         => 'nullable|string|max:255',
+            'start_year'         => 'required|integer|min:2000|max:2100',
+        ]);
+
+        CourseCreditSetting::create($validated);
+
+        return redirect()
+            ->route('head_of_finance.settings.course-credits.index')
+            ->with('success', 'ສ້າງໜ່ວຍກິດຕາມຫຼັກສູດສຳເລັດ');
+    }
+
+    public function edit(CourseCreditSetting $courseCredit)
+    {
+        $programs = DegreeProgram::orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
+        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
+            ->get()->groupBy('level')->map(fn($i) => (float) $i->first()->credit_unit_price);
+
+        return view('dashboards.finance_head.settings.course-credits.edit', compact('courseCredit', 'programs', 'creditPrices'));
+    }
+
+    public function update(Request $request, CourseCreditSetting $courseCredit)
+    {
+        $validated = $request->validate([
+            'degree_program_id'  => 'required|exists:degree_programs,id',
+            'course_credit_unit' => 'required|numeric|min:1|max:999',
+            'year1_credit_unit'  => 'nullable|numeric|min:0|max:999',
+            'gov_doc_id'         => 'nullable|string|max:255',
+            'start_year'         => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $courseCredit->update($validated);
+
+        return redirect()
+            ->route('head_of_finance.settings.course-credits.index')
+            ->with('success', 'ອັບເດດໜ່ວຍກິດຕາມຫຼັກສູດສຳເລັດ');
+    }
+
+    public function destroy(CourseCreditSetting $courseCredit)
+    {
+        $courseCredit->delete();
+
+        return redirect()
+            ->route('head_of_finance.settings.course-credits.index')
+            ->with('success', 'ລຶບໜ່ວຍກິດຕາມຫຼັກສູດສຳເລັດ');
+    }
+}

@@ -2,7 +2,7 @@
     <!-- Page Title -->
     <div>
         <h1 class="text-xl font-semibold text-gray-800">
-            @yield('page-title', 'Dashboard')
+            @yield('page-title', 'ແດຊບອດ')
         </h1>
     </div>
 
@@ -13,8 +13,7 @@
         </span>
         <div class="relative">
             <button class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none">
-                <div
-                    class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
                     {{ substr(auth()->user()->full_name ?? 'U', 0, 1) }}
                 </div>
             </button>

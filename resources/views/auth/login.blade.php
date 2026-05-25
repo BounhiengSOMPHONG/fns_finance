@@ -1,40 +1,66 @@
 <x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    {{-- Session Status --}}
+    @if (session('status'))
+        <div style="color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.82rem; margin-bottom: 1rem;">
+            {{ session('status') }}
+        </div>
+    @endif
 
-    <form method="POST" action="{{ route('login') }}" style="display: flex; flex-direction: column; gap: 20px;">
+    <form method="POST" action="{{ route('login') }}" style="display: flex; flex-direction: column; gap: 1.1rem;">
         @csrf
 
-        <!-- Username -->
-        <div class="form-group">
-            <label for="username" class="form-label required">ຊື່ຜູ້ໃຊ້ (Username)</label>
-            <input id="username" class="form-input" type="text" name="username" value="{{ old('username') }}" required autofocus autocomplete="username" placeholder="ປ້ອນຊື່ຜູ້ໃຊ້" />
+        {{-- Username --}}
+        <div>
+            <label for="username" class="fns-form-label">ຊື່ຜູ້ໃຊ້ (Username)</label>
+            <input
+                id="username"
+                type="text"
+                name="username"
+                value="{{ old('username') }}"
+                class="fns-form-input"
+                placeholder="ກະລຸນາໃສ່ຊື່ຜູ້ໃຊ້"
+                required autofocus autocomplete="username"
+            >
             @error('username')
-                <p style="font-size:var(--font-size-sm); color:#DC2626; margin-top:4px;">{{ $message }}</p>
+                <p style="color: #fca5a5; font-size: 0.75rem; margin-top: 0.35rem;">{{ $message }}</p>
             @enderror
         </div>
 
-        <!-- Password -->
-        <div class="form-group">
-            <label for="password" class="form-label required">ລະຫັດຜ່ານ (Password)</label>
-            <input id="password" class="form-input" type="password" name="password" required autocomplete="current-password" placeholder="ປ້ອນລະຫັດຜ່ານ" />
+        {{-- Password --}}
+        <div>
+            <label for="password" class="fns-form-label">ລະຫັດຜ່ານ (Password)</label>
+            <input
+                id="password"
+                type="password"
+                name="password"
+                class="fns-form-input"
+                placeholder="••••••••"
+                required autocomplete="current-password"
+            >
             @error('password')
-                <p style="font-size:var(--font-size-sm); color:#DC2626; margin-top:4px;">{{ $message }}</p>
+                <p style="color: #fca5a5; font-size: 0.75rem; margin-top: 0.35rem;">{{ $message }}</p>
             @enderror
         </div>
 
-        <!-- Remember Me -->
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-            <label for="remember_me" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                <input id="remember_me" type="checkbox" name="remember" style="width: 16px; height: 16px; accent-color: var(--color-primary);">
-                <span class="form-label" style="margin: 0; cursor: pointer;">ຈື່ຂ້ອຍໄວ້ຕຳຫຼອດ (Remember me)</span>
+        {{-- Remember Me --}}
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <input
+                id="remember_me"
+                type="checkbox"
+                name="remember"
+                style="width: 15px; height: 15px; accent-color: var(--fns-gold); border-radius: 4px;"
+            >
+            <label for="remember_me" style="font-size: 0.78rem; color: rgba(255,255,255,0.45); cursor: pointer;">
+                ຈົດຈຳການເຂົ້າສູ່ລະບົບ
             </label>
         </div>
 
-        <div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; height: 42px; font-size: var(--font-size-md);">
-                ເຂົ້າສູ່ລະບົບ (Log in)
+        {{-- Submit --}}
+        <div style="margin-top: 0.5rem;">
+            <button type="submit" class="fns-btn-primary">
+                ເຂົ້າສູ່ລະບົບ
             </button>
         </div>
     </form>
 </x-guest-layout>
+

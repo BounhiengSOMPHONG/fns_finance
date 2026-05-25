@@ -5,72 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Admin') - {{ config('app.name', 'Laravel') }}</title>
+    <title>@yield('title', 'Admin') — {{ config('app.name', 'FNS Finance') }}</title>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased" style="background: var(--color-bg-page); font-family: var(--font-sans);">
-    <div class="layout-shell print:block">
-        {{-- Sidebar --}}
-        <div class="print:hidden">
-            <x-admin-sidebar />
-        </div>
+<body class="antialiased" style="background: var(--fns-gray-100);">
+    <div style="display:flex; flex-direction:column; min-height:100vh;">
+        <x-layouts.admin-header />
+        <div style="display:flex; flex:1;">
+            <div class="hidden md:block">
+                <x-layouts.admin-sidebar />
+            </div>
+            <main id="admin-main" class="fns-main">
 
-        {{-- Topbar --}}
-        <div class="print:hidden">
-            <x-admin-header />
-        </div>
-
-        {{-- Main Content --}}
-        <div class="main-content print:ml-0 print:pt-0">
-            <div class="main-inner">
+                {{-- Flash Messages --}}
                 @if (session('success'))
-                    <div class="alert alert-success print:hidden" role="alert">
-                        <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="fns-alert fns-alert-success">
+                        <svg style="width:16px;height:16px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        <span class="alert-title">{{ session('success') }}</span>
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="alert alert-danger print:hidden" role="alert">
-                        <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        <div>
-                            <span class="alert-title">ເກີດຂໍ້ຜິດພາດບາງຢ່າງ:</span>
-                            <ul class="mt-1 list-inside list-disc" style="font-size: var(--font-size-sm);">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+                        <span>{{ session('success') }}</span>
                     </div>
                 @endif
 
                 @if (session('error'))
-                    <div class="alert alert-danger print:hidden" role="alert">
-                        <svg class="alert-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <div class="fns-alert fns-alert-error">
+                        <svg style="width:16px;height:16px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                         </svg>
-                        <span class="alert-title">{{ session('error') }}</span>
+                        <span>{{ session('error') }}</span>
                     </div>
                 @endif
 
+                {{-- Page Title --}}
                 @hasSection('page-title')
-                    <div class="page-header print:hidden">
-                        <h1 class="page-title">@yield('page-title')</h1>
+                    <div style="margin-bottom:1.25rem;">
+                        <h1 class="fns-page-title">@yield('page-title')</h1>
                     </div>
                 @endif
 
                 @yield('content')
-            </div>
+            </main>
         </div>
     </div>
 
     @stack('scripts')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('sidebar-toggle');
+            const sidebarWrapper = document.querySelector('body .flex > .hidden.md\\:block');
+            if (toggle && sidebarWrapper) {
+                toggle.addEventListener('click', function() {
+                    sidebarWrapper.classList.toggle('hidden');
+                });
+                toggle.style.display = 'flex';
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.logout-form').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'ຢືນຢັນການອອກຈາກລະບົບ',
+                        text: 'ທ່ານຕ້ອງການອອກຈາກລະບົບບໍ່?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'ຕົກລົງ',
+                        cancelButtonText: 'ຍົກເລີກ',
+                        reverseButtons: true,
+                        confirmButtonColor: '#c9991a',
+                        cancelButtonColor: '#6b7280'
+                    }).then((result) => {
+                        if (result.isConfirmed) form.submit();
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>
+

@@ -6,22 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Admin Dashboard - {{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'FNS Finance') }}</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased bg-gray-50">
-    <div class="min-h-screen">
-        <x-admin-header />
-        <div class="flex">
+<body class="antialiased" style="background: var(--fns-gray-100);">
+    <div style="display:flex; flex-direction:column; min-height:100vh;">
+        <x-layouts.admin-header />
+        <div style="display:flex; flex:1;">
             <div class="hidden md:block">
-                <x-admin-sidebar />
+                <x-layouts.admin-sidebar />
             </div>
-            <main id="admin-main" class="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+            <main id="admin-main" class="fns-main">
                 {{ $slot }}
             </main>
         </div>
@@ -34,15 +32,13 @@
                 toggle.addEventListener('click', function() {
                     sidebarWrapper.classList.toggle('hidden');
                 });
+                toggle.style.display = 'flex';
             }
         });
         document.addEventListener('DOMContentLoaded', function() {
-            const logoutForms = document.querySelectorAll('.logout-form');
-
-            logoutForms.forEach(function(form) {
+            document.querySelectorAll('.logout-form').forEach(function(form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-
                     Swal.fire({
                         title: 'ຢືນຢັນການອອກຈາກລະບົບ',
                         text: 'ທ່ານຕ້ອງການອອກຈາກລະບົບບໍ່?',
@@ -50,11 +46,11 @@
                         showCancelButton: true,
                         confirmButtonText: 'ຕົກລົງ',
                         cancelButtonText: 'ຍົກເລີກ',
-                        reverseButtons: true
+                        reverseButtons: true,
+                        confirmButtonColor: '#c9991a',
+                        cancelButtonColor: '#6b7280'
                     }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit();
-                        }
+                        if (result.isConfirmed) form.submit();
                     });
                 });
             });
@@ -63,3 +59,4 @@
 </body>
 
 </html>
+

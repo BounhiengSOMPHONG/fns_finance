@@ -1,0 +1,121 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class DegreeProgramSeeder extends Seeder
+{
+    public function run(): void
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::table('degree_programs')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+        $programs = [];
+
+        // ─── Year 2 ────────────────────────────────────────────────────
+        $year2 = [
+            ['B-CS-Y2',    'ວິທະຍາສາດຄອມ'],
+            ['B-PD-Y2',    'ພັດທະນາໂປຣແກຣມ'],
+            ['B-WD-Y2',    'ພັດທະນາເວບໄຊ້'],
+            ['B-CSC-Y2',   'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ'],
+            ['B-MAA-Y2',   'ຄະນິດສາດນໍາໃຊ້'],
+            ['B-MAE-Y2',   'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
+            ['B-STAT-Y2',  'ຄະນິດສາດສະຖິຕິ'],
+            ['B-BIO-Y2',   'ຊີວະທົ່ວໄປ'],
+            ['B-BT-Y2',    'ເທັກໂນໂລຍີ່ຊີວະພາບ'],
+            ['B-CHEM-Y2',  'ເຄມີທົ່ວໄປ'],
+            ['B-ECHE-Y2',  'ເຄມີສິ່ງແວດລ້ອມ'],
+            ['B-PHYS-Y2',  'ຟີຊິກທົ່ວໄປ'],
+            ['B-GPHY-Y2',  'ທໍລະນີຟີຊິກ'],
+            ['B-MATS-Y2',  'ວັດສະດຸສາດ'],
+            ['B-NPHY-Y2',  'ຟິຊິກນິວເຄຣຍ'],
+        ];
+        foreach ($year2 as [$code, $name]) {
+            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'bachelor', 'study_year' => 2, 'is_active' => true];
+        }
+
+        // ─── Year 3 ────────────────────────────────────────────────────
+        $year3 = [
+            ['B-CS-Y3',    'ວິທະຍາສາດຄອມ'],
+            ['B-PD-Y3',    'ພັດທະນາໂປຣແກຣມ'],
+            ['B-WD-Y3',    'ພັດທະນາເວບໄຊ້'],
+            ['B-MATH-Y3',  'ຄະນິດທົ່ວໄປ'],
+            ['B-MAE-Y3',   'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
+            ['B-STAT-Y3',  'ຄະນິດສາດສະຖິຕິ'],
+            ['B-BIO-Y3',   'ຊີວະວິທະຍາທົ່ວໄປ'],
+            ['B-BT-Y3',    'ເທັກໂນໂລຍີ່ຊີວະພາບ'],
+            ['B-CHEM-Y3',  'ເຄມີສາດທົ່ວໄປ'],
+            ['B-ECHE-Y3',  'ເຄມີສິ່ງແວດລ້ອມ'],
+            ['B-PHYS-Y3',  'ຟີຊິກສາດທົ່ວໄປ'],
+            ['B-GPHY-Y3',  'ທໍລະນີຟີຊິກ'],
+            ['B-MATS-Y3',  'ວັດສະດຸສາດ'],
+            ['B-NPHY-Y3',  'ຟິຊິກນິວເຄຣຍ'],
+        ];
+        foreach ($year3 as [$code, $name]) {
+            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'bachelor', 'study_year' => 3, 'is_active' => true];
+        }
+
+        // ─── Year 4 ────────────────────────────────────────────────────
+        $year4 = [
+            ['B-CS-Y4',    'ວິທະຍາສາດຄອມ'],
+            ['B-PD-Y4',    'ພັດທະນາໂປຣແກຣມ'],
+            ['B-WD-Y4',    'ພັດທະນາເວບໄຊ້'],
+            ['B-MATH-Y4',  'ຄະນິດທົ່ວໄປ'],
+            ['B-MAE-Y4',   'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
+            ['B-STAT-Y4',  'ຄະນິດສາດສະຖິຕິ'],
+            ['B-BIO-Y4',   'ຊີວະວິທະຍາທົ່ວໄປ'],
+            ['B-BT-Y4',    'ເທັກໂນໂລຍີ່ຊີວະພາບ'],
+            ['B-CHEM-Y4',  'ເຄມີສາດທົ່ວໄປ'],
+            ['B-ECHE-Y4',  'ເຄມີສິ່ງແວດລ້ອມ'],
+            ['B-PHYS-Y4',  'ຟີຊິກສາດທົ່ວໄປ'],
+            ['B-GPHY-Y4',  'ທໍລະນີຟີຊິກ'],
+            ['B-MATS-Y4',  'ວັດສະດຸສາດ'],
+            ['B-NPHY-Y4',  'ຟິຊິກນິວເຄຣຍ'],
+        ];
+        foreach ($year4 as [$code, $name]) {
+            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'bachelor', 'study_year' => 4, 'is_active' => true];
+        }
+
+        // ─── Master (coursework) ───────────────────────────────────────
+        $masters = [
+            ['M-PHYS',  'ປະລິນຍາໂທຟິຊິກນໍາໃຊ້'],
+            ['M-MATH',  'ປະລິນຍາໂທຄະນິດສາດ'],
+            ['M-BIO',   'ປິລິນຍາໂທຊີວະວິທະຍາ'],
+            ['M-CHEM',  'ປະລິນຍາໂທເຄມີ'],
+            ['M-CS',    'ປະລິນຍາໂທວິທະຍາສາດຄອມພິວເຕີ'],
+        ];
+        foreach ($masters as [$code, $name]) {
+            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'master', 'study_year' => null, 'is_active' => true];
+        }
+
+        // ─── Master (research format) ──────────────────────────────────
+        $masterResearch = [
+            ['MR-PHYS',  'ຟີຊິກສາດຮູບແບບຄົ້ນຄວ້າ'],
+            ['MR-CHEM',  'ເຄມີສາດຮູບແບບຄົ້ນຄວ້າ'],
+            ['MR-BIO',   'ຊີວະວິທະຍາຮູບແບບຄົ້ນຄວ້າ'],
+        ];
+        foreach ($masterResearch as [$code, $name]) {
+            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'master', 'study_year' => null, 'is_active' => true];
+        }
+
+        // ─── PhD ───────────────────────────────────────────────────────
+        $phd = [
+            ['D-PHYS',  'ປະລີິນຍາເອກຟິຊິກ'],
+            ['D-BIO',   'ປະລີິນຍາເອກຊີວະວິທະຍາ'],
+        ];
+        foreach ($phd as [$code, $name]) {
+            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'phd', 'study_year' => null, 'is_active' => true];
+        }
+
+        $now = now();
+        foreach ($programs as &$row) {
+            $row['created_at'] = $now;
+            $row['updated_at'] = $now;
+        }
+
+        DB::table('degree_programs')->insert($programs);
+    }
+}

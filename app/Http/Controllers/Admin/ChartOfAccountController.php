@@ -14,7 +14,7 @@ class ChartOfAccountController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ChartOfAccount::with('parent');
+        $query = ChartOfAccount::query();
 
         // Search
         if ($request->filled('search')) {
@@ -25,21 +25,9 @@ class ChartOfAccountController extends Controller
             });
         }
 
-        // Filter by parent_id
-        if ($request->has('parent_id') && strlen($request->parent_id) > 0) {
-            $query->where('parent_id', (int) $request->parent_id);
-        }
+        $chartOfAccounts = $query->orderBy('account_code')->paginate(10)->withQueryString();
 
-        $perPage = request('per_page', 25);
-        if ($perPage === 'all') {
-            $perPage = $query->count() > 0 ? $query->count() : 1;
-        } else {
-            $perPage = (int) $perPage;
-        }
-        $chartOfAccounts = $query->orderBy('account_code')->paginate($perPage)->withQueryString();
-        $parentAccounts = ChartOfAccount::has('children')->orderBy('account_code')->get();
-
-        return view('admin.chart-of-accounts.index', compact('chartOfAccounts', 'parentAccounts'));
+        return view('admin.chart-of-accounts.index', compact('chartOfAccounts'));
     }
 
     /**
@@ -47,8 +35,7 @@ class ChartOfAccountController extends Controller
      */
     public function create()
     {
-        $chartOfAccounts = ChartOfAccount::orderBy('account_code')->get();
-        return view('admin.chart-of-accounts.create', compact('chartOfAccounts'));
+        return view('admin.chart-of-accounts.create');
     }
 
     /**
@@ -59,7 +46,6 @@ class ChartOfAccountController extends Controller
         $validated = $request->validate([
             'account_code' => 'required|string|max:20|unique:chart_of_accounts',
             'account_name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:chart_of_accounts,id',
         ]);
 
         ChartOfAccount::create($validated);
@@ -82,8 +68,7 @@ class ChartOfAccountController extends Controller
      */
     public function edit(ChartOfAccount $chartOfAccount)
     {
-        $allAccounts = ChartOfAccount::orderBy('account_code')->get();
-        return view('admin.chart-of-accounts.edit', compact('chartOfAccount', 'allAccounts'));
+        return view('admin.chart-of-accounts.edit', compact('chartOfAccount'));
     }
 
     /**
@@ -94,7 +79,6 @@ class ChartOfAccountController extends Controller
         $validated = $request->validate([
             'account_code' => ['required', 'string', 'max:20', Rule::unique('chart_of_accounts')->ignore($chartOfAccount->id)],
             'account_name' => 'required|string|max:255',
-            'parent_id' => ['nullable', 'exists:chart_of_accounts,id', Rule::notIn([$chartOfAccount->id])],
         ]);
 
         $chartOfAccount->update($validated);
@@ -114,19 +98,5 @@ class ChartOfAccountController extends Controller
         return redirect()
             ->route('admin.chart-of-accounts.index')
             ->with('success', 'ลบบัญชีสำเร็จ');
-    }
-    /**
-     * Remove the specified resources from storage.
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:chart_of_accounts,id',
-        ]);
-
-        ChartOfAccount::whereIn('id', $request->ids)->delete();
-
-        return redirect()->route('admin.chart-of-accounts.index')->with('success', 'ລຶບບັນຊີທີ່ເລືອກສຳເລັດ');
     }
 }

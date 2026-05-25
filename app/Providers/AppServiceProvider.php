@@ -44,10 +44,6 @@ class AppServiceProvider extends ServiceProvider
             return $user->role?->role_name === 'head_of_faculty';
         });
 
-        Gate::define('head_of_department', function ($user) {
-            return $user->role?->role_name === 'head_of_department';
-        });
-
         // Provide categories to header component for category filtering links
         // View::composer('components.header', function ($view) {
         //     $view->with('categories', Category::all());

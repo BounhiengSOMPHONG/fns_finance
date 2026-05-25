@@ -7,17 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AcademicIncomeItem extends Model
 {
-    public $timestamps = false;
-
     protected $fillable = [
-        'plan_id', 'section_code', 'sort_order', 'item_name',
-        'num_credits', 'rate_per_person', 'num_persons',
-        'nuol_percentage', 'student_year',
+        'plan_id', 'section_code', 'degree_program_id', 'student_count',
+        'snap_credit_unit_price', 'snap_course_credit_unit',
+        'snap_registration_fee_rate', 'snap_nuol_pct',
+        'total_income', 'first_payment_amount', 'second_payment_amount',
     ];
 
     protected $casts = [
-        'nuol_percentage' => 'float',
-        'rate_per_person' => 'float',
+        'snap_credit_unit_price'     => 'decimal:2',
+        'snap_registration_fee_rate' => 'decimal:2',
+        'snap_nuol_pct'              => 'decimal:4',
+        'total_income'               => 'decimal:2',
+        'first_payment_amount'       => 'decimal:2',
+        'second_payment_amount'      => 'decimal:2',
     ];
 
     public function plan(): BelongsTo
@@ -25,26 +28,8 @@ class AcademicIncomeItem extends Model
         return $this->belongsTo(AcademicIncomePlan::class, 'plan_id');
     }
 
-    public function effectiveRate(float $pricePerCredit): float
+    public function degreeProgram(): BelongsTo
     {
-        if ($this->num_credits !== null) {
-            return $this->num_credits * $pricePerCredit;
-        }
-        return (float) ($this->rate_per_person ?? 0);
-    }
-
-    public function totalIncome(float $pricePerCredit): float
-    {
-        return $this->effectiveRate($pricePerCredit) * $this->num_persons;
-    }
-
-    public function nuolObligation(float $pricePerCredit): float
-    {
-        return $this->totalIncome($pricePerCredit) * $this->nuol_percentage;
-    }
-
-    public function kawtIncome(float $pricePerCredit): float
-    {
-        return $this->totalIncome($pricePerCredit) * (1 - $this->nuol_percentage);
+        return $this->belongsTo(DegreeProgram::class);
     }
 }

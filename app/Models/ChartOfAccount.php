@@ -22,18 +22,7 @@ class ChartOfAccount extends Model
     protected $fillable = [
         'account_code',
         'account_name',
-        'parent_id',
     ];
-
-    public function parent()
-    {
-        return $this->belongsTo(ChartOfAccount::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(ChartOfAccount::class, 'parent_id');
-    }
 
     /**
      * The attributes that should be cast.
@@ -45,17 +34,5 @@ class ChartOfAccount extends Model
         return [
             'id' => 'integer',
         ];
-    }
-
-    /**
-     * Get the code formatted with dashes (e.g. 60-00-00-00)
-     */
-    public function getFormattedCodeAttribute(): string
-    {
-        $code = $this->account_code;
-        if (strlen($code) === 8) {
-            return substr($code, 0, 2) . '-' . substr($code, 2, 2) . '-' . substr($code, 4, 2) . '-' . substr($code, 6, 2);
-        }
-        return $code;
     }
 }

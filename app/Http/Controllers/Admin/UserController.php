@@ -39,17 +39,11 @@ class UserController extends Controller
         }
 
         // Filter by status
-        if ($request->has('is_active') && strlen($request->is_active) > 0) {
-            $query->where('is_active', (int) $request->is_active);
+        if ($request->has('is_active') && $request->is_active !== '') {
+            $query->where('is_active', $request->is_active);
         }
 
-        $perPage = request('per_page', 25);
-        if ($perPage === 'all') {
-            $perPage = $query->count() > 0 ? $query->count() : 1;
-        } else {
-            $perPage = (int) $perPage;
-        }
-        $users = $query->latest('id')->paginate($perPage)->withQueryString();
+        $users = $query->latest('id')->paginate(10)->withQueryString();
         $roles = Role::orderBy('role_name')->get();
         $departments = Department::orderBy('department_name')->get();
 
@@ -88,7 +82,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'ສ້າງຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
+            ->with('success', 'สร้างผู้ใช้งานสำเร็จ');
     }
 
     /**
@@ -138,7 +132,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'ອັບເດດຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
+            ->with('success', 'อัปเดตผู้ใช้งานสำเร็จ');
     }
 
     /**
@@ -150,37 +144,13 @@ class UserController extends Controller
         if (auth()->id() === $user->id) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', 'ບໍ່ສາມາດລຶບບັນຊີຕົວເອງໄດ້');
+                ->with('error', 'ไม่สามารถลบบัญชีตัวเองได้');
         }
 
         $user->delete();
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'ລຶບຜູ້ໃຊ້ສຳເລັດແລ້ວ.');
-    }
-    /**
-     * Remove the specified resources from storage.
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:users,id',
-        ]);
-
-        $ids = $request->ids;
-        
-        // Prevent deleting yourself
-        if (in_array(auth()->id(), $ids)) {
-            $ids = array_diff($ids, [auth()->id()]);
-            if (empty($ids)) {
-                return redirect()->route('admin.users.index')->with('error', 'ບໍ່ສາມາດລຶບບັນຊີຕົວເອງໄດ້');
-            }
-        }
-
-        User::whereIn('id', $ids)->delete();
-
-        return redirect()->route('admin.users.index')->with('success', 'ລຶບຜູ້ໃຊ້ທີ່ເລືອກສຳເລັດແລ້ວ.');
+            ->with('success', 'ลบผู้ใช้งานสำเร็จ');
     }
 }

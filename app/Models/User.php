@@ -64,12 +64,4 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Department::class);
     }
-
-    /**
-     * Get the reviewer assignments for the user.
-     */
-    public function reviewerAssignments()
-    {
-        return $this->hasMany(BudgetPlanReviewer::class, 'user_id');
-    }
 }

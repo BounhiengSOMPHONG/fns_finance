@@ -22,13 +22,7 @@ class RoleController extends Controller
             $query->where('role_name', 'like', "%{$search}%");
         }
 
-        $perPage = request('per_page', 25);
-        if ($perPage === 'all') {
-            $perPage = $query->count() > 0 ? $query->count() : 1;
-        } else {
-            $perPage = (int) $perPage;
-        }
-        $roles = $query->latest('id')->paginate($perPage)->withQueryString();
+        $roles = $query->latest('id')->paginate(10)->withQueryString();
 
         return view('admin.roles.index', compact('roles'));
     }
@@ -54,7 +48,7 @@ class RoleController extends Controller
 
         return redirect()
             ->route('admin.roles.index')
-            ->with('success', 'ສ້າງບົດບາດສຳເລັດ');
+            ->with('success', 'สร้างบทบาทสำเร็จ');
     }
 
     /**
@@ -90,7 +84,7 @@ class RoleController extends Controller
 
         return redirect()
             ->route('admin.roles.index')
-            ->with('success', 'ອັບເດດບົດບາດສຳເລັດ');
+            ->with('success', 'อัปเดตบทบาทสำเร็จ');
     }
 
     /**
@@ -102,46 +96,13 @@ class RoleController extends Controller
         if ($role->users()->count() > 0) {
             return redirect()
                 ->route('admin.roles.index')
-                ->with('error', 'ບໍ່ສາມາດລຶບບົດບາດນີ້ໄດ້ເນື່ອງຈາກຍັງມີຜູ້ໃຊ້ຢູ່');
+                ->with('error', 'ไม่สามารถลบบทบาทนี้ได้เนื่องจากมีผู้ใช้งานอยู่');
         }
 
         $role->delete();
 
         return redirect()
             ->route('admin.roles.index')
-            ->with('success', 'ລຶບບົດບາດສຳເລັດ');
-    }
-    /**
-     * Remove the specified resources from storage.
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:roles,id',
-        ]);
-
-        $ids = $request->ids;
-        $deletedCount = 0;
-        $failedCount = 0;
-
-        foreach ($ids as $id) {
-            $role = Role::find($id);
-            if ($role) {
-                if ($role->users()->count() > 0) {
-                    $failedCount++;
-                } else {
-                    $role->delete();
-                    $deletedCount++;
-                }
-            }
-        }
-
-        $message = "ລຶບບົດບາດທີ່ເລືອກສຳເລັດ $deletedCount ລາຍການ.";
-        if ($failedCount > 0) {
-            $message .= " (ບໍ່ສາມາດລຶບ $failedCount ລາຍການເນື່ອງຈາກຍັງມີຜູ້ໃຊ້ງານຢຸ່)";
-        }
-
-        return redirect()->route('admin.roles.index')->with('success', $message);
+            ->with('success', 'ลบบทบาทสำเร็จ');
     }
 }

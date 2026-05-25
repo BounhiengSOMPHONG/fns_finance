@@ -21,7 +21,6 @@ class RoleSeeder extends Seeder
             ['role_name' => 'accountant'],
             ['role_name' => 'deputy_head_of_faculty'],
             ['role_name' => 'head_of_faculty'],
-            ['role_name' => 'head_of_department'],
         ];
 
         foreach ($roles as $role) {

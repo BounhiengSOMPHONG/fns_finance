@@ -41,8 +41,6 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::resource('academic-income', \App\Http\Controllers\FinanceHead\AcademicIncomePlanController::class, ['parameters' => ['academic-income' => 'academicIncome']])->except(['edit', 'update']);
         Route::get('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'evaluate'])->name('academic-income.evaluate');
         Route::post('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'saveEvaluate'])->name('academic-income.saveEvaluate');
-        Route::get('academic-income/{academicIncome}/summary', [\App\Http\Controllers\FinanceHead\AcademicIncomeSummaryController::class, 'summary'])->name('academic-income.summary');
-        Route::get('academic-income/{academicIncome}/print', [\App\Http\Controllers\FinanceHead\AcademicIncomeSummaryController::class, 'printView'])->name('academic-income.print');
 
         // Expense Plans
         Route::resource('expense', \App\Http\Controllers\FinanceHead\ExpensePlanController::class, [

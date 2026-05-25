@@ -34,15 +34,14 @@ class AcademicIncomePlanController extends Controller
         $plan = AcademicIncomePlan::create($validated);
 
         return redirect()
-            ->route('head_of_finance.academic-income.show', $plan)
+            ->route('head_of_finance.academic-income.evaluate', $plan)
             ->with('success', 'ສ້າງແຜນລາຍຮັບວິຊາການສຳເລັດ');
     }
 
     public function show(AcademicIncomePlan $academicIncome)
     {
-        $academicIncome->load(['items.degreeProgram', 'creator']);
-
-        return view('dashboards.finance_head.academic-income.show', compact('academicIncome'));
+        // Plan detail page removed — go straight to data entry.
+        return redirect()->route('head_of_finance.academic-income.evaluate', $academicIncome);
     }
 
     public function destroy(AcademicIncomePlan $academicIncome)

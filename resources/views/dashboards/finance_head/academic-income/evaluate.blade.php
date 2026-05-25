@@ -7,7 +7,7 @@
 
 <style>
 /* ── Evaluate page — calm, scannable data-entry ─────────────────── */
-.ai-wrap { max-width: 1060px; }
+.ai-wrap { width: 100%; }
 
 /* sticky search / orientation bar */
 .ai-bar {

@@ -101,7 +101,7 @@
                     <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
                         <x-icons.book-open />
-                        ລາຄາ & ໜ່ວຍກິດ
+                        ລາຄາ & ໜ່ວຍກິດ & ມຊ%
                     </a>
                     <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'ລາຄາ & ໜ່ວຍກິດ')
-@section('page-title', 'ການຕັ້ງລາຄາ ແລະ ໜ່ວຍກິດ')
+@section('title', 'ລາຄາ & ໜ່ວຍກິດ & ມຊ%')
+@section('page-title', 'ການຕັ້ງລາຄາ & ໜ່ວຍກິດ & ມຊ%')
 
 @section('content')
 

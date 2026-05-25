@@ -62,7 +62,6 @@
                 ໜ້າຫຼັກ
             </a>
 
-            <div class="fns-nav-section-label">ງົບປະມານ</div>
             <a href="{{ route('head_of_finance.expense.index') }}"
                 class="fns-nav-item {{ request()->routeIs('head_of_finance.expense.*') ? 'active' : '' }}">
                 <x-icons.book-open />
@@ -73,8 +72,6 @@
                 <x-icons.users />
                 ຕາຕະລາງເງິນເດືອນ
             </a>
-
-            <div class="fns-nav-section-label">ລາຍຮັບວິຊາການ</div>
             <a href="{{ route('head_of_finance.academic-income.index') }}"
                 class="fns-nav-item {{ request()->routeIs('head_of_finance.academic-income.*') ? 'active' : '' }}">
                 <x-icons.book-open />

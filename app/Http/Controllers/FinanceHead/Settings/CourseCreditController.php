@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseCreditSetting;
 use App\Models\CreditUnitPriceSetting;
 use App\Models\DegreeProgram;
+use App\Models\NuolPctSetting;
 use Illuminate\Http\Request;
 
 class CourseCreditController extends Controller
@@ -28,7 +29,11 @@ class CourseCreditController extends Controller
         $prices = CreditUnitPriceSetting::orderByDesc('start_year')
             ->get()->groupBy('level')->map->first();
 
-        return view('dashboards.finance_head.settings.course-credits.index', compact('courseCredits', 'prices'));
+        // latest NUOL % per level, keyed by level
+        $nuolPcts = NuolPctSetting::orderByDesc('start_year')
+            ->get()->groupBy('level')->map->first();
+
+        return view('dashboards.finance_head.settings.course-credits.index', compact('courseCredits', 'prices', 'nuolPcts'));
     }
 
     public function create()

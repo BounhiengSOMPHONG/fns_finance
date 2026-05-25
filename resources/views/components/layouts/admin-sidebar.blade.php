@@ -99,7 +99,7 @@
                         ສາຂາວິຊາ
                     </a>
                     <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
-                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') ? 'active' : '' }}">
+                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
                         <x-icons.book-open />
                         ລາຄາ & ໜ່ວຍກິດ
                     </a>
@@ -107,11 +107,6 @@
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">
                         <x-icons.shield-check />
                         ຄ່າລົງທະບຽນ
-                    </a>
-                    <a href="{{ route('head_of_finance.settings.nuol-pct.index') }}"
-                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
-                        <x-icons.shield-check />
-                        ເປີເຊັນ ມຊ (%)
                     </a>
                     <a href="{{ route('head_of_finance.settings.income-rates.index') }}"
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.income-rates.*') ? 'active' : '' }}">

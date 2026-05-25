@@ -14,7 +14,9 @@ class NuolPctSetting extends Model
     {
         return match ($level) {
             'bachelor'   => 'ປ.ຕີ (ປະລິນຍາຕີ)',
-            'master_phd' => 'ປ.ໂທ / ປ.ເອກ (ປະລິນຍາໂທ ແລະ ເອກ)',
+            'master'     => 'ປ.ໂທ (ປະລິນຍາໂທ)',
+            'phd'        => 'ປ.ເອກ (ປະລິນຍາເອກ)',
+            'master_phd' => 'ປ.ໂທ / ປ.ເອກ', // legacy fallback
             default      => $level,
         };
     }

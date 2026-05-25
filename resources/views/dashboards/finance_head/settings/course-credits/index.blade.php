@@ -148,6 +148,50 @@
         </div>
     </div>
 
+    {{-- ── Section 1b: NUOL % per level ───────────────────────────── --}}
+    <div class="fns-card cc-card">
+        <div class="cc-head">
+            <div class="fns-sec-num">%</div>
+            <div>
+                <div class="cc-head-title">ເປີເຊັນ ມຊ (%) ຕາມລະດັບ</div>
+                <div class="cc-head-desc">ອັດຕາ ມຊ ທີ່ຫັກຈາກລາຍຮັບ · ແກ້ໄຂແລ້ວກົດ “ບັນທຶກ” ໃນແຖວນັ້ນ</div>
+            </div>
+        </div>
+
+        <div class="cc-price">
+            @foreach($levelMeta as $key => $meta)
+                @php $n = $nuolPcts->get($key); @endphp
+                @if($n)
+                    <form method="POST" action="{{ route('head_of_finance.settings.nuol-pct.update', $n) }}" class="cc-prow" data-dirty-scope>
+                        @csrf @method('PUT')
+                        <input type="hidden" name="level" value="{{ $key }}">
+                        <div class="cc-plevel"><span class="fns-badge {{ $meta['badge'] }}">{{ $meta['full'] }}</span></div>
+                        <div class="cc-field">
+                            <label>ເປີເຊັນ ມຊ (%)</label>
+                            <input type="number" name="percentage" step="0.01" min="0" max="100" required
+                                value="{{ rtrim(rtrim(number_format($n->percentage * 100, 4, '.', ''), '0'), '.') }}" class="cc-in num" data-dirty>
+                        </div>
+                        <div class="cc-field">
+                            <label>ເລກທີເອກະສານ</label>
+                            <input type="text" name="gov_doc_id" value="{{ $n->gov_doc_id }}" class="cc-in" data-dirty>
+                        </div>
+                        <div class="cc-field">
+                            <label>ປີທີ່ໃຊ້</label>
+                            <input type="number" name="start_year" min="2000" max="2100" required
+                                value="{{ $n->start_year }}" class="cc-in num" data-dirty>
+                        </div>
+                        <button type="submit" class="cc-save">ບັນທຶກ</button>
+                    </form>
+                @else
+                    <div class="cc-prow" style="grid-template-columns:9.5rem 1fr;">
+                        <div class="cc-plevel"><span class="fns-badge {{ $meta['badge'] }}">{{ $meta['full'] }}</span></div>
+                        <div class="cc-pempty">ຍັງບໍ່ໄດ້ຕັ້ງ ມຊ ສຳລັບລະດັບນີ້</div>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+
     {{-- ── Section 2: course credits per program ──────────────────── --}}
     <div class="cc-bar">
         <div class="cc-search">

@@ -16,12 +16,6 @@ class AcademicIncomeAssessmentController extends Controller
 {
     public function evaluate(AcademicIncomePlan $academicIncome)
     {
-        if ($academicIncome->isApproved()) {
-            return redirect()
-                ->route('head_of_finance.academic-income.show', $academicIncome)
-                ->with('error', 'ແຜນທີ່ອະນຸມັດແລ້ວບໍ່ສາມາດແກ້ໄຂໄດ້');
-        }
-
         $programs11 = DegreeProgram::where('is_active', true)
             ->with('latestCourseCredit')
             ->where(fn($q) => $q
@@ -68,10 +62,6 @@ class AcademicIncomeAssessmentController extends Controller
 
     public function saveEvaluate(Request $request, AcademicIncomePlan $academicIncome)
     {
-        if ($academicIncome->isApproved()) {
-            return back()->with('error', 'ແຜນທີ່ອະນຸມັດແລ້ວບໍ່ສາມາດແກ້ໄຂໄດ້');
-        }
-
         $request->validate([
             's11'          => 'nullable|array',
             's11.*'        => 'nullable|integer|min:0',

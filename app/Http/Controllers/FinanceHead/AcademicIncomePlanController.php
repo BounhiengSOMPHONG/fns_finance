@@ -14,13 +14,7 @@ class AcademicIncomePlanController extends Controller
             ->orderByDesc('fiscal_year')
             ->paginate(15);
 
-        $counts = AcademicIncomePlan::selectRaw("
-            count(*) as total,
-            sum(status = 'APPROVED') as approved,
-            sum(status = 'DRAFT') as draft
-        ")->first();
-
-        return view('dashboards.finance_head.academic-income.index', compact('plans', 'counts'));
+        return view('dashboards.finance_head.academic-income.index', compact('plans'));
     }
 
     public function create()
@@ -36,7 +30,6 @@ class AcademicIncomePlanController extends Controller
         ]);
 
         $validated['created_by'] = auth()->id();
-        $validated['status']     = 'DRAFT';
 
         $plan = AcademicIncomePlan::create($validated);
 
@@ -59,18 +52,5 @@ class AcademicIncomePlanController extends Controller
         return redirect()
             ->route('head_of_finance.academic-income.index')
             ->with('success', 'ລຶບແຜນລາຍຮັບວິຊາການສຳເລັດ');
-    }
-
-    public function approve(AcademicIncomePlan $academicIncome)
-    {
-        if ($academicIncome->isApproved()) {
-            return back()->with('error', 'ແຜນນີ້ຖືກອະນຸມັດແລ້ວ');
-        }
-
-        $academicIncome->update(['status' => 'APPROVED']);
-
-        return redirect()
-            ->route('head_of_finance.academic-income.show', $academicIncome)
-            ->with('success', 'ອະນຸມັດແຜນລາຍຮັບວິຊາການສຳເລັດ');
     }
 }

@@ -14,20 +14,8 @@
         </a>
     </div>
     <div class="fns-toolbar-right">
-        @if(!$academicIncome->isApproved())
-            <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-primary">ປ້ອນຂໍ້ມູນ / ປະເມີນ</a>
-        @endif
+        <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-primary">ປ້ອນຂໍ້ມູນ / ປະເມີນ</a>
         <a href="{{ route('head_of_finance.academic-income.summary', $academicIncome) }}" class="fns-btn fns-btn-secondary">ເບິ່ງສັງລວມ</a>
-        @if(!$academicIncome->isApproved())
-            <form method="POST" action="{{ route('head_of_finance.academic-income.approve', $academicIncome) }}" style="display:inline;"
-                onsubmit="return confirm('ອະນຸມັດແຜນນີ້ບໍ?\nຫຼັງຈາກອະນຸມັດແລ້ວ ຈະບໍ່ສາມາດແກ້ໄຂໄດ້ອີກ.')">
-                @csrf
-                <button type="submit" class="fns-btn fns-btn-success">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;"><path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd"/></svg>
-                    ອະນຸມັດ
-                </button>
-            </form>
-        @endif
     </div>
 </div>
 
@@ -37,17 +25,6 @@
         <div>
             <p style="font-size:0.68rem; font-weight:700; color:var(--fns-gray-400); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.35rem;">ສົກປີງົບປະມານ</p>
             <p style="font-family:'Cinzel',serif; font-size:1.5rem; font-weight:700; color:var(--fns-navy); line-height:1;">{{ $academicIncome->fiscal_year }}</p>
-        </div>
-        <div>
-            <p style="font-size:0.68rem; font-weight:700; color:var(--fns-gray-400); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.35rem;">ສະຖານະ</p>
-            @if($academicIncome->isApproved())
-                <span class="fns-badge fns-badge-green" style="font-size:0.8rem; padding:0.3rem 0.85rem;">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" style="width:11px;height:11px;"><path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd"/></svg>
-                    ອະນຸມັດແລ້ວ
-                </span>
-            @else
-                <span class="fns-badge fns-badge-gold" style="font-size:0.8rem; padding:0.3rem 0.85rem;">ຮ່າງ</span>
-            @endif
         </div>
         <div>
             <p style="font-size:0.68rem; font-weight:700; color:var(--fns-gray-400); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.35rem;">ຜູ້ສ້າງ</p>
@@ -109,9 +86,7 @@
 <div class="fns-card" style="text-align:center; padding:2.5rem 1rem;">
     <div style="font-size:2.5rem; opacity:0.2; margin-bottom:0.75rem;">📊</div>
     <p style="color:var(--fns-gray-400); font-size:0.88rem; margin-bottom:1rem;">ຍັງບໍ່ມີຂໍ້ມູນການປະເມີນ</p>
-    @if(!$academicIncome->isApproved())
-        <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-primary">ປ້ອນຂໍ້ມູນ / ປະເມີນ</a>
-    @endif
+    <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-primary">ປ້ອນຂໍ້ມູນ / ປະເມີນ</a>
 </div>
 @endif
 

@@ -14,17 +14,7 @@
         </a>
     </div>
     <div class="fns-toolbar-right">
-        @if(!$academicIncome->isApproved())
-            <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-secondary">ແກ້ໄຂຂໍ້ມູນ</a>
-            <form method="POST" action="{{ route('head_of_finance.academic-income.approve', $academicIncome) }}" style="display:inline;"
-                onsubmit="return confirm('ອະນຸມັດແຜນນີ້ບໍ?\nຫຼັງຈາກອະນຸມັດ ຈະບໍ່ສາມາດແກ້ໄຂໄດ້ອີກ.')">
-                @csrf
-                <button type="submit" class="fns-btn fns-btn-success">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;"><path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd"/></svg>
-                    ອະນຸມັດ
-                </button>
-            </form>
-        @endif
+        <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-secondary">ແກ້ໄຂຂໍ້ມູນ</a>
         <a href="{{ route('head_of_finance.academic-income.print', $academicIncome) }}" target="_blank" class="fns-btn fns-btn-gold">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path fill-rule="evenodd" d="M5 2.75C5 1.784 5.784 1 6.75 1h6.5c.966 0 1.75.784 1.75 1.75v3.552c.377.046.752.097 1.126.153A2.212 2.212 0 0 1 18 8.653v4.097A2.25 2.25 0 0 1 15.75 15h-.241l.305 1.984A1.75 1.75 0 0 1 14.084 19H5.915a1.75 1.75 0 0 1-1.73-2.016L4.49 15H4.25A2.25 2.25 0 0 1 2 12.75V8.653c0-1.082.775-2.034 1.874-2.198.374-.056.749-.107 1.126-.153V2.75Zm8.5 3.397a41.533 41.533 0 0 0-7 0V2.75a.25.25 0 0 1 .25-.25h6.5a.25.25 0 0 1 .25.25v3.397ZM6.608 12.5H5.915l-.385 2.5h8.94l-.385-2.5H6.608Zm7.117-7.5H6.275a40.015 40.015 0 0 0-1.398.098A.712.712 0 0 0 4.25 5.796v6.954c0 .414.336.75.75.75h.241l.305-1.984a1.75 1.75 0 0 1 1.73-1.516h5.448a1.75 1.75 0 0 1 1.73 1.516l.305 1.984H15.75a.75.75 0 0 0 .75-.75V5.796a.712.712 0 0 0-.626-.698A40.15 40.15 0 0 0 13.725 5Z" clip-rule="evenodd"/></svg>
             ພິມ / PDF
@@ -38,17 +28,6 @@
         <div>
             <p style="font-size:0.68rem; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.3rem;">ຮ່າງສັງລວມລາຍຮັບວິຊາການ</p>
             <p style="font-family:'Cinzel',serif; font-size:1.6rem; font-weight:700; color:var(--fns-gold-light); line-height:1;">ສົກປີ {{ $academicIncome->fiscal_year }}</p>
-        </div>
-        <div>
-            @if($academicIncome->isApproved())
-                <span class="fns-badge fns-badge-green" style="font-size:0.82rem; padding:0.35rem 1rem; background:rgba(22,163,74,0.2); border-color:rgba(22,163,74,0.4); color:#86efac;">
-                    ອະນຸມັດແລ້ວ
-                </span>
-            @else
-                <span class="fns-badge fns-badge-gold" style="font-size:0.82rem; padding:0.35rem 1rem; background:rgba(201,153,26,0.2); border-color:rgba(201,153,26,0.35); color:var(--fns-gold-pale);">
-                    ຮ່າງ
-                </span>
-            @endif
         </div>
     </div>
 </div>
@@ -128,9 +107,7 @@
 <div class="fns-card" style="text-align:center; padding:2.5rem 1rem;">
     <div style="font-size:2.5rem; opacity:0.2; margin-bottom:0.75rem;">📊</div>
     <p style="color:var(--fns-gray-400); font-size:0.88rem; margin-bottom:1rem;">ຍັງບໍ່ມີຂໍ້ມູນການປະເມີນ</p>
-    @if(!$academicIncome->isApproved())
-        <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-primary">ປ້ອນຂໍ້ມູນ / ປະເມີນ</a>
-    @endif
+    <a href="{{ route('head_of_finance.academic-income.evaluate', $academicIncome) }}" class="fns-btn fns-btn-primary">ປ້ອນຂໍ້ມູນ / ປະເມີນ</a>
 </div>
 @endif
 

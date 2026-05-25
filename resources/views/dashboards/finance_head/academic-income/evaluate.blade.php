@@ -188,7 +188,7 @@
     <div class="fns-sec-hd">
         <div class="fns-sec-num" style="font-size:0.58rem; line-height:1.15;">1.2<br>1.4<br>3–6</div>
         <div style="flex:1;">
-            <div class="fns-sec-title">ຄ່າລົງທະບຽນ ແລະ ລາຍຮັບ Item 3–6</div>
+            <div class="fns-sec-title">ຄ່າລົງທະບຽນ ແລະ ຄ່າທຳນຽມ (3-6)</div>
             <div class="fns-sec-desc">ປ້ອນຈຳນວນ ນ/ສ ຂອງແຕ່ລະລາຍການ</div>
         </div>
     </div>

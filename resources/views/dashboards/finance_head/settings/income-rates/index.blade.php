@@ -60,12 +60,10 @@
 
                     <div class="fns-form-group">
                         <label class="fns-label">ຊື່ລາຍການ</label>
-                        <input type="text" name="{{ $key }}_label" value="{{ old($key . '_label', $row?->label ?? '') }}"
-                            class="fns-input @error($key . '_label') fns-input-error @enderror"
-                            placeholder="ເຊັ່ນ: ຄ່າທຳນຽມທ (Item {{ $meta['icon'] }})" required>
-                        @error($key . '_label')
-                            <div class="fns-input-hint fns-input-hint-error">{{ $message }}</div>
-                        @enderror
+                        <input type="text" value="{{ $row?->label ?? '' }}"
+                            class="fns-input"
+                            style="background-color:#f1f5f9; color:#64748b; cursor:not-allowed;"
+                            readonly>
                     </div>
 
                     <div class="fns-form-group" style="margin-bottom:0;">

@@ -90,7 +90,9 @@
                         <x-icons.settings style="width:16px;height:16px;flex-shrink:0;" />
                         ການຕັ້ງຄ່າ
                     </span>
-                    <span :style="openFhSettings ? 'transform:rotate(180deg)' : ''" style="display:inline-flex;transition:transform 0.2s;"><x-icons.chevron-down style="width:13px;height:13px;" /></span>
+                    <span :style="openFhSettings ? 'transform:rotate(180deg)' : ''"
+                        style="display:inline-flex;transition:transform 0.2s;"><x-icons.chevron-down
+                            style="width:13px;height:13px;" /></span>
                 </button>
                 <div x-show="openFhSettings" x-transition class="fns-nav-group-children">
                     <a href="{{ route('head_of_finance.settings.degree-programs.index') }}"
@@ -111,7 +113,7 @@
                     <a href="{{ route('head_of_finance.settings.income-rates.index') }}"
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.income-rates.*') ? 'active' : '' }}">
                         <x-icons.settings style="width:16px;height:16px;" />
-                        ອັດຕາລາຍຮັບ (Items 3-6)
+                        ຄ່າທຳນຽມ ແລະ ບໍລິການ (3-6)
                     </a>
                 </div>
             </div>

@@ -84,17 +84,27 @@
             </a>
 
             <div class="fns-nav-section-label">ການຕັ້ງຄ່າ</div>
-            <div x-data="{ openFhSettings: {{ request()->routeIs('head_of_finance.settings.*') ? 'true' : 'false' }} }">
-                <button class="fns-nav-group-btn" @click="openFhSettings = !openFhSettings">
+
+            {{-- Income settings --}}
+            @php
+                $incomeSettingsActive = request()->routeIs('head_of_finance.settings.degree-programs.*')
+                    || request()->routeIs('head_of_finance.settings.course-credits.*')
+                    || request()->routeIs('head_of_finance.settings.credit-unit-price.*')
+                    || request()->routeIs('head_of_finance.settings.nuol-pct.*')
+                    || request()->routeIs('head_of_finance.settings.registration-fee.*')
+                    || request()->routeIs('head_of_finance.settings.income-rates.*');
+            @endphp
+            <div x-data="{ openIncomeSettings: {{ $incomeSettingsActive ? 'true' : 'false' }} }">
+                <button class="fns-nav-group-btn" @click="openIncomeSettings = !openIncomeSettings">
                     <span style="display:flex; align-items:center; gap:0.6rem;">
                         <x-icons.settings style="width:16px;height:16px;flex-shrink:0;" />
-                        ການຕັ້ງຄ່າ
+                        ຕັ້ງຄ່າລາຍຮັບ
                     </span>
-                    <span :style="openFhSettings ? 'transform:rotate(180deg)' : ''"
+                    <span :style="openIncomeSettings ? 'transform:rotate(180deg)' : ''"
                         style="display:inline-flex;transition:transform 0.2s;"><x-icons.chevron-down
                             style="width:13px;height:13px;" /></span>
                 </button>
-                <div x-show="openFhSettings" x-transition class="fns-nav-group-children">
+                <div x-show="openIncomeSettings" x-transition class="fns-nav-group-children">
                     <a href="{{ route('head_of_finance.settings.degree-programs.index') }}"
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.degree-programs.*') ? 'active' : '' }}">
                         <x-icons.building-office />
@@ -114,6 +124,26 @@
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.income-rates.*') ? 'active' : '' }}">
                         <x-icons.settings style="width:16px;height:16px;" />
                         ຄ່າທຳນຽມ ແລະ ບໍລິການ (3-6)
+                    </a>
+                </div>
+            </div>
+
+            {{-- Expense settings --}}
+            <div x-data="{ openExpenseSettings: {{ request()->routeIs('head_of_finance.settings.expense-categories.*') ? 'true' : 'false' }} }">
+                <button class="fns-nav-group-btn" @click="openExpenseSettings = !openExpenseSettings">
+                    <span style="display:flex; align-items:center; gap:0.6rem;">
+                        <x-icons.settings style="width:16px;height:16px;flex-shrink:0;" />
+                        ຕັ້ງຄ່າລາຍຈ່າຍ
+                    </span>
+                    <span :style="openExpenseSettings ? 'transform:rotate(180deg)' : ''"
+                        style="display:inline-flex;transition:transform 0.2s;"><x-icons.chevron-down
+                            style="width:13px;height:13px;" /></span>
+                </button>
+                <div x-show="openExpenseSettings" x-transition class="fns-nav-group-children">
+                    <a href="{{ route('head_of_finance.settings.expense-categories.index') }}"
+                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.expense-categories.*') ? 'active' : '' }}">
+                        <x-icons.book-open />
+                        ໝວດລາຍຈ່າຍ
                     </a>
                 </div>
             </div>

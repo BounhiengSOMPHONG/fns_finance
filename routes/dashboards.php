@@ -35,6 +35,12 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             // Income Rate Settings (single-page: index + one patch to update all 4 keys)
             Route::get('income-rates', [\App\Http\Controllers\FinanceHead\Settings\IncomeRateSettingController::class, 'index'])->name('income-rates.index');
             Route::patch('income-rates', [\App\Http\Controllers\FinanceHead\Settings\IncomeRateSettingController::class, 'update'])->name('income-rates.update');
+
+            // Expense Category Template (master main/sub categories copied into new plans)
+            Route::get('expense-categories', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'index'])->name('expense-categories.index');
+            Route::post('expense-categories', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'store'])->name('expense-categories.store');
+            Route::patch('expense-categories/{expenseCategoryTemplate}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'update'])->name('expense-categories.update');
+            Route::delete('expense-categories/{expenseCategoryTemplate}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'destroy'])->name('expense-categories.destroy');
         });
 
         // Academic Income

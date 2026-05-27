@@ -73,7 +73,20 @@ class AcademicIncomeAssessmentController extends Controller
             'students_2_2' => 'required|integer|min:0',
             'students_2_3' => 'required|integer|min:0',
             'students_2_4' => 'required|integer|min:0',
+            'item3_rate'   => 'nullable|numeric|min:0',
+            'item4_rate'   => 'nullable|numeric|min:0',
+            'item5_rate'   => 'nullable|numeric|min:0',
+            'item6_rate'   => 'nullable|numeric|min:0',
         ]);
+
+        // Income rates (items 3–6) are edited inline on this entry page; persist
+        // any submitted values so the section 2.1–2.4 calculations below use them.
+        foreach (['item3', 'item4', 'item5', 'item6'] as $rateKey) {
+            if ($request->filled($rateKey . '_rate')) {
+                IncomeRateSetting::where('key', $rateKey . '_rate')
+                    ->update(['rate' => (float) $request->input($rateKey . '_rate')]);
+            }
+        }
 
         $nuolBachelor = NuolPctSetting::latestFor('bachelor')?->percentage ?? 0.17;
         $nuolMaster   = NuolPctSetting::latestFor('master')?->percentage ?? 0.10;

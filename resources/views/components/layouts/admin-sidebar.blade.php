@@ -91,8 +91,7 @@
                     || request()->routeIs('head_of_finance.settings.course-credits.*')
                     || request()->routeIs('head_of_finance.settings.credit-unit-price.*')
                     || request()->routeIs('head_of_finance.settings.nuol-pct.*')
-                    || request()->routeIs('head_of_finance.settings.registration-fee.*')
-                    || request()->routeIs('head_of_finance.settings.income-rates.*');
+                    || request()->routeIs('head_of_finance.settings.registration-fee.*');
             @endphp
             <div x-data="{ openIncomeSettings: {{ $incomeSettingsActive ? 'true' : 'false' }} }">
                 <button class="fns-nav-group-btn" @click="openIncomeSettings = !openIncomeSettings">
@@ -119,11 +118,6 @@
                         class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">
                         <x-icons.shield-check />
                         ຄ່າລົງທະບຽນ
-                    </a>
-                    <a href="{{ route('head_of_finance.settings.income-rates.index') }}"
-                        class="fns-nav-item {{ request()->routeIs('head_of_finance.settings.income-rates.*') ? 'active' : '' }}">
-                        <x-icons.settings style="width:16px;height:16px;" />
-                        ຄ່າທຳນຽມ ແລະ ບໍລິການ (3-6)
                     </a>
                 </div>
             </div>

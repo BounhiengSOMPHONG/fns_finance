@@ -175,13 +175,13 @@
          'rate'=> $feeYear1 ? number_format($feeYear1->total_rate,0).' ກີບ'.' (ປີ '.$feeYear1->start_year.')' : null,
          'warn'=>'⚠ ຍັງບໍ່ໄດ້ຕັ້ງຄ່າລົງທະບຽນ ປີ 1', 'eq'=>false],
         ['tag'=>'3', 'name'=>'students_2_1', 'title'=>$incomeRates->get('item3_rate')?->label ?? 'Item 3', 'key'=>'2.1_',
-         'rate'=> number_format((float)($incomeRates->get('item3_rate')?->rate ?? 0),0).' ກີບ', 'warn'=>null, 'eq'=>false],
+         'rateField'=>'item3_rate', 'rateVal'=>(float)($incomeRates->get('item3_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>false],
         ['tag'=>'4', 'name'=>'students_2_2', 'title'=>$incomeRates->get('item4_rate')?->label ?? 'Item 4', 'key'=>'2.2_',
-         'rate'=> number_format((float)($incomeRates->get('item4_rate')?->rate ?? 0),0).' ກີບ', 'warn'=>null, 'eq'=>true],
+         'rateField'=>'item4_rate', 'rateVal'=>(float)($incomeRates->get('item4_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>true],
         ['tag'=>'5', 'name'=>'students_2_3', 'title'=>$incomeRates->get('item5_rate')?->label ?? 'Item 5', 'key'=>'2.3_',
-         'rate'=> number_format((float)($incomeRates->get('item5_rate')?->rate ?? 0),0).' ກີບ', 'warn'=>null, 'eq'=>true],
+         'rateField'=>'item5_rate', 'rateVal'=>(float)($incomeRates->get('item5_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>true],
         ['tag'=>'6', 'name'=>'students_2_4', 'title'=>$incomeRates->get('item6_rate')?->label ?? 'Item 6', 'key'=>'2.4_',
-         'rate'=> number_format((float)($incomeRates->get('item6_rate')?->rate ?? 0),0).' ກີບ', 'warn'=>null, 'eq'=>false],
+         'rateField'=>'item6_rate', 'rateVal'=>(float)($incomeRates->get('item6_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>false],
     ];
 @endphp
 <div class="fns-card ai-card">
@@ -198,7 +198,14 @@
             <label class="ai-row ai-item @if($val<=0) is-zero @endif" data-name="{{ \Illuminate\Support\Str::lower($it['title']) }}">
                 <span class="ai-row-name">
                     <span class="ai-item-title"><span class="ai-item-tag">{{ $it['tag'] }}</span> <span class="ai-row-txt" title="{{ $it['title'] }}">{{ $it['title'] }}</span></span>
-                    @if($it['rate'])
+                    @if(!empty($it['rateField']))
+                        <span class="ai-item-rate">ອັດຕາ:
+                            <input type="number" name="{{ $it['rateField'] }}" min="0" step="1"
+                                value="{{ old($it['rateField'], (int) $it['rateVal']) }}"
+                                title="ແກ້ໄຂອັດຕາ (ກີບ)"
+                                style="width:96px;padding:2px 6px;font-size:0.78rem;border:1px solid #cbd5e1;border-radius:5px;font-weight:700;color:var(--fns-navy);"> ກີບ
+                        </span>
+                    @elseif(!empty($it['rate']))
                         <span class="ai-item-rate">ອັດຕາ: <b>{{ $it['rate'] }}</b></span>
                     @else
                         <span class="ai-item-rate warn">{{ $it['warn'] }}</span>

@@ -15,14 +15,10 @@ class ExpensePlan extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function topCategories(): HasMany
+    public function entries(): HasMany
     {
-        return $this->hasMany(ExpenseCategory::class, 'plan_id')->whereNull('parent_id')->orderBy('sort_order')->orderBy('ref_code');
-    }
-
-    public function allCategories(): HasMany
-    {
-        return $this->hasMany(ExpenseCategory::class, 'plan_id');
+        return $this->hasMany(ExpenseEntry::class, 'plan_id')
+            ->orderBy('main_cat')->orderBy('ref_code')->orderBy('sort_order');
     }
 
     public function isApproved(): bool
@@ -32,6 +28,8 @@ class ExpensePlan extends Model
 
     public function grandTotal(): float
     {
-        return (float) $this->allCategories->flatMap->items->sum('annual_amount');
+        return (float) ($this->relationLoaded('entries')
+            ? $this->entries->sum('total')
+            : $this->entries()->sum('total'));
     }
 }

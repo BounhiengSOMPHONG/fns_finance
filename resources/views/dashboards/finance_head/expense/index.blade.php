@@ -42,7 +42,7 @@
                 <td style="font-weight:600;">ສົກ {{ $plan->fiscal_year }}</td>
                 <td>{{ $plan->creator?->name ?? '-' }}</td>
                 <td style="text-align:right; font-weight:600;">
-                    {{ number_format($plan->allCategories->flatMap->items->sum('annual_amount'), 0) }}
+                    {{ number_format($plan->grandTotal(), 0) }}
                 </td>
                 <td>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">

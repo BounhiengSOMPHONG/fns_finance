@@ -47,13 +47,15 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('expense/{expensePlan}/manage', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'manage'])->name('expense.manage');
         Route::post('expense/{expensePlan}/approve', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'approve'])->name('expense.approve');
 
-        Route::post('expense-categories', [\App\Http\Controllers\FinanceHead\ExpenseCategoryController::class, 'store'])->name('expense-categories.store');
-        Route::patch('expense-categories/{expenseCategory}', [\App\Http\Controllers\FinanceHead\ExpenseCategoryController::class, 'update'])->name('expense-categories.update');
-        Route::delete('expense-categories/{expenseCategory}', [\App\Http\Controllers\FinanceHead\ExpenseCategoryController::class, 'destroy'])->name('expense-categories.destroy');
+        // Flat expense entries (AJAX inline grid)
+        Route::post('expense-entries', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'store'])->name('expense-entries.store');
+        Route::patch('expense-entries/{expenseEntry}', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'update'])->name('expense-entries.update');
+        Route::delete('expense-entries/{expenseEntry}', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'destroy'])->name('expense-entries.destroy');
 
-        Route::post('expense-items', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'store'])->name('expense-items.store');
-        Route::patch('expense-items/{expenseItem}', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'update'])->name('expense-items.update');
-        Route::delete('expense-items/{expenseItem}', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'destroy'])->name('expense-items.destroy');
+        // Ref-code configured list (managed via modal on the manage page)
+        Route::post('expense-ref-codes', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'store'])->name('expense-ref-codes.store');
+        Route::patch('expense-ref-codes/{expenseRefCode}', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'update'])->name('expense-ref-codes.update');
+        Route::delete('expense-ref-codes/{expenseRefCode}', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'destroy'])->name('expense-ref-codes.destroy');
 
         // Salary Plans
         Route::resource('salary', \App\Http\Controllers\FinanceHead\SalaryPlanController::class, [

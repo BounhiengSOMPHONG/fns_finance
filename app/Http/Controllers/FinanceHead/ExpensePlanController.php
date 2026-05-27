@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
-use App\Models\ExpenseCategory;
+use App\Models\ChartOfAccount;
 use App\Models\ExpensePlan;
+use App\Models\ExpenseRefCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,7 +13,7 @@ class ExpensePlanController extends Controller
 {
     public function index()
     {
-        $plans = ExpensePlan::with(['creator', 'allCategories.items'])
+        $plans = ExpensePlan::with(['creator', 'entries'])
             ->orderByDesc('fiscal_year')
             ->paginate(15);
 
@@ -44,27 +45,19 @@ class ExpensePlanController extends Controller
 
     public function show(ExpensePlan $expensePlan)
     {
-        $expensePlan->load([
-            'topCategories.children.children.items.chartOfAccount',
-            'topCategories.children.items.chartOfAccount',
-            'topCategories.items.chartOfAccount',
-            'creator',
-        ]);
+        $expensePlan->load(['entries.chartOfAccount', 'creator']);
 
         return view('dashboards.finance_head.expense.show', compact('expensePlan'));
     }
 
     public function manage(ExpensePlan $expensePlan)
     {
-        $expensePlan->load([
-            'topCategories.children.children.items.chartOfAccount',
-            'topCategories.children.items.chartOfAccount',
-            'topCategories.items.chartOfAccount',
-        ]);
+        $expensePlan->load('entries');
 
-        $chartOfAccounts = \App\Models\ChartOfAccount::orderBy('account_code')->get();
+        $coaMap   = $this->buildCoaMap();
+        $refCodes = ExpenseRefCode::orderBy('sort_order')->orderBy('code')->get();
 
-        return view('dashboards.finance_head.expense.manage', compact('expensePlan', 'chartOfAccounts'));
+        return view('dashboards.finance_head.expense.manage', compact('expensePlan', 'coaMap', 'refCodes'));
     }
 
     public function destroy(ExpensePlan $expensePlan)
@@ -73,25 +66,11 @@ class ExpensePlanController extends Controller
             return back()->with('error', 'ບໍ່ສາມາດລຶບແຜນທີ່ອະນຸມັດແລ້ວ');
         }
 
-        // The deep self-referential category tree exceeds MySQL's recursive
-        // cascade limit, so clear it bottom-up before deleting the plan.
-        foreach ($expensePlan->topCategories as $cat) {
-            $this->deleteCategoryTree($cat);
-        }
-
+        // Flat entries cascade cleanly via FK — no deep self-referential tree.
         $expensePlan->delete();
 
         return redirect()->route('head_of_finance.expense.index')
             ->with('success', 'ລຶບແຜນງົບປະມານສຳເລັດ');
-    }
-
-    private function deleteCategoryTree(ExpenseCategory $category): void
-    {
-        foreach ($category->children as $child) {
-            $this->deleteCategoryTree($child);
-        }
-        $category->items()->delete();
-        $category->delete();
     }
 
     public function approve(ExpensePlan $expensePlan)
@@ -99,5 +78,36 @@ class ExpensePlanController extends Controller
         $expensePlan->update(['status' => 'APPROVED']);
 
         return back()->with('success', 'ອະນຸມັດແຜນງົບປະມານສຳເລັດ');
+    }
+
+    /**
+     * Map of account_code => {id, name, main_cat, main_item} for the manage grid.
+     * Main Cat / Main Item are derived from the COA parent chain (resolved in
+     * memory to avoid per-row queries).
+     */
+    private function buildCoaMap(): array
+    {
+        $accounts = ChartOfAccount::orderBy('account_code')->get();
+        $byId     = $accounts->keyBy('id');
+
+        $map = [];
+        foreach ($accounts as $account) {
+            $chain = [];
+            $node  = $account;
+            $guard = 0;
+            while ($node && $guard++ < 10) {
+                array_unshift($chain, $node->account_name);
+                $node = $node->parent_id ? $byId->get($node->parent_id) : null;
+            }
+
+            $map[$account->account_code] = [
+                'id'        => $account->id,
+                'name'      => $account->account_name,
+                'main_cat'  => $chain[0] ?? '',
+                'main_item' => $chain[1] ?? '',
+            ];
+        }
+
+        return $map;
     }
 }

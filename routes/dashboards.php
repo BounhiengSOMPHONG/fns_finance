@@ -61,11 +61,6 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::patch('expense-items/{expenseItem}', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'update'])->name('expense-items.update');
         Route::delete('expense-items/{expenseItem}', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'destroy'])->name('expense-items.destroy');
 
-        // Annual Report (multi-module PDF)
-        Route::get('reports/{year}', [\App\Http\Controllers\FinanceHead\AnnualReportController::class, 'show'])
-             ->name('reports.show')
-             ->where('year', '[0-9]{4}');
-
         // Salary Plans
         Route::resource('salary', \App\Http\Controllers\FinanceHead\SalaryPlanController::class, [
             'parameters' => ['salary' => 'salaryPlan'],

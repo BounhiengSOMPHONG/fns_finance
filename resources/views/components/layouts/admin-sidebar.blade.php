@@ -77,11 +77,6 @@
                 <x-icons.book-open />
                 ປະເມີນລາຍຮັບ
             </a>
-            <a href="{{ route('head_of_finance.reports.show', ['year' => date('Y')]) }}"
-                class="fns-nav-item {{ request()->routeIs('head_of_finance.reports.*') ? 'active' : '' }}">
-                <x-icons.calendar />
-                ລາຍງານລວມ / PDF
-            </a>
 
             <div class="fns-nav-section-label">ການຕັ້ງຄ່າ</div>
 

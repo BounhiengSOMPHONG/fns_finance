@@ -33,12 +33,6 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             Route::resource('registration-fee', \App\Http\Controllers\FinanceHead\Settings\RegistrationFeeController::class, ['parameters' => ['registration-fee' => 'registrationFee']])->only(['index', 'edit', 'update']);
             Route::resource('nuol-pct', \App\Http\Controllers\FinanceHead\Settings\NuolPctSettingController::class, ['parameters' => ['nuol-pct' => 'nuolPct']])->only(['index', 'update']);
             // Income rates (items 3–6) are now edited inline on the academic-income entry page.
-
-            // Expense Category Template (master main/sub categories copied into new plans)
-            Route::get('expense-categories', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'index'])->name('expense-categories.index');
-            Route::post('expense-categories', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'store'])->name('expense-categories.store');
-            Route::patch('expense-categories/{expenseCategoryTemplate}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'update'])->name('expense-categories.update');
-            Route::delete('expense-categories/{expenseCategoryTemplate}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseCategoryTemplateController::class, 'destroy'])->name('expense-categories.destroy');
         });
 
         // Academic Income

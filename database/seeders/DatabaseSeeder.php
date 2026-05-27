@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             DegreeProgramSeeder::class,
             CourseCreditSeeder::class,
             ExpensePlanSeeder::class,
-            ExpenseCategoryTemplateSeeder::class,
             AcademicIncomePlanSeeder::class,
             SalaryBudgetCodeSeeder::class,
             SalarySampleDataSeeder::class,

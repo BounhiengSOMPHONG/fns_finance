@@ -254,8 +254,12 @@ async function saveRow(row){
         if (!itemId && data.entry?.id) {
             row.dataset.itemId = data.entry.id;
             row.classList.remove('row-new');
-            appendBlankRow();
+            const newRow = appendBlankRow({
+                cat:  f(row,'gi-maincat-code').value,
+                item: f(row,'gi-mainitem-code').value,
+            });
             renumber();
+            newRow?.querySelector('.gi-sub')?.focus();
         }
         if (data.entry?.total !== undefined) {
             const cell = row.querySelector('.cell-total');
@@ -295,11 +299,20 @@ function renumber(){
     tbody.querySelectorAll('.grid-row:not(.row-new) .row-num').forEach(c => c.textContent = n++);
 }
 
-function appendBlankRow(){
+function appendBlankRow(prefill){
     const tpl = document.getElementById('blank-row-tpl');
     const tr = tpl.content.firstElementChild.cloneNode(true);
     tbody.appendChild(tr);
+
+    if (prefill && prefill.cat) {
+        f(tr,'gi-maincat-code').value = prefill.cat;
+        populateLevel2(tr, prefill.item);
+        f(tr,'gi-acct').value = optData(f(tr,'gi-mainitem-code'),'acct') || '';
+        applyCoa(tr);
+    }
+
     bindRow(tr);
+    return tr;
 }
 
 function bindRow(row){

@@ -28,6 +28,11 @@ class ExpenseEntry extends Model
     {
         parent::boot();
         static::saving(function (self $entry) {
+            // A row with a note is a descriptive line — it never carries an amount.
+            if (filled($entry->note)) {
+                $entry->total = 0;
+                return;
+            }
             // Total = (Rate1 + Rate2) × Qty × Period × Frequency + AddOn
             $entry->total = ((float) $entry->rate1 + (float) $entry->rate2)
                 * (float) $entry->qty

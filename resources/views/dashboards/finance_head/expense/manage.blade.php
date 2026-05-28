@@ -226,9 +226,13 @@ const money = s => parseFloat((s || '0').replace(/,/g,'')) || 0;
 
 // ---- Totals ----
 function recalc(row){
-    const total = (num(row,'gi-r1') + num(row,'gi-r2'))
+    // A row with a ໝາຍເຫດ is a note line — it never carries an amount.
+    const hasNote = val(row,'gi-note').trim() !== '';
+    const total = hasNote ? 0 : (
+        (num(row,'gi-r1') + num(row,'gi-r2'))
         * (num(row,'gi-qty') || 0) * (num(row,'gi-period') || 0) * (num(row,'gi-freq') || 0)
-        + num(row,'gi-addon');
+        + num(row,'gi-addon')
+    );
     const cell = row.querySelector('.cell-total');
     if (cell) cell.textContent = numFmt.format(total);
     const grp = row.closest('.item-group');
@@ -417,7 +421,7 @@ function addFromPicker(){
 
 // ---- Binding ----
 function bindRow(row){
-    row.querySelectorAll('.gi-r1,.gi-r2,.gi-qty,.gi-period,.gi-freq,.gi-addon').forEach(inp =>
+    row.querySelectorAll('.gi-r1,.gi-r2,.gi-qty,.gi-period,.gi-freq,.gi-addon,.gi-note').forEach(inp =>
         inp.addEventListener('input', () => recalc(row)));
 
     const acct = f(row,'gi-acct');

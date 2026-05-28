@@ -126,6 +126,7 @@
     outline:none;font-family:inherit;color:inherit;transition:background 0.15s;
 }
 .entry-grid .gi:focus { background:#eff6ff;border-radius:3px;outline:2px solid #93c5fd;outline-offset:-1px; }
+.entry-grid .gi-invalid { animation:flash-red 0.8s ease; }
 .entry-grid select.gi { cursor:pointer; }
 .entry-grid input[type=number].gi { text-align:right; }
 .entry-grid tr.row-new { background:#fefce8; }
@@ -182,11 +183,18 @@ function recalcGrand(){
     document.getElementById('grand-total').textContent = numFmt.format(g);
 }
 
-// Resolve the typed/auto-filled account code to its chart_of_accounts id.
+// Resolve the account code to its chart_of_accounts id. Reject anything that
+// is not a real COA code — no free-typed garbage is kept.
 function applyCoa(row){
-    const code = val(row,'gi-acct').trim();
+    const acctEl = f(row,'gi-acct');
+    const code = acctEl.value.trim();
     const info = COA_MAP[code];
     f(row,'gi-acctid').value = info ? info.id : '';
+    if (code && !info) {
+        acctEl.value = '';
+        acctEl.classList.add('gi-invalid');
+        setTimeout(() => acctEl.classList.remove('gi-invalid'), 900);
+    }
 }
 
 // Rebuild the Level-2 (ລາຍການຫຼັກ) options from the chosen Level-1 (ໝວດຫຼັກ).

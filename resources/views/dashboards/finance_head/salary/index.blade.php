@@ -25,7 +25,6 @@
             <tr>
                 <th style="width:5%">#</th>
                 <th>ເດືອນ / ສົກ</th>
-                <th style="text-align:center;">ສະຖານະ</th>
                 <th style="text-align:right;">ລວມຕໍ່ເດືອນ (ກີບ)</th>
                 <th style="text-align:right;">ລວມ 12 ເດືອນ (ກີບ)</th>
                 <th>ສ້າງໂດຍ</th>
@@ -39,16 +38,9 @@
                 <td style="font-weight:600;">
                     ເດືອນ {{ $plan->monthLabel() }}
                 </td>
-                <td style="text-align:center;">
-                    @if($plan->status === 'APPROVED')
-                        <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:999px;font-size:0.75rem;font-weight:600;">ອະນຸມັດ</span>
-                    @else
-                        <span style="background:#fef9c3;color:#854d0e;padding:2px 10px;border-radius:999px;font-size:0.75rem;font-weight:600;">ຮ່າງ</span>
-                    @endif
-                </td>
                 <td style="text-align:right;">{{ number_format($plan->monthlyTotal(), 0) }}</td>
                 <td style="text-align:right;font-weight:600;">{{ number_format($plan->grandTotal(), 0) }}</td>
-                <td>{{ $plan->creator?->name ?? '-' }}</td>
+                <td>{{ $plan->creator?->full_name ?? $plan->creator?->username ?? '-' }}</td>
                 <td>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
                         <a href="{{ route('head_of_finance.salary.manage', $plan) }}" class="fns-btn fns-btn-sm fns-btn-primary">ຈັດການ</a>
@@ -64,7 +56,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="text-align:center; color:var(--fns-gray-400); padding:2rem;">ຍັງບໍ່ມີຂໍ້ມູນ — ກົດ "ສ້າງແຜນໃໝ່" ເພື່ອເລີ່ມຕົ້ນ</td>
+                <td colspan="6" style="text-align:center; color:var(--fns-gray-400); padding:2rem;">ຍັງບໍ່ມີຂໍ້ມູນ — ກົດ "ສ້າງແຜນໃໝ່" ເພື່ອເລີ່ມຕົ້ນ</td>
             </tr>
             @endforelse
         </tbody>

@@ -63,10 +63,11 @@ class ExpenseEntryController extends Controller
     private function validated(Request $request, bool $isStore): array
     {
         $rules = [
-            'entry_date'          => 'nullable|date',
             'ref_code'            => 'nullable|string|max:30',
             'chart_of_account_id' => 'nullable|exists:chart_of_accounts,id',
+            'main_cat_code'       => 'nullable|string|max:30',
             'main_cat'            => 'nullable|string|max:255',
+            'main_item_code'      => 'nullable|string|max:30',
             'main_item'           => 'nullable|string|max:255',
             'sub_item'            => 'required|string|max:255',
             'rate1'               => 'nullable|numeric|min:0',

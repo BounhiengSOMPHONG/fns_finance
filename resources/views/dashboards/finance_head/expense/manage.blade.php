@@ -36,11 +36,9 @@
     <thead>
         <tr style="font-size:0.68rem;">
             <th style="width:32px;text-align:center;">#</th>
-            <th style="width:120px;">ວັນທີ</th>
-            <th style="width:95px;">ອ້າງອີງ</th>
+            <th style="width:170px;">ໝວດຫຼັກ</th>
+            <th style="width:190px;">ລາຍການຫຼັກ</th>
             <th style="width:120px;">ລະຫັດບັນຊີ</th>
-            <th style="width:150px;">ໝວດຫຼັກ</th>
-            <th style="width:150px;">ລາຍການຫຼັກ</th>
             <th style="min-width:170px;">ລາຍການຍ່ອຍ</th>
             <th style="width:95px;text-align:right;">ອັດຕາ 1</th>
             <th style="width:95px;text-align:right;">ອັດຕາ 2</th>
@@ -72,30 +70,35 @@
 
         {{-- Add form --}}
         <form method="POST" action="{{ route('head_of_finance.expense-ref-codes.store') }}"
-              style="display:flex;gap:6px;align-items:flex-end;margin-bottom:1rem;">
+              style="display:flex;gap:6px;align-items:flex-end;margin-bottom:1rem;flex-wrap:wrap;">
             @csrf
-            <div style="width:110px;">
+            <div style="width:90px;">
                 <label class="fns-label" style="font-size:0.72rem;">ລະຫັດ *</label>
                 <input type="text" name="code" class="fns-input" placeholder="2.1.8" required>
             </div>
-            <div style="flex:1;">
+            <div style="flex:1;min-width:140px;">
                 <label class="fns-label" style="font-size:0.72rem;">ຊື່</label>
                 <input type="text" name="label" class="fns-input" placeholder="ຄຳອະທິບາຍ">
+            </div>
+            <div style="width:110px;">
+                <label class="fns-label" style="font-size:0.72rem;">ລະຫັດບັນຊີ</label>
+                <input type="text" name="account_code" class="fns-input" list="coa-codes" placeholder="60100101">
             </div>
             <button type="submit" class="fns-btn fns-btn-primary">ເພີ່ມ</button>
         </form>
 
         <table class="fns-table" style="font-size:0.8rem;">
-            <thead><tr><th style="width:120px;">ລະຫັດ</th><th>ຊື່</th><th style="width:120px;"></th></tr></thead>
+            <thead><tr><th style="width:90px;">ລະຫັດ</th><th>ຊື່</th><th style="width:110px;">ລະຫັດບັນຊີ</th><th style="width:110px;"></th></tr></thead>
             <tbody>
                 @forelse($refCodes as $rc)
                 <tr>
-                    <td colspan="2" style="padding:4px 8px;">
+                    <td colspan="3" style="padding:4px 8px;">
                         <form method="POST" action="{{ route('head_of_finance.expense-ref-codes.update', $rc) }}"
                               id="rcform-{{ $rc->id }}" style="display:flex;gap:6px;">
                             @csrf @method('PATCH')
-                            <input type="text" name="code" value="{{ $rc->code }}" class="fns-input" style="width:110px;" required>
+                            <input type="text" name="code" value="{{ $rc->code }}" class="fns-input" style="width:80px;" required>
                             <input type="text" name="label" value="{{ $rc->label }}" class="fns-input" style="flex:1;" placeholder="ຊື່">
+                            <input type="text" name="account_code" value="{{ $rc->account_code }}" class="fns-input" style="width:100px;" list="coa-codes" placeholder="ລະຫັດບັນຊີ">
                         </form>
                     </td>
                     <td style="text-align:right;padding:4px 8px;white-space:nowrap;">
@@ -108,7 +111,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:1rem;">ຍັງບໍ່ມີລະຫັດອ້າງອີງ</td></tr>
+                <tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:1rem;">ຍັງບໍ່ມີລະຫັດອ້າງອີງ</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -136,6 +139,16 @@
 
 <script>
 const COA_MAP = @json($coaMap);
+const REF_CODES = @json($refCodes->map(fn($r) => ['code' => $r->code, 'label' => $r->label, 'account_code' => $r->account_code])->values());
+
+// Map of Level-1 code (e.g. "2.1") -> array of its Level-2 children (e.g. 2.1.1, 2.1.2...).
+const REF_CHILDREN = {};
+REF_CODES.forEach(r => {
+    if ((r.code.match(/\./g) || []).length === 2) {
+        const parent = r.code.slice(0, r.code.lastIndexOf('.'));
+        (REF_CHILDREN[parent] = REF_CHILDREN[parent] || []).push(r);
+    }
+});
 
 function openRefModal(){ document.getElementById('refModal').style.display='flex'; }
 function closeRefModal(){ document.getElementById('refModal').style.display='none'; }
@@ -150,6 +163,7 @@ const numFmt = new Intl.NumberFormat('en-US', {maximumFractionDigits:0});
 const f = (row, cls) => row.querySelector('.'+cls);
 const val = (row, cls) => f(row, cls)?.value ?? '';
 const num = (row, cls) => parseFloat(f(row, cls)?.value) || 0;
+const optData = (sel, key) => sel?.selectedOptions[0]?.dataset[key] ?? '';
 
 function recalc(row){
     const total = (num(row,'gi-r1') + num(row,'gi-r2'))
@@ -168,14 +182,34 @@ function recalcGrand(){
     document.getElementById('grand-total').textContent = numFmt.format(g);
 }
 
+// Resolve the typed/auto-filled account code to its chart_of_accounts id.
 function applyCoa(row){
     const code = val(row,'gi-acct').trim();
     const info = COA_MAP[code];
     f(row,'gi-acctid').value = info ? info.id : '';
-    if (info) {
-        f(row,'gi-maincat').value = info.main_cat || '';
-        f(row,'gi-mainitem').value = info.main_item || '';
-    }
+}
+
+// Rebuild the Level-2 (ລາຍການຫຼັກ) options from the chosen Level-1 (ໝວດຫຼັກ).
+function populateLevel2(row, keep){
+    const sel = f(row,'gi-mainitem-code');
+    if (!sel) return;
+    const cat = val(row,'gi-maincat-code');
+    const current = keep !== undefined ? keep : sel.value;
+    sel.innerHTML = '<option value="">—</option>';
+    (REF_CHILDREN[cat] || []).forEach(rc => {
+        const o = document.createElement('option');
+        o.value = rc.code;
+        o.textContent = rc.code + (rc.label ? ' · ' + rc.label : '');
+        o.dataset.label = rc.label || '';
+        o.dataset.acct = rc.account_code || '';
+        if (rc.code === current) o.selected = true;
+        sel.appendChild(o);
+    });
+}
+
+function clearAcct(row){
+    f(row,'gi-acct').value = '';
+    f(row,'gi-acctid').value = '';
 }
 
 async function saveRow(row){
@@ -183,13 +217,16 @@ async function saveRow(row){
     if (!sub) return; // require sub item
 
     const itemId = row.dataset.itemId;
+    const catSel = f(row,'gi-maincat-code');
+    const itemSel = f(row,'gi-mainitem-code');
     const payload = {
         plan_id:             planId,
-        entry_date:          val(row,'gi-date') || null,
-        ref_code:            val(row,'gi-ref') || null,
+        main_cat_code:       catSel.value || null,
+        main_cat:            optData(catSel,'label') || null,
+        main_item_code:      itemSel.value || null,
+        main_item:           optData(itemSel,'label') || null,
+        ref_code:            itemSel.value || null,
         chart_of_account_id: f(row,'gi-acctid').value || null,
-        main_cat:            val(row,'gi-maincat') || null,
-        main_item:           val(row,'gi-mainitem') || null,
         sub_item:            sub,
         rate1:               num(row,'gi-r1'),
         rate2:               num(row,'gi-r2'),
@@ -269,8 +306,20 @@ function bindRow(row){
     row.querySelectorAll('.gi-r1,.gi-r2,.gi-qty,.gi-period,.gi-freq,.gi-addon').forEach(inp =>
         inp.addEventListener('input', () => recalc(row)));
 
+    const cat = f(row,'gi-maincat-code');
+    if (cat) cat.addEventListener('change', () => { populateLevel2(row, ''); clearAcct(row); });
+
+    const item = f(row,'gi-mainitem-code');
+    if (item) item.addEventListener('change', () => {
+        f(row,'gi-acct').value = optData(item,'acct') || '';
+        applyCoa(row);
+    });
+
     const acct = f(row,'gi-acct');
     if (acct) acct.addEventListener('change', () => applyCoa(row));
+
+    // Build the Level-2 list for the row's current Level-1, keeping any saved selection.
+    populateLevel2(row, item ? item.value : '');
 
     const delBtn = row.querySelector('.btn-del-row');
     if (delBtn) delBtn.addEventListener('click', () => deleteRow(row));

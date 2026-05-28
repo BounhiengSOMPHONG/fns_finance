@@ -8,14 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ExpenseEntry extends Model
 {
     protected $fillable = [
-        'plan_id', 'entry_date', 'ref_code', 'chart_of_account_id',
-        'main_cat', 'main_item', 'sub_item',
+        'plan_id', 'ref_code', 'chart_of_account_id',
+        'main_cat_code', 'main_cat', 'main_item_code', 'main_item', 'sub_item',
         'rate1', 'rate2', 'qty', 'period', 'frequency', 'add_on', 'total',
         'note', 'sort_order',
     ];
 
     protected $casts = [
-        'entry_date' => 'date',
         'rate1'      => 'decimal:2',
         'rate2'      => 'decimal:2',
         'qty'        => 'decimal:2',

@@ -43,13 +43,6 @@ class ExpensePlanController extends Controller
             ->with('success', 'ສ້າງແຜນງົບປະມານສຳເລັດ');
     }
 
-    public function show(ExpensePlan $expensePlan)
-    {
-        $expensePlan->load(['entries.chartOfAccount', 'creator']);
-
-        return view('dashboards.finance_head.expense.show', compact('expensePlan'));
-    }
-
     public function manage(ExpensePlan $expensePlan)
     {
         $expensePlan->load('entries');

@@ -1,34 +1,7 @@
-{{-- One flat expense entry row. Vars: $e (ExpenseEntry|null), $i (int index), $refCodes --}}
-@php
-    $isNew    = ! $e;
-    $acctCode = $e?->chartOfAccount?->account_code ?? '';
-    // Level-1 = codes with one dot (2.1); level-2 = two dots (2.1.1).
-    $level1   = $refCodes->filter(fn ($rc) => substr_count($rc->code, '.') === 1)->values();
-    $selItem  = $e && $e->main_item_code ? $refCodes->firstWhere('code', $e->main_item_code) : null;
-@endphp
-<tr class="grid-row {{ $isNew ? 'row-new' : '' }}" data-item-id="{{ $e?->id }}">
-    <td class="row-num" style="text-align:center;font-size:0.7rem;">{{ $isNew ? '+' : $i + 1 }}</td>
-    {{-- ໝວດຫຼັກ (Level 1) --}}
+{{-- One detail row inside an item-group. Category comes from the group; account is per row. Vars: $e (ExpenseEntry|null) --}}
+<tr class="grid-row" data-item-id="{{ $e?->id }}">
     <td>
-        <select class="gi gi-maincat-code">
-            <option value="">—</option>
-            @foreach($level1 as $rc)
-                <option value="{{ $rc->code }}" data-label="{{ $rc->label }}" @selected($e && $e->main_cat_code === $rc->code)>{{ $rc->code }}{{ $rc->label ? ' · '.$rc->label : '' }}</option>
-            @endforeach
-        </select>
-    </td>
-    {{-- ລາຍການຫຼັກ (Level 2 — options filled by JS based on the chosen Level 1) --}}
-    <td>
-        <select class="gi gi-mainitem-code">
-            <option value="">—</option>
-            @if($selItem)
-                <option value="{{ $selItem->code }}" data-label="{{ $selItem->label }}" data-acct="{{ $selItem->account_code }}" selected>{{ $selItem->code }}{{ $selItem->label ? ' · '.$selItem->label : '' }}</option>
-            @endif
-        </select>
-    </td>
-    {{-- ລະຫັດບັນຊີ (auto-filled from the Level 2 ref code, still editable) --}}
-    <td>
-        <input class="gi gi-acct" type="text" list="coa-codes" value="{{ $acctCode }}" placeholder="ລະຫັດ">
+        <input class="gi gi-acct" type="text" list="coa-codes" value="{{ $e?->chartOfAccount?->account_code }}" placeholder="ລະຫັດ">
         <input class="gi-acctid" type="hidden" value="{{ $e?->chart_of_account_id }}">
     </td>
     <td><input class="gi gi-sub" type="text" value="{{ $e?->sub_item }}" placeholder="ລາຍການຍ່ອຍ..."></td>

@@ -43,7 +43,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         // Expense Plans
         Route::resource('expense', \App\Http\Controllers\FinanceHead\ExpensePlanController::class, [
             'parameters' => ['expense' => 'expensePlan'],
-        ])->except(['edit', 'update']);
+        ])->except(['edit', 'update', 'show']);
         Route::get('expense/{expensePlan}/manage', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'manage'])->name('expense.manage');
         Route::post('expense/{expensePlan}/approve', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'approve'])->name('expense.approve');
 

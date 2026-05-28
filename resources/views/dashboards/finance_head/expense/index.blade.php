@@ -40,7 +40,7 @@
             <tr>
                 <td class="c dim">{{ $plans->firstItem() + $loop->index }}</td>
                 <td style="font-weight:600;">ສົກ {{ $plan->fiscal_year }}</td>
-                <td>{{ $plan->creator?->name ?? '-' }}</td>
+                <td>{{ $plan->creator?->full_name ?? $plan->creator?->username ?? '-' }}</td>
                 <td style="text-align:right; font-weight:600;">
                     {{ number_format($plan->grandTotal(), 0) }}
                 </td>

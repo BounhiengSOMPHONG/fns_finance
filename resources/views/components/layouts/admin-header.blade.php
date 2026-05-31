@@ -42,8 +42,12 @@
                 </a>
 
                 {{-- Expense dropdown --}}
+                @php
+                    $expenseActive = request()->routeIs('head_of_finance.expense.*')
+                        || request()->routeIs('head_of_finance.salary.*');
+                @endphp
                 <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
-                    <button type="button" class="fns-topnav-item {{ request()->routeIs('head_of_finance.expense.*') ? 'active' : '' }}"
+                    <button type="button" class="fns-topnav-item {{ $expenseActive ? 'active' : '' }}"
                             @click="open = !open" :aria-expanded="open">
                         <x-icons.book-open />
                         ປະເມີນລາຍຈ່າຍ
@@ -54,14 +58,12 @@
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.expense.*') ? 'active' : '' }}">
                             <x-icons.book-open /> ສ້າງປະເມີນລາຍຈ່າຍ
                         </a>
+                        <a href="{{ route('head_of_finance.salary.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.salary.*') ? 'active' : '' }}">
+                            <x-icons.users /> ສ້າງຕາຕະລາງເງິນເດືອນ
+                        </a>
                     </div>
                 </div>
-
-                <a href="{{ route('head_of_finance.salary.index') }}"
-                   class="fns-topnav-item {{ request()->routeIs('head_of_finance.salary.*') ? 'active' : '' }}">
-                    <x-icons.users />
-                    ຕາຕະລາງເງິນເດືອນ
-                </a>
 
                 {{-- Academic income dropdown --}}
                 <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">

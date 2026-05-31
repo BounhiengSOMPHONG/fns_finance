@@ -15,26 +15,11 @@
 <body class="antialiased" style="background: var(--fns-gray-100);">
     <div style="display:flex; flex-direction:column; min-height:100vh;">
         <x-layouts.admin-header />
-        <div style="display:flex; flex:1;">
-            <div class="hidden md:block">
-                <x-layouts.admin-sidebar />
-            </div>
-            <main id="admin-main" class="fns-main">
-                {{ $slot }}
-            </main>
-        </div>
+        <main id="admin-main" class="fns-main">
+            {{ $slot }}
+        </main>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.getElementById('sidebar-toggle');
-            const sidebarWrapper = document.querySelector('body .flex > .hidden.md\\:block');
-            if (toggle && sidebarWrapper) {
-                toggle.addEventListener('click', function() {
-                    sidebarWrapper.classList.toggle('hidden');
-                });
-                toggle.style.display = 'flex';
-            }
-        });
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.logout-form').forEach(function(form) {
                 form.addEventListener('submit', function(e) {
@@ -59,4 +44,3 @@
 </body>
 
 </html>
-

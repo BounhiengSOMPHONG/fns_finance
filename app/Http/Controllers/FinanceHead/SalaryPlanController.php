@@ -61,13 +61,35 @@ final class SalaryPlanController extends Controller
             ->orderBy('id')
             ->get();
 
-        // Picker shows only leaf accounts (nodes that have no children) — parents/categories
-        // shouldn't be assignable directly.
-        $coa = ChartOfAccount::whereDoesntHave('children')
-            ->orderBy('account_code')
-            ->get(['id', 'account_code', 'account_name']);
+        // Load the whole COA tree once so we can compute each leaf's top-level (main) ancestor
+        // without round-tripping per row.
+        $all = ChartOfAccount::orderBy('account_code')->get(['id', 'account_code', 'account_name', 'parent_id']);
+        $byId = $all->keyBy('id');
 
-        return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa'));
+        $mainAccounts = $all->whereNull('parent_id')->values();
+
+        $childParentIds = $all->pluck('parent_id')->filter()->unique()->all();
+        $leaves         = $all->reject(fn ($a) => in_array($a->id, $childParentIds, true))->values();
+
+        $coa = $leaves->map(function ($a) use ($byId) {
+            // Walk up to find the top-level (parent_id IS NULL) ancestor.
+            $mainId = $a->id;
+            $node   = $a;
+            $guard  = 0;
+            while ($node && $node->parent_id && $guard++ < 10) {
+                $node = $byId->get($node->parent_id);
+                if ($node) $mainId = $node->id;
+            }
+
+            return [
+                'id'      => $a->id,
+                'code'    => $a->account_code,
+                'name'    => $a->account_name,
+                'main_id' => $mainId,
+            ];
+        });
+
+        return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa', 'mainAccounts'));
     }
 
     public function destroy(SalaryPlan $salaryPlan)

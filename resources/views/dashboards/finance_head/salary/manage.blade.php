@@ -49,6 +49,46 @@
     <span class="smg-meta" id="smg-meta">{{ $entries->count() }} ລາຍການ</span>
 </section>
 
+{{-- ===== Main-account filter dropdown ===== --}}
+<div class="smg-filter-row">
+    <div class="smg-filter-dd" id="smg-filter-dd">
+        <button type="button" class="smg-filter-trigger" id="smg-filter-trigger" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            <span>ບັນຊີຫຼັກ</span>
+            <span class="smg-filter-badge" id="smg-filter-badge">{{ $mainAccounts->count() }}/{{ $mainAccounts->count() }}</span>
+            <svg class="smg-filter-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="smg-filter-pop" id="smg-filter-pop" role="dialog" aria-label="ເລືອກບັນຊີຫຼັກ">
+            <div class="smg-filter-pop-head">
+                <div class="smg-filter-pop-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="text" id="smg-filter-search" placeholder="ຄົ້ນຫາ..." autocomplete="off">
+                </div>
+                <div class="smg-filter-pop-actions">
+                    <button type="button" id="smg-chip-all" class="smg-filter-link">ເລືອກທັງໝົດ</button>
+                    <span class="smg-filter-sep">·</span>
+                    <button type="button" id="smg-chip-clear" class="smg-filter-link">ລ້າງ</button>
+                </div>
+            </div>
+            <div class="smg-filter-list" id="smg-filter-list">
+                @foreach($mainAccounts as $m)
+                    @php
+                        // Default selection: only main accounts whose code starts with 60 or 61 are pre-selected.
+                        $isDefault = in_array(substr($m->account_code, 0, 2), ['60', '61'], true);
+                    @endphp
+                    <label class="smg-check-row" data-main-id="{{ $m->id }}"
+                           data-search="{{ strtolower($m->account_code . ' ' . $m->account_name) }}">
+                        <input type="checkbox" class="smg-check" data-main-id="{{ $m->id }}" {{ $isDefault ? 'checked' : '' }}>
+                        <span class="smg-check-code">{{ $m->account_code }}</span>
+                        <span class="smg-check-name" title="{{ $m->account_name }}">{{ $m->account_name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <span class="smg-filter-count" id="smg-filter-count"></span>
+</div>
+
 {{-- ===== Entry table ===== --}}
 <div class="smg-table-wrap" data-plan-id="{{ $salaryPlan->id }}">
     <table class="smg-table">
@@ -150,6 +190,144 @@
     .smg-btn-gold { background: var(--fns-gold); color: var(--fns-navy-deep); box-shadow: 0 2px 8px -2px rgba(201,153,26,0.45); }
     .smg-btn-gold:hover { background: var(--fns-gold-light, #e7be4f); transform: translateY(-1px); }
     .smg-meta { font-size: .74rem; color: var(--fns-gray-400); }
+
+    /* === Main-account filter dropdown === */
+    .smg-filter-row {
+        display: flex; align-items: center; gap: .65rem;
+        margin-bottom: 1rem;
+    }
+    .smg-filter-dd { position: relative; }
+
+    .smg-filter-trigger {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .5rem .85rem;
+        background: #fff; border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        font-family: inherit; font-size: .8rem; font-weight: 600;
+        color: var(--fns-navy); cursor: pointer;
+        transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .smg-filter-trigger:hover { background: var(--fns-gray-100); }
+    .smg-filter-trigger[aria-expanded="true"] {
+        background: #fff;
+        border-color: var(--fns-navy-light);
+        box-shadow: 0 0 0 3px rgba(46,63,110,0.1);
+    }
+    .smg-filter-trigger > svg:first-child {
+        width: 14px; height: 14px; color: var(--fns-gray-600);
+    }
+    .smg-filter-chev {
+        width: 12px; height: 12px;
+        color: var(--fns-gray-400);
+        transition: transform .18s;
+    }
+    .smg-filter-trigger[aria-expanded="true"] .smg-filter-chev { transform: rotate(180deg); color: var(--fns-navy); }
+
+    .smg-filter-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: .12rem .5rem;
+        font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700;
+        background: rgba(201,153,26,0.14); color: #8b6a12;
+        border-radius: 999px;
+        min-width: 36px;
+    }
+    .smg-filter-badge.is-partial { background: rgba(26,39,68,0.08); color: var(--fns-navy); }
+
+    .smg-filter-pop {
+        display: none;
+        position: absolute; top: calc(100% + 4px); left: 0;
+        z-index: 80;
+        width: 420px; max-width: 95vw;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200); border-radius: 10px;
+        box-shadow: 0 14px 40px -12px rgba(17,27,51,0.35);
+        overflow: hidden;
+    }
+    .smg-filter-pop.is-open { display: block; }
+
+    .smg-filter-pop-head {
+        padding: .55rem .65rem .3rem;
+        background: var(--fns-gray-100);
+        border-bottom: 1px solid var(--fns-gray-200);
+    }
+    .smg-filter-pop-search {
+        display: flex; align-items: center; gap: .45rem;
+        padding: .4rem .55rem;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200); border-radius: 7px;
+    }
+    .smg-filter-pop-search svg { width: 13px; height: 13px; color: var(--fns-gray-400); flex-shrink: 0; }
+    .smg-filter-pop-search input {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-family: inherit; font-size: .82rem; color: var(--fns-navy);
+    }
+    .smg-filter-pop-actions {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .4rem .15rem .15rem;
+    }
+    .smg-filter-link {
+        background: none; border: none; padding: 0;
+        font-family: inherit; font-size: .72rem; font-weight: 600;
+        color: var(--fns-navy); cursor: pointer;
+    }
+    .smg-filter-link:hover { color: var(--fns-gold); text-decoration: underline; }
+    .smg-filter-sep { color: var(--fns-gray-400); font-size: .7rem; }
+
+    .smg-filter-list {
+        max-height: 360px; overflow-y: auto;
+        padding: .25rem;
+    }
+    .smg-check-row {
+        display: flex; align-items: center; gap: .55rem;
+        padding: .45rem .55rem;
+        border-radius: 6px;
+        cursor: pointer; user-select: none;
+        font-size: .82rem; color: var(--fns-navy);
+        transition: background .12s;
+    }
+    .smg-check-row:hover { background: var(--fns-gray-100); }
+    .smg-check {
+        appearance: none; -webkit-appearance: none; -moz-appearance: none;
+        flex-shrink: 0;
+        width: 17px; height: 17px; margin: 0;
+        background: #fff;
+        border: 1.5px solid var(--fns-gray-200);
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        transition: background .12s, border-color .12s;
+    }
+    .smg-check:hover { border-color: var(--fns-navy-light); }
+    .smg-check:checked {
+        background: var(--fns-gold);
+        border-color: var(--fns-gold);
+    }
+    .smg-check:checked::after {
+        content: ""; position: absolute;
+        left: 4px; top: 1px;
+        width: 5px; height: 9px;
+        border-right: 2px solid var(--fns-navy-deep);
+        border-bottom: 2px solid var(--fns-navy-deep);
+        transform: rotate(45deg);
+    }
+    .smg-check-code {
+        font-family: 'Cinzel', serif; font-weight: 700;
+        flex-shrink: 0; min-width: 75px;
+        color: var(--fns-navy);
+    }
+    .smg-check-name {
+        font-weight: 500; color: var(--fns-gray-600);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .smg-check:not(:checked) ~ .smg-check-code,
+    .smg-check:not(:checked) ~ .smg-check-name {
+        opacity: .55;
+    }
+    .smg-check-row.is-hidden { display: none; }
+
+    .smg-filter-count {
+        font-size: .74rem; color: var(--fns-gray-400);
+    }
 
     /* === Table === */
     .smg-table-wrap {
@@ -343,9 +521,17 @@
 (function () {
     const CSRF    = document.querySelector('meta[name="csrf-token"]').content;
     const PLAN_ID = document.querySelector('.smg-table-wrap').dataset.planId;
-    const COA_LIST = @json($coa->map(fn ($c) => ['id' => $c->id, 'code' => $c->account_code, 'name' => $c->account_name])->values());
+    const COA_LIST = @json($coa);
     const COA_BY_ID = {};
     COA_LIST.forEach(c => COA_BY_ID[c.id] = c);
+
+    // Main-account filter — Set of active main_id values.
+    const ALL_MAIN_IDS = new Set(COA_LIST.map(c => c.main_id));
+    const activeMains  = new Set();
+    // Seed activeMains from the checkboxes marked `checked` in the rendered HTML.
+    document.querySelectorAll('.smg-check[data-main-id]').forEach(ch => {
+        if (ch.checked) activeMains.add(parseInt(ch.dataset.mainId, 10));
+    });
 
     const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
     const $body = document.getElementById('smg-body');
@@ -402,9 +588,9 @@
 
     function renderCoaList(q) {
         q = (q || '').trim().toLowerCase();
-        popVisible = q
-            ? COA_LIST.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
-            : COA_LIST;
+        const inFilter = c => activeMains.has(c.main_id);
+        const matchQ = c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+        popVisible = COA_LIST.filter(c => inFilter(c) && (!q || matchQ(c)));
         const selectedId = popRow?.dataset.coaId || '';
         $popList.innerHTML = popVisible.map((c, i) =>
             `<div class="smg-coa-item${String(c.id) === selectedId ? ' is-selected' : ''}${i === popActiveIdx ? ' is-active' : ''}" data-id="${c.id}" role="option">
@@ -597,6 +783,91 @@
     document.getElementById('smg-add').addEventListener('click', addRow);
     document.querySelectorAll('.smg-row').forEach(bindRow);
     recalcTotals();
+
+    // ── Main-account filter dropdown ──────────────────────────────
+    const $checks       = Array.from(document.querySelectorAll('.smg-check[data-main-id]'));
+    const $rows         = Array.from(document.querySelectorAll('.smg-check-row[data-main-id]'));
+    const $filterAll    = document.getElementById('smg-chip-all');
+    const $filterClear  = document.getElementById('smg-chip-clear');
+    const $filterCount  = document.getElementById('smg-filter-count');
+    const $filterBadge  = document.getElementById('smg-filter-badge');
+    const $filterDD     = document.getElementById('smg-filter-dd');
+    const $filterTrig   = document.getElementById('smg-filter-trigger');
+    const $filterPop    = document.getElementById('smg-filter-pop');
+    const $filterSearch = document.getElementById('smg-filter-search');
+
+    function syncFilter() {
+        $checks.forEach(ch => {
+            ch.checked = activeMains.has(parseInt(ch.dataset.mainId, 10));
+        });
+        const allOn = activeMains.size === ALL_MAIN_IDS.size;
+        const visibleCoa = COA_LIST.filter(c => activeMains.has(c.main_id)).length;
+        $filterBadge.textContent = `${activeMains.size}/${ALL_MAIN_IDS.size}`;
+        $filterBadge.classList.toggle('is-partial', !allOn && activeMains.size > 0);
+        $filterCount.textContent = allOn
+            ? `ສະແດງທັງໝົດ ${COA_LIST.length} ບັນຊີ`
+            : `${activeMains.size} / ${ALL_MAIN_IDS.size} ໝວດ — ${visibleCoa} ບັນຊີ`;
+        // Re-filter the COA picker if it's currently open
+        if ($pop.classList.contains('is-open')) {
+            popActiveIdx = 0;
+            renderCoaList($popInput.value);
+        }
+    }
+
+    // Checkbox row toggles
+    $checks.forEach(ch => ch.addEventListener('change', () => {
+        const id = parseInt(ch.dataset.mainId, 10);
+        if (ch.checked) activeMains.add(id);
+        else activeMains.delete(id);
+        syncFilter();
+    }));
+
+    $filterAll.addEventListener('click', () => {
+        ALL_MAIN_IDS.forEach(id => activeMains.add(id));
+        syncFilter();
+    });
+    $filterClear.addEventListener('click', () => {
+        activeMains.clear();
+        syncFilter();
+    });
+
+    // Dropdown open/close
+    function openFilter() {
+        $filterPop.classList.add('is-open');
+        $filterTrig.setAttribute('aria-expanded', 'true');
+        setTimeout(() => $filterSearch?.focus(), 0);
+    }
+    function closeFilter() {
+        $filterPop.classList.remove('is-open');
+        $filterTrig.setAttribute('aria-expanded', 'false');
+        if ($filterSearch) {
+            $filterSearch.value = '';
+            $rows.forEach(r => r.classList.remove('is-hidden'));
+        }
+    }
+    $filterTrig.addEventListener('click', e => {
+        e.stopPropagation();
+        if ($filterPop.classList.contains('is-open')) closeFilter();
+        else openFilter();
+    });
+    document.addEventListener('click', e => {
+        if (!$filterPop.classList.contains('is-open')) return;
+        if ($filterDD.contains(e.target)) return;
+        closeFilter();
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && $filterPop.classList.contains('is-open')) {
+            closeFilter();
+            $filterTrig.focus();
+        }
+    });
+    // Search inside the filter dropdown — hides non-matching checkbox rows
+    $filterSearch?.addEventListener('input', () => {
+        const q = $filterSearch.value.trim().toLowerCase();
+        $rows.forEach(r => r.classList.toggle('is-hidden', q && !r.dataset.search.includes(q)));
+    });
+
+    syncFilter();
 })();
 </script>
 

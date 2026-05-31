@@ -16,7 +16,34 @@
     padding: 0.7rem 0.9rem; margin-bottom: 1.1rem;
     background: rgba(248,247,244,0.92); backdrop-filter: blur(8px);
     border: 1px solid var(--fns-gray-200); border-radius: 12px;
+    box-shadow: 0 4px 14px -10px rgba(17,27,51,0.18);
 }
+.ai-back {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0;
+    background: var(--fns-gray-100); border-radius: 8px;
+    color: var(--fns-navy); text-decoration: none;
+    transition: background .15s, transform .12s;
+}
+.ai-back:hover { background: var(--fns-gray-200); transform: translateX(-2px); }
+.ai-back svg { width: 15px; height: 15px; }
+.ai-fy-chip {
+    display:inline-flex; flex-direction: column; line-height: 1; padding: 0 .25rem 0 .15rem;
+}
+.ai-fy-chip-k {
+    font-size: .55rem; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--fns-gray-400); font-weight: 700;
+}
+.ai-fy-chip-v {
+    font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700;
+    color: var(--fns-navy); margin-top: .12rem; letter-spacing: .03em;
+}
+.ai-meta-strip {
+    display:inline-flex; align-items: center; gap: .55rem;
+    font-size: .72rem; color: var(--fns-gray-600);
+    padding-left: .55rem; border-left: 1px solid var(--fns-gray-200);
+}
+.ai-meta-strip b { color: var(--fns-navy); font-weight: 600; }
 .ai-search { position: relative; flex: 1; min-width: 220px; }
 .ai-search svg { position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--fns-gray-400); pointer-events: none; }
 .ai-search input {
@@ -93,12 +120,23 @@
 .ai-submit-bar {
     position: sticky; bottom: 0; z-index: 15;
     display: flex; gap: 0.6rem; align-items: center;
-    margin-top: 0.5rem; padding: 0.85rem 0.95rem;
+    margin-top: 0.5rem; padding: 0.85rem 1.1rem;
     background: rgba(248,247,244,0.94); backdrop-filter: blur(8px);
     border: 1px solid var(--fns-gray-200); border-radius: 12px;
+    box-shadow: 0 -4px 14px -10px rgba(17,27,51,0.18);
 }
-.ai-submit-note { margin-left: auto; font-size: 0.76rem; color: var(--fns-gray-500, #6b7280); }
-.ai-submit-note b { font-family: 'Cinzel', serif; color: var(--fns-navy); font-size: 0.92rem; }
+.ai-submit-bar .fns-btn-primary { padding: .6rem 1.3rem; font-size: .85rem; }
+.ai-submit-note {
+    margin-left: auto;
+    display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1;
+}
+.ai-submit-note-k {
+    font-size: .62rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--fns-gray-400); font-weight: 700;
+}
+.ai-submit-note-v { margin-top: .3rem; }
+.ai-submit-note-v b { font-family: 'Cinzel', serif; color: var(--fns-navy); font-size: 1.25rem; font-weight: 700; }
+.ai-submit-note-v span { font-size: .68rem; color: var(--fns-gray-400); margin-left: .3rem; font-weight: 500; }
 </style>
 
 @php
@@ -110,8 +148,21 @@
 <form method="POST" action="{{ route('head_of_finance.academic-income.saveEvaluate', $academicIncome) }}" class="ai-wrap">
 @csrf
 
-{{-- ── Search / orientation bar ──────────────────────────────── --}}
+{{-- ── Sticky context + search bar ─────────────────────────── --}}
 <div class="ai-bar">
+    <a href="{{ route('head_of_finance.academic-income.index') }}" class="ai-back" title="ກັບຄືນ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <div class="ai-fy-chip">
+        <span class="ai-fy-chip-k">ສົກປີ</span>
+        <span class="ai-fy-chip-v">{{ $academicIncome->fiscal_year }}</span>
+    </div>
+    @if($academicIncome->creator)
+        <div class="ai-meta-strip">
+            <span>ສ້າງໂດຍ <b>{{ $academicIncome->creator->full_name ?? $academicIncome->creator->username }}</b></span>
+            <span>· {{ $academicIncome->created_at->format('d/m/Y') }}</span>
+        </div>
+    @endif
     <div class="ai-search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.41 9.823l3.633 3.634a.75.75 0 1 0 1.06-1.06l-3.633-3.634A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
         <input type="text" id="ai-filter" placeholder="ຄົ້ນຫາສາຂາວິຊາ…" autocomplete="off">
@@ -232,7 +283,10 @@
         ບັນທຶກ
     </button>
     <a href="{{ route('head_of_finance.academic-income.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
-    <span class="ai-submit-note">ລວມ ນ/ສ ຄ່າໜ່ວຍກິດ: <b id="ai-grand">0</b></span>
+    <span class="ai-submit-note">
+        <span class="ai-submit-note-k">ລວມ ນ/ສ ຄ່າໜ່ວຍກິດ</span>
+        <span class="ai-submit-note-v"><b id="ai-grand">0</b><span>ຄົນ</span></span>
+    </span>
 </div>
 
 @push('scripts')

@@ -30,12 +30,15 @@
     </div>
 </div>
 
-{{-- COA datalist for autocomplete --}}
-<datalist id="coa-codes">
-    @foreach($coa as $c)
-        <option value="{{ $c->account_code }}">{{ $c->account_code }} — {{ $c->account_name }}</option>
-    @endforeach
-</datalist>
+{{-- COA picker popover (single shared instance) --}}
+<div id="smg-coa-pop" class="smg-coa-pop" role="dialog" aria-label="ເລືອກລະຫັດບັນຊີ">
+    <div class="smg-coa-pop-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="smg-coa-search" type="text" placeholder="ຄົ້ນຫາລະຫັດ ຫຼື ຊື່ບັນຊີ..." autocomplete="off">
+    </div>
+    <div id="smg-coa-list" class="smg-coa-list" role="listbox"></div>
+    <div id="smg-coa-empty" class="smg-coa-empty" style="display:none;">ບໍ່ພົບລະຫັດທີ່ກົງກັນ</div>
+</div>
 
 {{-- ===== Toolbox ===== --}}
 <section class="smg-toolbox">
@@ -207,6 +210,89 @@
     }
     .smg-name-empty { color: var(--fns-gray-400); font-style: italic; }
 
+    /* === COA picker trigger === */
+    .smg-coa-trigger {
+        display: inline-flex; align-items: center; justify-content: space-between;
+        gap: .35rem; width: 100%;
+        padding: 5px 8px;
+        background: transparent;
+        border: 1px solid transparent; border-radius: 6px;
+        font-family: 'Cinzel', serif; font-size: .82rem; font-weight: 600;
+        color: var(--fns-navy); cursor: pointer;
+        text-align: left; letter-spacing: .02em;
+        transition: background .12s, border-color .12s, box-shadow .12s;
+    }
+    .smg-coa-trigger:hover { background: #fafaf7; }
+    .smg-coa-trigger.is-open {
+        background: #fff;
+        border-color: var(--fns-navy-light);
+        box-shadow: 0 0 0 2px rgba(46,63,110,0.12);
+    }
+    .smg-coa-trigger.is-empty {
+        font-family: 'Noto Sans Lao', sans-serif;
+        font-weight: 500; color: var(--fns-gray-400); font-style: italic;
+    }
+    .smg-coa-trigger svg {
+        width: 12px; height: 12px;
+        color: var(--fns-gray-400); flex-shrink: 0;
+        transition: transform .18s;
+    }
+    .smg-coa-trigger.is-open svg { transform: rotate(180deg); color: var(--fns-navy); }
+    .smg-coa-trigger-code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* === COA popover === */
+    .smg-coa-pop {
+        display: none;
+        position: fixed; z-index: 100;
+        width: 380px; max-width: 95vw;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 10px;
+        box-shadow: 0 14px 40px -12px rgba(17,27,51,0.35);
+        overflow: hidden;
+        animation: smgPopIn .14s ease-out;
+    }
+    .smg-coa-pop.is-open { display: block; }
+    @keyframes smgPopIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+    .smg-coa-pop-search {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .55rem .75rem;
+        background: var(--fns-gray-100);
+        border-bottom: 1px solid var(--fns-gray-200);
+    }
+    .smg-coa-pop-search svg { width: 14px; height: 14px; color: var(--fns-gray-400); flex-shrink: 0; }
+    .smg-coa-pop-search input {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-family: inherit; font-size: .85rem; color: var(--fns-navy);
+    }
+    .smg-coa-list {
+        max-height: 320px; overflow-y: auto; padding: .3rem;
+    }
+    .smg-coa-item {
+        display: flex; align-items: baseline; gap: .55rem;
+        padding: .45rem .65rem; border-radius: 6px;
+        cursor: pointer; font-size: .82rem; color: var(--fns-navy);
+        transition: background .1s;
+    }
+    .smg-coa-item:hover, .smg-coa-item.is-active {
+        background: rgba(26,39,68,0.06);
+    }
+    .smg-coa-item.is-selected {
+        background: rgba(201,153,26,0.12);
+        color: #8b6a12;
+    }
+    .smg-coa-item-code {
+        font-family: 'Cinzel', serif; font-weight: 700;
+        min-width: 70px; flex-shrink: 0;
+    }
+    .smg-coa-item-name {
+        font-weight: 500; color: var(--fns-gray-600);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .smg-coa-item.is-selected .smg-coa-item-name { color: #8b6a12; }
+    .smg-coa-empty { padding: 1.2rem; text-align: center; font-size: .82rem; color: var(--fns-gray-400); }
+
     .smg-btn-del {
         display: inline-flex; align-items: center; justify-content: center;
         width: 26px; height: 26px;
@@ -257,10 +343,9 @@
 (function () {
     const CSRF    = document.querySelector('meta[name="csrf-token"]').content;
     const PLAN_ID = document.querySelector('.smg-table-wrap').dataset.planId;
-    const COA_BY_CODE = {};
-    @foreach($coa as $c)
-        COA_BY_CODE[@json($c->account_code)] = { id: {{ $c->id }}, name: @json($c->account_name) };
-    @endforeach
+    const COA_LIST = @json($coa->map(fn ($c) => ['id' => $c->id, 'code' => $c->account_code, 'name' => $c->account_name])->values());
+    const COA_BY_ID = {};
+    COA_LIST.forEach(c => COA_BY_ID[c.id] = c);
 
     const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
     const $body = document.getElementById('smg-body');
@@ -305,24 +390,109 @@
         setTimeout(() => t.remove(), 2400);
     }
 
-    function applyCoa(row) {
-        const codeEl = row.querySelector('.smg-code');
-        const code = codeEl.value.trim();
-        const nameEl = row.querySelector('.smg-name');
-        const info = COA_BY_CODE[code];
-        row.dataset.coaId = info ? info.id : '';
-        if (info) {
+    // ── COA picker popover ─────────────────────────────────────
+    const $pop      = document.getElementById('smg-coa-pop');
+    const $popList  = document.getElementById('smg-coa-list');
+    const $popInput = document.getElementById('smg-coa-search');
+    const $popEmpty = document.getElementById('smg-coa-empty');
+    let popRow = null;          // the row whose code we're editing
+    let popTrigger = null;      // the button that opened it
+    let popVisible = [];        // currently visible COA items (after filter)
+    let popActiveIdx = 0;       // keyboard cursor
+
+    function renderCoaList(q) {
+        q = (q || '').trim().toLowerCase();
+        popVisible = q
+            ? COA_LIST.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
+            : COA_LIST;
+        const selectedId = popRow?.dataset.coaId || '';
+        $popList.innerHTML = popVisible.map((c, i) =>
+            `<div class="smg-coa-item${String(c.id) === selectedId ? ' is-selected' : ''}${i === popActiveIdx ? ' is-active' : ''}" data-id="${c.id}" role="option">
+                <span class="smg-coa-item-code">${c.code}</span>
+                <span class="smg-coa-item-name">${c.name}</span>
+             </div>`
+        ).join('');
+        $popEmpty.style.display = popVisible.length ? 'none' : '';
+        // Scroll the active item into view
+        const active = $popList.querySelector('.smg-coa-item.is-active');
+        if (active) active.scrollIntoView({ block: 'nearest' });
+    }
+
+    function openCoaPop(trigger, row) {
+        closeCoaPop();
+        popTrigger = trigger; popRow = row;
+        trigger.classList.add('is-open');
+
+        // Use position:fixed → viewport coords from getBoundingClientRect, no scroll offset
+        const r = trigger.getBoundingClientRect();
+        const popW = 380;
+        const left = Math.min(r.left, window.innerWidth - popW - 12);
+        $pop.style.top  = (r.bottom + 4) + 'px';
+        $pop.style.left = Math.max(8, left) + 'px';
+        $pop.classList.add('is-open');
+
+        popActiveIdx = 0;
+        $popInput.value = '';
+        renderCoaList('');
+        // Auto-scroll to selected if any
+        const sel = $popList.querySelector('.smg-coa-item.is-selected');
+        if (sel) sel.scrollIntoView({ block: 'center' });
+        setTimeout(() => $popInput.focus(), 0);
+    }
+
+    function closeCoaPop() {
+        $pop.classList.remove('is-open');
+        if (popTrigger) popTrigger.classList.remove('is-open');
+        popTrigger = null; popRow = null;
+    }
+
+    function selectCoa(coaId) {
+        if (!popRow) return;
+        const info = COA_BY_ID[coaId];
+        if (!info) return;
+        popRow.dataset.coaId = info.id;
+        const codeEl = popRow.querySelector('.smg-coa-trigger-code');
+        if (codeEl) codeEl.textContent = info.code;
+        popRow.querySelector('.smg-coa-trigger')?.classList.remove('is-empty');
+        const nameEl = popRow.querySelector('.smg-name');
+        if (nameEl) {
             nameEl.textContent = info.name;
             nameEl.classList.remove('smg-name-empty');
-        } else {
-            nameEl.textContent = code ? 'ລະຫັດບໍ່ຖືກຕ້ອງ' : 'ເລືອກລະຫັດບັນຊີ...';
-            nameEl.classList.add('smg-name-empty');
-            if (code) {
-                codeEl.classList.add('is-invalid');
-                setTimeout(() => codeEl.classList.remove('is-invalid'), 900);
-            }
+            nameEl.title = info.name;
         }
+        const rowToSave = popRow;
+        closeCoaPop();
+        saveRow(rowToSave);
     }
+
+    $popInput.addEventListener('input', () => { popActiveIdx = 0; renderCoaList($popInput.value); });
+    $popInput.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { e.preventDefault(); closeCoaPop(); popTrigger?.focus(); return; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); popActiveIdx = Math.min(popActiveIdx + 1, popVisible.length - 1); renderCoaList($popInput.value); return; }
+        if (e.key === 'ArrowUp')   { e.preventDefault(); popActiveIdx = Math.max(popActiveIdx - 1, 0); renderCoaList($popInput.value); return; }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const item = popVisible[popActiveIdx];
+            if (item) selectCoa(item.id);
+        }
+    });
+    $popList.addEventListener('click', e => {
+        const item = e.target.closest('.smg-coa-item');
+        if (item) selectCoa(item.dataset.id);
+    });
+    // Close on outside click
+    document.addEventListener('click', e => {
+        if (!$pop.classList.contains('is-open')) return;
+        if ($pop.contains(e.target)) return;
+        if (e.target.closest('.smg-coa-trigger')) return;
+        closeCoaPop();
+    });
+    // Close popover on page scroll (but NOT on scroll inside the popover's own list)
+    window.addEventListener('scroll', (e) => {
+        if ($pop.contains(e.target)) return;
+        closeCoaPop();
+    }, true);
+    window.addEventListener('resize', () => closeCoaPop());
 
     async function saveRow(row) {
         const coaId = row.dataset.coaId;
@@ -388,8 +558,12 @@
     }
 
     function bindRow(row) {
-        const codeEl = row.querySelector('.smg-code');
-        codeEl?.addEventListener('change', () => { applyCoa(row); saveRow(row); });
+        const trigger = row.querySelector('.smg-coa-trigger');
+        trigger?.addEventListener('click', e => {
+            e.stopPropagation();
+            if (trigger.classList.contains('is-open')) closeCoaPop();
+            else openCoaPop(trigger, row);
+        });
 
         row.querySelectorAll('.smg-atm, .smg-cash').forEach(inp =>
             inp.addEventListener('input', () => recalc(row)));
@@ -414,8 +588,10 @@
         const row = tpl.content.firstElementChild.cloneNode(true);
         $body.appendChild(row);
         bindRow(row);
-        row.querySelector('.smg-code')?.focus();
         recalcTotals();
+        // Auto-open the COA picker so the user can immediately pick an account
+        const trigger = row.querySelector('.smg-coa-trigger');
+        if (trigger) openCoaPop(trigger, row);
     }
 
     document.getElementById('smg-add').addEventListener('click', addRow);

@@ -1,8 +1,10 @@
 {{-- One salary entry row. Vars: $e (SalaryEntry|null) --}}
 <tr class="smg-row" data-item-id="{{ $e?->id }}" data-coa-id="{{ $e?->chart_of_account_id }}">
     <td>
-        <input class="smg-input smg-code" type="text" list="coa-codes"
-               value="{{ $e?->chartOfAccount?->account_code }}" placeholder="ລະຫັດ...">
+        <button type="button" class="smg-coa-trigger {{ $e?->chartOfAccount ? '' : 'is-empty' }}">
+            <span class="smg-coa-trigger-code">{{ $e?->chartOfAccount?->account_code ?? 'ເລືອກລະຫັດ' }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
     </td>
     <td>
         <span class="smg-name {{ $e?->chartOfAccount ? '' : 'smg-name-empty' }}"

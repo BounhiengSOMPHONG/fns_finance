@@ -208,12 +208,18 @@
             'programs' => $programs13_bach, 'section' => '1.3', 'inputPrefix' => 's13',
         ])
     </div>
-    <div class="ai-group">
-        <div class="ai-glabel">ປ.ໂທ / ປ.ເອກ ປີ 1 <span class="ai-gcount">· {{ $programs13_master->count() }} ສາຂາ</span></div>
-        @include('dashboards.finance_head.academic-income._program-grid', [
-            'programs' => $programs13_master, 'section' => '1.3', 'inputPrefix' => 's13m', 'useYear1Unit' => true,
-        ])
-    </div>
+    @php
+        $groups13_master_phd = $programs13_master->groupBy(fn($p) =>
+            $p->level === 'master' ? 'ປ.ໂທ' : 'ປ.ເອກ');
+    @endphp
+    @foreach($groups13_master_phd as $label => $progs)
+        <div class="ai-group">
+            <div class="ai-glabel">{{ $label }} ປີ 1 <span class="ai-gcount">· {{ $progs->count() }} ສາຂາ</span></div>
+            @include('dashboards.finance_head.academic-income._program-grid', [
+                'programs' => $progs, 'section' => '1.3', 'inputPrefix' => 's13m', 'useYear1Unit' => true,
+            ])
+        </div>
+    @endforeach
 </div>
 
 {{-- ── 1.2 / 1.4 / 3–6 — flat-rate items (single counts) ────────── --}}

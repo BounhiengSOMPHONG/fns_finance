@@ -56,8 +56,6 @@
                 <th style="width:88px; text-align:center;">ຈຳນວນພົນ</th>
                 <th style="width:130px; text-align:right;">ໂອນເຂົ້າ ATM</th>
                 <th style="width:130px; text-align:right;">ຖອນເງິນສົດ</th>
-                <th style="width:130px; text-align:right;">ລວມ/ເດືອນ</th>
-                <th style="width:140px; text-align:right;">ລວມ 12 ເດືອນ</th>
                 <th style="width:160px;">ໝາຍເຫດ</th>
                 <th style="width:36px;"></th>
             </tr>
@@ -274,12 +272,7 @@
     function num(el) { return parseFloat(el?.value || 0) || 0; }
 
     function recalc(row) {
-        const atm = num(row.querySelector('.smg-atm'));
-        const cash = num(row.querySelector('.smg-cash'));
-        const monthly = atm + cash;
-        const annual = monthly * 12;
-        row.querySelector('.smg-cell-total').textContent = fmt.format(monthly);
-        row.querySelector('.smg-cell-annual').textContent = fmt.format(annual);
+        // Per-row total/annual cells were removed; sticky-bar grand totals still recalc below.
         recalcTotals();
     }
 
@@ -360,10 +353,6 @@
 
             const wasNew = !itemId;
             if (wasNew && data.entry?.id) row.dataset.itemId = data.entry.id;
-            if (data.entry?.monthly_total !== undefined) {
-                row.querySelector('.smg-cell-total').textContent  = fmt.format(parseFloat(data.entry.monthly_total));
-                row.querySelector('.smg-cell-annual').textContent = fmt.format(parseFloat(data.entry.annual_amount));
-            }
             recalcTotals();
             row.classList.add('row-saved');
             setTimeout(() => row.classList.remove('row-saved'), 900);

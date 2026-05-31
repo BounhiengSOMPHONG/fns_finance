@@ -16,8 +16,6 @@
     </td>
     <td><input class="smg-input smg-atm"  type="number" min="0" step="0.01" value="{{ $e ? (float) $e->atm_amount  : 0 }}"></td>
     <td><input class="smg-input smg-cash" type="number" min="0" step="0.01" value="{{ $e ? (float) $e->cash_amount : 0 }}"></td>
-    <td class="smg-cell-total">{{ $e ? number_format((float) $e->monthly_total, 0) : 0 }}</td>
-    <td class="smg-cell-annual">{{ $e ? number_format((float) $e->annual_amount, 0) : 0 }}</td>
     <td><input class="smg-input smg-remark" type="text" value="{{ $e?->remark }}" placeholder="ໝາຍເຫດ..."></td>
     <td style="text-align:center;">
         <button class="smg-btn-del" type="button" title="ລຶບລາຍການ" aria-label="ລຶບລາຍການ">

@@ -27,12 +27,6 @@
                 <p class="aic-hint">ປ້ອນເລກ 4 ຫຼັກ ເຊັ່ນ {{ date('Y') }}</p>
             </div>
 
-            <div class="aic-group">
-                <label class="aic-label" for="notes">ໝາຍເຫດ <span class="aic-opt">(ບໍ່ບັງຄັບ)</span></label>
-                <textarea id="notes" name="notes" rows="3" class="aic-input"
-                          placeholder="ໝາຍເຫດເພີ່ມເຕີມ ເຊັ່ນ ໝາຍເຫດການວາງແຜນ, ການແບ່ງປັນງົບ...">{{ old('notes') }}</textarea>
-            </div>
-
             <div class="aic-foot">
                 <a href="{{ route('head_of_finance.academic-income.index') }}" class="aic-btn aic-btn-secondary">ຍົກເລີກ</a>
                 <button type="submit" class="aic-btn aic-btn-primary">

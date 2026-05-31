@@ -64,7 +64,9 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('salary/{salaryPlan}/manage', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'manage'])->name('salary.manage');
 
         // Salary Entries (AJAX)
+        Route::post('salary-entries',                [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'store'])->name('salary-entries.store');
         Route::patch('salary-entries/{salaryEntry}', [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'update'])->name('salary-entries.update');
+        Route::delete('salary-entries/{salaryEntry}',[\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'destroy'])->name('salary-entries.destroy');
     });
 
 // 3. Faculty Head

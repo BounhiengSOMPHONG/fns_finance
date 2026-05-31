@@ -23,8 +23,6 @@ class DatabaseSeeder extends Seeder
             ExpenseRefCodeSeeder::class,
             ExpensePlanSeeder::class,
             AcademicIncomePlanSeeder::class,
-            SalaryBudgetCodeSeeder::class,
-            SalarySampleDataSeeder::class,
         ]);
     }
 }

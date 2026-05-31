@@ -5,341 +5,434 @@
 
 @section('content')
 
-{{-- Plan header --}}
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap;">
-    <a href="{{ route('head_of_finance.salary.index') }}" class="fns-btn fns-btn-secondary fns-btn-sm">← ກັບຄືນ</a>
-    <span style="font-weight:700;color:var(--fns-navy);font-size:1rem;">
-        ເດືອນ {{ $salaryPlan->monthLabel() }}
-    </span>
-    <span style="margin-left:auto;font-size:0.83rem;color:#64748b;">
-        ລວມ 12 ເດືອນ:
-        <strong id="grand-annual" style="color:var(--fns-navy);">{{ number_format($salaryPlan->grandTotal(), 0) }}</strong> ກີບ
-    </span>
+@php
+    $monthNames = ['','ມັງກອນ','ກຸມພາ','ມີນາ','ເມສາ','ພຶດສະພາ','ມິຖຸນາ','ກໍລະກົດ','ສິງຫາ','ກັນຍາ','ຕຸລາ','ພະຈິກ','ທັນວາ'];
+@endphp
+
+{{-- ===== Sticky context bar ===== --}}
+<div class="smg-sticky-bar">
+    <a href="{{ route('head_of_finance.salary.index') }}" class="smg-back" title="ກັບຄືນ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <div class="smg-id">
+        <span class="smg-id-kicker">ເດືອນ {{ str_pad((string) $salaryPlan->month, 2, '0', STR_PAD_LEFT) }} / ສົກ</span>
+        <span class="smg-id-num">{{ $salaryPlan->fiscal_year }}</span>
+        <span class="smg-id-sub">{{ $monthNames[$salaryPlan->month] ?? '' }}</span>
+    </div>
+    <div class="smg-spacer"></div>
+    <div class="smg-total">
+        <span class="smg-total-label">ລວມ 12 ເດືອນ</span>
+        <span class="smg-total-value"><strong id="grand-annual">{{ number_format((float) $entries->sum('annual_amount'), 0) }}</strong><span>ກີບ</span></span>
+    </div>
+    <div class="smg-total smg-total-sm">
+        <span class="smg-total-label">ລວມ/ເດືອນ</span>
+        <span class="smg-total-value-sm"><strong id="grand-monthly">{{ number_format((float) $entries->sum('monthly_total'), 0) }}</strong><span>ກີບ</span></span>
+    </div>
 </div>
 
-{{-- ──────────── PAYROLL TABLE ──────────── --}}
-<div style="overflow-x:auto;">
-<table id="salary-table" style="width:100%;border-collapse:collapse;font-size:0.8rem;min-width:860px;">
-    <colgroup>
-        <col style="width:36px">  {{-- ພ --}}
-        <col style="width:36px">  {{-- ພສ --}}
-        <col style="width:36px">  {{-- ຮ່ວງ --}}
-        <col style="width:36px">  {{-- ລຮ --}}
-        <col>                     {{-- ເນື້ອໃນລາຍຈ່າຍ --}}
-        <col style="width:52px">  {{-- ຈຳນວນ ພິນ --}}
-        <col style="width:130px"> {{-- ໂອນ ATM --}}
-        <col style="width:115px"> {{-- ຖອນສົດ --}}
-        <col style="width:130px"> {{-- ລວມ --}}
-        <col style="width:140px"> {{-- ລວມ 12 ເດືອນ --}}
-    </colgroup>
-    <thead>
-        <tr style="background:var(--fns-navy);color:#fff;font-size:0.72rem;">
-            <th colspan="4" style="text-align:center;padding:6px 4px;border-right:1px solid rgba(255,255,255,0.2);">ສາລະບານງົບປະມານ</th>
-            <th rowspan="2" style="padding:6px 8px;border-right:1px solid rgba(255,255,255,0.2);text-align:left;">ເນື້ອໃນລາຍຈ່າຍ</th>
-            <th rowspan="2" style="padding:6px 4px;border-right:1px solid rgba(255,255,255,0.2);text-align:center;">ຈຳນວນ<br>ພິນ</th>
-            <th colspan="3" style="text-align:center;padding:6px 4px;border-right:1px solid rgba(255,255,255,0.2);">ຈຳນວນເງິນຖອນຕົວຈິງໃນ 1 ເດືອນ</th>
-            <th rowspan="2" style="padding:6px 6px;text-align:right;">ລວມ 12 ເດືອນ</th>
-        </tr>
-        <tr style="background:#1e3a5f;color:#fff;font-size:0.7rem;">
-            <th style="text-align:center;padding:4px 2px;border-right:1px solid rgba(255,255,255,0.1);">ພ</th>
-            <th style="text-align:center;padding:4px 2px;border-right:1px solid rgba(255,255,255,0.1);">ພສ</th>
-            <th style="text-align:center;padding:4px 2px;border-right:1px solid rgba(255,255,255,0.1);">ຮ່ວງ</th>
-            <th style="text-align:center;padding:4px 2px;border-right:1px solid rgba(255,255,255,0.2);">ລຮ</th>
-            <th style="padding:4px 4px;border-right:1px solid rgba(255,255,255,0.1);text-align:right;">ໂອນເຂົ້າ ATM</th>
-            <th style="padding:4px 4px;border-right:1px solid rgba(255,255,255,0.1);text-align:right;">ຖອນເງິນສົດ</th>
-            <th style="padding:4px 4px;border-right:1px solid rgba(255,255,255,0.2);text-align:right;">ລວມ</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($roots as $root)
-            @include('dashboards.finance_head.salary._rows', [
-                'node'     => $root,
-                'depth'    => 0,
-                'entryMap' => $entries,
-                'nodeAgg'  => $nodeAgg,
-                'editable' => !$salaryPlan->isApproved(),
-                'planId'   => $salaryPlan->id,
-            ])
-        @endforeach
+{{-- COA datalist for autocomplete --}}
+<datalist id="coa-codes">
+    @foreach($coa as $c)
+        <option value="{{ $c->account_code }}">{{ $c->account_code }} — {{ $c->account_name }}</option>
+    @endforeach
+</datalist>
 
-        {{-- Grand total row --}}
-        @php
-            $grandMonthly = $salaryPlan->entries->sum('monthly_total');
-            $grandAtm     = $salaryPlan->entries->sum('atm_amount');
-            $grandCash    = $salaryPlan->entries->sum('cash_amount');
-            $grandAnnual  = $salaryPlan->entries->sum('annual_amount');
-        @endphp
-        <tr style="background:#1e3a5f;color:#fff;font-weight:700;font-size:0.8rem;">
-            <td colspan="4" style="border-right:1px solid rgba(255,255,255,0.2);"></td>
-            <td style="padding:7px 8px;border-right:1px solid rgba(255,255,255,0.2);">ລວມຍອດເງິນໄດ້ຮັບທັງໝົດ:</td>
-            <td style="text-align:center;padding:7px 4px;border-right:1px solid rgba(255,255,255,0.1);">{{ $salaryPlan->entries->sum('person_count') > 0 ? number_format($salaryPlan->entries->sum('person_count'), 0) : '' }}</td>
-            <td style="text-align:right;padding:7px 6px;border-right:1px solid rgba(255,255,255,0.1);">{{ number_format($grandAtm, 0) }}</td>
-            <td style="text-align:right;padding:7px 6px;border-right:1px solid rgba(255,255,255,0.1);">{{ number_format($grandCash, 0) }}</td>
-            <td style="text-align:right;padding:7px 6px;border-right:1px solid rgba(255,255,255,0.2);">{{ number_format($grandMonthly, 0) }}</td>
-            <td style="text-align:right;padding:7px 6px;" id="footer-annual">{{ number_format($grandAnnual, 0) }}</td>
-        </tr>
-    </tbody>
-</table>
-</div>
-
-{{-- Sticky save bar --}}
-@if(!$salaryPlan->isApproved())
-<div class="sal-save-bar">
-    <span class="sal-save-hint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        ການປ້ອນຂໍ້ມູນຖືກບັນທຶກອັດຕະໂນມັດເມື່ອກົດ Enter ຫຼື Tab — ກົດປຸ່ມລຸ່ມເພື່ອບັນທຶກທັງໝົດ
-    </span>
-    <span class="sal-save-status" id="sal-save-status"></span>
-    <button type="button" id="sal-save-all" class="sal-save-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-        ບັນທຶກທັງໝົດ
+{{-- ===== Toolbox ===== --}}
+<section class="smg-toolbox">
+    <button type="button" class="smg-btn smg-btn-gold" id="smg-add">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        ເພີ່ມລາຍການ
     </button>
+    <span class="smg-meta" id="smg-meta">{{ $entries->count() }} ລາຍການ</span>
+</section>
+
+{{-- ===== Entry table ===== --}}
+<div class="smg-table-wrap" data-plan-id="{{ $salaryPlan->id }}">
+    <table class="smg-table">
+        <thead>
+            <tr>
+                <th style="width:200px;">ລະຫັດບັນຊີ</th>
+                <th>ຊື່ບັນຊີ</th>
+                <th style="width:88px; text-align:center;">ຈຳນວນພົນ</th>
+                <th style="width:130px; text-align:right;">ໂອນເຂົ້າ ATM</th>
+                <th style="width:130px; text-align:right;">ຖອນເງິນສົດ</th>
+                <th style="width:130px; text-align:right;">ລວມ/ເດືອນ</th>
+                <th style="width:140px; text-align:right;">ລວມ 12 ເດືອນ</th>
+                <th style="width:160px;">ໝາຍເຫດ</th>
+                <th style="width:36px;"></th>
+            </tr>
+        </thead>
+        <tbody id="smg-body">
+            @forelse($entries as $e)
+                @include('dashboards.finance_head.salary._entry_row', ['e' => $e])
+            @empty
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="smg-empty" id="smg-empty" @if($entries->count()) style="display:none;" @endif>
+        <div class="smg-empty-num">00</div>
+        <h3 class="smg-empty-title">ຍັງບໍ່ມີລາຍການ</h3>
+        <p class="smg-empty-sub">ກົດ <strong>ເພີ່ມລາຍການ</strong> ດ້ານເທິງ ເພື່ອປ້ອນລາຍຈ່າຍເງິນເດືອນ.</p>
+    </div>
 </div>
+
+{{-- ===== Toast container ===== --}}
+<div id="smgToasts" class="smg-toasts" aria-live="polite"></div>
+
+{{-- ===== Row template ===== --}}
+<template id="smg-row-tpl">
+    @include('dashboards.finance_head.salary._entry_row', ['e' => null])
+</template>
 
 <style>
-.sal-save-bar {
-    position: sticky;
-    bottom: 0;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding: 0.85rem 1.1rem;
-    background: rgba(255,255,255,0.96);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--fns-gray-200);
-    border-radius: 12px;
-    box-shadow: 0 -4px 14px -10px rgba(17,27,51,0.2);
-}
-.sal-save-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.74rem;
-    color: var(--fns-gray-600);
-}
-.sal-save-hint svg { width: 14px; height: 14px; color: var(--fns-gold); }
-.sal-save-status {
-    margin-left: auto;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--fns-gray-400);
-    min-width: 0;
-}
-.sal-save-status.is-success { color: #166534; }
-.sal-save-status.is-error   { color: #b91c1c; }
-.sal-save-status.is-progress { color: var(--fns-navy); }
-.sal-save-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    background: var(--fns-gold);
-    color: var(--fns-navy-deep);
-    box-shadow: 0 4px 14px -4px rgba(201,153,26,0.55);
-    transition: background .15s, transform .1s, box-shadow .15s;
-}
-.sal-save-btn:hover {
-    background: var(--fns-gold-light, #e7be4f);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px -4px rgba(201,153,26,0.7);
-}
-.sal-save-btn:disabled {
-    background: var(--fns-gray-200);
-    color: var(--fns-gray-400);
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-.sal-save-btn svg { width: 16px; height: 16px; }
-</style>
-@endif
+    /* === Sticky bar === */
+    .smg-sticky-bar {
+        position: sticky; top: 0; z-index: 50;
+        display: flex; align-items: center; gap: .9rem;
+        padding: .65rem 1rem; margin: -1rem -1rem 1.1rem;
+        background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--fns-gray-200);
+        box-shadow: 0 4px 14px -10px rgba(17,27,51,0.18);
+    }
+    .smg-back {
+        display:inline-flex; align-items:center; justify-content:center;
+        width: 36px; height: 36px;
+        background: var(--fns-gray-100); border-radius: 8px;
+        color: var(--fns-navy); text-decoration:none;
+        transition: background .15s, transform .12s;
+    }
+    .smg-back:hover { background: var(--fns-gray-200); transform: translateX(-2px); }
+    .smg-back svg { width: 16px; height: 16px; }
 
-@push('scripts')
+    .smg-id { display:flex; flex-direction:column; line-height: 1; min-width: 0; }
+    .smg-id-kicker {
+        font-size: .58rem; letter-spacing: .2em; text-transform: uppercase;
+        color: var(--fns-gray-400); font-weight: 700;
+    }
+    .smg-id-num {
+        font-family: 'Cinzel', serif; font-size: 1.4rem; font-weight: 700;
+        color: var(--fns-navy); margin-top: .12rem; letter-spacing: -.01em;
+    }
+    .smg-id-sub { font-size: .72rem; color: var(--fns-gray-600); font-weight: 500; margin-top: .12rem; }
+
+    .smg-spacer { flex: 1; }
+
+    .smg-total {
+        display: flex; flex-direction: column; align-items: flex-end; line-height: 1;
+        padding-left: 1rem; border-left: 1px solid var(--fns-gray-200);
+    }
+    .smg-total-label {
+        font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+        color: var(--fns-gray-400); font-weight: 700;
+    }
+    .smg-total-value { margin-top: .3rem; font-family: 'Cinzel', serif; font-size: 1.35rem; color: var(--fns-navy); font-weight: 700; }
+    .smg-total-value span { font-family: 'Noto Sans Lao', sans-serif; font-size: .65rem; color: var(--fns-gray-400); margin-left: .35rem; font-weight: 500; }
+    .smg-total-value-sm { margin-top: .3rem; font-family: 'Cinzel', serif; font-size: 1rem; color: var(--fns-gray-600); font-weight: 600; }
+    .smg-total-value-sm span { font-family: 'Noto Sans Lao', sans-serif; font-size: .6rem; color: var(--fns-gray-400); margin-left: .25rem; font-weight: 500; }
+
+    /* === Toolbox === */
+    .smg-toolbox {
+        display: flex; align-items: center; gap: 1rem;
+        padding: .9rem 1rem; margin-bottom: 1rem;
+        background: #fff; border: 1px solid var(--fns-gray-200);
+        border-radius: 10px;
+    }
+    .smg-btn {
+        display: inline-flex; align-items: center; gap: .4rem;
+        padding: .55rem .95rem; border-radius: 8px;
+        font-family: inherit; font-size: .82rem; font-weight: 700;
+        border: 1px solid transparent; cursor: pointer;
+        transition: background .15s, color .15s, transform .1s;
+    }
+    .smg-btn svg { width: 14px; height: 14px; }
+    .smg-btn-gold { background: var(--fns-gold); color: var(--fns-navy-deep); box-shadow: 0 2px 8px -2px rgba(201,153,26,0.45); }
+    .smg-btn-gold:hover { background: var(--fns-gold-light, #e7be4f); transform: translateY(-1px); }
+    .smg-meta { font-size: .74rem; color: var(--fns-gray-400); }
+
+    /* === Table === */
+    .smg-table-wrap {
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 1.2rem;
+    }
+    .smg-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .smg-table thead {
+        background: linear-gradient(135deg, var(--fns-navy) 0%, var(--fns-navy-mid) 100%);
+        color: #fff;
+    }
+    .smg-table thead th {
+        padding: .6rem .55rem;
+        font-size: .7rem; font-weight: 700; letter-spacing: .03em;
+        text-align: left;
+    }
+    .smg-table tbody td {
+        padding: 4px 6px;
+        border-bottom: 1px dashed var(--fns-gray-200);
+    }
+    .smg-table tbody tr:last-child td { border-bottom: none; }
+    .smg-table tbody tr:hover { background: #fdfbf3; }
+
+    .smg-input {
+        width: 100%;
+        background: transparent; border: 1px solid transparent; border-radius: 5px;
+        padding: 5px 7px; font-family: inherit; font-size: .8rem;
+        color: var(--fns-navy); outline: none;
+        transition: background .12s, border-color .12s, box-shadow .12s;
+    }
+    .smg-input::placeholder { color: var(--fns-gray-400); }
+    .smg-input:hover { background: #fafaf7; }
+    .smg-input:focus {
+        background: #fff; border-color: var(--fns-navy-light);
+        box-shadow: 0 0 0 2px rgba(46,63,110,0.12);
+    }
+    .smg-input.is-invalid { animation: smgFlashRed .8s ease; }
+
+    .smg-table input[type=number].smg-input,
+    .smg-table .smg-cell-total { text-align: right; font-variant-numeric: tabular-nums; }
+    .smg-table .smg-cell-center { text-align: center; }
+    .smg-table .smg-cell-total {
+        padding: 4px 8px;
+        font-family: 'Cinzel', serif; font-weight: 700; color: var(--fns-navy);
+    }
+    .smg-table .smg-cell-annual {
+        font-family: 'Cinzel', serif; font-weight: 700; color: var(--fns-navy);
+        background: rgba(201,153,26,0.04);
+    }
+
+    .smg-name {
+        font-size: .8rem; color: var(--fns-gray-600); padding: 0 .55rem;
+        line-height: 1.4; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .smg-name-empty { color: var(--fns-gray-400); font-style: italic; }
+
+    .smg-btn-del {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px;
+        background: transparent; border: none; color: #ef4444;
+        cursor: pointer; border-radius: 5px;
+        transition: background .12s;
+    }
+    .smg-btn-del:hover { background: rgba(239,68,68,0.1); }
+    .smg-btn-del svg { width: 13px; height: 13px; }
+
+    .smg-row.row-saving { opacity: .55; pointer-events: none; }
+    .smg-row.row-saved td { animation: smgFlashGreen .9s ease; }
+    .smg-row.row-error td { animation: smgFlashRed .9s ease; }
+    @keyframes smgFlashGreen { 0%,100% { background: inherit; } 25% { background: #bbf7d0; } }
+    @keyframes smgFlashRed   { 0%,100% { background: inherit; } 25% { background: #fecaca; } }
+
+    /* === Empty === */
+    .smg-empty {
+        padding: 3.2rem 1.5rem; text-align: center; color: var(--fns-gray-600);
+    }
+    .smg-empty-num {
+        font-family: 'Cinzel', serif; font-size: 4rem; font-weight: 700;
+        color: var(--fns-gray-200); line-height: 1; margin-bottom: .6rem;
+    }
+    .smg-empty-title { font-size: 1.1rem; color: var(--fns-navy); font-weight: 700; margin: .3rem 0 .5rem; }
+    .smg-empty-sub { font-size: .85rem; margin: 0; }
+
+    /* === Toasts === */
+    .smg-toasts {
+        position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9500;
+        display: flex; flex-direction: column; gap: .55rem; pointer-events: none;
+    }
+    .smg-toast {
+        display: flex; align-items: center; gap: .55rem;
+        padding: .65rem .9rem; border-radius: 8px;
+        background: var(--fns-navy-deep); color: #fff;
+        box-shadow: 0 12px 30px -10px rgba(17,27,51,0.5);
+        font-size: .8rem; pointer-events: auto;
+        animation: smgToastIn .22s ease-out;
+    }
+    .smg-toast.is-success { background: #166534; }
+    .smg-toast.is-error { background: #991b1b; }
+    .smg-toast svg { width: 15px; height: 15px; }
+    @keyframes smgToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+
 <script>
 (function () {
-    const CSRF   = document.querySelector('meta[name="csrf-token"]').content;
-    const editable = {{ !$salaryPlan->isApproved() ? 'true' : 'false' }};
-    if (!editable) return;
+    const CSRF    = document.querySelector('meta[name="csrf-token"]').content;
+    const PLAN_ID = document.querySelector('.smg-table-wrap').dataset.planId;
+    const COA_BY_CODE = {};
+    @foreach($coa as $c)
+        COA_BY_CODE[@json($c->account_code)] = { id: {{ $c->id }}, name: @json($c->account_name) };
+    @endforeach
 
-    // ── helpers ──────────────────────────────────────────────────
-    function fmt(n) {
-        return parseFloat(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    const fmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+    const $body = document.getElementById('smg-body');
+    const $empty = document.getElementById('smg-empty');
+    const $meta  = document.getElementById('smg-meta');
+    const $grandM = document.getElementById('grand-monthly');
+    const $grandA = document.getElementById('grand-annual');
+
+    function num(el) { return parseFloat(el?.value || 0) || 0; }
+
+    function recalc(row) {
+        const atm = num(row.querySelector('.smg-atm'));
+        const cash = num(row.querySelector('.smg-cash'));
+        const monthly = atm + cash;
+        const annual = monthly * 12;
+        row.querySelector('.smg-cell-total').textContent = fmt.format(monthly);
+        row.querySelector('.smg-cell-annual').textContent = fmt.format(annual);
+        recalcTotals();
     }
 
-    function recalcRow(row) {
-        const atm   = parseFloat(row.querySelector('.si-atm')?.value  || 0) || 0;
-        const cash  = parseFloat(row.querySelector('.si-cash')?.value || 0) || 0;
-        const mode  = row.dataset.annualMode || 'x12';
-        const total = atm + cash;
-        let annual  = 0;
-
-        if (mode === 'x12')    annual = total * 12;
-        else if (mode === 'x1') annual = total;
-        else if (mode === 'direct') {
-            annual = parseFloat(row.querySelector('.si-annual')?.value || 0) || 0;
-        }
-
-        const cellTotal  = row.querySelector('.cell-total');
-        const cellAnnual = row.querySelector('.cell-annual');
-        if (cellTotal)  cellTotal.textContent  = fmt(total);
-        if (cellAnnual) cellAnnual.textContent  = fmt(annual);
-
-        return { atm, cash, annual };
-    }
-
-    function recalcAllParents() {
-        // Recalculate all .summary-row totals bottom-up
-        document.querySelectorAll('.summary-row').forEach(row => {
-            const nodeId = row.dataset.nodeId;
-            let atm = 0, cash = 0, total = 0, annual = 0;
-            document.querySelectorAll(`.leaf-row[data-parent-chain*=",${nodeId},"]`).forEach(lr => {
-                atm    += parseFloat(lr.dataset.atm    || 0);
-                cash   += parseFloat(lr.dataset.cash   || 0);
-                total  += parseFloat(lr.dataset.monthly || 0);
-                annual += parseFloat(lr.dataset.annual  || 0);
-            });
-            const r = row.querySelector('.sum-atm');
-            if (r) r.textContent = atm   > 0 ? fmt(atm)   : '';
-            const c = row.querySelector('.sum-cash');
-            if (c) c.textContent = cash  > 0 ? fmt(cash)  : '';
-            const t = row.querySelector('.sum-total');
-            if (t) t.textContent = total > 0 ? fmt(total) : '';
-            const a = row.querySelector('.sum-annual');
-            if (a) a.textContent = annual > 0 ? fmt(annual) : '';
+    function recalcTotals() {
+        let monthly = 0, annual = 0;
+        $body.querySelectorAll('.smg-row').forEach(r => {
+            const atm = num(r.querySelector('.smg-atm'));
+            const cash = num(r.querySelector('.smg-cash'));
+            monthly += atm + cash;
+            annual  += (atm + cash) * 12;
         });
-
-        // Footer
-        let grandAnnual = 0;
-        document.querySelectorAll('.leaf-row').forEach(lr => {
-            grandAnnual += parseFloat(lr.dataset.annual || 0);
-        });
-        const fa = document.getElementById('footer-annual');
-        if (fa) fa.textContent = fmt(grandAnnual);
+        if ($grandM) $grandM.textContent = fmt.format(monthly);
+        if ($grandA) $grandA.textContent = fmt.format(annual);
+        const n = $body.querySelectorAll('.smg-row').length;
+        if ($meta) $meta.textContent = `${n} ລາຍການ`;
+        $empty.style.display = n ? 'none' : '';
     }
 
-    async function saveEntry(row) {
-        const entryId = row.dataset.entryId;
-        if (!entryId) return;
+    function showToast(msg, kind = 'info') {
+        const wrap = document.getElementById('smgToasts');
+        const t = document.createElement('div');
+        t.className = `smg-toast is-${kind}`;
+        const icon = kind === 'success'
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+            : kind === 'error'
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+        t.innerHTML = icon + `<span>${msg}</span>`;
+        wrap.appendChild(t);
+        setTimeout(() => t.remove(), 2400);
+    }
 
-        const mode    = row.dataset.annualMode || 'x12';
-        const atm     = parseFloat(row.querySelector('.si-atm')?.value  || 0) || 0;
-        const cash    = parseFloat(row.querySelector('.si-cash')?.value || 0) || 0;
-        const persons = parseInt(row.querySelector('.si-persons')?.value || 0) || 0;
-        const remark  = row.querySelector('.si-remark')?.value || '';
-
-        const payload = { person_count: persons, atm_amount: atm, cash_amount: cash, remark };
-
-        if (mode === 'direct') {
-            payload.annual_amount = parseFloat(row.querySelector('.si-annual')?.value || 0) || 0;
+    function applyCoa(row) {
+        const codeEl = row.querySelector('.smg-code');
+        const code = codeEl.value.trim();
+        const nameEl = row.querySelector('.smg-name');
+        const info = COA_BY_CODE[code];
+        row.dataset.coaId = info ? info.id : '';
+        if (info) {
+            nameEl.textContent = info.name;
+            nameEl.classList.remove('smg-name-empty');
+        } else {
+            nameEl.textContent = code ? 'ລະຫັດບໍ່ຖືກຕ້ອງ' : 'ເລືອກລະຫັດບັນຊີ...';
+            nameEl.classList.add('smg-name-empty');
+            if (code) {
+                codeEl.classList.add('is-invalid');
+                setTimeout(() => codeEl.classList.remove('is-invalid'), 900);
+            }
         }
+    }
 
-        row.style.opacity = '0.6';
-        row.style.pointerEvents = 'none';
+    async function saveRow(row) {
+        const coaId = row.dataset.coaId;
+        if (!coaId) return; // need a valid COA before persisting
 
+        const itemId = row.dataset.itemId;
+        const payload = {
+            plan_id:             PLAN_ID,
+            chart_of_account_id: coaId,
+            person_count:        parseInt(row.querySelector('.smg-persons')?.value || 0, 10) || 0,
+            atm_amount:          num(row.querySelector('.smg-atm')),
+            cash_amount:         num(row.querySelector('.smg-cash')),
+            remark:              row.querySelector('.smg-remark')?.value || null,
+        };
+        const url = itemId ? `/head-of-finance/salary-entries/${itemId}` : '/head-of-finance/salary-entries';
+        const method = itemId ? 'PATCH' : 'POST';
+
+        row.classList.add('row-saving');
         try {
-            const res  = await fetch(`/head-of-finance/salary-entries/${entryId}`, {
-                method: 'PATCH',
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
+            row.classList.remove('row-saving');
             if (!res.ok || !data.success) throw new Error(data.message || 'Error');
 
-            // Update cached data attributes for parent recalc
-            row.dataset.atm     = atm;
-            row.dataset.cash    = cash;
-            row.dataset.monthly = data.monthly_total;
-            row.dataset.annual  = data.annual_amount;
-
-            // Update display cells with server-confirmed values
-            const cellTotal = row.querySelector('.cell-total');
-            if (cellTotal) cellTotal.textContent = data.monthly_total > 0 ? fmt(data.monthly_total) : '';
-            const cellAnnual = row.querySelector('.cell-annual');
-            if (cellAnnual) cellAnnual.textContent = data.annual_amount > 0 ? fmt(data.annual_amount) : '';
-
-            recalcAllParents();
-            row.style.background = '#f0fdf4';
-            setTimeout(() => { row.style.background = ''; }, 700);
+            const wasNew = !itemId;
+            if (wasNew && data.entry?.id) row.dataset.itemId = data.entry.id;
+            if (data.entry?.monthly_total !== undefined) {
+                row.querySelector('.smg-cell-total').textContent  = fmt.format(parseFloat(data.entry.monthly_total));
+                row.querySelector('.smg-cell-annual').textContent = fmt.format(parseFloat(data.entry.annual_amount));
+            }
+            recalcTotals();
+            row.classList.add('row-saved');
+            setTimeout(() => row.classList.remove('row-saved'), 900);
+            if (wasNew) showToast('ບັນທຶກລາຍການໃໝ່ສຳເລັດ', 'success');
         } catch {
-            row.style.background = '#fef2f2';
-            setTimeout(() => { row.style.background = ''; }, 700);
-        } finally {
-            row.style.opacity = '1';
-            row.style.pointerEvents = '';
+            row.classList.remove('row-saving');
+            row.classList.add('row-error');
+            setTimeout(() => row.classList.remove('row-error'), 900);
+            showToast('ບໍ່ສາມາດບັນທຶກໄດ້', 'error');
         }
     }
 
-    // ── bind all leaf rows ────────────────────────────────────────
-    document.querySelectorAll('.leaf-row').forEach(row => {
-        const inputs = row.querySelectorAll('.si-atm,.si-cash,.si-annual');
-        inputs.forEach(inp => inp.addEventListener('input', () => recalcRow(row)));
+    async function deleteRow(row) {
+        const itemId = row.dataset.itemId;
+        if (!itemId) { row.remove(); recalcTotals(); return; }
+        if (!confirm('ລຶບລາຍການນີ້?')) return;
+        row.classList.add('row-saving');
+        try {
+            const res = await fetch(`/head-of-finance/salary-entries/${itemId}`, {
+                method: 'DELETE',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error();
+            row.remove(); recalcTotals();
+            showToast('ລຶບລາຍການແລ້ວ', 'success');
+        } catch {
+            row.classList.remove('row-saving');
+            row.classList.add('row-error');
+            setTimeout(() => row.classList.remove('row-error'), 900);
+            showToast('ບໍ່ສາມາດລຶບໄດ້', 'error');
+        }
+    }
 
-        row.querySelectorAll('.salary-input').forEach((inp, idx, arr) => {
+    function bindRow(row) {
+        const codeEl = row.querySelector('.smg-code');
+        codeEl?.addEventListener('change', () => { applyCoa(row); saveRow(row); });
+
+        row.querySelectorAll('.smg-atm, .smg-cash').forEach(inp =>
+            inp.addEventListener('input', () => recalc(row)));
+
+        row.querySelectorAll('.smg-input').forEach(inp => {
             inp.addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); saveEntry(row); inp.blur(); }
-                if (e.key === 'Tab' && !e.shiftKey && idx === arr.length - 1) {
-                    e.preventDefault();
-                    saveEntry(row);
-                    // Move to next leaf row
-                    const allLeafs = Array.from(document.querySelectorAll('.leaf-row'));
-                    const next = allLeafs[allLeafs.indexOf(row) + 1];
-                    if (next) next.querySelector('.salary-input')?.focus();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); saveRow(row); inp.blur(); }
             });
-
-            inp.addEventListener('blur', function () {
-                setTimeout(() => {
-                    if (!row.contains(document.activeElement)) saveEntry(row);
-                }, 180);
-            });
+            inp.addEventListener('blur', () => setTimeout(() => {
+                if (row.contains(document.activeElement)) return;
+                saveRow(row);
+            }, 150));
         });
-    });
 
-    // ── "Save all" button ────────────────────────────────────────
-    const saveAllBtn = document.getElementById('sal-save-all');
-    const saveStatus = document.getElementById('sal-save-status');
-    function setStatus(msg, kind) {
-        if (!saveStatus) return;
-        saveStatus.textContent = msg || '';
-        saveStatus.classList.remove('is-success', 'is-error', 'is-progress');
-        if (kind) saveStatus.classList.add('is-' + kind);
+        row.querySelector('.smg-btn-del')?.addEventListener('click', () => deleteRow(row));
+
+        recalc(row);
     }
-    if (saveAllBtn) {
-        saveAllBtn.addEventListener('click', async () => {
-            const rows = Array.from(document.querySelectorAll('.leaf-row[data-entry-id]'));
-            if (!rows.length) return;
-            saveAllBtn.disabled = true;
-            setStatus(`ກຳລັງບັນທຶກ 0 / ${rows.length}...`, 'progress');
 
-            let done = 0, errors = 0;
-            // Save sequentially to keep parent totals consistent; cheap on small row counts.
-            for (const row of rows) {
-                try {
-                    await saveEntry(row);
-                } catch { errors++; }
-                done++;
-                setStatus(`ກຳລັງບັນທຶກ ${done} / ${rows.length}...`, 'progress');
-            }
-
-            if (errors === 0) {
-                setStatus(`ບັນທຶກ ${rows.length} ລາຍການສຳເລັດ`, 'success');
-            } else {
-                setStatus(`ບັນທຶກສຳເລັດ ${rows.length - errors} / ${rows.length} (ຜິດພາດ ${errors})`, 'error');
-            }
-            saveAllBtn.disabled = false;
-            setTimeout(() => setStatus('', ''), 3500);
-        });
+    function addRow() {
+        const tpl = document.getElementById('smg-row-tpl');
+        const row = tpl.content.firstElementChild.cloneNode(true);
+        $body.appendChild(row);
+        bindRow(row);
+        row.querySelector('.smg-code')?.focus();
+        recalcTotals();
     }
+
+    document.getElementById('smg-add').addEventListener('click', addRow);
+    document.querySelectorAll('.smg-row').forEach(bindRow);
+    recalcTotals();
 })();
 </script>
-@endpush
 
 @endsection

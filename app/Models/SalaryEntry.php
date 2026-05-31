@@ -10,15 +10,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class SalaryEntry extends Model
 {
     protected $fillable = [
-        'plan_id', 'budget_code_id',
+        'plan_id', 'chart_of_account_id',
         'person_count', 'atm_amount', 'cash_amount',
         'monthly_total', 'annual_amount', 'remark',
     ];
 
     protected $casts = [
         'person_count' => 'integer',
-        'atm_amount' => 'float',
-        'cash_amount' => 'float',
+        'atm_amount'   => 'float',
+        'cash_amount'  => 'float',
         'monthly_total' => 'float',
         'annual_amount' => 'float',
     ];
@@ -27,17 +27,10 @@ final class SalaryEntry extends Model
     {
         parent::boot();
 
+        // monthly = ATM + cash; annual = monthly * 12
         static::saving(function (self $entry): void {
             $entry->monthly_total = (float) $entry->atm_amount + (float) $entry->cash_amount;
-
-            $mode = $entry->budgetCode?->annual_mode ?? 'x12';
-
-            if ($mode === 'x12') {
-                $entry->annual_amount = $entry->monthly_total * 12;
-            } elseif ($mode === 'x1') {
-                $entry->annual_amount = $entry->monthly_total;
-            }
-            // 'direct' mode: annual_amount is set explicitly, leave untouched
+            $entry->annual_amount = $entry->monthly_total * 12;
         });
     }
 
@@ -46,8 +39,8 @@ final class SalaryEntry extends Model
         return $this->belongsTo(SalaryPlan::class, 'plan_id');
     }
 
-    public function budgetCode(): BelongsTo
+    public function chartOfAccount(): BelongsTo
     {
-        return $this->belongsTo(SalaryBudgetCode::class, 'budget_code_id');
+        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
     }
 }

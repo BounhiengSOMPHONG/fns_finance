@@ -11,34 +11,79 @@ use Illuminate\Http\Request;
 
 final class SalaryEntryController extends Controller
 {
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'plan_id'             => 'required|integer|exists:salary_plans,id',
+            'chart_of_account_id' => 'required|integer|exists:chart_of_accounts,id',
+            'person_count'        => 'nullable|integer|min:0',
+            'atm_amount'          => 'nullable|numeric|min:0',
+            'cash_amount'         => 'nullable|numeric|min:0',
+            'remark'              => 'nullable|string|max:255',
+        ]);
+
+        $entry = SalaryEntry::create([
+            'plan_id'             => (int) $data['plan_id'],
+            'chart_of_account_id' => (int) $data['chart_of_account_id'],
+            'person_count'        => (int) ($data['person_count'] ?? 0),
+            'atm_amount'          => (float) ($data['atm_amount'] ?? 0),
+            'cash_amount'         => (float) ($data['cash_amount'] ?? 0),
+            'remark'              => $data['remark'] ?? null,
+        ]);
+        $entry->load('chartOfAccount');
+
+        return response()->json([
+            'success' => true,
+            'entry'   => $this->serialize($entry),
+        ]);
+    }
+
     public function update(Request $request, SalaryEntry $salaryEntry): JsonResponse
     {
         $data = $request->validate([
-            'person_count' => 'required|integer|min:0',
-            'atm_amount'   => 'required|numeric|min:0',
-            'cash_amount'  => 'required|numeric|min:0',
-            'annual_amount' => 'nullable|numeric|min:0',
-            'remark'       => 'nullable|string|max:255',
+            'chart_of_account_id' => 'sometimes|required|integer|exists:chart_of_accounts,id',
+            'person_count'        => 'nullable|integer|min:0',
+            'atm_amount'          => 'nullable|numeric|min:0',
+            'cash_amount'         => 'nullable|numeric|min:0',
+            'remark'              => 'nullable|string|max:255',
         ]);
 
-        $mode = $salaryEntry->budgetCode?->annual_mode ?? 'x12';
-
-        $salaryEntry->person_count = (int) $data['person_count'];
-        $salaryEntry->atm_amount   = (float) $data['atm_amount'];
-        $salaryEntry->cash_amount  = (float) $data['cash_amount'];
-        $salaryEntry->remark       = $data['remark'] ?? null;
-
-        // For 'direct' mode, accept the annual_amount from the request
-        if ($mode === 'direct' && isset($data['annual_amount'])) {
-            $salaryEntry->annual_amount = (float) $data['annual_amount'];
+        if (array_key_exists('chart_of_account_id', $data)) {
+            $salaryEntry->chart_of_account_id = (int) $data['chart_of_account_id'];
         }
-
+        $salaryEntry->person_count = (int) ($data['person_count'] ?? 0);
+        $salaryEntry->atm_amount   = (float) ($data['atm_amount'] ?? 0);
+        $salaryEntry->cash_amount  = (float) ($data['cash_amount'] ?? 0);
+        $salaryEntry->remark       = $data['remark'] ?? null;
         $salaryEntry->save();
+        $salaryEntry->load('chartOfAccount');
 
         return response()->json([
-            'success'       => true,
-            'monthly_total' => $salaryEntry->monthly_total,
-            'annual_amount' => $salaryEntry->annual_amount,
+            'success' => true,
+            'entry'   => $this->serialize($salaryEntry),
         ]);
+    }
+
+    public function destroy(SalaryEntry $salaryEntry): JsonResponse
+    {
+        $salaryEntry->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    private function serialize(SalaryEntry $e): array
+    {
+        return [
+            'id'                  => $e->id,
+            'chart_of_account_id' => $e->chart_of_account_id,
+            'account_code'        => $e->chartOfAccount?->account_code,
+            'account_name'        => $e->chartOfAccount?->account_name,
+            'person_count'        => $e->person_count,
+            'atm_amount'          => $e->atm_amount,
+            'cash_amount'         => $e->cash_amount,
+            'monthly_total'       => $e->monthly_total,
+            'annual_amount'       => $e->annual_amount,
+            'remark'              => $e->remark,
+        ];
     }
 }

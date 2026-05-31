@@ -182,11 +182,6 @@
     flex-shrink: 0;
 }
 .fns-topnav-menu-item.active svg { color: var(--fns-gold); }
-.fns-topnav-menu-divider {
-    height: 1px;
-    background: var(--fns-gray-200);
-    margin: 0.35rem 0.7rem;
-}
 
 /* Right side */
 .fns-topnav-right {

@@ -41,13 +41,9 @@
                     ໜ້າຫຼັກ
                 </a>
 
-                @php
-                    $incomeActive = request()->routeIs('head_of_finance.academic-income.*')
-                        || $settingsActive;
-                @endphp
                 {{-- Academic income dropdown --}}
                 <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
-                    <button type="button" class="fns-topnav-item {{ $incomeActive ? 'active' : '' }}"
+                    <button type="button" class="fns-topnav-item {{ request()->routeIs('head_of_finance.academic-income.*') ? 'active' : '' }}"
                             @click="open = !open" :aria-expanded="open">
                         <x-icons.book-open />
                         ປະເມີນລາຍຮັບ
@@ -57,19 +53,6 @@
                         <a href="{{ route('head_of_finance.academic-income.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.academic-income.*') ? 'active' : '' }}">
                             <x-icons.book-open /> ສ້າງປະເມີນລາຍຮັບ
-                        </a>
-                        <div class="fns-topnav-menu-divider"></div>
-                        <a href="{{ route('head_of_finance.settings.degree-programs.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.degree-programs.*') ? 'active' : '' }}">
-                            <x-icons.building-office /> ສາຂາວິຊາ
-                        </a>
-                        <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> ລາຄາ & ໜ່ວຍກິດ & ມຊ%
-                        </a>
-                        <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">
-                            <x-icons.shield-check /> ຄ່າລົງທະບຽນ
                         </a>
                     </div>
                 </div>
@@ -98,6 +81,29 @@
                     </div>
                 </div>
 
+                {{-- Settings dropdown --}}
+                <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
+                    <button type="button" class="fns-topnav-item {{ $settingsActive ? 'active' : '' }}"
+                            @click="open = !open" :aria-expanded="open">
+                        <x-icons.settings />
+                        ຕັ້ງຄ່າ
+                        <svg class="fns-topnav-chev" :class="{ 'is-open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="fns-topnav-menu" x-show="open" x-transition.opacity.duration.150ms style="display:none;">
+                        <a href="{{ route('head_of_finance.settings.degree-programs.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.degree-programs.*') ? 'active' : '' }}">
+                            <x-icons.building-office /> ສາຂາວິຊາ
+                        </a>
+                        <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> ລາຄາ & ໜ່ວຍກິດ & ມຊ%
+                        </a>
+                        <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">
+                            <x-icons.shield-check /> ຄ່າລົງທະບຽນ
+                        </a>
+                    </div>
+                </div>
             @endif
 
             @if($isAdmin)

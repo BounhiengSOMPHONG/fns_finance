@@ -61,9 +61,11 @@ final class SalaryPlanController extends Controller
             ->orderBy('id')
             ->get();
 
-        // All chart-of-accounts for the picker / datalist (flat list, leaf-only would be ideal
-        // but for now expose everything and let the user pick).
-        $coa = ChartOfAccount::orderBy('account_code')->get(['id', 'account_code', 'account_name']);
+        // Picker shows only leaf accounts (nodes that have no children) — parents/categories
+        // shouldn't be assignable directly.
+        $coa = ChartOfAccount::whereDoesntHave('children')
+            ->orderBy('account_code')
+            ->get(['id', 'account_code', 'account_name']);
 
         return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa'));
     }

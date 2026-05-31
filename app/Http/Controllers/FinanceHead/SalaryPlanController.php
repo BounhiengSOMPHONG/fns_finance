@@ -49,7 +49,6 @@ final class SalaryPlanController extends Controller
             $plan = SalaryPlan::create([
                 'fiscal_year' => (string) $data['fiscal_year'],
                 'month'       => (int) $data['month'],
-                'status'      => 'DRAFT',
                 'notes'       => $data['notes'] ?? null,
                 'created_by'  => Auth::id(),
             ]);
@@ -145,10 +144,4 @@ final class SalaryPlanController extends Controller
             ->with('success', 'ລຶບແຜນເງິນເດືອນສຳເລັດ');
     }
 
-    public function approve(SalaryPlan $salaryPlan)
-    {
-        $salaryPlan->update(['status' => 'APPROVED']);
-
-        return back()->with('success', 'ອະນຸມັດແຜນເງິນເດືອນສຳເລັດ');
-    }
 }

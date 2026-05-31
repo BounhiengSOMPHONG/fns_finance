@@ -10,23 +10,11 @@
     <a href="{{ route('head_of_finance.salary.index') }}" class="fns-btn fns-btn-secondary fns-btn-sm">← ກັບຄືນ</a>
     <span style="font-weight:700;color:var(--fns-navy);font-size:1rem;">
         ເດືອນ {{ $salaryPlan->monthLabel() }}
-        @if($salaryPlan->isApproved())
-            <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:0.72rem;margin-left:6px;">ອະນຸມັດ</span>
-        @else
-            <span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:999px;font-size:0.72rem;margin-left:6px;">ຮ່າງ</span>
-        @endif
     </span>
     <span style="margin-left:auto;font-size:0.83rem;color:#64748b;">
         ລວມ 12 ເດືອນ:
         <strong id="grand-annual" style="color:var(--fns-navy);">{{ number_format($salaryPlan->grandTotal(), 0) }}</strong> ກີບ
     </span>
-    @if(!$salaryPlan->isApproved())
-    <form method="POST" action="{{ route('head_of_finance.salary.approve', $salaryPlan) }}" style="margin:0;">
-        @csrf
-        <button type="submit" class="fns-btn fns-btn-sm" style="background:#166534;color:#fff;"
-            onclick="return confirm('ອະນຸມັດແຜນເງິນເດືອນ?')">ອະນຸມັດ</button>
-    </form>
-    @endif
 </div>
 
 {{-- ──────────── PAYROLL TABLE ──────────── --}}
@@ -94,11 +82,84 @@
 </table>
 </div>
 
-{{-- Tip --}}
+{{-- Sticky save bar --}}
 @if(!$salaryPlan->isApproved())
-<p style="font-size:0.72rem;color:#94a3b8;margin-top:8px;">
-    💡 ກົດໃສ່ຕາລາງ ແລ້ວກົດ Enter ຫຼື Tab ເພື່ອບັນທຶກ. ຄ່າຖືກຄຳນວນໂດຍອັດຕະໂນມັດ.
-</p>
+<div class="sal-save-bar">
+    <span class="sal-save-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        ການປ້ອນຂໍ້ມູນຖືກບັນທຶກອັດຕະໂນມັດເມື່ອກົດ Enter ຫຼື Tab — ກົດປຸ່ມລຸ່ມເພື່ອບັນທຶກທັງໝົດ
+    </span>
+    <span class="sal-save-status" id="sal-save-status"></span>
+    <button type="button" id="sal-save-all" class="sal-save-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        ບັນທຶກທັງໝົດ
+    </button>
+</div>
+
+<style>
+.sal-save-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0.85rem 1.1rem;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--fns-gray-200);
+    border-radius: 12px;
+    box-shadow: 0 -4px 14px -10px rgba(17,27,51,0.2);
+}
+.sal-save-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.74rem;
+    color: var(--fns-gray-600);
+}
+.sal-save-hint svg { width: 14px; height: 14px; color: var(--fns-gold); }
+.sal-save-status {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--fns-gray-400);
+    min-width: 0;
+}
+.sal-save-status.is-success { color: #166534; }
+.sal-save-status.is-error   { color: #b91c1c; }
+.sal-save-status.is-progress { color: var(--fns-navy); }
+.sal-save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    background: var(--fns-gold);
+    color: var(--fns-navy-deep);
+    box-shadow: 0 4px 14px -4px rgba(201,153,26,0.55);
+    transition: background .15s, transform .1s, box-shadow .15s;
+}
+.sal-save-btn:hover {
+    background: var(--fns-gold-light, #e7be4f);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -4px rgba(201,153,26,0.7);
+}
+.sal-save-btn:disabled {
+    background: var(--fns-gray-200);
+    color: var(--fns-gray-400);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+.sal-save-btn svg { width: 16px; height: 16px; }
+</style>
 @endif
 
 @push('scripts')
@@ -241,6 +302,42 @@
             });
         });
     });
+
+    // ── "Save all" button ────────────────────────────────────────
+    const saveAllBtn = document.getElementById('sal-save-all');
+    const saveStatus = document.getElementById('sal-save-status');
+    function setStatus(msg, kind) {
+        if (!saveStatus) return;
+        saveStatus.textContent = msg || '';
+        saveStatus.classList.remove('is-success', 'is-error', 'is-progress');
+        if (kind) saveStatus.classList.add('is-' + kind);
+    }
+    if (saveAllBtn) {
+        saveAllBtn.addEventListener('click', async () => {
+            const rows = Array.from(document.querySelectorAll('.leaf-row[data-entry-id]'));
+            if (!rows.length) return;
+            saveAllBtn.disabled = true;
+            setStatus(`ກຳລັງບັນທຶກ 0 / ${rows.length}...`, 'progress');
+
+            let done = 0, errors = 0;
+            // Save sequentially to keep parent totals consistent; cheap on small row counts.
+            for (const row of rows) {
+                try {
+                    await saveEntry(row);
+                } catch { errors++; }
+                done++;
+                setStatus(`ກຳລັງບັນທຶກ ${done} / ${rows.length}...`, 'progress');
+            }
+
+            if (errors === 0) {
+                setStatus(`ບັນທຶກ ${rows.length} ລາຍການສຳເລັດ`, 'success');
+            } else {
+                setStatus(`ບັນທຶກສຳເລັດ ${rows.length - errors} / ${rows.length} (ຜິດພາດ ${errors})`, 'error');
+            }
+            saveAllBtn.disabled = false;
+            setTimeout(() => setStatus('', ''), 3500);
+        });
+    }
 })();
 </script>
 @endpush

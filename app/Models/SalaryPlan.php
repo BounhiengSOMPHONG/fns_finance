@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalaryPlan extends Model
 {
-    protected $fillable = ['fiscal_year', 'month', 'status', 'notes', 'created_by'];
+    protected $fillable = ['fiscal_year', 'month', 'notes', 'created_by'];
 
     protected $casts = [
         'month' => 'integer',
@@ -28,7 +28,7 @@ final class SalaryPlan extends Model
 
     public function isApproved(): bool
     {
-        return $this->status === 'APPROVED';
+        return false;
     }
 
     public function monthLabel(): string

@@ -62,7 +62,6 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             'parameters' => ['salary' => 'salaryPlan'],
         ])->except(['edit', 'update']);
         Route::get('salary/{salaryPlan}/manage', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'manage'])->name('salary.manage');
-        Route::post('salary/{salaryPlan}/approve', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'approve'])->name('salary.approve');
 
         // Salary Entries (AJAX)
         Route::patch('salary-entries/{salaryEntry}', [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'update'])->name('salary-entries.update');

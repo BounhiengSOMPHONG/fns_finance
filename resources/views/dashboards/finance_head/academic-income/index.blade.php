@@ -22,6 +22,10 @@
             <span class="ai-stat-label">ຈຳນວນແຜນ</span>
             <span class="ai-stat-value">{{ number_format($plans->total()) }}</span>
         </div>
+        <div class="ai-stat ai-stat-accent">
+            <span class="ai-stat-label">ລາຍຮັບລວມທັງໝົດ (ກີບ)</span>
+            <span class="ai-stat-value">{{ number_format($totalIncomeAcrossPlans, 0) }}</span>
+        </div>
         <a href="{{ route('head_of_finance.academic-income.create') }}" class="ai-hero-cta">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
             <span>ສ້າງແຜນໃໝ່</span>
@@ -58,14 +62,20 @@
 
             <div class="ai-card-body">
                 <div class="ai-card-row">
+                    <span class="ai-card-row-key">ລາຍຮັບລວມ</span>
+                    <span class="ai-card-row-val ai-money">
+                        {{ number_format((float) ($plan->total_income_sum ?? 0), 0) }}<span class="ai-money-unit">ກີບ</span>
+                    </span>
+                </div>
+                <div class="ai-card-row">
+                    <span class="ai-card-row-key">ຈຳນວນລາຍການ</span>
+                    <span class="ai-card-row-val">{{ number_format((int) ($plan->items_count ?? 0)) }}</span>
+                </div>
+                <div class="ai-card-row">
                     <span class="ai-card-row-key">ສ້າງໂດຍ</span>
                     <span class="ai-card-row-val ai-creator">
                         {{ $plan->creator?->full_name ?? '—' }}
                     </span>
-                </div>
-                <div class="ai-card-row">
-                    <span class="ai-card-row-key">ວັນທີສ້າງ</span>
-                    <span class="ai-card-row-val">{{ $plan->created_at->format('d/m/Y') }}</span>
                 </div>
             </div>
 
@@ -130,6 +140,7 @@
         color: rgba(255,255,255,0.55); font-weight:600;
     }
     .ai-stat-value { font-family:'Cinzel', serif; font-size:1.45rem; font-weight:700; line-height:1; }
+    .ai-stat-accent .ai-stat-value { color: var(--fns-gold-light, #e7be4f); font-size:1.65rem; }
     .ai-hero-cta {
         display:inline-flex; align-items:center; gap:.55rem;
         padding: .72rem 1.15rem; border-radius:10px;
@@ -214,6 +225,8 @@
     .ai-card-row-key { font-size:0.72rem; color: var(--fns-gray-400); }
     .ai-card-row-val { font-size:0.86rem; color: var(--fns-navy); font-weight:600; text-align:right; }
     .ai-creator { font-weight:500; color: var(--fns-gray-600); }
+    .ai-money { font-family:'Cinzel', serif; font-size:1rem; }
+    .ai-money-unit { font-family:'Noto Sans Lao', sans-serif; font-size:0.68rem; color: var(--fns-gray-400); margin-left:.3rem; font-weight:500; }
 
     .ai-card-foot { display:flex; gap:.5rem; padding: .8rem 1.15rem .85rem 1.4rem; align-items:center; }
 

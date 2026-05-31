@@ -11,10 +11,18 @@ class AcademicIncomePlanController extends Controller
     public function index()
     {
         $plans = AcademicIncomePlan::with('creator')
+            ->withCount('items')
+            ->withSum('items as total_income_sum', 'total_income')
+            ->withSum('items as total_students_sum', 'student_count')
             ->orderByDesc('fiscal_year')
             ->paginate(15);
 
-        return view('dashboards.finance_head.academic-income.index', compact('plans'));
+        $totalIncomeAcrossPlans = (float) AcademicIncomePlan::query()
+            ->withSum('items as t', 'total_income')
+            ->get()
+            ->sum('t');
+
+        return view('dashboards.finance_head.academic-income.index', compact('plans', 'totalIncomeAcrossPlans'));
     }
 
     public function create()

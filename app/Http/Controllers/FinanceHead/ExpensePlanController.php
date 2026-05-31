@@ -80,11 +80,16 @@ class ExpensePlanController extends Controller
      */
     private function buildCoaMap(): array
     {
+        // All accounts needed to walk parent chains for main_cat / main_item.
         $accounts = ChartOfAccount::orderBy('account_code')->get();
         $byId     = $accounts->keyBy('id');
 
+        // Picker only exposes leaf accounts (nodes with no children).
+        $childParentIds = $accounts->pluck('parent_id')->filter()->unique()->all();
+        $leaves         = $accounts->reject(fn ($a) => in_array($a->id, $childParentIds, true));
+
         $map = [];
-        foreach ($accounts as $account) {
+        foreach ($leaves as $account) {
             $chain = [];
             $node  = $account;
             $guard = 0;

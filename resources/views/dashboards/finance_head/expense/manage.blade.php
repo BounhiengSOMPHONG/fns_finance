@@ -52,12 +52,15 @@
     </button>
 </div>
 
-{{-- ===== COA datalist (used by the ref-code modal) ===== --}}
-<datalist id="coa-codes">
-    @foreach($coaMap as $code => $info)
-        <option value="{{ $code }}">{{ $code }} — {{ $info['name'] }}</option>
-    @endforeach
-</datalist>
+{{-- ===== COA picker popover (shared across all rows) ===== --}}
+<div id="xpop" class="xpop" role="dialog" aria-label="ເລືອກລະຫັດບັນຊີ">
+    <div class="xpop-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="xpop-search" type="text" placeholder="ຄົ້ນຫາລະຫັດ ຫຼື ຊື່ບັນຊີ..." autocomplete="off">
+    </div>
+    <div id="xpop-list" class="xpop-list" role="listbox"></div>
+    <div id="xpop-empty" class="xpop-empty" style="display:none;">ບໍ່ພົບລະຫັດທີ່ກົງກັນ</div>
+</div>
 
 {{-- ===== Add / control row ===== --}}
 <section class="mgr-toolbox">
@@ -594,6 +597,82 @@
     /* Make existing fns-btn-sm inside ref rows match new palette */
     .rc-row .fns-btn { padding: .3rem .65rem; font-size: .72rem; border-radius: 6px; }
 
+    /* ===== COA picker trigger (per row) ===== */
+    .gi-coa-trigger {
+        display: inline-flex; align-items: center; justify-content: space-between;
+        gap: .3rem; width: 100%;
+        padding: 3px 6px;
+        background: transparent;
+        border: 1px solid transparent; border-radius: 4px;
+        font-family: 'Cinzel', serif; font-size: .78rem; font-weight: 600;
+        color: var(--fns-navy); cursor: pointer;
+        text-align: left; letter-spacing: .02em;
+        transition: background .12s, border-color .12s, box-shadow .12s;
+    }
+    .gi-coa-trigger:hover { background: #fafaf7; }
+    .gi-coa-trigger.is-open {
+        background: #fff;
+        border-color: var(--fns-navy-light);
+        box-shadow: 0 0 0 2px rgba(46,63,110,0.12);
+    }
+    .gi-coa-trigger.is-empty {
+        font-family: 'Noto Sans Lao', sans-serif;
+        font-weight: 500; color: var(--fns-gray-400); font-style: italic;
+    }
+    .gi-coa-trigger svg {
+        width: 11px; height: 11px;
+        color: var(--fns-gray-400); flex-shrink: 0;
+        transition: transform .18s;
+    }
+    .gi-coa-trigger.is-open svg { transform: rotate(180deg); color: var(--fns-navy); }
+    .gi-coa-trigger-code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ===== COA popover ===== */
+    .xpop {
+        display: none;
+        position: fixed; z-index: 100;
+        width: 380px; max-width: 95vw;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 10px;
+        box-shadow: 0 14px 40px -12px rgba(17,27,51,0.35);
+        overflow: hidden;
+        animation: xpopIn .14s ease-out;
+    }
+    .xpop.is-open { display: block; }
+    @keyframes xpopIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+    .xpop-search {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .55rem .75rem;
+        background: var(--fns-gray-100);
+        border-bottom: 1px solid var(--fns-gray-200);
+    }
+    .xpop-search svg { width: 14px; height: 14px; color: var(--fns-gray-400); flex-shrink: 0; }
+    .xpop-search input {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-family: inherit; font-size: .85rem; color: var(--fns-navy);
+    }
+    .xpop-list { max-height: 320px; overflow-y: auto; padding: .3rem; }
+    .xpop-item {
+        display: flex; align-items: baseline; gap: .55rem;
+        padding: .45rem .65rem; border-radius: 6px;
+        cursor: pointer; font-size: .82rem; color: var(--fns-navy);
+        transition: background .1s;
+    }
+    .xpop-item:hover, .xpop-item.is-active { background: rgba(26,39,68,0.06); }
+    .xpop-item.is-selected { background: rgba(201,153,26,0.12); color: #8b6a12; }
+    .xpop-item-code {
+        font-family: 'Cinzel', serif; font-weight: 700;
+        min-width: 70px; flex-shrink: 0;
+    }
+    .xpop-item-name {
+        font-weight: 500; color: var(--fns-gray-600);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .xpop-item.is-selected .xpop-item-name { color: #8b6a12; }
+    .xpop-empty { padding: 1.2rem; text-align: center; font-size: .82rem; color: var(--fns-gray-400); }
+
     /* ===== Responsive ===== */
     @media (max-width: 900px) {
         .mgr-sticky-bar { grid-template-columns: auto auto 1fr auto; gap: .6rem; }
@@ -692,19 +771,100 @@ function recalcGrand(){
     document.getElementById('entryMeta').textContent = `${total} ລາຍການ`;
 }
 
-// Resolve the per-row account code to its chart_of_accounts id; reject garbage.
-function applyCoa(row){
-    const acctEl = f(row,'gi-acct');
-    const code = acctEl.value.trim();
-    const info = COA_MAP[code];
-    f(row,'gi-acctid').value = info ? info.id : '';
-    if (code && !info) {
-        acctEl.value = '';
-        acctEl.classList.add('gi-invalid');
-        setTimeout(() => acctEl.classList.remove('gi-invalid'), 900);
-        showToast(`ລະຫັດບັນຊີ ${code} ບໍ່ຖືກຕ້ອງ`, 'error');
-    }
+// ── COA picker popover ──────────────────────────────────────
+const COA_LIST = Object.entries(COA_MAP).map(([code, info]) => ({ id: info.id, code, name: info.name }));
+COA_LIST.sort((a, b) => a.code.localeCompare(b.code));
+const COA_BY_ID = {};
+COA_LIST.forEach(c => COA_BY_ID[c.id] = c);
+
+const $xpop      = document.getElementById('xpop');
+const $xpopList  = document.getElementById('xpop-list');
+const $xpopInput = document.getElementById('xpop-search');
+const $xpopEmpty = document.getElementById('xpop-empty');
+let xpopRow = null, xpopTrigger = null, xpopVisible = [], xpopActiveIdx = 0;
+
+function renderCoaList(q) {
+    q = (q || '').trim().toLowerCase();
+    xpopVisible = q
+        ? COA_LIST.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
+        : COA_LIST;
+    const selectedId = xpopRow?.querySelector('.gi-acctid')?.value || '';
+    $xpopList.innerHTML = xpopVisible.map((c, i) =>
+        `<div class="xpop-item${String(c.id) === selectedId ? ' is-selected' : ''}${i === xpopActiveIdx ? ' is-active' : ''}" data-id="${c.id}" role="option">
+            <span class="xpop-item-code">${c.code}</span>
+            <span class="xpop-item-name">${c.name}</span>
+         </div>`
+    ).join('');
+    $xpopEmpty.style.display = xpopVisible.length ? 'none' : '';
+    const active = $xpopList.querySelector('.xpop-item.is-active');
+    if (active) active.scrollIntoView({ block: 'nearest' });
 }
+
+function openCoaPop(trigger, row) {
+    closeCoaPop();
+    xpopTrigger = trigger; xpopRow = row;
+    trigger.classList.add('is-open');
+
+    const r = trigger.getBoundingClientRect();
+    const popW = 380;
+    const left = Math.min(r.left, window.innerWidth - popW - 12);
+    $xpop.style.top  = (r.bottom + 4) + 'px';
+    $xpop.style.left = Math.max(8, left) + 'px';
+    $xpop.classList.add('is-open');
+
+    xpopActiveIdx = 0;
+    $xpopInput.value = '';
+    renderCoaList('');
+    const sel = $xpopList.querySelector('.xpop-item.is-selected');
+    if (sel) sel.scrollIntoView({ block: 'center' });
+    setTimeout(() => $xpopInput.focus(), 0);
+}
+
+function closeCoaPop() {
+    $xpop.classList.remove('is-open');
+    if (xpopTrigger) xpopTrigger.classList.remove('is-open');
+    xpopTrigger = null; xpopRow = null;
+}
+
+function selectCoa(coaId) {
+    if (!xpopRow) return;
+    const info = COA_BY_ID[coaId];
+    if (!info) return;
+    f(xpopRow, 'gi-acctid').value = info.id;
+    const codeSpan = xpopRow.querySelector('.gi-coa-trigger-code');
+    if (codeSpan) codeSpan.textContent = info.code;
+    xpopRow.querySelector('.gi-coa-trigger')?.classList.remove('is-empty');
+    const rowToSave = xpopRow;
+    closeCoaPop();
+    saveRow(rowToSave);
+}
+
+$xpopInput.addEventListener('input', () => { xpopActiveIdx = 0; renderCoaList($xpopInput.value); });
+$xpopInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); closeCoaPop(); xpopTrigger?.focus(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); xpopActiveIdx = Math.min(xpopActiveIdx + 1, xpopVisible.length - 1); renderCoaList($xpopInput.value); return; }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); xpopActiveIdx = Math.max(xpopActiveIdx - 1, 0); renderCoaList($xpopInput.value); return; }
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const item = xpopVisible[xpopActiveIdx];
+        if (item) selectCoa(item.id);
+    }
+});
+$xpopList.addEventListener('click', e => {
+    const item = e.target.closest('.xpop-item');
+    if (item) selectCoa(item.dataset.id);
+});
+document.addEventListener('click', e => {
+    if (!$xpop.classList.contains('is-open')) return;
+    if ($xpop.contains(e.target)) return;
+    if (e.target.closest('.gi-coa-trigger')) return;
+    closeCoaPop();
+});
+window.addEventListener('scroll', (e) => {
+    if ($xpop.contains(e.target)) return;
+    closeCoaPop();
+}, true);
+window.addEventListener('resize', () => closeCoaPop());
 
 // ---- Save / delete a detail row ----
 async function saveRow(row){
@@ -879,7 +1039,7 @@ searchEl?.addEventListener('input', () => {
         grp.querySelectorAll('.grid-row').forEach(row => {
             if (!q) { row.classList.remove('is-hidden'); anyVisible = true; return; }
             const sub  = (row.querySelector('.gi-sub')?.value || '').toLowerCase();
-            const acct = (row.querySelector('.gi-acct')?.value || '').toLowerCase();
+            const acct = (row.querySelector('.gi-coa-trigger-code')?.textContent || '').toLowerCase();
             const note = (row.querySelector('.gi-note')?.value || '').toLowerCase();
             const hit  = sub.includes(q) || acct.includes(q) || note.includes(q);
             row.classList.toggle('is-hidden', !hit);
@@ -916,8 +1076,12 @@ function bindRow(row){
     row.querySelectorAll('.gi-r1,.gi-r2,.gi-qty,.gi-period,.gi-freq,.gi-addon,.gi-note').forEach(inp =>
         inp.addEventListener('input', () => recalc(row)));
 
-    const acct = f(row,'gi-acct');
-    if (acct) acct.addEventListener('change', () => applyCoa(row));
+    const trig = row.querySelector('.gi-coa-trigger');
+    if (trig) trig.addEventListener('click', e => {
+        e.stopPropagation();
+        if (trig.classList.contains('is-open')) closeCoaPop();
+        else openCoaPop(trig, row);
+    });
 
     const delBtn = row.querySelector('.btn-del-row');
     if (delBtn) delBtn.addEventListener('click', () => deleteRow(row));

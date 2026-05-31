@@ -1,7 +1,10 @@
 {{-- One detail row inside an item-group. Category comes from the group; account is per row. Vars: $e (ExpenseEntry|null) --}}
 <tr class="grid-row" data-item-id="{{ $e?->id }}">
     <td>
-        <input class="gi gi-acct" type="text" list="coa-codes" value="{{ $e?->chartOfAccount?->account_code }}" placeholder="ລະຫັດ...">
+        <button type="button" class="gi-coa-trigger {{ $e?->chartOfAccount ? '' : 'is-empty' }}">
+            <span class="gi-coa-trigger-code">{{ $e?->chartOfAccount?->account_code ?? 'ເລືອກລະຫັດ' }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
         <input class="gi-acctid" type="hidden" value="{{ $e?->chart_of_account_id }}">
     </td>
     <td><input class="gi gi-sub" type="text" value="{{ $e?->sub_item }}" placeholder="ລາຍການຍ່ອຍ..."></td>

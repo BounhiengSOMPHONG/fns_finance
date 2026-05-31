@@ -41,11 +41,21 @@
                     ໜ້າຫຼັກ
                 </a>
 
-                <a href="{{ route('head_of_finance.expense.index') }}"
-                   class="fns-topnav-item {{ request()->routeIs('head_of_finance.expense.*') ? 'active' : '' }}">
-                    <x-icons.book-open />
-                    ປະເມີນລາຍຈ່າຍ
-                </a>
+                {{-- Expense dropdown --}}
+                <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
+                    <button type="button" class="fns-topnav-item {{ request()->routeIs('head_of_finance.expense.*') ? 'active' : '' }}"
+                            @click="open = !open" :aria-expanded="open">
+                        <x-icons.book-open />
+                        ປະເມີນລາຍຈ່າຍ
+                        <svg class="fns-topnav-chev" :class="{ 'is-open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="fns-topnav-menu" x-show="open" x-transition.opacity.duration.150ms style="display:none;">
+                        <a href="{{ route('head_of_finance.expense.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.expense.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> ສ້າງປະເມີນລາຍຈ່າຍ
+                        </a>
+                    </div>
+                </div>
 
                 <a href="{{ route('head_of_finance.salary.index') }}"
                    class="fns-topnav-item {{ request()->routeIs('head_of_finance.salary.*') ? 'active' : '' }}">
@@ -53,11 +63,21 @@
                     ຕາຕະລາງເງິນເດືອນ
                 </a>
 
-                <a href="{{ route('head_of_finance.academic-income.index') }}"
-                   class="fns-topnav-item {{ request()->routeIs('head_of_finance.academic-income.*') ? 'active' : '' }}">
-                    <x-icons.book-open />
-                    ປະເມີນລາຍຮັບ
-                </a>
+                {{-- Academic income dropdown --}}
+                <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
+                    <button type="button" class="fns-topnav-item {{ request()->routeIs('head_of_finance.academic-income.*') ? 'active' : '' }}"
+                            @click="open = !open" :aria-expanded="open">
+                        <x-icons.book-open />
+                        ປະເມີນລາຍຮັບ
+                        <svg class="fns-topnav-chev" :class="{ 'is-open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div class="fns-topnav-menu" x-show="open" x-transition.opacity.duration.150ms style="display:none;">
+                        <a href="{{ route('head_of_finance.academic-income.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.academic-income.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> ສ້າງປະເມີນລາຍຮັບ
+                        </a>
+                    </div>
+                </div>
 
                 {{-- Settings dropdown --}}
                 <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">

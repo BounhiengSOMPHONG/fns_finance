@@ -47,10 +47,13 @@ class ExpensePlanController extends Controller
     {
         $expensePlan->load('entries');
 
-        $coaMap   = $this->buildCoaMap();
-        $refCodes = ExpenseRefCode::orderBy('sort_order')->orderBy('code')->get();
+        $coaMap       = $this->buildCoaMap();
+        $mainAccounts = ChartOfAccount::whereNull('parent_id')
+            ->orderBy('account_code')
+            ->get(['id', 'account_code', 'account_name']);
+        $refCodes     = ExpenseRefCode::orderBy('sort_order')->orderBy('code')->get();
 
-        return view('dashboards.finance_head.expense.manage', compact('expensePlan', 'coaMap', 'refCodes'));
+        return view('dashboards.finance_head.expense.manage', compact('expensePlan', 'coaMap', 'mainAccounts', 'refCodes'));
     }
 
     public function destroy(ExpensePlan $expensePlan)
@@ -90,12 +93,14 @@ class ExpensePlanController extends Controller
 
         $map = [];
         foreach ($leaves as $account) {
-            $chain = [];
-            $node  = $account;
-            $guard = 0;
+            $chain   = [];
+            $node    = $account;
+            $mainId  = $account->id;
+            $guard   = 0;
             while ($node && $guard++ < 10) {
                 array_unshift($chain, $node->account_name);
-                $node = $node->parent_id ? $byId->get($node->parent_id) : null;
+                $mainId = $node->id;
+                $node   = $node->parent_id ? $byId->get($node->parent_id) : null;
             }
 
             $map[$account->account_code] = [
@@ -103,6 +108,7 @@ class ExpensePlanController extends Controller
                 'name'      => $account->account_name,
                 'main_cat'  => $chain[0] ?? '',
                 'main_item' => $chain[1] ?? '',
+                'main_id'   => $mainId,
             ];
         }
 

@@ -94,6 +94,46 @@
     </div>
 </section>
 
+{{-- ===== Main-account filter dropdown ===== --}}
+<div class="xfilter-row">
+    <div class="xfilter-dd" id="xfilter-dd">
+        <button type="button" class="xfilter-trigger" id="xfilter-trigger" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            <span>ບັນຊີຫຼັກ</span>
+            <span class="xfilter-badge" id="xfilter-badge">{{ $mainAccounts->count() }}/{{ $mainAccounts->count() }}</span>
+            <svg class="xfilter-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="xfilter-pop" id="xfilter-pop" role="dialog" aria-label="ເລືອກບັນຊີຫຼັກ">
+            <div class="xfilter-pop-head">
+                <div class="xfilter-pop-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="text" id="xfilter-search" placeholder="ຄົ້ນຫາ..." autocomplete="off">
+                </div>
+                <div class="xfilter-pop-actions">
+                    <button type="button" id="xfilter-all" class="xfilter-link">ເລືອກທັງໝົດ</button>
+                    <span class="xfilter-sep">·</span>
+                    <button type="button" id="xfilter-clear" class="xfilter-link">ລ້າງ</button>
+                </div>
+            </div>
+            <div class="xfilter-list" id="xfilter-list">
+                @foreach($mainAccounts as $m)
+                    @php
+                        // Default selection: tick everything EXCEPT codes starting with 60 or 61.
+                        $isDefault = !in_array(substr($m->account_code, 0, 2), ['60', '61'], true);
+                    @endphp
+                    <label class="xcheck-row" data-main-id="{{ $m->id }}"
+                           data-search="{{ strtolower($m->account_code . ' ' . $m->account_name) }}">
+                        <input type="checkbox" class="xcheck" data-main-id="{{ $m->id }}" {{ $isDefault ? 'checked' : '' }}>
+                        <span class="xcheck-code">{{ $m->account_code }}</span>
+                        <span class="xcheck-name" title="{{ $m->account_name }}">{{ $m->account_name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <span class="xfilter-count" id="xfilter-count"></span>
+</div>
+
 {{-- ===== Accordion groups ===== --}}
 <div id="groups" class="mgr-groups">
 @forelse($entriesByCat as $catCode => $catEntries)
@@ -673,6 +713,127 @@
     .xpop-item.is-selected .xpop-item-name { color: #8b6a12; }
     .xpop-empty { padding: 1.2rem; text-align: center; font-size: .82rem; color: var(--fns-gray-400); }
 
+    /* ===== Main-account filter dropdown ===== */
+    .xfilter-row {
+        display: flex; align-items: center; gap: .65rem;
+        margin-bottom: 1rem;
+    }
+    .xfilter-dd { position: relative; }
+    .xfilter-trigger {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .5rem .85rem;
+        background: #fff; border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        font-family: inherit; font-size: .8rem; font-weight: 600;
+        color: var(--fns-navy); cursor: pointer;
+        transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .xfilter-trigger:hover { background: var(--fns-gray-100); }
+    .xfilter-trigger[aria-expanded="true"] {
+        background: #fff;
+        border-color: var(--fns-navy-light);
+        box-shadow: 0 0 0 3px rgba(46,63,110,0.1);
+    }
+    .xfilter-trigger > svg:first-child { width: 14px; height: 14px; color: var(--fns-gray-600); }
+    .xfilter-chev { width: 12px; height: 12px; color: var(--fns-gray-400); transition: transform .18s; }
+    .xfilter-trigger[aria-expanded="true"] .xfilter-chev { transform: rotate(180deg); color: var(--fns-navy); }
+
+    .xfilter-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: .12rem .5rem;
+        font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700;
+        background: rgba(201,153,26,0.14); color: #8b6a12;
+        border-radius: 999px;
+        min-width: 36px;
+    }
+    .xfilter-badge.is-partial { background: rgba(26,39,68,0.08); color: var(--fns-navy); }
+
+    .xfilter-pop {
+        display: none;
+        position: absolute; top: calc(100% + 4px); left: 0;
+        z-index: 80;
+        width: 420px; max-width: 95vw;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200); border-radius: 10px;
+        box-shadow: 0 14px 40px -12px rgba(17,27,51,0.35);
+        overflow: hidden;
+    }
+    .xfilter-pop.is-open { display: block; }
+
+    .xfilter-pop-head {
+        padding: .55rem .65rem .3rem;
+        background: var(--fns-gray-100);
+        border-bottom: 1px solid var(--fns-gray-200);
+    }
+    .xfilter-pop-search {
+        display: flex; align-items: center; gap: .45rem;
+        padding: .4rem .55rem;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200); border-radius: 7px;
+    }
+    .xfilter-pop-search svg { width: 13px; height: 13px; color: var(--fns-gray-400); flex-shrink: 0; }
+    .xfilter-pop-search input {
+        flex: 1; border: none; outline: none; background: transparent;
+        font-family: inherit; font-size: .82rem; color: var(--fns-navy);
+    }
+    .xfilter-pop-actions {
+        display: flex; align-items: center; gap: .5rem;
+        padding: .4rem .15rem .15rem;
+    }
+    .xfilter-link {
+        background: none; border: none; padding: 0;
+        font-family: inherit; font-size: .72rem; font-weight: 600;
+        color: var(--fns-navy); cursor: pointer;
+    }
+    .xfilter-link:hover { color: var(--fns-gold); text-decoration: underline; }
+    .xfilter-sep { color: var(--fns-gray-400); font-size: .7rem; }
+
+    .xfilter-list { max-height: 360px; overflow-y: auto; padding: .25rem; }
+    .xcheck-row {
+        display: flex; align-items: center; gap: .55rem;
+        padding: .45rem .55rem;
+        border-radius: 6px;
+        cursor: pointer; user-select: none;
+        font-size: .82rem; color: var(--fns-navy);
+        transition: background .12s;
+    }
+    .xcheck-row:hover { background: var(--fns-gray-100); }
+    .xcheck-row.is-hidden { display: none; }
+    .xcheck {
+        appearance: none; -webkit-appearance: none; -moz-appearance: none;
+        flex-shrink: 0;
+        width: 17px; height: 17px; margin: 0;
+        background: #fff;
+        border: 1.5px solid var(--fns-gray-200);
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        transition: background .12s, border-color .12s;
+    }
+    .xcheck:hover { border-color: var(--fns-navy-light); }
+    .xcheck:checked { background: var(--fns-gold); border-color: var(--fns-gold); }
+    .xcheck:checked::after {
+        content: ""; position: absolute;
+        left: 4px; top: 1px;
+        width: 5px; height: 9px;
+        border-right: 2px solid var(--fns-navy-deep);
+        border-bottom: 2px solid var(--fns-navy-deep);
+        transform: rotate(45deg);
+    }
+    .xcheck-code {
+        font-family: 'Cinzel', serif; font-weight: 700;
+        flex-shrink: 0; min-width: 75px;
+        color: var(--fns-navy);
+    }
+    .xcheck-name {
+        font-weight: 500; color: var(--fns-gray-600);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .xcheck:not(:checked) ~ .xcheck-code,
+    .xcheck:not(:checked) ~ .xcheck-name { opacity: .55; }
+
+    .xfilter-count { font-size: .74rem; color: var(--fns-gray-400); }
+
     /* ===== Responsive ===== */
     @media (max-width: 900px) {
         .mgr-sticky-bar { grid-template-columns: auto auto 1fr auto; gap: .6rem; }
@@ -772,10 +933,17 @@ function recalcGrand(){
 }
 
 // ── COA picker popover ──────────────────────────────────────
-const COA_LIST = Object.entries(COA_MAP).map(([code, info]) => ({ id: info.id, code, name: info.name }));
+const COA_LIST = Object.entries(COA_MAP).map(([code, info]) => ({ id: info.id, code, name: info.name, main_id: info.main_id }));
 COA_LIST.sort((a, b) => a.code.localeCompare(b.code));
 const COA_BY_ID = {};
 COA_LIST.forEach(c => COA_BY_ID[c.id] = c);
+
+// Main-account filter — Set of active main_id values, seeded from rendered checkbox state
+const ALL_MAIN_IDS = new Set(COA_LIST.map(c => c.main_id));
+const activeMains  = new Set();
+document.querySelectorAll('.xcheck[data-main-id]').forEach(ch => {
+    if (ch.checked) activeMains.add(parseInt(ch.dataset.mainId, 10));
+});
 
 const $xpop      = document.getElementById('xpop');
 const $xpopList  = document.getElementById('xpop-list');
@@ -785,9 +953,9 @@ let xpopRow = null, xpopTrigger = null, xpopVisible = [], xpopActiveIdx = 0;
 
 function renderCoaList(q) {
     q = (q || '').trim().toLowerCase();
-    xpopVisible = q
-        ? COA_LIST.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
-        : COA_LIST;
+    const inFilter = c => activeMains.has(c.main_id);
+    const matchQ = c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+    xpopVisible = COA_LIST.filter(c => inFilter(c) && (!q || matchQ(c)));
     const selectedId = xpopRow?.querySelector('.gi-acctid')?.value || '';
     $xpopList.innerHTML = xpopVisible.map((c, i) =>
         `<div class="xpop-item${String(c.id) === selectedId ? ' is-selected' : ''}${i === xpopActiveIdx ? ' is-active' : ''}" data-id="${c.id}" role="option">
@@ -865,6 +1033,85 @@ window.addEventListener('scroll', (e) => {
     closeCoaPop();
 }, true);
 window.addEventListener('resize', () => closeCoaPop());
+
+// ── Main-account filter dropdown ────────────────────────────
+const $xfChecks  = Array.from(document.querySelectorAll('.xcheck[data-main-id]'));
+const $xfRows    = Array.from(document.querySelectorAll('.xcheck-row[data-main-id]'));
+const $xfAll     = document.getElementById('xfilter-all');
+const $xfClear   = document.getElementById('xfilter-clear');
+const $xfCount   = document.getElementById('xfilter-count');
+const $xfBadge   = document.getElementById('xfilter-badge');
+const $xfDD      = document.getElementById('xfilter-dd');
+const $xfTrig    = document.getElementById('xfilter-trigger');
+const $xfPop     = document.getElementById('xfilter-pop');
+const $xfSearch  = document.getElementById('xfilter-search');
+
+function syncXfilter() {
+    $xfChecks.forEach(ch => {
+        ch.checked = activeMains.has(parseInt(ch.dataset.mainId, 10));
+    });
+    const allOn = activeMains.size === ALL_MAIN_IDS.size;
+    const visibleCoa = COA_LIST.filter(c => activeMains.has(c.main_id)).length;
+    $xfBadge.textContent = `${activeMains.size}/${ALL_MAIN_IDS.size}`;
+    $xfBadge.classList.toggle('is-partial', !allOn && activeMains.size > 0);
+    $xfCount.textContent = allOn
+        ? `ສະແດງທັງໝົດ ${COA_LIST.length} ບັນຊີ`
+        : `${activeMains.size} / ${ALL_MAIN_IDS.size} ໝວດ — ${visibleCoa} ບັນຊີ`;
+    if ($xpop.classList.contains('is-open')) {
+        xpopActiveIdx = 0;
+        renderCoaList($xpopInput.value);
+    }
+}
+
+$xfChecks.forEach(ch => ch.addEventListener('change', () => {
+    const id = parseInt(ch.dataset.mainId, 10);
+    if (ch.checked) activeMains.add(id);
+    else activeMains.delete(id);
+    syncXfilter();
+}));
+$xfAll.addEventListener('click', () => {
+    ALL_MAIN_IDS.forEach(id => activeMains.add(id));
+    syncXfilter();
+});
+$xfClear.addEventListener('click', () => {
+    activeMains.clear();
+    syncXfilter();
+});
+
+function openXfilter() {
+    $xfPop.classList.add('is-open');
+    $xfTrig.setAttribute('aria-expanded', 'true');
+    setTimeout(() => $xfSearch?.focus(), 0);
+}
+function closeXfilter() {
+    $xfPop.classList.remove('is-open');
+    $xfTrig.setAttribute('aria-expanded', 'false');
+    if ($xfSearch) {
+        $xfSearch.value = '';
+        $xfRows.forEach(r => r.classList.remove('is-hidden'));
+    }
+}
+$xfTrig.addEventListener('click', e => {
+    e.stopPropagation();
+    if ($xfPop.classList.contains('is-open')) closeXfilter();
+    else openXfilter();
+});
+document.addEventListener('click', e => {
+    if (!$xfPop.classList.contains('is-open')) return;
+    if ($xfDD.contains(e.target)) return;
+    closeXfilter();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $xfPop.classList.contains('is-open')) {
+        closeXfilter();
+        $xfTrig.focus();
+    }
+});
+$xfSearch?.addEventListener('input', () => {
+    const q = $xfSearch.value.trim().toLowerCase();
+    $xfRows.forEach(r => r.classList.toggle('is-hidden', q && !r.dataset.search.includes(q)));
+});
+syncXfilter();
 
 // ---- Save / delete a detail row ----
 async function saveRow(row){

@@ -1002,6 +1002,11 @@ function selectCoa(coaId) {
     const codeSpan = xpopRow.querySelector('.gi-coa-trigger-code');
     if (codeSpan) codeSpan.textContent = info.code;
     xpopRow.querySelector('.gi-coa-trigger')?.classList.remove('is-empty');
+    // Auto-fill sub_item with account name if empty
+    const subInput = xpopRow.querySelector('.gi-sub');
+    if (subInput && !subInput.value.trim()) {
+        subInput.value = info.name;
+    }
     const rowToSave = xpopRow;
     closeCoaPop();
     saveRow(rowToSave);

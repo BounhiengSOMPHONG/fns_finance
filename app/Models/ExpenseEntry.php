@@ -10,6 +10,8 @@ class ExpenseEntry extends Model
     protected $fillable = [
         'plan_id', 'ref_code', 'chart_of_account_id',
         'main_cat_code', 'main_cat', 'main_item_code', 'main_item', 'sub_item',
+        'expense_ref_code_id', 'department_id',
+        'expense_type', 'disbursement_mode', 'paid_at', 'code',
         'rate1', 'rate2', 'qty', 'period', 'frequency', 'add_on', 'total',
         'note', 'sort_order',
     ];

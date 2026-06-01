@@ -120,7 +120,7 @@ class AcademicIncomeAssessmentController extends Controller
         $feeYear1 = RegistrationFeeSetting::where('section_type', 'year1')
             ->with('items')->orderByDesc('start_year')->first();
 
-        // Section 1.1 — bachelor yr2-4 + master/phd yr2+; rate = credit_unit × price/unit
+        // Section 1.1 — bachelor yr2-4 (60/40) + master/phd (40/60)
         $inputs11 = $request->input('s11', []);
         foreach ($programs11 as $program) {
             $nuol       = $nuolByLevel[$program->level] ?? $nuolBachelor;
@@ -128,6 +128,9 @@ class AcademicIncomeAssessmentController extends Controller
             $creditUnit = $program->latestCourseCredit?->course_credit_unit ?? 0;
             $price      = $creditPrices[$program->level]?->credit_unit_price ?? 0;
             $total      = $count * $creditUnit * $price * (1 - $nuol);
+
+            // Bachelor: 60% first / 40% teaching. Master/PhD: 40% first / 60% teaching.
+            $teachingPct = $program->level === 'bachelor' ? 0.40 : 0.60;
 
             AcademicIncomeItem::updateOrCreate(
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.1', 'degree_program_id' => $program->id],
@@ -138,8 +141,8 @@ class AcademicIncomeAssessmentController extends Controller
                     'snap_registration_fee_rate' => null,
                     'snap_nuol_pct'              => $nuol,
                     'total_income'               => $total,
-                    'first_payment_amount'       => round($total * 0.60, 2),
-                    'second_payment_amount'      => round($total * 0.40, 2),
+                    'first_payment_amount'       => round($total * (1 - $teachingPct), 2),
+                    'second_payment_amount'      => round($total * $teachingPct, 2),
                 ]
             );
         }
@@ -162,7 +165,7 @@ class AcademicIncomeAssessmentController extends Controller
                     'snap_nuol_pct'              => $nuolBachelor,
                     'total_income'               => $total,
                     'first_payment_amount'       => round($total * 0.60, 2),
-                    'second_payment_amount'      => 0,
+                    'second_payment_amount'      => round($total * 0.40, 2),
                 ]
             );
         }
@@ -186,16 +189,20 @@ class AcademicIncomeAssessmentController extends Controller
                     'snap_registration_fee_rate' => null,
                     'snap_nuol_pct'              => $nuol,
                     'total_income'               => $total,
-                    'first_payment_amount'       => round($total * 0.60, 2),
-                    'second_payment_amount'      => 0,
+                    'first_payment_amount'       => round($total * 0.40, 2),
+                    'second_payment_amount'      => round($total * 0.60, 2),
                 ]
             );
         }
 
-        // Section 1.2 — Year 2-4 registration fee (bachelor rate)
+        // Section 1.2 — Year 2-4 registration fee (per-item weighted NUOL)
         $feeRate2_4 = $feeYear2_4 ? $feeYear2_4->total_rate : 0;
-        $count12    = (int) $request->students_1_2;
-        $total12    = $count12 * $feeRate2_4 * (1 - $nuolBachelor);
+        $feeItems24 = $feeYear2_4 ? $feeYear2_4->items : collect();
+        $weightedNuol24 = $feeRate2_4 > 0
+            ? $feeItems24->sum(fn($i) => $i->amount * $i->nuol_pct) / $feeRate2_4
+            : 0;
+        $count12 = (int) $request->students_1_2;
+        $total12 = $count12 * $feeRate2_4 * (1 - $weightedNuol24);
 
         AcademicIncomeItem::updateOrCreate(
             ['plan_id' => $academicIncome->id, 'section_code' => '1.2', 'degree_program_id' => null],
@@ -204,17 +211,21 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_credit_unit_price'     => null,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => $feeRate2_4,
-                'snap_nuol_pct'              => $nuolBachelor,
+                'snap_nuol_pct'              => $weightedNuol24,
                 'total_income'               => $total12,
                 'first_payment_amount'       => 0,
                 'second_payment_amount'      => 0,
             ]
         );
 
-        // Section 1.4 — Year 1 registration fee (bachelor rate)
+        // Section 1.4 — Year 1 registration fee (per-item weighted NUOL)
         $feeRate1 = $feeYear1 ? $feeYear1->total_rate : 0;
-        $count14  = (int) $request->students_1_4;
-        $total14  = $count14 * $feeRate1 * (1 - $nuolBachelor);
+        $feeItems1 = $feeYear1 ? $feeYear1->items : collect();
+        $weightedNuol1 = $feeRate1 > 0
+            ? $feeItems1->sum(fn($i) => $i->amount * $i->nuol_pct) / $feeRate1
+            : 0;
+        $count14 = (int) $request->students_1_4;
+        $total14 = $count14 * $feeRate1 * (1 - $weightedNuol1);
 
         AcademicIncomeItem::updateOrCreate(
             ['plan_id' => $academicIncome->id, 'section_code' => '1.4', 'degree_program_id' => null],
@@ -223,7 +234,7 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_credit_unit_price'     => null,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => $feeRate1,
-                'snap_nuol_pct'              => $nuolBachelor,
+                'snap_nuol_pct'              => $weightedNuol1,
                 'total_income'               => $total14,
                 'first_payment_amount'       => 0,
                 'second_payment_amount'      => 0,

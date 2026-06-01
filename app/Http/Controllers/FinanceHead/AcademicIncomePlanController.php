@@ -67,7 +67,7 @@ class AcademicIncomePlanController extends Controller
             $count = $rowItems->sum('student_count');
             $fnsIncome = $rowItems->sum('total_income');
             $teachingFee = $rowItems->sum('second_payment_amount');
-            $remaining = $rowItems->sum('first_payment_amount');
+            $remaining = $fnsIncome - $teachingFee;
 
             $gross = $rowItems->reduce(function($carry, $item) {
                 if ($item->snap_course_credit_unit) {

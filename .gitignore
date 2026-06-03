@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+compose.debug.yaml
+compose.yaml
+Dockerfile
+mysql.sql

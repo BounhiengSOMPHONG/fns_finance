@@ -28,52 +28,45 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         // Settings
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::resource('degree-programs', \App\Http\Controllers\FinanceHead\Settings\DegreeProgramController::class)->except(['show']);
-            Route::resource('credit-unit-price', \App\Http\Controllers\FinanceHead\Settings\CreditUnitPriceController::class, ['parameters' => ['credit-unit-price' => 'creditUnitPrice']])->except(['show']);
+            Route::resource('credit-unit-price', \App\Http\Controllers\FinanceHead\Settings\CreditUnitPriceController::class, ['parameters' => ['credit-unit-price' => 'creditUnitPrice']])->only(['index', 'update']);
             Route::resource('course-credits', \App\Http\Controllers\FinanceHead\Settings\CourseCreditController::class, ['parameters' => ['course-credits' => 'courseCredit']])->except(['show']);
-            Route::resource('registration-fee', \App\Http\Controllers\FinanceHead\Settings\RegistrationFeeController::class, ['parameters' => ['registration-fee' => 'registrationFee']])->except(['show']);
-            Route::resource('nuol-pct', \App\Http\Controllers\FinanceHead\Settings\NuolPctSettingController::class, ['parameters' => ['nuol-pct' => 'nuolPct']])->except(['show']);
-            // Income Rate Settings (single-page: index + one patch to update all 4 keys)
-            Route::get('income-rates', [\App\Http\Controllers\FinanceHead\Settings\IncomeRateSettingController::class, 'index'])->name('income-rates.index');
-            Route::patch('income-rates', [\App\Http\Controllers\FinanceHead\Settings\IncomeRateSettingController::class, 'update'])->name('income-rates.update');
+            Route::resource('registration-fee', \App\Http\Controllers\FinanceHead\Settings\RegistrationFeeController::class, ['parameters' => ['registration-fee' => 'registrationFee']])->only(['index', 'edit', 'update']);
+            Route::resource('nuol-pct', \App\Http\Controllers\FinanceHead\Settings\NuolPctSettingController::class, ['parameters' => ['nuol-pct' => 'nuolPct']])->only(['index', 'update']);
+            // Income rates (items 3–6) are now edited inline on the academic-income entry page.
         });
 
         // Academic Income
         Route::resource('academic-income', \App\Http\Controllers\FinanceHead\AcademicIncomePlanController::class, ['parameters' => ['academic-income' => 'academicIncome']])->except(['edit', 'update']);
         Route::get('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'evaluate'])->name('academic-income.evaluate');
         Route::post('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'saveEvaluate'])->name('academic-income.saveEvaluate');
-        Route::get('academic-income/{academicIncome}/summary', [\App\Http\Controllers\FinanceHead\AcademicIncomeSummaryController::class, 'summary'])->name('academic-income.summary');
-        Route::get('academic-income/{academicIncome}/print', [\App\Http\Controllers\FinanceHead\AcademicIncomeSummaryController::class, 'printView'])->name('academic-income.print');
-        Route::post('academic-income/{academicIncome}/approve', [\App\Http\Controllers\FinanceHead\AcademicIncomePlanController::class, 'approve'])->name('academic-income.approve');
 
         // Expense Plans
         Route::resource('expense', \App\Http\Controllers\FinanceHead\ExpensePlanController::class, [
             'parameters' => ['expense' => 'expensePlan'],
-        ])->except(['edit', 'update']);
+        ])->except(['edit', 'update', 'show']);
         Route::get('expense/{expensePlan}/manage', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'manage'])->name('expense.manage');
         Route::post('expense/{expensePlan}/approve', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'approve'])->name('expense.approve');
 
-        Route::post('expense-categories', [\App\Http\Controllers\FinanceHead\ExpenseCategoryController::class, 'store'])->name('expense-categories.store');
-        Route::patch('expense-categories/{expenseCategory}', [\App\Http\Controllers\FinanceHead\ExpenseCategoryController::class, 'update'])->name('expense-categories.update');
-        Route::delete('expense-categories/{expenseCategory}', [\App\Http\Controllers\FinanceHead\ExpenseCategoryController::class, 'destroy'])->name('expense-categories.destroy');
+        // Flat expense entries (AJAX inline grid)
+        Route::post('expense-entries', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'store'])->name('expense-entries.store');
+        Route::patch('expense-entries/{expenseEntry}', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'update'])->name('expense-entries.update');
+        Route::delete('expense-entries/{expenseEntry}', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'destroy'])->name('expense-entries.destroy');
 
-        Route::post('expense-items', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'store'])->name('expense-items.store');
-        Route::patch('expense-items/{expenseItem}', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'update'])->name('expense-items.update');
-        Route::delete('expense-items/{expenseItem}', [\App\Http\Controllers\FinanceHead\ExpenseItemController::class, 'destroy'])->name('expense-items.destroy');
-
-        // Annual Report (multi-module PDF)
-        Route::get('reports/{year}', [\App\Http\Controllers\FinanceHead\AnnualReportController::class, 'show'])
-             ->name('reports.show')
-             ->where('year', '[0-9]{4}');
+        // Ref-code configured list (managed via modal on the manage page)
+        Route::post('expense-ref-codes', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'store'])->name('expense-ref-codes.store');
+        Route::patch('expense-ref-codes/{expenseRefCode}', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'update'])->name('expense-ref-codes.update');
+        Route::delete('expense-ref-codes/{expenseRefCode}', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'destroy'])->name('expense-ref-codes.destroy');
 
         // Salary Plans
         Route::resource('salary', \App\Http\Controllers\FinanceHead\SalaryPlanController::class, [
             'parameters' => ['salary' => 'salaryPlan'],
         ])->except(['edit', 'update']);
         Route::get('salary/{salaryPlan}/manage', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'manage'])->name('salary.manage');
-        Route::post('salary/{salaryPlan}/approve', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'approve'])->name('salary.approve');
 
         // Salary Entries (AJAX)
+        Route::post('salary-entries',                [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'store'])->name('salary-entries.store');
         Route::patch('salary-entries/{salaryEntry}', [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'update'])->name('salary-entries.update');
+        Route::delete('salary-entries/{salaryEntry}',[\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'destroy'])->name('salary-entries.destroy');
     });
 
 // 3. Faculty Head

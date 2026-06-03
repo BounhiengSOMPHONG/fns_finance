@@ -24,7 +24,7 @@ return new class extends Migration
             $table->decimal('second_payment_amount', 18, 2)->default(0);
             $table->timestamps();
 
-            $table->unique(['plan_id', 'section_code', 'degree_program_id']);
+            $table->unique(['plan_id', 'section_code', 'degree_program_id'], 'aii_plan_section_program_unique');
         });
     }
 

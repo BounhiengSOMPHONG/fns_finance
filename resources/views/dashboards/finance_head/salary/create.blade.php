@@ -30,11 +30,6 @@
                 @error('month')<p style="color:#ef4444;font-size:0.78rem;margin-top:4px;">{{ $message }}</p>@enderror
             </div>
 
-            <div class="fns-form-group">
-                <label class="fns-label">ໝາຍເຫດ</label>
-                <textarea name="notes" class="fns-input" rows="2" placeholder="ໝາຍເຫດ (ທາງເລືອກ)">{{ old('notes') }}</textarea>
-            </div>
-
             <div style="display:flex;gap:8px;margin-top:1.2rem;">
                 <button type="submit" class="fns-btn fns-btn-primary">ສ້າງແຜນ</button>
                 <a href="{{ route('head_of_finance.salary.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>

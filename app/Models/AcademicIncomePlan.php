@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AcademicIncomePlan extends Model
 {
     protected $fillable = [
-        'fiscal_year', 'status', 'notes', 'created_by',
+        'fiscal_year', 'notes', 'created_by',
     ];
 
     protected $casts = [];
@@ -22,10 +22,5 @@ class AcademicIncomePlan extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function isApproved(): bool
-    {
-        return $this->status === 'APPROVED';
     }
 }

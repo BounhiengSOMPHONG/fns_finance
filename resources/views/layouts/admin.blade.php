@@ -13,56 +13,42 @@
 <body class="antialiased" style="background: var(--fns-gray-100);">
     <div style="display:flex; flex-direction:column; min-height:100vh;">
         <x-layouts.admin-header />
-        <div style="display:flex; flex:1;">
-            <div class="hidden md:block">
-                <x-layouts.admin-sidebar />
-            </div>
-            <main id="admin-main" class="fns-main">
 
-                {{-- Flash Messages --}}
-                @if (session('success'))
-                    <div class="fns-alert fns-alert-success">
-                        <svg style="width:16px;height:16px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                @endif
+        <main id="admin-main" class="fns-main">
 
-                @if (session('error'))
-                    <div class="fns-alert fns-alert-error">
-                        <svg style="width:16px;height:16px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>{{ session('error') }}</span>
-                    </div>
-                @endif
+            {{-- Flash Messages --}}
+            @if (session('success'))
+                <div class="fns-alert fns-alert-success">
+                    <svg style="width:16px;height:16px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
 
-                {{-- Page Title --}}
-                @hasSection('page-title')
-                    <div style="margin-bottom:1.25rem;">
-                        <h1 class="fns-page-title">@yield('page-title')</h1>
-                    </div>
-                @endif
+            @if (session('error'))
+                <div class="fns-alert fns-alert-error">
+                    <svg style="width:16px;height:16px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
 
-                @yield('content')
-            </main>
-        </div>
+            {{-- Page Title --}}
+            @hasSection('page-title')
+                <div style="margin-bottom:1.25rem;">
+                    <h1 class="fns-page-title">@yield('page-title')</h1>
+                </div>
+            @endif
+
+            @yield('content')
+        </main>
     </div>
 
     @stack('scripts')
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.getElementById('sidebar-toggle');
-            const sidebarWrapper = document.querySelector('body .flex > .hidden.md\\:block');
-            if (toggle && sidebarWrapper) {
-                toggle.addEventListener('click', function() {
-                    sidebarWrapper.classList.toggle('hidden');
-                });
-                toggle.style.display = 'flex';
-            }
-        });
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.logout-form').forEach(function(form) {
                 form.addEventListener('submit', function(e) {
@@ -86,4 +72,3 @@
     </script>
 </body>
 </html>
-

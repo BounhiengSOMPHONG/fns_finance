@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('fiscal_year', 10);
             $table->unsignedTinyInteger('month');
-            $table->string('status', 20)->default('DRAFT');
             $table->text('notes')->nullable();
             $table->integer('created_by');
             $table->foreign('created_by')->references('id')->on('users')->cascadeOnDelete();

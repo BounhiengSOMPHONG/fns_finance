@@ -6,26 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseCreditSetting;
 use App\Models\CreditUnitPriceSetting;
 use App\Models\DegreeProgram;
+use App\Models\NuolPctSetting;
 use Illuminate\Http\Request;
 
 class CourseCreditController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = CourseCreditSetting::with('degreeProgram');
+        // Merged settings page: credit-unit prices (per level) + course credits (per program).
+        $levelRank = ['bachelor' => 0, 'master' => 1, 'phd' => 2];
 
-        if ($request->filled('degree_program_id')) {
-            $query->where('degree_program_id', $request->degree_program_id);
-        }
+        $courseCredits = CourseCreditSetting::with('degreeProgram')->get()
+            ->sortBy(fn($s) => sprintf(
+                '%d-%02d-%s',
+                $levelRank[$s->degreeProgram?->level] ?? 9,
+                $s->degreeProgram?->study_year ?? 99,
+                $s->degreeProgram?->name
+            ))
+            ->values();
 
-        $settings = $query->orderByDesc('start_year')
-            ->orderBy('degree_program_id')
-            ->paginate(15)
-            ->withQueryString();
+        // latest credit-unit price per level, keyed by level
+        $prices = CreditUnitPriceSetting::orderByDesc('start_year')
+            ->get()->groupBy('level')->map->first();
 
-        $programs = DegreeProgram::orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
+        // latest NUOL % per level, keyed by level
+        $nuolPcts = NuolPctSetting::orderByDesc('start_year')
+            ->get()->groupBy('level')->map->first();
 
-        return view('dashboards.finance_head.settings.course-credits.index', compact('settings', 'programs'));
+        return view('dashboards.finance_head.settings.course-credits.index', compact('courseCredits', 'prices', 'nuolPcts'));
     }
 
     public function create()

@@ -32,6 +32,17 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             Route::resource('course-credits', \App\Http\Controllers\FinanceHead\Settings\CourseCreditController::class, ['parameters' => ['course-credits' => 'courseCredit']])->except(['show']);
             Route::resource('registration-fee', \App\Http\Controllers\FinanceHead\Settings\RegistrationFeeController::class, ['parameters' => ['registration-fee' => 'registrationFee']])->only(['index', 'edit', 'update']);
             Route::resource('nuol-pct', \App\Http\Controllers\FinanceHead\Settings\NuolPctSettingController::class, ['parameters' => ['nuol-pct' => 'nuolPct']])->only(['index', 'update']);
+            Route::resource('expense-patterns', \App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, ['parameters' => ['expense-patterns' => 'expensePattern']])->only(['index', 'store', 'update']);
+            Route::post('expense-patterns/{expensePattern}/fields', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'storeField'])->name('expense-patterns.fields.store');
+            Route::patch('expense-pattern-fields/{expensePatternField}', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'updateField'])->name('expense-pattern-fields.update');
+            Route::delete('expense-pattern-fields/{expensePatternField}', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'destroyField'])->name('expense-pattern-fields.destroy');
+            Route::get('expense-structure', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'index'])->name('expense-structure.index');
+            Route::post('expense-structure/sections', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'storeSection'])->name('expense-structure.sections.store');
+            Route::patch('expense-structure/sections/{expenseSection}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'updateSection'])->name('expense-structure.sections.update');
+            Route::delete('expense-structure/sections/{expenseSection}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'destroySection'])->name('expense-structure.sections.destroy');
+            Route::post('expense-structure/sections/{expenseSection}/subsections', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'storeSubsection'])->name('expense-structure.subsections.store');
+            Route::patch('expense-structure/subsections/{expenseSubsection}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'updateSubsection'])->name('expense-structure.subsections.update');
+            Route::delete('expense-structure/subsections/{expenseSubsection}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'destroySubsection'])->name('expense-structure.subsections.destroy');
             // Income rates (items 3–6) are now edited inline on the academic-income entry page.
         });
 
@@ -47,15 +58,10 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('expense/{expensePlan}/manage', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'manage'])->name('expense.manage');
         Route::post('expense/{expensePlan}/approve', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'approve'])->name('expense.approve');
 
-        // Flat expense entries (AJAX inline grid)
-        Route::post('expense-entries', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'store'])->name('expense-entries.store');
-        Route::patch('expense-entries/{expenseEntry}', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'update'])->name('expense-entries.update');
-        Route::delete('expense-entries/{expenseEntry}', [\App\Http\Controllers\FinanceHead\ExpenseEntryController::class, 'destroy'])->name('expense-entries.destroy');
-
-        // Ref-code configured list (managed via modal on the manage page)
-        Route::post('expense-ref-codes', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'store'])->name('expense-ref-codes.store');
-        Route::patch('expense-ref-codes/{expenseRefCode}', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'update'])->name('expense-ref-codes.update');
-        Route::delete('expense-ref-codes/{expenseRefCode}', [\App\Http\Controllers\FinanceHead\ExpenseRefCodeController::class, 'destroy'])->name('expense-ref-codes.destroy');
+        // Expense plan rows (AJAX dynamic fields)
+        Route::post('expense-plan-rows', [\App\Http\Controllers\FinanceHead\ExpensePlanRowController::class, 'store'])->name('expense-plan-rows.store');
+        Route::patch('expense-plan-rows/{expensePlanRow}', [\App\Http\Controllers\FinanceHead\ExpensePlanRowController::class, 'update'])->name('expense-plan-rows.update');
+        Route::delete('expense-plan-rows/{expensePlanRow}', [\App\Http\Controllers\FinanceHead\ExpensePlanRowController::class, 'destroy'])->name('expense-plan-rows.destroy');
 
         // Salary Plans
         Route::resource('salary', \App\Http\Controllers\FinanceHead\SalaryPlanController::class, [

@@ -33,7 +33,19 @@ class CourseCreditController extends Controller
         $nuolPcts = NuolPctSetting::orderByDesc('start_year')
             ->get()->groupBy('level')->map->first();
 
-        return view('dashboards.finance_head.settings.course-credits.index', compact('courseCredits', 'prices', 'nuolPcts'));
+        $programs = DegreeProgram::where('is_active', true)
+            ->orderBy('level')
+            ->orderByRaw('study_year IS NULL')
+            ->orderBy('study_year')
+            ->orderBy('name')
+            ->get();
+
+        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
+            ->get()
+            ->groupBy('level')
+            ->map(fn($i) => (float) $i->first()->credit_unit_price);
+
+        return view('dashboards.finance_head.settings.course-credits.index', compact('courseCredits', 'prices', 'nuolPcts', 'programs', 'creditPrices'));
     }
 
     public function create()

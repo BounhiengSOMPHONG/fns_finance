@@ -6,7 +6,10 @@
         || request()->routeIs('head_of_finance.settings.course-credits.*')
         || request()->routeIs('head_of_finance.settings.credit-unit-price.*')
         || request()->routeIs('head_of_finance.settings.nuol-pct.*')
-        || request()->routeIs('head_of_finance.settings.registration-fee.*');
+        || request()->routeIs('head_of_finance.settings.registration-fee.*')
+        || request()->routeIs('head_of_finance.settings.expense-patterns.*')
+        || request()->routeIs('head_of_finance.settings.expense-pattern-fields.*')
+        || request()->routeIs('head_of_finance.settings.expense-structure.*');
 
     $systemActive = request()->routeIs('admin.users.*')
         || request()->routeIs('admin.roles.*')
@@ -105,6 +108,14 @@
                         <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
                             <x-icons.book-open /> ລາຄາ & ໜ່ວຍກິດ & ມຊ%
+                        </a>
+                        <a href="{{ route('head_of_finance.settings.expense-patterns.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-patterns.*') || request()->routeIs('head_of_finance.settings.expense-pattern-fields.*') ? 'active' : '' }}">
+                            <x-icons.settings /> Expense patterns
+                        </a>
+                        <a href="{{ route('head_of_finance.settings.expense-structure.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-structure.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> Expense structure
                         </a>
                         <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">

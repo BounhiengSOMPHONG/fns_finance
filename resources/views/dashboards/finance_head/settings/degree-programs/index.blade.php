@@ -86,6 +86,29 @@
 .dp-empty { text-align: center; padding: 3rem 1rem; color: var(--fns-gray-400); }
 .dp-empty svg { width: 40px; height: 40px; opacity: 0.25; margin-bottom: 0.6rem; }
 .dp-nores { display: none; text-align: center; padding: 2rem 1rem; color: var(--fns-gray-400); font-size: 0.85rem; }
+.dp-modal {
+    position: fixed; inset: 0; z-index: 1000;
+    display: none; align-items: center; justify-content: center;
+    padding: 1rem; background: rgba(15, 23, 42, 0.48);
+}
+.dp-modal.is-open { display: flex; }
+.dp-modal-panel {
+    width: min(560px, 100%);
+    border-radius: 14px; border: 1px solid var(--fns-gray-200);
+    background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    overflow: hidden;
+}
+.dp-modal-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1rem 1.15rem; border-bottom: 1px solid var(--fns-gray-200); background: #fbfbfc;
+}
+.dp-modal-head h2 { margin: 0; color: var(--fns-navy); font-size: 1rem; font-weight: 900; }
+.dp-modal-close {
+    border: 0; background: transparent; color: var(--fns-gray-500);
+    font-size: 1.45rem; line-height: 1; cursor: pointer;
+}
+.dp-modal-body { padding: 1.15rem; }
+.dp-modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1.25rem; }
 </style>
 
 @php
@@ -112,10 +135,10 @@
             <button type="button" class="dp-chip" data-level="master">ປ.ໂທ</button>
             <button type="button" class="dp-chip" data-level="phd">ປ.ເອກ</button>
         </div>
-        <a href="{{ route('head_of_finance.settings.degree-programs.create') }}" class="fns-btn fns-btn-primary">
+        <button type="button" class="fns-btn fns-btn-primary" id="dp-open-create">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/></svg>
             ເພີ່ມສາຂາວິຊາ
-        </a>
+        </button>
     </div>
 
     @forelse($levels as $key => $meta)
@@ -160,6 +183,58 @@
 
 </div>
 
+<div class="dp-modal" id="dp-modal" aria-hidden="true">
+    <div class="dp-modal-panel" role="dialog" aria-modal="true" aria-labelledby="dp-modal-title">
+        <div class="dp-modal-head">
+            <h2 id="dp-modal-title">ເພີ່ມສາຂາວິຊາ</h2>
+            <button type="button" class="dp-modal-close" data-dp-close>&times;</button>
+        </div>
+        <div class="dp-modal-body">
+            <form method="POST" action="{{ route('head_of_finance.settings.degree-programs.store') }}" id="dp-modal-form">
+                @csrf
+                <input type="hidden" name="_method" id="dp-form-method" value="PUT" disabled>
+
+                <div class="fns-form-group">
+                    <label class="fns-label">ລະຫັດສາຂາ <span style="color:red;">*</span></label>
+                    <input type="text" name="code" id="dp-code" class="fns-input" required>
+                </div>
+
+                <div class="fns-form-group">
+                    <label class="fns-label">ຊື່ສາຂາວິຊາ <span style="color:red;">*</span></label>
+                    <input type="text" name="name" id="dp-name" class="fns-input" required>
+                </div>
+
+                <div class="fns-form-group">
+                    <label class="fns-label">ລະດັບ <span style="color:red;">*</span></label>
+                    <select name="level" id="dp-level" class="fns-input" required>
+                        <option value="">-- ເລືອກລະດັບ --</option>
+                        <option value="bachelor">ປ.ຕີ (ປະລິນຍາຕີ)</option>
+                        <option value="master">ປ.ໂທ (ປະລິນຍາໂທ)</option>
+                        <option value="phd">ປ.ເອກ (ປະລິນຍາເອກ)</option>
+                    </select>
+                </div>
+
+                <div class="fns-form-group">
+                    <label class="fns-label">ຊັ້ນປີ (ສຳລັບ ປ.ຕີ)</label>
+                    <input type="number" name="study_year" id="dp-study-year" min="1" max="6" class="fns-input" placeholder="ຕື່ມສຳລັບ ປ.ຕີ ເທົ່ານັ້ນ">
+                </div>
+
+                <div class="fns-form-group">
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                        <input type="checkbox" name="is_active" value="1" id="dp-active" checked>
+                        ເປີດໃຊ້ງານ
+                    </label>
+                </div>
+
+                <div class="dp-modal-actions">
+                    <button type="button" class="fns-btn fns-btn-secondary" data-dp-close>ຍົກເລີກ</button>
+                    <button type="submit" class="fns-btn fns-btn-primary" id="dp-submit">ບັນທຶກ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 (function () {
@@ -167,6 +242,17 @@
     const clear  = document.getElementById('dp-clear');
     const chips  = document.getElementById('dp-chips');
     const nores  = document.getElementById('dp-nores');
+    const modal = document.getElementById('dp-modal');
+    const modalTitle = document.getElementById('dp-modal-title');
+    const form = document.getElementById('dp-modal-form');
+    const method = document.getElementById('dp-form-method');
+    const code = document.getElementById('dp-code');
+    const name = document.getElementById('dp-name');
+    const level = document.getElementById('dp-level');
+    const studyYear = document.getElementById('dp-study-year');
+    const active = document.getElementById('dp-active');
+    const submit = document.getElementById('dp-submit');
+    const createUrl = @json(route('head_of_finance.settings.degree-programs.store'));
     let activeLevel = '';
 
     function apply() {
@@ -202,6 +288,58 @@
         chips.querySelectorAll('.dp-chip').forEach(c => c.classList.toggle('is-on', c === btn));
         apply();
     });
+
+    function setStudyYearState() {
+        studyYear.disabled = level.value !== 'bachelor';
+        if (studyYear.disabled) studyYear.value = '';
+    }
+
+    function openModal(mode, data = {}) {
+        form.action = mode === 'edit' ? data.url : createUrl;
+        method.disabled = mode !== 'edit';
+        modalTitle.textContent = mode === 'edit' ? 'ແກ້ໄຂສາຂາວິຊາ' : 'ເພີ່ມສາຂາວິຊາ';
+        submit.textContent = mode === 'edit' ? 'ອັບເດດ' : 'ບັນທຶກ';
+
+        code.value = data.code || '';
+        name.value = data.name || '';
+        level.value = data.level || '';
+        studyYear.value = data.studyYear || '';
+        active.checked = data.active !== '0';
+        setStudyYearState();
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        setTimeout(() => code.focus(), 50);
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        form.reset();
+        method.disabled = true;
+    }
+
+    document.getElementById('dp-open-create').addEventListener('click', () => openModal('create'));
+    document.addEventListener('click', e => {
+        const edit = e.target.closest('.js-dp-edit');
+        if (edit) {
+            openModal('edit', {
+                url: edit.dataset.url,
+                code: edit.dataset.code,
+                name: edit.dataset.name,
+                level: edit.dataset.level,
+                studyYear: edit.dataset.studyYear,
+                active: edit.dataset.active,
+            });
+            return;
+        }
+
+        if (e.target.matches('[data-dp-close]') || e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+    level.addEventListener('change', setStudyYearState);
 })();
 </script>
 @endpush

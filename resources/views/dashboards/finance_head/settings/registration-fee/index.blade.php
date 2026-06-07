@@ -53,6 +53,27 @@
 
 .rf-empty { text-align: center; padding: 2.5rem; color: var(--fns-gray-400); }
 .rf-empty div { font-size: 2rem; opacity: 0.2; margin-bottom: 0.6rem; }
+.rf-modal {
+    position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+    padding: 1rem; background: rgba(15, 23, 42, 0.48);
+}
+.rf-modal.is-open { display: flex; }
+.rf-modal-panel {
+    width: min(760px, 100%); max-height: calc(100vh - 2rem); overflow: auto;
+    border-radius: 16px; border: 1px solid var(--fns-gray-200); background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+.rf-modal-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1rem 1.15rem; border-bottom: 1px solid var(--fns-gray-200); background: #fbfbfc;
+}
+.rf-modal-head h2 { margin: 0; color: var(--fns-navy); font-size: 1rem; font-weight: 900; }
+.rf-modal-close { border: 0; background: transparent; color: var(--fns-gray-500); font-size: 1.45rem; line-height: 1; cursor: pointer; }
+.rf-modal-body { padding: 1.15rem; }
+.rf-modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1.25rem; }
+.rf-items-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.rf-items-table th { text-align: left; color: var(--fns-gray-500); font-size: .72rem; padding: .45rem; border-bottom: 1px solid var(--fns-gray-200); }
+.rf-items-table td { padding: .45rem; border-bottom: 1px solid var(--fns-gray-200); }
 </style>
 
 <div class="rf-wrap">
@@ -70,10 +91,13 @@
                 <span class="fns-badge {{ $badge }}" style="font-size:0.8rem; padding:0.3rem 0.85rem;">
                     {{ \App\Models\RegistrationFeeSetting::sectionLabel($s->section_type) }}
                 </span>
-                <a href="{{ route('head_of_finance.settings.registration-fee.edit', $s) }}" class="rf-edit">
+                <button type="button"
+                        class="rf-edit js-rf-edit"
+                        data-id="{{ $s->id }}"
+                        data-url="{{ route('head_of_finance.settings.registration-fee.update', $s) }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z"/><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z"/></svg>
                     ແກ້ໄຂ
-                </a>
+                </button>
             </div>
 
             <div class="rf-total-label">ລວມຄ່າລົງທະບຽນ</div>
@@ -106,5 +130,137 @@
         @endforelse
     </div>
 </div>
+
+<div id="rf-modal" class="rf-modal" aria-hidden="true">
+    <div class="rf-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rf-modal-title">
+        <div class="rf-modal-head">
+            <h2 id="rf-modal-title">ແກ້ໄຂຄ່າລົງທະບຽນ</h2>
+            <button type="button" class="rf-modal-close" data-rf-close>&times;</button>
+        </div>
+        <form method="POST" id="rf-modal-form" class="rf-modal-body">
+            @csrf
+            @method('PUT')
+
+            <div class="fns-form-group">
+                <label class="fns-label">ປະເພດ <span style="color:red;">*</span></label>
+                <select name="section_type" id="rf-section-type" class="fns-input" required>
+                    <option value="year2_4">ນ/ສ ປີ 2-4</option>
+                    <option value="year1">ນ/ສ ປີ 1 (ໃໝ່)</option>
+                </select>
+            </div>
+
+            <div class="fns-form-group">
+                <label class="fns-label">ເລກທີເອກະສານອ້າງອີງ</label>
+                <input type="text" name="gov_doc_id" id="rf-gov-doc" class="fns-input">
+            </div>
+
+            <div class="fns-form-group">
+                <label class="fns-label">ປີທີ່ເລີ່ມໃຊ້ <span style="color:red;">*</span></label>
+                <input type="number" name="start_year" id="rf-start-year" min="2000" max="2100" class="fns-input" required>
+            </div>
+
+            <div class="fns-form-group" style="margin-top:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <label class="fns-label" style="margin-bottom:0;">ລາຍການຄ່າໃຊ້ຈ່າຍ <span style="color:red;">*</span></label>
+                    <button type="button" id="rf-add-item" class="fns-btn fns-btn-sm fns-btn-secondary">+ ເພີ່ມລາຍການ</button>
+                </div>
+                <table class="rf-items-table">
+                    <thead>
+                        <tr>
+                            <th>ລາຍການ</th>
+                            <th style="width:150px;">ຈຳນວນ (ກີບ)</th>
+                            <th style="width:130px;">% ມຊ</th>
+                            <th style="width:70px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="rf-items-body"></tbody>
+                </table>
+            </div>
+
+            <div class="rf-modal-actions">
+                <button type="button" class="fns-btn fns-btn-secondary" data-rf-close>ຍົກເລີກ</button>
+                <button type="submit" class="fns-btn fns-btn-primary">ອັບເດດ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const settings = @json($settings->mapWithKeys(fn ($s) => [$s->id => [
+        'section_type' => $s->section_type,
+        'gov_doc_id' => $s->gov_doc_id,
+        'start_year' => $s->start_year,
+        'items' => $s->items->map(fn ($item) => [
+            'name' => $item->name,
+            'amount' => (float) $item->amount,
+            'nuol_pct' => rtrim(rtrim(number_format($item->nuol_pct * 100, 2, '.', ''), '0'), '.'),
+        ])->values(),
+    ]]));
+
+    const modal = document.getElementById('rf-modal');
+    const form = document.getElementById('rf-modal-form');
+    const sectionType = document.getElementById('rf-section-type');
+    const govDoc = document.getElementById('rf-gov-doc');
+    const startYear = document.getElementById('rf-start-year');
+    const tbody = document.getElementById('rf-items-body');
+    let rowIndex = 0;
+
+    function escHtml(value) {
+        return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function addRow(data = {}) {
+        const index = rowIndex++;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" name="items[${index}][name]" value="${escHtml(data.name ?? '')}" class="fns-input" required></td>
+            <td><input type="number" name="items[${index}][amount]" value="${escHtml(data.amount ?? '')}" class="fns-input" min="0" step="0.01" required></td>
+            <td><input type="number" name="items[${index}][nuol_pct]" value="${escHtml(data.nuol_pct ?? '0')}" class="fns-input" min="0" max="100" step="0.01" required></td>
+            <td><button type="button" class="fns-btn fns-btn-sm fns-btn-danger">ລຶບ</button></td>
+        `;
+        tr.querySelector('button').addEventListener('click', () => tr.remove());
+        tbody.appendChild(tr);
+    }
+
+    function openModal(button) {
+        const data = settings[button.dataset.id];
+        if (!data) return;
+
+        form.action = button.dataset.url;
+        sectionType.value = data.section_type || 'year2_4';
+        govDoc.value = data.gov_doc_id || '';
+        startYear.value = data.start_year || @json(date('Y'));
+        tbody.innerHTML = '';
+        rowIndex = 0;
+        (data.items.length ? data.items : [{ name: '', amount: '', nuol_pct: '0' }]).forEach(addRow);
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        setTimeout(() => sectionType.focus(), 50);
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    document.addEventListener('click', event => {
+        const edit = event.target.closest('.js-rf-edit');
+        if (edit) {
+            openModal(edit);
+            return;
+        }
+
+        if (event.target.matches('[data-rf-close]') || event.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+    document.getElementById('rf-add-item').addEventListener('click', () => addRow());
+});
+</script>
+@endpush
 
 @endsection

@@ -20,8 +20,6 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             DegreeProgramSeeder::class,
             CourseCreditSeeder::class,
-            ExpenseRefCodeSeeder::class,
-            ExpensePlanSeeder::class,
             AcademicIncomePlanSeeder::class,
         ]);
     }

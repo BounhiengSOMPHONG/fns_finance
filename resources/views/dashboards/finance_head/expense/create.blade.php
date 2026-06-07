@@ -1,36 +1,36 @@
 @extends('layouts.admin')
 
-@section('title', 'ສ້າງແຜນປະເມີນລາຍຈ່າຍ')
-@section('page-title', 'ສ້າງແຜນປະເມີນລາຍຈ່າຍ')
+@section('title', 'Create expense planning year')
+@section('page-title', 'Create expense planning year')
 
 @section('content')
+<div class="fns-card" style="max-width:560px;">
+    <form method="POST" action="{{ route('head_of_finance.expense.store') }}">
+        @csrf
 
-<div class="fns-card" style="max-width:480px;">
-    <div class="fns-card-header">ຂໍ້ມູນແຜນງົບປະມານ</div>
-    <div class="fns-card-body">
-        <form method="POST" action="{{ route('head_of_finance.expense.store') }}">
-            @csrf
+        <div class="fns-form-group">
+            <label class="fns-label">Planning year <span style="color:red">*</span></label>
+            <input type="number" name="year" class="fns-input @error('year') is-invalid @enderror"
+                   value="{{ old('year', date('Y')) }}" min="2000" max="2100" required>
+            @error('year')
+                <div class="fns-error">{{ $message }}</div>
+            @enderror
+        </div>
 
-            <div class="fns-form-group">
-                <label class="fns-label">ສົກງົບປະມານ <span style="color:red">*</span></label>
-                <input type="number" name="fiscal_year" class="fns-input @error('fiscal_year') is-invalid @enderror"
-                    value="{{ old('fiscal_year', date('Y')) }}" min="2000" max="2100" required>
-                @error('fiscal_year')
-                <div class="fns-invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
+        <div class="fns-form-group">
+            <label class="fns-label">Name</label>
+            <input type="text" name="name" class="fns-input" value="{{ old('name') }}" placeholder="Planning {{ date('Y') }}">
+        </div>
 
-            <div class="fns-form-group">
-                <label class="fns-label">ໝາຍເຫດ</label>
-                <textarea name="notes" class="fns-input" rows="3">{{ old('notes') }}</textarea>
-            </div>
+        <div class="fns-form-group">
+            <label class="fns-label">Description</label>
+            <textarea name="description" class="fns-input" rows="3">{{ old('description') }}</textarea>
+        </div>
 
-            <div style="display:flex;gap:10px;margin-top:1rem;">
-                <button type="submit" class="fns-btn fns-btn-primary">ສ້າງແຜນ</button>
-                <a href="{{ route('head_of_finance.expense.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
-            </div>
-        </form>
-    </div>
+        <div style="display:flex;gap:10px;margin-top:1rem;">
+            <button type="submit" class="fns-btn fns-btn-primary">Create</button>
+            <a href="{{ route('head_of_finance.expense.index') }}" class="fns-btn fns-btn-secondary">Cancel</a>
+        </div>
+    </form>
 </div>
-
 @endsection

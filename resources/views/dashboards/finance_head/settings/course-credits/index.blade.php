@@ -210,13 +210,13 @@
                     <input type="text" id="cc-filter" placeholder="ຄົ້ນຫາຫຼັກສູດ / ສາຂາວິຊາ..." autocomplete="off"
                         class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
                 </div>
-                <a href="{{ route('head_of_finance.settings.course-credits.create') }}" 
+                <button type="button" id="cc-open-create"
                    class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 focus:ring-4 focus:ring-slate-200 transition-all shadow-sm shrink-0">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
                     ເພີ່ມໃໝ່
-                </a>
+                </button>
             </div>
         </div>
 
@@ -269,10 +269,18 @@
                                     </div>
                                     
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                        <a href="{{ route('head_of_finance.settings.course-credits.edit', $s) }}" 
-                                           class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="ແກ້ໄຂ">
+                                        <button type="button"
+                                           class="js-cc-edit p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           title="ແກ້ໄຂ"
+                                           data-url="{{ route('head_of_finance.settings.course-credits.update', $s) }}"
+                                           data-degree-program-id="{{ $s->degree_program_id }}"
+                                           data-level="{{ $s->degreeProgram?->level }}"
+                                           data-course-credit-unit="{{ (float) $s->course_credit_unit }}"
+                                           data-year1-credit-unit="{{ (float) $s->year1_credit_unit }}"
+                                           data-gov-doc-id="{{ $s->gov_doc_id }}"
+                                           data-start-year="{{ $s->start_year }}">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </a>
+                                        </button>
                                         <form method="POST" action="{{ route('head_of_finance.settings.course-credits.destroy', $s) }}" onsubmit="return confirm('ທ່ານຕ້ອງການລຶບຂໍ້ມູນນີ້ແທ້ບໍ?')" class="inline-block">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500" title="ລຶບ">
@@ -313,7 +321,91 @@
     </div>
 </div>
 
+<div id="cc-modal" class="cc-modal" aria-hidden="true">
+    <div class="cc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cc-modal-title">
+        <div class="cc-modal-head">
+            <h2 id="cc-modal-title">ເພີ່ມໃໝ່</h2>
+            <button type="button" class="cc-modal-close" data-cc-close>&times;</button>
+        </div>
+        <form method="POST" action="{{ route('head_of_finance.settings.course-credits.store') }}" id="cc-modal-form" class="cc-modal-body">
+            @csrf
+            <input type="hidden" name="_method" id="cc-form-method" value="PUT" disabled>
+
+            <div class="fns-form-group">
+                <label class="fns-label">ສາຂາວິຊາ <span style="color:red;">*</span></label>
+                <select name="degree_program_id" id="cc-degree-program" class="fns-input" required>
+                    <option value="">-- ເລືອກສາຂາວິຊາ --</option>
+                    @foreach($programs as $p)
+                        <option value="{{ $p->id }}" data-level="{{ $p->level }}">
+                            [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $p->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div id="cc-mp-fields" style="display:none;">
+                <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 mb-3">
+                    <label class="fns-label" style="color:#0369a1;">ໜ່ວຍກິດລວມທັງໝົດ</label>
+                    <input type="number" id="cc-total-units" min="1" max="9999" step="1" class="fns-input" placeholder="ເຊັ່ນ: 115">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="fns-form-group">
+                        <label class="fns-label">ລາຍຮັບ ປີ 2+ (ກີບ) <span id="cc-yr2-hint" class="text-xs text-slate-400"></span></label>
+                        <input type="number" id="cc-income-yr2" min="0" step="1" class="fns-input">
+                    </div>
+                    <div class="fns-form-group">
+                        <label class="fns-label">ລາຍຮັບ ປີ 1 - 60% (ກີບ) <span id="cc-yr1-hint" class="text-xs text-slate-400"></span></label>
+                        <input type="number" id="cc-income-yr1" min="0" step="1" class="fns-input">
+                    </div>
+                </div>
+                <input type="hidden" id="cc-unit-mp">
+                <input type="hidden" id="cc-yr1-unit-mp">
+            </div>
+
+            <div id="cc-bachelor-fields">
+                <div class="fns-form-group">
+                    <label class="fns-label">ໜ່ວຍກິດ <span style="color:red;">*</span></label>
+                    <input type="number" id="cc-unit-bach" name="course_credit_unit" min="1" max="999" step="0.5" class="fns-input">
+                </div>
+            </div>
+
+            <div class="fns-form-group">
+                <label class="fns-label">ເລກທີເອກະສານອ້າງອີງ</label>
+                <input type="text" name="gov_doc_id" id="cc-gov-doc" class="fns-input">
+            </div>
+
+            <div class="fns-form-group">
+                <label class="fns-label">ປີທີ່ເລີ່ມໃຊ້ <span style="color:red;">*</span></label>
+                <input type="number" name="start_year" id="cc-start-year" min="2000" max="2100" value="{{ date('Y') }}" class="fns-input" required>
+            </div>
+
+            <div class="cc-modal-actions">
+                <button type="button" class="fns-btn fns-btn-secondary" data-cc-close>ຍົກເລີກ</button>
+                <button type="submit" class="fns-btn fns-btn-primary" id="cc-submit">ບັນທຶກ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
+.cc-modal {
+    position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+    padding: 1rem; background: rgba(15, 23, 42, 0.48);
+}
+.cc-modal.is-open { display: flex; }
+.cc-modal-panel {
+    width: min(620px, 100%); max-height: calc(100vh - 2rem); overflow: auto;
+    border-radius: 16px; border: 1px solid #e2e8f0; background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+.cc-modal-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1rem 1.15rem; border-bottom: 1px solid #e2e8f0; background: #fbfbfc;
+}
+.cc-modal-head h2 { margin: 0; color: #172642; font-size: 1rem; font-weight: 900; }
+.cc-modal-close { border: 0; background: transparent; color: #64748b; font-size: 1.45rem; line-height: 1; cursor: pointer; }
+.cc-modal-body { padding: 1.15rem; }
+.cc-modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1.25rem; }
 .dirty-form.is-dirty {
     border-color: #3b82f6 !important;
     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -1px rgba(59, 130, 246, 0.06) !important;
@@ -381,6 +473,152 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    const modal = document.getElementById('cc-modal');
+    const modalTitle = document.getElementById('cc-modal-title');
+    const form = document.getElementById('cc-modal-form');
+    const method = document.getElementById('cc-form-method');
+    const degreeProgram = document.getElementById('cc-degree-program');
+    const mpFields = document.getElementById('cc-mp-fields');
+    const bachelorFields = document.getElementById('cc-bachelor-fields');
+    const totalUnits = document.getElementById('cc-total-units');
+    const incomeYr2 = document.getElementById('cc-income-yr2');
+    const incomeYr1 = document.getElementById('cc-income-yr1');
+    const unitMp = document.getElementById('cc-unit-mp');
+    const yr1UnitMp = document.getElementById('cc-yr1-unit-mp');
+    const unitBach = document.getElementById('cc-unit-bach');
+    const govDoc = document.getElementById('cc-gov-doc');
+    const startYear = document.getElementById('cc-start-year');
+    const submit = document.getElementById('cc-submit');
+    const prices = @json($creditPrices ?? []);
+    const createUrl = @json(route('head_of_finance.settings.course-credits.store'));
+
+    function currentLevel() {
+        const selected = degreeProgram.options[degreeProgram.selectedIndex];
+        return selected ? selected.dataset.level : '';
+    }
+
+    function isMasterPhd() {
+        return ['master', 'phd'].includes(currentLevel());
+    }
+
+    function price() {
+        return Number(prices[currentLevel()] || 0);
+    }
+
+    function setHints(yr2Units, yr1Units) {
+        document.getElementById('cc-yr2-hint').textContent = yr2Units ? `= ${yr2Units} ໜ່ວຍ` : '';
+        document.getElementById('cc-yr1-hint').textContent = yr1Units ? `= ${yr1Units} ໜ່ວຍ` : '';
+    }
+
+    function kipToUnit(kip) {
+        const p = price();
+        if (!p || !kip) return 0;
+        return Math.round(kip / p * 10) / 10;
+    }
+
+    function syncHiddenUnits() {
+        const yr2Units = kipToUnit(Number(incomeYr2.value) || 0);
+        const yr1Units = kipToUnit(Number(incomeYr1.value) || 0);
+        unitMp.value = yr2Units || '';
+        yr1UnitMp.value = yr1Units || '';
+        setHints(unitMp.value, yr1UnitMp.value);
+    }
+
+    function fillFromTotal() {
+        const total = Number(totalUnits.value);
+        const p = price();
+        if (!total || !p) return;
+
+        const yr1Units = Math.round(total * 0.6);
+        const yr2Units = Math.round(total * 0.4);
+        incomeYr1.value = yr1Units * p;
+        incomeYr2.value = yr2Units * p;
+        unitMp.value = yr2Units;
+        yr1UnitMp.value = yr1Units;
+        setHints(yr2Units, yr1Units);
+    }
+
+    function prefillKipFromUnits() {
+        const p = price();
+        const yr2Units = Number(unitMp.value) || 0;
+        const yr1Units = Number(yr1UnitMp.value) || 0;
+        incomeYr2.value = yr2Units && p ? yr2Units * p : '';
+        incomeYr1.value = yr1Units && p ? yr1Units * p : '';
+        setHints(yr2Units || '', yr1Units || '');
+    }
+
+    function toggleCreditFields() {
+        const mp = isMasterPhd();
+        mpFields.style.display = mp ? '' : 'none';
+        bachelorFields.style.display = mp ? 'none' : '';
+
+        if (mp) {
+            unitBach.removeAttribute('name');
+            unitBach.removeAttribute('required');
+            unitMp.setAttribute('name', 'course_credit_unit');
+            yr1UnitMp.setAttribute('name', 'year1_credit_unit');
+            prefillKipFromUnits();
+            return;
+        }
+
+        unitBach.setAttribute('name', 'course_credit_unit');
+        unitBach.setAttribute('required', '');
+        unitMp.removeAttribute('name');
+        yr1UnitMp.removeAttribute('name');
+    }
+
+    function openModal(mode, data = {}) {
+        form.action = mode === 'edit' ? data.url : createUrl;
+        method.disabled = mode !== 'edit';
+        modalTitle.textContent = mode === 'edit' ? 'ແກ້ໄຂໜ່ວຍກິດ' : 'ເພີ່ມໜ່ວຍກິດ';
+        submit.textContent = mode === 'edit' ? 'ອັບເດດ' : 'ບັນທຶກ';
+
+        form.reset();
+        degreeProgram.value = data.degreeProgramId || '';
+        unitBach.value = data.courseCreditUnit || '';
+        unitMp.value = data.courseCreditUnit || '';
+        yr1UnitMp.value = data.year1CreditUnit || '';
+        govDoc.value = data.govDocId || '';
+        startYear.value = data.startYear || @json(date('Y'));
+        toggleCreditFields();
+
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        setTimeout(() => degreeProgram.focus(), 50);
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        form.reset();
+        method.disabled = true;
+    }
+
+    document.getElementById('cc-open-create')?.addEventListener('click', () => openModal('create'));
+    document.addEventListener('click', event => {
+        const edit = event.target.closest('.js-cc-edit');
+        if (edit) {
+            openModal('edit', {
+                url: edit.dataset.url,
+                degreeProgramId: edit.dataset.degreeProgramId,
+                courseCreditUnit: edit.dataset.courseCreditUnit,
+                year1CreditUnit: edit.dataset.year1CreditUnit,
+                govDocId: edit.dataset.govDocId,
+                startYear: edit.dataset.startYear,
+            });
+            return;
+        }
+
+        if (event.target.matches('[data-cc-close]') || event.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+    degreeProgram.addEventListener('change', toggleCreditFields);
+    totalUnits.addEventListener('input', fillFromTotal);
+    incomeYr2.addEventListener('input', syncHiddenUnits);
+    incomeYr1.addEventListener('input', syncHiddenUnits);
 });
 </script>
 @endpush

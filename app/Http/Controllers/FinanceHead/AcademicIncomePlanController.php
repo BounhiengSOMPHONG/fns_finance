@@ -4,6 +4,7 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
+use App\Models\PlanningYear;
 use App\Models\RegistrationFeeSetting;
 use Illuminate\Http\Request;
 
@@ -30,9 +31,19 @@ class AcademicIncomePlanController extends Controller
             'notes'       => 'nullable|string',
         ]);
 
-        $validated['created_by'] = auth()->id();
+        $planningYear = PlanningYear::firstOrCreate(
+            ['year' => (int) $validated['fiscal_year']],
+            [
+                'name' => 'Planning ' . $validated['fiscal_year'],
+                'is_active' => true,
+            ]
+        );
 
-        $plan = AcademicIncomePlan::create($validated);
+        $plan = AcademicIncomePlan::create([
+            ...$validated,
+            'planning_year_id' => $planningYear->id,
+            'created_by' => auth()->id(),
+        ]);
 
         return redirect()
             ->route('head_of_finance.academic-income.evaluate', $plan)

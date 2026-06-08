@@ -24,6 +24,16 @@ class PlanningYear extends Model
         return $this->hasMany(ExpensePlan::class);
     }
 
+    public function academicIncomePlans(): HasMany
+    {
+        return $this->hasMany(AcademicIncomePlan::class);
+    }
+
+    public function salaryPlans(): HasMany
+    {
+        return $this->hasMany(SalaryPlan::class);
+    }
+
     public function totalAmount(): float
     {
         $planIds = $this->expensePlans()->pluck('id');

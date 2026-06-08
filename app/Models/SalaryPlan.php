@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalaryPlan extends Model
 {
-    protected $fillable = ['fiscal_year', 'month', 'notes', 'created_by'];
+    protected $fillable = ['planning_year_id', 'fiscal_year', 'month', 'notes', 'created_by'];
 
     protected $casts = [
         'month' => 'integer',
@@ -19,6 +19,11 @@ final class SalaryPlan extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function planningYear(): BelongsTo
+    {
+        return $this->belongsTo(PlanningYear::class);
     }
 
     public function entries(): HasMany

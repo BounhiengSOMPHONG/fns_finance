@@ -6,6 +6,7 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
+use App\Models\PlanningYear;
 use App\Models\SalaryPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,8 +44,17 @@ final class SalaryPlanController extends Controller
             return back()->withInput()->with('error', 'ມີຂໍ້ມູນເງິນເດືອນເດືອນ ' . str_pad($data['month'], 2, '0', STR_PAD_LEFT) . '/' . $data['fiscal_year'] . ' ແລ້ວ');
         }
 
+        $planningYear = PlanningYear::firstOrCreate(
+            ['year' => (int) $data['fiscal_year']],
+            [
+                'name' => 'Planning ' . $data['fiscal_year'],
+                'is_active' => true,
+            ]
+        );
+
         $plan = SalaryPlan::create([
-            'fiscal_year' => (string) $data['fiscal_year'],
+            'planning_year_id' => $planningYear->id,
+            'fiscal_year' => (int) $data['fiscal_year'],
             'month'       => (int) $data['month'],
             'notes'       => $data['notes'] ?? null,
             'created_by'  => Auth::id(),

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AcademicIncomePlan extends Model
 {
     protected $fillable = [
-        'fiscal_year', 'notes', 'created_by',
+        'planning_year_id', 'fiscal_year', 'notes', 'created_by',
     ];
 
     protected $casts = [];
@@ -22,5 +22,10 @@ class AcademicIncomePlan extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function planningYear(): BelongsTo
+    {
+        return $this->belongsTo(PlanningYear::class);
     }
 }

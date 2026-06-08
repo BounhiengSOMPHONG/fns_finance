@@ -24,6 +24,9 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
     ->name('head_of_finance.')
     ->group(function () {
         Route::get('/home', [\App\Http\Controllers\FinanceHead\HomeController::class, 'index'])->name('home');
+        Route::get('manage-plan', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'index'])->name('manage-plan.index');
+        Route::post('manage-plan', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'store'])->name('manage-plan.store');
+        Route::post('manage-plan/{planningYear}/sync', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'sync'])->name('manage-plan.sync');
 
         // Settings
         Route::prefix('settings')->name('settings.')->group(function () {

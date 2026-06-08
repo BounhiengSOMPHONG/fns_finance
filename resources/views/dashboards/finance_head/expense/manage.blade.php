@@ -91,13 +91,17 @@
             <span>ແຜນລາຍຈ່າຍປະຈຳປີ</span>
             <strong>{{ $planningYear->year }}</strong>
         </div>
+        <div class="excel-toolbar-actions">
+            <button type="button" class="excel-structure-btn excel-total-shortcut" id="openTotalPage">ໜ້າສະຫຼຸບ</button>
+            <button type="button" class="excel-structure-btn is-hidden" id="backFromTotalPage">ກັບໄປໜ້າປ້ອນ</button>
+        </div>
         <div class="excel-grand">
             <span>ລວມທັງໝົດ</span>
             <strong id="grandTotal">0</strong>
         </div>
     </div>
 
-    <section class="excel-overview">
+    <section class="excel-overview" id="overviewPage">
         <div class="excel-overview-head">
             <div>
                 <h2>ສະຫຼຸບລວມລາຍຈ່າຍ</h2>
@@ -106,6 +110,7 @@
             <strong id="overviewGrandTotal">0</strong>
         </div>
         <div id="overviewSummary" class="excel-summary-wrap"></div>
+        <div id="overviewSectionSummaries" class="excel-preview-sections"></div>
     </section>
 
     <div class="excel-section-nav">
@@ -113,17 +118,15 @@
         <div id="sectionTabs" class="excel-tabs"></div>
         <button type="button" id="nextSection" class="excel-nav-btn">Next</button>
     </div>
-
-    <div class="excel-structure-actions">
-       <button type="button" class="excel-structure-btn" id="openSectionModal">+ ເພີ່ມຫົວຂໍ້ຫລັກ</button>
-        <button type="button" class="excel-structure-btn" id="openSubsectionModal">+ ເພີ່ມຫົວຂໍ້ຍ່ອຍ</button>
-    </div>
-
     <section class="excel-sheet">
         <div class="excel-section-head">
             <div>
                 <h2 id="sectionTitle">-</h2>
                 <p id="sectionMeta">-</p>
+            </div>
+            <div class="excel-section-actions">
+                <button type="button" class="excel-structure-btn" id="openSectionModal">+ ເພີ່ມຫົວຂໍ້ຫຼັກ</button>
+                <button type="button" class="excel-structure-btn" id="openSubsectionModal">+ ເພີ່ມຫົວຂໍ້ຍ່ອຍ</button>
             </div>
             <div class="excel-section-total">
                 <span>ລວມພາກນີ້</span>
@@ -131,7 +134,6 @@
             </div>
         </div>
 
-        <div id="sectionSummary" class="excel-summary-wrap"></div>
         <div id="subsectionSheets" class="excel-subsections"></div>
     </section>
 </div>
@@ -233,7 +235,7 @@
 <style>
     .excel-plan { display:flex; flex-direction:column; gap:1rem; }
     .excel-toolbar {
-        display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:1rem;
+        display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:1rem;
         background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; padding:.8rem 1rem;
         box-shadow:0 2px 12px rgba(26,39,68,.05);
     }
@@ -241,6 +243,7 @@
     .excel-back span { font-size:1.1rem; }
     .excel-title span, .excel-grand span, .excel-section-total span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
     .excel-title strong { color:var(--fns-navy); font-size:1.05rem; }
+    .excel-toolbar-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; }
     .excel-grand { min-width:180px; text-align:right; padding:.55rem .8rem; border-radius:8px; background:var(--fns-navy); color:#fff; }
     .excel-grand strong { display:block; color:var(--fns-gold-light); font-family:'Cinzel',serif; font-size:1.35rem; line-height:1.1; }
     .excel-overview {
@@ -267,6 +270,15 @@
         font-size:1.25rem;
         white-space:nowrap;
     }
+    .excel-preview-sections { padding:1rem; display:flex; flex-direction:column; gap:1.1rem; }
+    .excel-preview-block { overflow:auto; }
+    .excel-preview-title {
+        margin:.2rem 0 .55rem;
+        color:#061226;
+        font-size:1rem;
+        font-weight:900;
+    }
+    .is-hidden { display:none !important; }
     .excel-section-nav {
         display:grid;
         grid-template-columns:auto 1fr auto;
@@ -288,7 +300,6 @@
     }
     .excel-nav-btn:hover:not(:disabled) { border-color:var(--fns-gold); color:#111b33; }
     .excel-nav-btn:disabled { cursor:not-allowed; opacity:.45; }
-    .excel-structure-actions { display:flex; flex-wrap:wrap; gap:.55rem; }
     .excel-structure-btn {
         border:1px solid var(--fns-gray-200);
         border-radius:8px;
@@ -302,6 +313,8 @@
         box-shadow:0 2px 10px rgba(26,39,68,.04);
     }
     .excel-structure-btn:hover { border-color:var(--fns-gold); color:#111b33; }
+    .excel-total-shortcut { background:var(--fns-gold); border-color:var(--fns-gold); color:#111b33; }
+    .excel-total-shortcut:hover { background:#dcb236; border-color:#dcb236; }
     .excel-tabs {
         display:grid;
         grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
@@ -336,6 +349,7 @@
     }
     .excel-section-head h2 { margin:0; color:var(--fns-navy); font-size:1.15rem; }
     .excel-section-head p { margin:.25rem 0 0; color:var(--fns-gray-500); font-size:.82rem; }
+    .excel-section-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; margin-left:auto; }
     .excel-section-total { text-align:right; min-width:160px; }
     .excel-section-total strong { color:var(--fns-navy); font-family:'Cinzel',serif; font-size:1.2rem; }
     .excel-summary-wrap { padding:1rem 1rem 0; overflow:auto; }
@@ -427,6 +441,8 @@
     .excel-modal-actions { display:flex; justify-content:flex-end; gap:.55rem; margin-top:1.25rem; }
     @media (max-width:760px) {
         .excel-toolbar, .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
+        .excel-toolbar-actions { width:100%; justify-content:flex-start; }
+        .excel-section-actions { width:100%; justify-content:flex-start; margin-left:0; }
         .excel-grand, .excel-section-total { width:100%; text-align:left; }
         .excel-overview-head { flex-direction:column; }
         .excel-section-nav { grid-template-columns:1fr 1fr; }
@@ -446,6 +462,7 @@ const RULES = @json($rulesPayload);
 const CHART_ACCOUNTS = @json($chartAccountsPayload);
 let ROWS = @json($rowsPayload);
 let selectedSectionId = SECTIONS[0]?.id || null;
+let lastInputSectionId = SECTIONS[0]?.id || null;
 const fmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 
 function esc(value) {
@@ -532,6 +549,18 @@ function renderOverviewSummary() {
             </tfoot>
         </table>
     `;
+    document.getElementById('overviewSectionSummaries').innerHTML = SECTIONS.map(section => {
+        const finalSubsections = section.subsections.filter(subsection =>
+            !section.subsections.some(child => Number(child.parent_id) === Number(subsection.id))
+        );
+
+        return `
+            <div class="excel-preview-block">
+                <h3 class="excel-preview-title">${esc(section.code)} ${esc(section.name)}</h3>
+                ${renderSectionSummary(section, finalSubsections)}
+            </div>
+        `;
+    }).join('');
 }
 
 function renderTabs() {
@@ -549,21 +578,24 @@ function renderTabs() {
 }
 
 function selectedSectionIndex() {
+    if (selectedSectionId === 'overview') return SECTIONS.length;
     return SECTIONS.findIndex(section => Number(section.id) === Number(selectedSectionId));
 }
 
 function syncSectionNavButtons() {
     const index = selectedSectionIndex();
     document.getElementById('prevSection').disabled = index <= 0;
-    document.getElementById('nextSection').disabled = index < 0 || index >= SECTIONS.length - 1;
+    document.getElementById('nextSection').disabled = index < 0 || index >= SECTIONS.length;
 }
 
 function moveSection(direction) {
     const index = selectedSectionIndex();
-    const next = SECTIONS[index + direction];
-    if (!next) return;
+    const pages = [...SECTIONS.map(section => Number(section.id)), 'overview'];
+    const next = pages[index + direction];
+    if (next === undefined) return;
 
-    selectedSectionId = Number(next.id);
+    if (selectedSectionId !== 'overview') lastInputSectionId = selectedSectionId;
+    selectedSectionId = next;
     renderTabs();
     renderSheet();
 }
@@ -598,8 +630,22 @@ function rowDisplayValue(row, field) {
 }
 
 function renderSheet() {
+    const isOverview = selectedSectionId === 'overview';
+    document.getElementById('overviewPage').classList.toggle('is-hidden', !isOverview);
+    document.querySelector('.excel-section-nav').classList.toggle('is-hidden', isOverview);
+    document.querySelector('.excel-sheet').classList.toggle('is-hidden', isOverview);
+    document.getElementById('backFromTotalPage').classList.toggle('is-hidden', !isOverview);
+
+    if (isOverview) {
+        renderOverviewSummary();
+        document.getElementById('grandTotal').textContent = fmt.format(ROWS.reduce((sum, row) => sum + numberValue(row.total), 0));
+        syncSectionNavButtons();
+        return;
+    }
+
     const section = SECTIONS.find(item => Number(item.id) === Number(selectedSectionId));
     if (!section) return;
+    lastInputSectionId = Number(section.id);
 
     renderOverviewSummary();
     document.getElementById('sectionTitle').textContent = `${section.code} ${section.name}`;
@@ -609,8 +655,6 @@ function renderSheet() {
     document.getElementById('sectionMeta').textContent = `${finalSubsections.length} ຫົວຂໍ້ຍ່ອຍ`;
     document.getElementById('sectionTotal').textContent = fmt.format(totalFor(section.id));
     document.getElementById('grandTotal').textContent = fmt.format(ROWS.reduce((sum, row) => sum + numberValue(row.total), 0));
-    document.getElementById('sectionSummary').innerHTML = renderSectionSummary(section, finalSubsections);
-
     document.getElementById('subsectionSheets').innerHTML = section.subsections
         .filter(subsection => subsection.parent_id === null)
         .map(subsection => renderSubsectionGroup(section, subsection))
@@ -992,6 +1036,19 @@ document.getElementById('sectionTabs').addEventListener('click', event => {
 
 document.getElementById('prevSection').addEventListener('click', () => moveSection(-1));
 document.getElementById('nextSection').addEventListener('click', () => moveSection(1));
+document.getElementById('openTotalPage').addEventListener('click', () => {
+    if (selectedSectionId !== 'overview') lastInputSectionId = selectedSectionId;
+    selectedSectionId = 'overview';
+    renderTabs();
+    renderSheet();
+    document.querySelector('.excel-plan')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+});
+document.getElementById('backFromTotalPage').addEventListener('click', () => {
+    selectedSectionId = lastInputSectionId || SECTIONS[0]?.id || null;
+    renderTabs();
+    renderSheet();
+    document.querySelector('.excel-plan')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+});
 
 const sectionModal = document.getElementById('sectionModal');
 const subsectionModal = document.getElementById('subsectionModal');
@@ -1035,7 +1092,7 @@ function syncSubsectionModal() {
 
 document.getElementById('openSectionModal').addEventListener('click', () => openModal(sectionModal));
 document.getElementById('openSubsectionModal').addEventListener('click', () => {
-    if (subsectionSection && selectedSectionId) subsectionSection.value = String(selectedSectionId);
+    if (subsectionSection && selectedSectionId !== 'overview') subsectionSection.value = String(selectedSectionId);
     syncSubsectionModal();
     openModal(subsectionModal);
 });

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'ເງິນເດືອນ ເດືອນ ' . $salaryPlan->monthLabel())
-@section('page-title', 'ຕາຕະລາງສັງລວມລາຍຈ່າຍເງິນເດືອນ')
+@section('page-title', 'ເງິນເດືອນ')
 
 @section('content')
 
@@ -18,8 +18,9 @@
 
 {{-- ===== Sticky context bar ===== --}}
 <div class="smg-sticky-bar">
-    <a href="{{ route('head_of_finance.salary.index') }}" class="smg-back" title="ກັບຄືນ">
+    <a href="{{ route('head_of_finance.manage-plan.index') }}" class="smg-back" title="ກັບຄືນ">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>ກັບຄືນ</span>
     </a>
     <div class="smg-id">
         <span class="smg-id-kicker">ເດືອນ {{ str_pad((string) $salaryPlan->month, 2, '0', STR_PAD_LEFT) }} / ສົກ</span>
@@ -101,8 +102,10 @@
     }
     .smg-back {
         display:inline-flex; align-items:center; justify-content:center;
-        width: 36px; height: 36px;
+        gap: .4rem; min-width: 36px; height: 36px;
+        padding: 0 .75rem;
         background: var(--fns-gray-100); border-radius: 8px;
+        font-size: .78rem; font-weight: 700;
         color: var(--fns-navy); text-decoration:none;
         transition: background .15s, transform .12s;
     }

@@ -15,12 +15,7 @@ final class SalaryPlanController extends Controller
 {
     public function index()
     {
-        $plans = SalaryPlan::with('creator')
-            ->orderByDesc('fiscal_year')
-            ->orderByDesc('month')
-            ->paginate(15);
-
-        return view('dashboards.finance_head.salary.index', compact('plans'));
+        return redirect()->route('head_of_finance.manage-plan.index');
     }
 
     public function create()
@@ -103,11 +98,4 @@ final class SalaryPlanController extends Controller
         return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa'));
     }
 
-    public function destroy(SalaryPlan $salaryPlan)
-    {
-        $salaryPlan->delete();
-
-        return redirect()->route('head_of_finance.salary.index')
-            ->with('success', 'ລຶບແຜນເງິນເດືອນສຳເລັດ');
-    }
 }

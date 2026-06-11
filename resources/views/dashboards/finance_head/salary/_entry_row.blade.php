@@ -7,7 +7,7 @@
     $rowGroupKey = $rowGroupCode ? 'coa-' . $rowGroupCode : 'coa-other';
     $hasAccount = filled($rowAccountId);
 @endphp
-<tr class="smg-row"
+<tr class="smg-row is-collapsed"
     data-item-id="{{ $e?->id }}"
     data-coa-id="{{ $rowAccountId }}"
     data-group="{{ $rowGroupKey }}"

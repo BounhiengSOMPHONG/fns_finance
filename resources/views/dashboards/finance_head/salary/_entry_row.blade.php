@@ -30,8 +30,8 @@
     </td>
     <td class="smg-editable-cell">
         <select class="smg-input smg-payment-type">
-            <option value="transfer" @selected($rowPaymentType === 'transfer')>Transfer</option>
-            <option value="cash" @selected($rowPaymentType === 'cash')>Cash</option>
+            <option value="transfer" @selected($rowPaymentType === 'transfer')>ໂອນເຂົ້າບັນຊີ</option>
+            <option value="cash" @selected($rowPaymentType === 'cash')>ເງິນສົດ</option>
         </select>
     </td>
     <td class="smg-editable-cell"><input class="smg-input smg-amount smg-money-input" type="text" inputmode="numeric" value="{{ number_format($e ? (float) $e->amount : 0, 0) }}"></td>

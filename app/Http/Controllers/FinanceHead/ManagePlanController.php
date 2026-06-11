@@ -19,7 +19,11 @@ class ManagePlanController extends Controller
 {
     public function index()
     {
-        $plans = PlanningYear::with(['academicIncomePlans', 'salaryPlans'])
+        $plans = PlanningYear::with([
+                'academicIncomePlans.items',
+                'salaryPlans.entries',
+                'expensePlans.values' => fn ($query) => $query->where('field_key', 'yearly_total'),
+            ])
             ->withCount('expensePlans')
             ->orderByDesc('year')
             ->paginate(12);

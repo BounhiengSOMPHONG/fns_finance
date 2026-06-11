@@ -27,6 +27,9 @@
                 $incomePlan = $plan->academicIncomePlans->first();
                 $salaryPlan = $plan->salaryPlans->sortBy('month')->first();
                 $expenseRows = $plan->expense_plans_count;
+                $incomeTotal = $plan->academicIncomePlans->sum(fn ($income) => $income->items->sum('total_income'));
+                $salaryTotal = $plan->salaryPlans->sum(fn ($salary) => $salary->entries->sum('annual_amount'));
+                $expenseTotal = $plan->expensePlans->sum(fn ($expense) => $expense->values->sum('value_number'));
                 $isCurrent = (int) $plan->year === $currentYear;
             @endphp
             <article class="mp-card  {{ $isCurrent ? 'is-current' : '' }}">
@@ -47,15 +50,15 @@
                 <div class="mp-status">
                     <div>
                         <span>ລາຍຮັບ</span>
-                        <strong>{{ $incomePlan ? 'ສ້າງແລ້ວ' : 'ຍັງບໍ່ມີ' }}</strong>
+                        <strong>{{ $incomePlan ? number_format((float) $incomeTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                     <div>
                         <span>ເງິນເດືອນ</span>
-                        <strong>{{ $salaryPlan ? 'ສ້າງແລ້ວ' : 'ຍັງບໍ່ມີ' }}</strong>
+                        <strong>{{ $salaryPlan ? number_format((float) $salaryTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                     <div>
                         <span>ລາຍຈ່າຍ</span>
-                        <strong>{{ $expenseRows > 0 ? $expenseRows . ' ລາຍການ' : 'ຍັງບໍ່ມີ' }}</strong>
+                        <strong>{{ $expenseRows > 0 ? number_format((float) $expenseTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                 </div>
 
@@ -164,7 +167,15 @@
     .mp-status { display:grid; grid-template-columns:repeat(3, 1fr); gap:.55rem; margin:1rem 0; }
     .mp-status div { border:1px solid var(--fns-gray-200); border-radius:8px; padding:.55rem; }
     .mp-status span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:900; }
-    .mp-status strong { display:block; margin-top:.15rem; color:var(--fns-navy); font-size:.82rem; }
+    .mp-status strong {
+        display:block; margin-top:.15rem;
+        color:var(--fns-navy);
+        font-size:clamp(.72rem, 1.35vw, .86rem);
+        font-variant-numeric:tabular-nums;
+        white-space:normal;
+        overflow-wrap:anywhere;
+        line-height:1.25;
+    }
     .mp-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
     .mp-actions form { margin:0; }
     .mp-action {

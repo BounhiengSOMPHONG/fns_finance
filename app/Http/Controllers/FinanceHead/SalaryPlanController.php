@@ -71,35 +71,36 @@ final class SalaryPlanController extends Controller
             ->orderBy('id')
             ->get();
 
-        // Load the whole COA tree once so we can compute each leaf's top-level (main) ancestor
-        // without round-tripping per row.
         $all = ChartOfAccount::orderBy('account_code')->get(['id', 'account_code', 'account_name', 'parent_id']);
-        $byId = $all->keyBy('id');
+        $rootIds = $all
+            ->whereNull('parent_id')
+            ->filter(fn ($a) => str_starts_with((string) $a->account_code, '60')
+                || str_starts_with((string) $a->account_code, '61'))
+            ->pluck('id');
 
-        $mainAccounts = $all->whereNull('parent_id')->values();
+        $subAccounts = collect();
+        $parentIds = $rootIds;
 
-        $childParentIds = $all->pluck('parent_id')->filter()->unique()->all();
-        $leaves         = $all->reject(fn ($a) => in_array($a->id, $childParentIds, true))->values();
+        while ($parentIds->isNotEmpty()) {
+            $children = $all->whereIn('parent_id', $parentIds->all())->values();
 
-        $coa = $leaves->map(function ($a) use ($byId) {
-            // Walk up to find the top-level (parent_id IS NULL) ancestor.
-            $mainId = $a->id;
-            $node   = $a;
-            $guard  = 0;
-            while ($node && $node->parent_id && $guard++ < 10) {
-                $node = $byId->get($node->parent_id);
-                if ($node) $mainId = $node->id;
+            if ($children->isEmpty()) {
+                break;
             }
 
+            $subAccounts = $subAccounts->merge($children);
+            $parentIds = $children->pluck('id');
+        }
+
+        $coa = $subAccounts->sortBy('account_code')->values()->map(function ($a) {
             return [
-                'id'      => $a->id,
-                'code'    => $a->account_code,
-                'name'    => $a->account_name,
-                'main_id' => $mainId,
+                'id'   => $a->id,
+                'code' => $a->account_code,
+                'name' => $a->account_name,
             ];
         });
 
-        return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa', 'mainAccounts'));
+        return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa'));
     }
 
     public function destroy(SalaryPlan $salaryPlan)

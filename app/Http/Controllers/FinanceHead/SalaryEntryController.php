@@ -17,8 +17,8 @@ final class SalaryEntryController extends Controller
             'plan_id'             => 'required|integer|exists:salary_plans,id',
             'chart_of_account_id' => 'required|integer|exists:chart_of_accounts,id',
             'person_count'        => 'nullable|integer|min:0',
-            'atm_amount'          => 'nullable|numeric|min:0',
-            'cash_amount'         => 'nullable|numeric|min:0',
+            'payment_type'        => 'required|in:cash,transfer',
+            'amount'              => 'nullable|numeric|min:0',
             'remark'              => 'nullable|string|max:255',
         ]);
 
@@ -26,8 +26,8 @@ final class SalaryEntryController extends Controller
             'plan_id'             => (int) $data['plan_id'],
             'chart_of_account_id' => (int) $data['chart_of_account_id'],
             'person_count'        => (int) ($data['person_count'] ?? 0),
-            'atm_amount'          => (float) ($data['atm_amount'] ?? 0),
-            'cash_amount'         => (float) ($data['cash_amount'] ?? 0),
+            'payment_type'        => $data['payment_type'],
+            'amount'              => (float) ($data['amount'] ?? 0),
             'remark'              => $data['remark'] ?? null,
         ]);
         $entry->load('chartOfAccount');
@@ -43,8 +43,8 @@ final class SalaryEntryController extends Controller
         $data = $request->validate([
             'chart_of_account_id' => 'sometimes|required|integer|exists:chart_of_accounts,id',
             'person_count'        => 'nullable|integer|min:0',
-            'atm_amount'          => 'nullable|numeric|min:0',
-            'cash_amount'         => 'nullable|numeric|min:0',
+            'payment_type'        => 'required|in:cash,transfer',
+            'amount'              => 'nullable|numeric|min:0',
             'remark'              => 'nullable|string|max:255',
         ]);
 
@@ -52,8 +52,8 @@ final class SalaryEntryController extends Controller
             $salaryEntry->chart_of_account_id = (int) $data['chart_of_account_id'];
         }
         $salaryEntry->person_count = (int) ($data['person_count'] ?? 0);
-        $salaryEntry->atm_amount   = (float) ($data['atm_amount'] ?? 0);
-        $salaryEntry->cash_amount  = (float) ($data['cash_amount'] ?? 0);
+        $salaryEntry->payment_type = $data['payment_type'];
+        $salaryEntry->amount       = (float) ($data['amount'] ?? 0);
         $salaryEntry->remark       = $data['remark'] ?? null;
         $salaryEntry->save();
         $salaryEntry->load('chartOfAccount');
@@ -79,8 +79,8 @@ final class SalaryEntryController extends Controller
             'account_code'        => $e->chartOfAccount?->account_code,
             'account_name'        => $e->chartOfAccount?->account_name,
             'person_count'        => $e->person_count,
-            'atm_amount'          => $e->atm_amount,
-            'cash_amount'         => $e->cash_amount,
+            'payment_type'        => $e->payment_type,
+            'amount'              => $e->amount,
             'monthly_total'       => $e->monthly_total,
             'annual_amount'       => $e->annual_amount,
             'remark'              => $e->remark,

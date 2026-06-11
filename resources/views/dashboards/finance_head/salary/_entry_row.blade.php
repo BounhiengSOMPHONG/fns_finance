@@ -5,6 +5,7 @@
     $rowAccountName = $e?->chartOfAccount?->account_name ?? data_get($account ?? null, 'name');
     $rowGroupCode = data_get($account ?? null, 'group_code');
     $rowGroupKey = $rowGroupCode ? 'coa-' . $rowGroupCode : 'coa-other';
+    $rowPaymentType = old('payment_type', $e?->payment_type ?? 'transfer');
     $hasAccount = filled($rowAccountId);
 @endphp
 <tr class="smg-row is-collapsed"
@@ -27,7 +28,12 @@
         <input class="smg-input smg-persons" type="number" min="0" step="1"
                value="{{ $e ? (int) $e->person_count : 0 }}" style="text-align:center;">
     </td>
-    <td class="smg-editable-cell"><input class="smg-input smg-atm smg-money-input" type="text" inputmode="numeric" value="{{ number_format($e ? (float) $e->atm_amount : 0, 0) }}"></td>
-    <td class="smg-editable-cell"><input class="smg-input smg-cash smg-money-input" type="text" inputmode="numeric" value="{{ number_format($e ? (float) $e->cash_amount : 0, 0) }}"></td>
+    <td class="smg-editable-cell">
+        <select class="smg-input smg-payment-type">
+            <option value="transfer" @selected($rowPaymentType === 'transfer')>Transfer</option>
+            <option value="cash" @selected($rowPaymentType === 'cash')>Cash</option>
+        </select>
+    </td>
+    <td class="smg-editable-cell"><input class="smg-input smg-amount smg-money-input" type="text" inputmode="numeric" value="{{ number_format($e ? (float) $e->amount : 0, 0) }}"></td>
     <td class="smg-editable-cell"><input class="smg-input smg-remark" type="text" value="{{ $e?->remark }}" placeholder="ພິມໝາຍເຫດ..."></td>
 </tr>

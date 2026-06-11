@@ -47,8 +47,8 @@
                 <th style="width:200px;">ລະຫັດບັນຊີ</th>
                 <th>ຊື່ບັນຊີ</th>
                 <th class="smg-th-editable" style="width:88px; text-align:center;">ຈຳນວນພົນ</th>
-                <th class="smg-th-editable" style="width:130px; text-align:right;">ໂອນເຂົ້າ ATM</th>
-                <th class="smg-th-editable" style="width:130px; text-align:right;">ຖອນເງິນສົດ</th>
+                <th class="smg-th-editable" style="width:130px;">ປະເພດການຈ່າຍ</th>
+                <th class="smg-th-editable" style="width:150px; text-align:right;">ຈຳນວນເງິນ</th>
                 <th class="smg-th-editable" style="width:160px;">ໝາຍເຫດ</th>
             </tr>
         </thead>
@@ -409,9 +409,7 @@
         const groupTotals = {};
 
         $body.querySelectorAll('.smg-row').forEach(r => {
-            const atm = num(r.querySelector('.smg-atm'));
-            const cash = num(r.querySelector('.smg-cash'));
-            const rowTotal = atm + cash;
+            const rowTotal = num(r.querySelector('.smg-amount'));
             const group = r.dataset.group || 'coa-other';
 
             monthly += rowTotal;
@@ -453,8 +451,8 @@
             plan_id:             PLAN_ID,
             chart_of_account_id: coaId,
             person_count:        parseInt(row.querySelector('.smg-persons')?.value || 0, 10) || 0,
-            atm_amount:          num(row.querySelector('.smg-atm')),
-            cash_amount:         num(row.querySelector('.smg-cash')),
+            payment_type:        row.querySelector('.smg-payment-type')?.value || 'transfer',
+            amount:              num(row.querySelector('.smg-amount')),
             remark:              row.querySelector('.smg-remark')?.value || null,
         };
         const url = itemId ? `/head-of-finance/salary-entries/${itemId}` : '/head-of-finance/salary-entries';
@@ -500,6 +498,11 @@
         row.querySelectorAll('.smg-input').forEach(inp => {
             inp.addEventListener('keydown', e => {
                 if (e.key === 'Enter') { e.preventDefault(); saveRow(row); inp.blur(); }
+            });
+            inp.addEventListener('change', () => {
+                if (inp.classList.contains('smg-payment-type')) {
+                    saveRow(row);
+                }
             });
             inp.addEventListener('blur', () => setTimeout(() => {
                 if (inp.classList.contains('smg-money-input')) {

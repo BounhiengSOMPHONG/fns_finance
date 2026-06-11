@@ -11,14 +11,13 @@ final class SalaryEntry extends Model
 {
     protected $fillable = [
         'plan_id', 'chart_of_account_id',
-        'person_count', 'atm_amount', 'cash_amount',
+        'person_count', 'payment_type', 'amount',
         'monthly_total', 'annual_amount', 'remark',
     ];
 
     protected $casts = [
         'person_count' => 'integer',
-        'atm_amount'   => 'float',
-        'cash_amount'  => 'float',
+        'amount' => 'float',
         'monthly_total' => 'float',
         'annual_amount' => 'float',
     ];
@@ -27,9 +26,8 @@ final class SalaryEntry extends Model
     {
         parent::boot();
 
-        // monthly = ATM + cash; annual = monthly * 12
         static::saving(function (self $entry): void {
-            $entry->monthly_total = (float) $entry->atm_amount + (float) $entry->cash_amount;
+            $entry->monthly_total = (float) $entry->amount;
             $entry->annual_amount = $entry->monthly_total * 12;
         });
     }

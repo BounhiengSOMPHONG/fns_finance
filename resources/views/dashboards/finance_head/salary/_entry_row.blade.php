@@ -20,11 +20,11 @@
             {{ $rowAccountName ?? 'ເລືອກລະຫັດບັນຊີ...' }}
         </span>
     </td>
-    <td class="smg-cell-center">
+    <td class="smg-cell-center smg-editable-cell">
         <input class="smg-input smg-persons" type="number" min="0" step="1"
                value="{{ $e ? (int) $e->person_count : 0 }}" style="text-align:center;">
     </td>
-    <td><input class="smg-input smg-atm"  type="number" min="0" step="0.01" value="{{ $e ? (float) $e->atm_amount  : 0 }}"></td>
-    <td><input class="smg-input smg-cash" type="number" min="0" step="0.01" value="{{ $e ? (float) $e->cash_amount : 0 }}"></td>
-    <td><input class="smg-input smg-remark" type="text" value="{{ $e?->remark }}" placeholder="ໝາຍເຫດ..."></td>
+    <td class="smg-editable-cell"><input class="smg-input smg-atm"  type="number" min="0" step="0.01" value="{{ $e ? (float) $e->atm_amount  : 0 }}"></td>
+    <td class="smg-editable-cell"><input class="smg-input smg-cash" type="number" min="0" step="0.01" value="{{ $e ? (float) $e->cash_amount : 0 }}"></td>
+    <td class="smg-editable-cell"><input class="smg-input smg-remark" type="text" value="{{ $e?->remark }}" placeholder="ພິມໝາຍເຫດ..."></td>
 </tr>

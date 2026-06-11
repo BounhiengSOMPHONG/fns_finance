@@ -46,10 +46,10 @@
             <tr>
                 <th style="width:200px;">ລະຫັດບັນຊີ</th>
                 <th>ຊື່ບັນຊີ</th>
-                <th style="width:88px; text-align:center;">ຈຳນວນພົນ</th>
-                <th style="width:130px; text-align:right;">ໂອນເຂົ້າ ATM</th>
-                <th style="width:130px; text-align:right;">ຖອນເງິນສົດ</th>
-                <th style="width:160px;">ໝາຍເຫດ</th>
+                <th class="smg-th-editable" style="width:88px; text-align:center;">ຈຳນວນພົນ</th>
+                <th class="smg-th-editable" style="width:130px; text-align:right;">ໂອນເຂົ້າ ATM</th>
+                <th class="smg-th-editable" style="width:130px; text-align:right;">ຖອນເງິນສົດ</th>
+                <th class="smg-th-editable" style="width:160px;">ໝາຍເຫດ</th>
             </tr>
         </thead>
         <tbody id="smg-body">
@@ -164,19 +164,39 @@
     }
     .smg-table tbody tr:last-child td { border-bottom: none; }
     .smg-table tbody tr:hover { background: #fdfbf3; }
+    .smg-table thead th.smg-th-editable::after {
+        content: "ແກ້ໄຂໄດ້";
+        display: inline-flex;
+        margin-left: .35rem;
+        padding: .08rem .32rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.16);
+        color: rgba(255,255,255,0.78);
+        font-size: .56rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        vertical-align: middle;
+    }
+    .smg-editable-cell { background: rgba(246, 248, 252, 0.6); }
 
     .smg-input {
         width: 100%;
-        background: transparent; border: 1px solid transparent; border-radius: 5px;
-        padding: 5px 7px; font-family: inherit; font-size: .8rem;
+        background: #fff; border: 1px solid #cbd5e1; border-radius: 6px;
+        padding: 6px 8px; font-family: inherit; font-size: .8rem;
         color: var(--fns-navy); outline: none;
-        transition: background .12s, border-color .12s, box-shadow .12s;
+        box-shadow: inset 0 1px 2px rgba(15,23,42,0.06);
+        transition: background .12s, border-color .12s, box-shadow .12s, transform .12s;
     }
-    .smg-input::placeholder { color: var(--fns-gray-400); }
-    .smg-input:hover { background: #fafaf7; }
+    .smg-input::placeholder { color: #94a3b8; }
+    .smg-input:hover {
+        background: #fffef8;
+        border-color: var(--fns-gold, #c9991a);
+        box-shadow: inset 0 1px 2px rgba(15,23,42,0.06), 0 0 0 2px rgba(201,153,26,0.12);
+    }
     .smg-input:focus {
         background: #fff; border-color: var(--fns-navy-light);
-        box-shadow: 0 0 0 2px rgba(46,63,110,0.12);
+        box-shadow: inset 0 1px 2px rgba(15,23,42,0.05), 0 0 0 3px rgba(46,63,110,0.18);
+        transform: translateY(-1px);
     }
     .smg-input.is-invalid { animation: smgFlashRed .8s ease; }
 

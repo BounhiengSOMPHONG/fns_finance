@@ -3,11 +3,14 @@
     $rowAccountId = $e?->chart_of_account_id ?? data_get($account ?? null, 'id');
     $rowAccountCode = $e?->chartOfAccount?->account_code ?? data_get($account ?? null, 'code');
     $rowAccountName = $e?->chartOfAccount?->account_name ?? data_get($account ?? null, 'name');
+    $rowGroupCode = data_get($account ?? null, 'group_code');
+    $rowGroupKey = $rowGroupCode ? 'coa-' . $rowGroupCode : 'coa-other';
     $hasAccount = filled($rowAccountId);
 @endphp
 <tr class="smg-row"
     data-item-id="{{ $e?->id }}"
     data-coa-id="{{ $rowAccountId }}"
+    data-group="{{ $rowGroupKey }}"
     data-default-row="{{ $account ? '1' : '0' }}">
     <td>
         <span class="smg-coa-code {{ $hasAccount ? '' : 'is-empty' }}">

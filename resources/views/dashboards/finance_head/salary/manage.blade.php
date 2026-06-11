@@ -71,6 +71,11 @@
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                 </span>
                                 <span class="smg-group-title">{{ $groupName }}</span>
+                                <span class="smg-group-total">
+                                    <span>ລວມ</span>
+                                    <strong data-group-total="{{ $groupKey }}">0</strong>
+                                    <span>ກີບ</span>
+                                </span>
                             </button>
                         </td>
                     </tr>
@@ -244,6 +249,24 @@
         background: var(--fns-gray-200);
         flex: 1;
     }
+    .smg-group-total {
+        display: inline-flex; align-items: baseline; gap: .3rem;
+        padding: .28rem .55rem;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--fns-gray-600);
+        box-shadow: inset 0 0 0 1px var(--fns-gray-200);
+        font-size: .72rem;
+        font-weight: 700;
+        white-space: nowrap;
+        flex: 0 0 auto;
+    }
+    .smg-group-total strong {
+        color: var(--fns-navy);
+        font-family: 'Cinzel', serif;
+        font-size: .88rem;
+        font-variant-numeric: tabular-nums;
+    }
     .smg-row.is-collapsed { display: none; }
     .smg-table thead th.smg-th-editable::after {
         content: "ແກ້ໄຂໄດ້";
@@ -365,7 +388,16 @@
     const $grandM = document.getElementById('grand-monthly');
     const $grandA = document.getElementById('grand-annual');
 
-    function num(el) { return parseFloat(el?.value || 0) || 0; }
+    function rawMoney(value) {
+        return String(value || '').replace(/[^\d]/g, '');
+    }
+
+    function formatMoney(value) {
+        const raw = rawMoney(value);
+        return raw ? fmt.format(Number(raw)) : '0';
+    }
+
+    function num(el) { return Number(rawMoney(el?.value)) || 0; }
 
     function recalc(row) {
         // Per-row total/annual cells were removed; sticky-bar grand totals still recalc below.
@@ -374,12 +406,23 @@
 
     function recalcTotals() {
         let monthly = 0, annual = 0;
+        const groupTotals = {};
+
         $body.querySelectorAll('.smg-row').forEach(r => {
             const atm = num(r.querySelector('.smg-atm'));
             const cash = num(r.querySelector('.smg-cash'));
-            monthly += atm + cash;
-            annual  += (atm + cash) * 12;
+            const rowTotal = atm + cash;
+            const group = r.dataset.group || 'coa-other';
+
+            monthly += rowTotal;
+            annual  += rowTotal * 12;
+            groupTotals[group] = (groupTotals[group] || 0) + rowTotal;
         });
+
+        document.querySelectorAll('[data-group-total]').forEach(total => {
+            total.textContent = fmt.format(groupTotals[total.dataset.groupTotal] || 0);
+        });
+
         if ($grandM) $grandM.textContent = fmt.format(monthly);
         if ($grandA) $grandA.textContent = fmt.format(annual);
         const n = $body.querySelectorAll('.smg-row').length;
@@ -443,14 +486,25 @@
     }
 
     function bindRow(row) {
-        row.querySelectorAll('.smg-atm, .smg-cash').forEach(inp =>
-            inp.addEventListener('input', () => recalc(row)));
+        row.querySelectorAll('.smg-money-input').forEach(inp => {
+            inp.value = formatMoney(inp.value);
+            inp.addEventListener('input', () => {
+                inp.value = formatMoney(inp.value);
+                recalc(row);
+            });
+            inp.addEventListener('focus', () => {
+                inp.select();
+            });
+        });
 
         row.querySelectorAll('.smg-input').forEach(inp => {
             inp.addEventListener('keydown', e => {
                 if (e.key === 'Enter') { e.preventDefault(); saveRow(row); inp.blur(); }
             });
             inp.addEventListener('blur', () => setTimeout(() => {
+                if (inp.classList.contains('smg-money-input')) {
+                    inp.value = formatMoney(inp.value);
+                }
                 if (row.contains(document.activeElement)) return;
                 saveRow(row);
             }, 150));

@@ -53,7 +53,29 @@
             </tr>
         </thead>
         <tbody id="smg-body">
+            @php $lastGroupCode = null; @endphp
             @foreach($salaryAccountRows as $account)
+                @if(($account['group_code'] ?? null) !== $lastGroupCode)
+                    @php
+                        $lastGroupCode = $account['group_code'] ?? null;
+                        $groupName = $account['group_name'] ?? 'ລາຍການບັນຊີ';
+                        $groupKey = $lastGroupCode ? 'coa-' . $lastGroupCode : 'coa-other';
+                    @endphp
+                    <tr class="smg-group-row">
+                        <td colspan="6">
+                            <button type="button"
+                                    class="smg-group-toggle"
+                                    data-group="{{ $groupKey }}"
+                                    aria-expanded="true">
+                                <span class="smg-group-chevron" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </span>
+                                <span class="smg-group-title">{{ $groupName }}</span>
+                            </button>
+                        </td>
+                    </tr>
+                @endif
+
                 @include('dashboards.finance_head.salary._entry_row', [
                     'e' => $entriesByAccount->get($account['id']),
                     'account' => $account,
@@ -164,6 +186,65 @@
     }
     .smg-table tbody tr:last-child td { border-bottom: none; }
     .smg-table tbody tr:hover { background: #fdfbf3; }
+    .smg-table tbody tr.smg-group-row:hover { background: #f8fafc; }
+    .smg-table .smg-group-row td {
+        padding: .72rem .8rem .48rem;
+        background: #f8fafc;
+        border-top: 1px solid var(--fns-gray-200);
+        border-bottom: 1px solid var(--fns-gray-200);
+    }
+    .smg-table tbody tr.smg-group-row:first-child td { border-top: none; }
+    .smg-group-toggle {
+        width: 100%;
+        display: flex; align-items: center; gap: .65rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .smg-group-toggle:focus-visible {
+        outline: 3px solid rgba(46,63,110,0.25);
+        outline-offset: 4px;
+        border-radius: 8px;
+    }
+    .smg-group-chevron {
+        width: 24px; height: 24px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 7px;
+        background: #fff;
+        color: var(--fns-navy);
+        box-shadow: inset 0 0 0 1px var(--fns-gray-200);
+        transition: transform .16s ease, background .16s ease;
+        flex: 0 0 auto;
+    }
+    .smg-group-chevron svg { width: 15px; height: 15px; }
+    .smg-group-toggle:hover .smg-group-chevron { background: #fff9e6; }
+    .smg-group-toggle.is-collapsed .smg-group-chevron { transform: rotate(-90deg); }
+    .smg-group-title {
+        display: flex; align-items: center; gap: .65rem;
+        color: var(--fns-navy);
+        font-size: .86rem; font-weight: 800;
+        line-height: 1.35;
+        flex: 1;
+    }
+    .smg-group-title::before {
+        content: "";
+        width: 8px; height: 24px;
+        border-radius: 999px;
+        background: var(--fns-gold);
+        box-shadow: 0 0 0 3px rgba(201,153,26,0.13);
+        flex: 0 0 auto;
+    }
+    .smg-group-title::after {
+        content: "";
+        height: 1px;
+        background: var(--fns-gray-200);
+        flex: 1;
+    }
+    .smg-row.is-collapsed { display: none; }
     .smg-table thead th.smg-th-editable::after {
         content: "ແກ້ໄຂໄດ້";
         display: inline-flex;
@@ -379,6 +460,18 @@
     }
 
     document.querySelectorAll('.smg-row').forEach(bindRow);
+    document.querySelectorAll('.smg-group-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const group = toggle.dataset.group;
+            const isCollapsed = toggle.getAttribute('aria-expanded') === 'true';
+
+            toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+            toggle.classList.toggle('is-collapsed', isCollapsed);
+            document.querySelectorAll(`.smg-row[data-group="${group}"]`).forEach(row => {
+                row.classList.toggle('is-collapsed', isCollapsed);
+            });
+        });
+    });
     recalcTotals();
 })();
 </script>

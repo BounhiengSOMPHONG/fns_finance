@@ -88,13 +88,30 @@ final class SalaryPlanController extends Controller
         }
 
         $parentAccountIds = $all->pluck('parent_id')->filter()->unique();
-        $leafAccounts = $subAccounts->reject(fn ($a) => $parentAccountIds->contains($a->id));
+        $leafAccounts = $subAccounts->reject(fn ($a) => $parentAccountIds->contains($a->id)
+            || preg_match('/^\d{3}0{5}$/', (string) $a->account_code));
+        $accountsById = $all->keyBy('id');
+        $rootIdsLookup = $rootIds->flip();
+        $accountsByCode = $all->keyBy('account_code');
 
-        $coa = $leafAccounts->sortBy('account_code')->values()->map(function ($a) {
+        $coa = $leafAccounts->sortBy('account_code')->values()->map(function ($a) use ($accountsByCode, $accountsById, $rootIdsLookup) {
+            $groupCode = substr((string) $a->account_code, 0, 3) . '00000';
+            $group = $accountsByCode->get($groupCode);
+
+            if (! $group) {
+                $group = $a;
+
+                while ($group?->parent_id && ! $rootIdsLookup->has($group->parent_id)) {
+                    $group = $accountsById->get($group->parent_id);
+                }
+            }
+
             return [
                 'id'   => $a->id,
                 'code' => $a->account_code,
                 'name' => $a->account_name,
+                'group_code' => $group?->account_code,
+                'group_name' => $group?->account_name,
             ];
         });
 

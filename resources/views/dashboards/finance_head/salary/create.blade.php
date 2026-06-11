@@ -5,7 +5,7 @@
 
 @section('content')
 <div style="max-width:480px;">
-    <a href="{{ route('head_of_finance.salary.index') }}" class="fns-btn fns-btn-secondary fns-btn-sm" style="margin-bottom:1.2rem;display:inline-flex;">← ກັບຄືນ</a>
+    <a href="{{ route('head_of_finance.manage-plan.index') }}" class="fns-btn fns-btn-secondary fns-btn-sm" style="margin-bottom:1.2rem;display:inline-flex;">← ກັບຄືນ</a>
 
     <div class="fns-card" style="padding:1.5rem;">
         <form method="POST" action="{{ route('head_of_finance.salary.store') }}">
@@ -32,7 +32,7 @@
 
             <div style="display:flex;gap:8px;margin-top:1.2rem;">
                 <button type="submit" class="fns-btn fns-btn-primary">ສ້າງແຜນ</button>
-                <a href="{{ route('head_of_finance.salary.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
+                <a href="{{ route('head_of_finance.manage-plan.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
             </div>
         </form>
     </div>

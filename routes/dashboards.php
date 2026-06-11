@@ -74,7 +74,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         // Salary Plans
         Route::resource('salary', \App\Http\Controllers\FinanceHead\SalaryPlanController::class, [
             'parameters' => ['salary' => 'salaryPlan'],
-        ])->except(['edit', 'update']);
+        ])->except(['edit', 'update', 'destroy']);
         Route::get('salary/{salaryPlan}/manage', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'manage'])->name('salary.manage');
 
         // Salary Entries (AJAX)

@@ -87,7 +87,10 @@ final class SalaryPlanController extends Controller
             $parentIds = $children->pluck('id');
         }
 
-        $coa = $subAccounts->sortBy('account_code')->values()->map(function ($a) {
+        $parentAccountIds = $all->pluck('parent_id')->filter()->unique();
+        $leafAccounts = $subAccounts->reject(fn ($a) => $parentAccountIds->contains($a->id));
+
+        $coa = $leafAccounts->sortBy('account_code')->values()->map(function ($a) {
             return [
                 'id'   => $a->id,
                 'code' => $a->account_code,

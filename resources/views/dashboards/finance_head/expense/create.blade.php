@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Create expense planning year')
-@section('page-title', 'Create expense planning year')
+@section('title', 'Create expense year')
+@section('page-title', 'Create expense year')
 
 @section('content')
 <div class="fns-card" style="max-width:560px;">
@@ -29,7 +29,7 @@
 
         <div style="display:flex;gap:10px;margin-top:1rem;">
             <button type="submit" class="fns-btn fns-btn-primary">Create</button>
-            <a href="{{ route('head_of_finance.expense.index') }}" class="fns-btn fns-btn-secondary">Cancel</a>
+            <a href="{{ route('head_of_finance.manage-plan.index') }}" class="fns-btn fns-btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

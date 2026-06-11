@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Expense planning ' . $planningYear->year)
-@section('page-title', 'Expense planning ' . $planningYear->year)
+@section('title', 'ລາຍຈ່າຍ ' . $planningYear->year)
+@section('page-title', 'ລາຍຈ່າຍ ' . $planningYear->year)
 
 @section('content')
 @php
@@ -95,7 +95,7 @@
 
 <div class="excel-plan">
     <div class="excel-toolbar">
-        <a href="{{ route('head_of_finance.expense.index') }}" class="excel-back">
+        <a href="{{ route('head_of_finance.manage-plan.index') }}" class="excel-back">
             <span>&larr;</span>
             Back
         </a>

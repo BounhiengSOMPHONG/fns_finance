@@ -21,9 +21,7 @@ class ExpensePlanController extends Controller
 {
     public function index()
     {
-        $plans = PlanningYear::orderByDesc('year')->paginate(15);
-
-        return view('dashboards.finance_head.expense.index', compact('plans'));
+        return redirect()->route('head_of_finance.manage-plan.index');
     }
 
     public function create()
@@ -315,7 +313,7 @@ class ExpensePlanController extends Controller
     {
         $expensePlan->delete();
 
-        return redirect()->route('head_of_finance.expense.index')
+        return redirect()->route('head_of_finance.manage-plan.index')
             ->with('success', 'ລຶບແຜນລາຍຈ່າຍສຳເລັດ');
     }
 

@@ -14,11 +14,13 @@ class ExpenseSection extends Model
         'name',
         'description',
         'display_order',
+        'summary_period_count',
         'is_active',
     ];
 
     protected $casts = [
         'display_order' => 'integer',
+        'summary_period_count' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

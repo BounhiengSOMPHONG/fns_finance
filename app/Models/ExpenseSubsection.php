@@ -15,12 +15,14 @@ class ExpenseSubsection extends Model
         'name',
         'description',
         'default_pattern_id',
+        'summary_period_count',
         'display_order',
         'is_active',
     ];
 
     protected $casts = [
         'display_order' => 'integer',
+        'summary_period_count' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -42,5 +44,10 @@ class ExpenseSubsection extends Model
     public function defaultPattern(): BelongsTo
     {
         return $this->belongsTo(ExpensePattern::class, 'default_pattern_id');
+    }
+
+    public function fieldSettings(): HasMany
+    {
+        return $this->hasMany(ExpenseSubsectionFieldSetting::class, 'subsection_id');
     }
 }

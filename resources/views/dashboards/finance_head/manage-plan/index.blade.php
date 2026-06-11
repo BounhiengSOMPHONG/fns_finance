@@ -35,7 +35,7 @@
                         <span>FY</span>
                         <strong>{{ $plan->year }}</strong>
                     </div>
-                    <div class="mp-card-title mb-5">
+                    <div class="mp-card-title">
                         <h3>{{ $plan->name ?: 'Planning ' . $plan->year }}</h3>
                         <p>{{ $plan->description ?: 'ຈັດການແຜນປະຈຳປີຮ່ວມກັນ' }}</p>
                     </div>
@@ -44,6 +44,20 @@
                     @endif
                 </div>
 
+                <div class="mp-status">
+                    <div>
+                        <span>ລາຍຮັບ</span>
+                        <strong>{{ $incomePlan ? 'ສ້າງແລ້ວ' : 'ຍັງບໍ່ມີ' }}</strong>
+                    </div>
+                    <div>
+                        <span>ເງິນເດືອນ</span>
+                        <strong>{{ $salaryPlan ? 'ສ້າງແລ້ວ' : 'ຍັງບໍ່ມີ' }}</strong>
+                    </div>
+                    <div>
+                        <span>ລາຍຈ່າຍ</span>
+                        <strong>{{ $expenseRows > 0 ? $expenseRows . ' ລາຍການ' : 'ຍັງບໍ່ມີ' }}</strong>
+                    </div>
+                </div>
 
                 <div class="mp-actions">
                     @if($incomePlan)

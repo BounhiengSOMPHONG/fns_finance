@@ -48,12 +48,14 @@
             'id' => $section->id,
             'code' => $section->code,
             'name' => $section->name,
+            'summary_period_count' => $section->summary_period_count ?? 12,
             'subsections' => $section->subsections->map(fn ($subsection) => [
                 'id' => $subsection->id,
                 'parent_id' => $subsection->parent_id,
                 'code' => $subsection->code,
                 'name' => $subsection->name,
                 'default_pattern_id' => $subsection->default_pattern_id,
+                'summary_period_count' => $subsection->summary_period_count ?? 12,
             ])->values(),
         ];
     })->values();
@@ -79,6 +81,16 @@
         'code' => $account->account_code,
         'name' => $account->account_name,
     ])->values();
+
+    $defaultRowsPayload = $defaultRows ?? collect();
+    $subsectionFieldSettingsPayload = ($subsectionFieldSettings ?? collect())->map(fn ($settings) => $settings->map(fn ($setting) => [
+        'pattern_field_id' => $setting->pattern_field_id,
+        'label' => $setting->label,
+        'display_order' => $setting->display_order,
+        'is_required' => $setting->is_required,
+        'is_active' => $setting->is_active,
+        'default_value' => $setting->default_value,
+    ]));
 @endphp
 
 <div class="excel-plan">
@@ -232,6 +244,61 @@
     </div>
 </div>
 
+<div class="excel-modal" id="fieldSettingsModal" aria-hidden="true">
+    <div class="excel-modal-panel excel-modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="fieldSettingsTitle">
+        <div class="excel-modal-head">
+            <div>
+                <h2 id="fieldSettingsTitle">Field labels</h2>
+                <p id="fieldSettingsSubtitle"></p>
+            </div>
+            <button type="button" class="excel-modal-close" data-close-modal>&times;</button>
+        </div>
+        <form method="POST" id="fieldSettingsForm" class="excel-modal-body">
+            @csrf
+            @method('PATCH')
+            <div class="excel-field-settings-table-wrap">
+                <table class="excel-field-settings-table">
+                    <thead>
+                        <tr>
+                            <th>Field key</th>
+                            <th>Label for this subsection</th>
+                            <th>Order</th>
+                            <th>Default</th>
+                            <th>Required</th>
+                            <th>Show</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fieldSettingsRows"></tbody>
+                </table>
+            </div>
+            <div class="excel-modal-actions">
+                <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>Cancel</button>
+                <button type="submit" class="fns-btn fns-btn-primary">Save labels</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="excel-modal" id="addExpenseRowModal" aria-hidden="true">
+    <div class="excel-modal-panel excel-modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="addExpenseRowTitle">
+        <div class="excel-modal-head">
+            <div>
+                <h2 id="addExpenseRowTitle">ເພີ່ມລາຍການ</h2>
+                <p id="addExpenseRowSubtitle"></p>
+            </div>
+            <button type="button" class="excel-modal-close" data-close-modal>&times;</button>
+        </div>
+        <form method="POST" id="addExpenseRowForm" class="excel-modal-body">
+            @csrf
+            <div id="addExpenseRowFields" class="excel-modal-grid"></div>
+            <div class="excel-modal-actions">
+                <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>ຍົກເລີກ</button>
+                <button type="submit" class="fns-btn fns-btn-primary">ເພີ່ມ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
     .excel-plan { display:flex; flex-direction:column; gap:1rem; }
     .excel-toolbar {
@@ -358,14 +425,42 @@
     .excel-summary-table td { border:1px solid #111827; padding:.35rem .45rem; background:#fff; }
     .excel-summary-table tfoot td { background:#f7f8fa; font-weight:900; }
     .excel-summary-highlight { background:#fffb00 !important; font-weight:900; }
+    .excel-summary-count-input {
+        width:4.5rem;
+        border:1px solid transparent;
+        background:transparent;
+        color:inherit;
+        font:inherit;
+        font-variant-numeric:tabular-nums;
+        text-align:right;
+        padding:.2rem .3rem;
+    }
+    .excel-summary-count-input:focus {
+        border-color:#2563eb;
+        background:#fff;
+        outline:0;
+    }
     .excel-subsections { padding:1rem; display:flex; flex-direction:column; gap:1.3rem; }
     .excel-parent-block { display:flex; flex-direction:column; gap:.85rem; }
     .excel-parent-title { padding:.2rem .1rem; }
     .excel-parent-title h3 { margin:0; color:#061226; font-size:1.15rem; font-weight:900; line-height:1.35; }
     .excel-block { border:1px solid #d8dce5; border-radius:6px; overflow:hidden; background:#fff; }
-    .excel-block-title { padding:.8rem .95rem; border-bottom:1px solid #d8dce5; background:#fff; }
+    .excel-block-title { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:.8rem .95rem; border-bottom:1px solid #d8dce5; background:#fff; }
     .excel-block-title h3 { margin:0; color:#061226; font-size:1rem; line-height:1.35; font-weight:900; }
     .excel-block-title p { margin:.3rem 0 0; color:var(--fns-gray-500); font-size:.75rem; }
+    .excel-field-settings-btn {
+        flex:0 0 auto;
+        border:1px solid var(--fns-gray-200);
+        border-radius:6px;
+        background:#fff;
+        color:var(--fns-navy);
+        padding:.38rem .55rem;
+        font-family:inherit;
+        font-size:.72rem;
+        font-weight:900;
+        cursor:pointer;
+    }
+    .excel-field-settings-btn:hover { border-color:var(--fns-gold); color:#111b33; }
     .excel-table-wrap { overflow:auto; }
     .excel-table { width:100%; min-width:880px; border-collapse:collapse; font-size:.82rem; }
     .excel-table th {
@@ -384,8 +479,9 @@
     .excel-account-search { min-width:340px; }
     .excel-money-input { text-align:right; font-variant-numeric:tabular-nums; }
     .excel-add-row td { background:#fffdf7; }
+    .excel-add-row td:not(.excel-seq):not(:has(.excel-add)) { display:none; }
+    .excel-add-row td:has(.excel-add) { text-align:center; }
     .excel-add { border:0; border-radius:6px; background:var(--fns-gold); color:#111b33; font-weight:900; padding:.45rem .75rem; cursor:pointer; white-space:nowrap; }
-    .excel-save-line { border:0; border-radius:6px; background:var(--fns-navy); color:#fff; font-weight:900; padding:.42rem .6rem; cursor:pointer; white-space:nowrap; margin-right:.25rem; }
     .excel-delete { border:0; background:transparent; color:#dc2626; font-size:1rem; cursor:pointer; line-height:1; }
     .excel-empty { color:var(--fns-gray-400); text-align:center; padding:.8rem; }
     .excel-unit { text-align:right; color:#111b33; font-weight:800; padding:.45rem .65rem; background:#f7f8fa; border-bottom:1px solid #d8dce5; }
@@ -410,6 +506,7 @@
         background:#fff;
         box-shadow:0 24px 70px rgba(15,23,42,.28);
     }
+    .excel-modal-panel-wide { width:min(960px, 100%); }
     .excel-modal-head {
         display:flex;
         align-items:center;
@@ -420,6 +517,7 @@
         background:#fbfbfc;
     }
     .excel-modal-head h2 { margin:0; color:var(--fns-navy); font-size:1rem; font-weight:900; }
+    .excel-modal-head p { margin:.2rem 0 0; color:var(--fns-gray-500); font-size:.78rem; font-weight:800; }
     .excel-modal-close {
         border:0;
         background:transparent;
@@ -439,6 +537,28 @@
     }
     .excel-modal-wide { grid-column:1 / -1; }
     .excel-modal-actions { display:flex; justify-content:flex-end; gap:.55rem; margin-top:1.25rem; }
+    .excel-field-settings-table-wrap { overflow:auto; }
+    .excel-field-settings-table { width:100%; min-width:760px; border-collapse:collapse; font-size:.82rem; }
+    .excel-field-settings-table th {
+        border-bottom:1px solid var(--fns-gray-200);
+        color:var(--fns-gray-500);
+        padding:.45rem .5rem;
+        text-align:left;
+        font-size:.72rem;
+        font-weight:900;
+        text-transform:uppercase;
+    }
+    .excel-field-settings-table td { border-bottom:1px solid #eef1f5; padding:.45rem .5rem; vertical-align:middle; }
+    .excel-field-key { color:var(--fns-navy); font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.78rem; }
+    .excel-field-settings-table input[type="text"],
+    .excel-field-settings-table input[type="number"] {
+        width:100%;
+        border:1px solid var(--fns-gray-200);
+        border-radius:7px;
+        padding:.48rem .55rem;
+        color:var(--fns-navy);
+        font:inherit;
+    }
     @media (max-width:760px) {
         .excel-toolbar, .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
         .excel-toolbar-actions { width:100%; justify-content:flex-start; }
@@ -460,9 +580,12 @@ const SECTIONS = @json($sectionsPayload);
 const PATTERNS = @json($patternsPayload);
 const RULES = @json($rulesPayload);
 const CHART_ACCOUNTS = @json($chartAccountsPayload);
+const DEFAULT_ROWS = @json($defaultRowsPayload);
+const SUBSECTION_FIELD_SETTINGS = @json($subsectionFieldSettingsPayload);
 let ROWS = @json($rowsPayload);
 let selectedSectionId = SECTIONS[0]?.id || null;
 let lastInputSectionId = SECTIONS[0]?.id || null;
+let activeAddBlock = null;
 const fmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 
 function esc(value) {
@@ -495,12 +618,63 @@ function rowsFor(sectionId, subsectionId = null) {
 }
 
 function totalFor(sectionId, subsectionId = null) {
-    return rowsFor(sectionId, subsectionId).reduce((sum, row) => sum + numberValue(row.total), 0);
+    return rowsFor(sectionId, subsectionId).reduce((sum, row) => sum + rowTotal(row), 0);
+}
+
+function childSubsections(section, subsectionId) {
+    const children = section.subsections.filter(subsection => Number(subsection.parent_id) === Number(subsectionId));
+    return children.flatMap(child => [child, ...childSubsections(section, child.id)]);
+}
+
+function summaryRowsFor(section, subsection) {
+    const ids = [subsection.id, ...childSubsections(section, subsection.id).map(child => child.id)];
+    return ROWS.filter(row => Number(row.section_id) === Number(section.id) && ids.some(id => Number(id) === Number(row.subsection_id)));
+}
+
+function topLevelSubsections(section) {
+    return section.subsections.filter(subsection => subsection.parent_id === null);
+}
+
+function summaryPeriodCount(item) {
+    const count = numberValue(item?.summary_period_count);
+    return count > 0 ? count : 12;
+}
+
+function subsectionSummaryValues(section, subsection) {
+    const directRows = rowsFor(section.id, subsection.id);
+    const rows = summaryRowsFor(section, subsection);
+    const rowTotalValue = rows.reduce((sum, row) => sum + rowTotal(row), 0);
+    const periodCount = summaryPeriodCount(subsection);
+    const rowMonthly = periodCount ? rowTotalValue / periodCount : rowTotalValue;
+
+    return {
+        monthly: rowMonthly,
+        qty: periodCount,
+        total: rowTotalValue,
+        monthlyText: fmt.format(rowMonthly),
+        qtyText: fmt.format(periodCount),
+        note: summaryNote(rows),
+    };
+}
+
+function sectionSummaryValues(section) {
+    return topLevelSubsections(section).reduce((summary, subsection) => {
+        const values = subsectionSummaryValues(section, subsection);
+        summary.monthly += values.monthly;
+        summary.total += values.total;
+        return summary;
+    }, {monthly: 0, total: 0});
 }
 
 function renderOverviewSummary() {
-    const grandTotal = ROWS.reduce((sum, row) => sum + numberValue(row.total), 0);
-    const monthlyGrandTotal = SECTIONS.reduce((sum, section) => sum + summaryValue(rowsFor(section.id), ['amount_per_month', 'unit_price']), 0);
+    const overviewValues = SECTIONS.reduce((summary, section) => {
+        const values = sectionSummaryValues(section);
+        summary.total += values.total;
+        summary.monthly += values.total / summaryPeriodCount(section);
+        return summary;
+    }, {monthly: 0, total: 0});
+    const grandTotal = overviewValues.total;
+    const monthlyGrandTotal = overviewValues.monthly;
 
     document.getElementById('overviewGrandTotal').textContent = fmt.format(grandTotal);
     document.getElementById('overviewSummary').innerHTML = `
@@ -518,10 +692,9 @@ function renderOverviewSummary() {
             </thead>
             <tbody>
                 ${SECTIONS.map((section, index) => {
-                    const sectionRows = rowsFor(section.id);
-                    const monthly = summaryValue(sectionRows, ['amount_per_month', 'unit_price']);
-                    const months = summaryValue(sectionRows, ['month_count']);
-                    const total = totalFor(section.id);
+                    const values = sectionSummaryValues(section);
+                    const periodCount = summaryPeriodCount(section);
+                    const monthly = values.total / periodCount;
 
                     return `
                         <tr>
@@ -529,8 +702,10 @@ function renderOverviewSummary() {
                             <td>${esc(section.name)}</td>
                             <td style="text-align:center;">${esc(section.code)}</td>
                             <td class="excel-number">${fmt.format(monthly)}</td>
-                            <td class="excel-number">${fmt.format(months || 12)}</td>
-                            <td class="excel-number excel-summary-highlight">${fmt.format(total)}</td>
+                            <td class="excel-number">
+                                <input class="excel-summary-count-input" type="text" inputmode="decimal" value="${moneyInputValue(periodCount)}" data-summary-section="${section.id}">
+                            </td>
+                            <td class="excel-number excel-summary-highlight">${fmt.format(values.total)}</td>
                             <td></td>
                         </tr>
                     `;
@@ -550,17 +725,14 @@ function renderOverviewSummary() {
         </table>
     `;
     document.getElementById('overviewSectionSummaries').innerHTML = SECTIONS.map(section => {
-        const finalSubsections = section.subsections.filter(subsection =>
-            !section.subsections.some(child => Number(child.parent_id) === Number(subsection.id))
-        );
-
         return `
             <div class="excel-preview-block">
                 <h3 class="excel-preview-title">${esc(section.code)} ${esc(section.name)}</h3>
-                ${renderSectionSummary(section, finalSubsections)}
+                ${renderSectionSummary(section, topLevelSubsections(section))}
             </div>
         `;
     }).join('');
+    bindSummaryCountEvents();
 }
 
 function renderTabs() {
@@ -571,7 +743,7 @@ function renderTabs() {
                 ${esc(section.name)}
                 <small>${section.subsections.filter(subsection => !section.subsections.some(child => Number(child.parent_id) === Number(subsection.id))).length} ຫົວຂໍ້ຍ່ອຍ</small>
             </span>
-            <span class="excel-tab-total">${fmt.format(totalFor(section.id))}</span>
+            <span class="excel-tab-total">${fmt.format(sectionSummaryValues(section).total)}</span>
         </button>
     `).join('');
     syncSectionNavButtons();
@@ -619,8 +791,38 @@ function calculateFormula(formula, values) {
     }, 0);
 }
 
-function visibleFields(pattern) {
-    return (pattern?.fields || []).filter(field => field.key !== 'reference');
+function rowTotal(row) {
+    const rule = activeRule(row.section_id, row.subsection_id, row.pattern_id);
+
+    if (rule) {
+        return calculateFormula(rule.formula, row.values || {});
+    }
+
+    return numberValue(row.values?.yearly_total ?? row.total);
+}
+
+function subsectionFieldSetting(subsection, field) {
+    return SUBSECTION_FIELD_SETTINGS?.[subsection?.id]?.[field.id] || null;
+}
+
+function fieldsForSubsection(pattern, subsection) {
+    return (pattern?.fields || []).map(field => {
+        const setting = subsectionFieldSetting(subsection, field);
+
+        return {
+            ...field,
+            label: setting?.label || field.label,
+            order: setting?.display_order ?? field.order,
+            required: setting?.is_required ?? field.required,
+            active: setting?.is_active ?? field.active,
+            default_value: setting?.default_value ?? field.default_value,
+        };
+    }).filter(field => field.active)
+      .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+}
+
+function visibleFields(pattern, subsection) {
+    return fieldsForSubsection(pattern, subsection).filter(field => field.key !== 'reference');
 }
 
 function rowDisplayValue(row, field) {
@@ -638,7 +840,7 @@ function renderSheet() {
 
     if (isOverview) {
         renderOverviewSummary();
-        document.getElementById('grandTotal').textContent = fmt.format(ROWS.reduce((sum, row) => sum + numberValue(row.total), 0));
+        document.getElementById('grandTotal').textContent = fmt.format(SECTIONS.reduce((sum, section) => sum + sectionSummaryValues(section).total, 0));
         syncSectionNavButtons();
         return;
     }
@@ -653,8 +855,8 @@ function renderSheet() {
         !section.subsections.some(child => Number(child.parent_id) === Number(subsection.id))
     );
     document.getElementById('sectionMeta').textContent = `${finalSubsections.length} ຫົວຂໍ້ຍ່ອຍ`;
-    document.getElementById('sectionTotal').textContent = fmt.format(totalFor(section.id));
-    document.getElementById('grandTotal').textContent = fmt.format(ROWS.reduce((sum, row) => sum + numberValue(row.total), 0));
+    document.getElementById('sectionTotal').textContent = fmt.format(sectionSummaryValues(section).total);
+    document.getElementById('grandTotal').textContent = fmt.format(SECTIONS.reduce((sum, item) => sum + sectionSummaryValues(item).total, 0));
     document.getElementById('subsectionSheets').innerHTML = section.subsections
         .filter(subsection => subsection.parent_id === null)
         .map(subsection => renderSubsectionGroup(section, subsection))
@@ -669,9 +871,25 @@ function summaryValue(rows, keys) {
     }, 0);
 }
 
+function summaryNote(rows) {
+    const notes = [...new Set(rows
+        .map(row => String(row.values?.note || row.detail || '').trim())
+        .filter(Boolean)
+    )];
+
+    if (notes.length <= 2) {
+        return notes.join(', ');
+    }
+
+    return `${notes.slice(0, 2).join(', ')} +${notes.length - 2}`;
+}
+
 function renderSectionSummary(section, subsections) {
-    const subtotal = totalFor(section.id);
-    const monthlyTotal = summaryValue(rowsFor(section.id), ['amount_per_month', 'unit_price']);
+    const sectionValues = sectionSummaryValues(section);
+    const subtotal = sectionValues.total;
+    const monthlyTotal = subsections.reduce((sum, subsection) => {
+        return sum + subsectionSummaryValues(section, subsection).monthly;
+    }, 0);
 
     return `
         <table class="excel-summary-table">
@@ -688,21 +906,19 @@ function renderSectionSummary(section, subsections) {
             </thead>
             <tbody>
                 ${subsections.map((subsection, index) => {
-                    const rows = rowsFor(section.id, subsection.id);
-                    const monthly = summaryValue(rows, ['amount_per_month', 'unit_price']);
-                    const qty = summaryValue(rows, ['month_count', 'quantity', 'times_per_year', 'frequency_count', 'event_count']);
-                    const total = totalFor(section.id, subsection.id);
-                    const note = rows.map(row => row.values?.note || row.detail).filter(Boolean).join(', ');
+                    const summary = subsectionSummaryValues(section, subsection);
 
                     return `
                         <tr>
                             <td class="excel-seq">${index + 1}</td>
                             <td>${esc(subsection.name)}</td>
                             <td style="text-align:center;">${esc(subsection.code)}</td>
-                            <td class="excel-number">${fmt.format(monthly)}</td>
-                            <td class="excel-number">${fmt.format(qty)}</td>
-                            <td class="excel-number excel-summary-highlight">${fmt.format(total)}</td>
-                            <td>${esc(note)}</td>
+                            <td class="excel-number">${summary.monthlyText}</td>
+                            <td class="excel-number">
+                                <input class="excel-summary-count-input" type="text" inputmode="decimal" value="${esc(summary.qtyText)}" data-summary-subsection="${subsection.id}">
+                            </td>
+                            <td class="excel-number excel-summary-highlight">${fmt.format(summary.total)}</td>
+                            <td>${esc(summary.note)}</td>
                         </tr>
                     `;
                 }).join('')}
@@ -725,14 +941,21 @@ function renderSectionSummary(section, subsections) {
 function renderSubsectionGroup(section, subsection) {
     const children = section.subsections.filter(child => Number(child.parent_id) === Number(subsection.id));
     if (!children.length) {
+        if (!rowsFor(section.id, subsection.id).length && !(DEFAULT_ROWS[subsection.code] || []).length) {
+            return '';
+        }
+
         return renderSubsection(section, subsection);
     }
+
+    const hasOwnRows = rowsFor(section.id, subsection.id).length || (DEFAULT_ROWS[subsection.code] || []).length;
 
     return `
         <div class="excel-parent-block">
             <div class="excel-parent-title">
                 <h3>${esc(subsection.code)} &nbsp;${esc(subsection.name)}</h3>
             </div>
+            ${hasOwnRows ? renderSubsection(section, subsection) : ''}
             ${children.map(child => renderSubsection(section, child)).join('')}
         </div>
     `;
@@ -740,19 +963,21 @@ function renderSubsectionGroup(section, subsection) {
 
 function renderSubsection(section, subsection) {
     const pattern = PATTERNS[subsection.default_pattern_id] || Object.values(PATTERNS)[0];
-    const fields = visibleFields(pattern);
+    const fields = visibleFields(pattern, subsection);
     const normalFields = fields.filter(field => field.key !== 'yearly_total');
     const totalField = fields.find(field => field.key === 'yearly_total') || fields.find(field => field.calculated);
     const rows = rowsFor(section.id, subsection.id);
     const subtotal = totalFor(section.id, subsection.id);
     const inputRow = Object.fromEntries(fields.map(field => [field.key, field.default_value ?? '']));
     if (!inputRow.item_name) inputRow.item_name = '';
-
     return `
         <article class="excel-block" data-section="${section.id}" data-subsection="${subsection.id}" data-pattern="${pattern?.id || ''}">
             <div class="excel-block-title">
-                <h3>${esc(subsection.code)} &nbsp;${esc(subsection.name)}</h3>
+                <div>
+                    <h3>${esc(subsection.code)} &nbsp;${esc(subsection.name)}</h3>
                 <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
+                </div>
+                <button type="button" class="excel-field-settings-btn" data-field-settings="${subsection.id}">Field labels</button>
             </div>
             <div class="excel-unit">ໜ່ວຍ: ກີບ</div>
             <div class="excel-table-wrap">
@@ -796,9 +1021,8 @@ function renderSavedRow(row, index, normalFields, totalField) {
                                   inputmode="${field.type === 'number' ? 'decimal' : 'text'}" value="${esc(field.type === 'number' ? moneyInputValue(rowDisplayValue(row, field)) : rowDisplayValue(row, field))}" placeholder="${esc(field.label)}" ${field.required ? 'required' : ''}>`}
                 </td>
             `).join('')}
-            ${totalField ? `<td><input class="excel-input excel-money-input" name="${esc(totalField.key)}" data-type="number" data-calculated="1" type="text" inputmode="decimal" value="${moneyInputValue(row.total || rowDisplayValue(row, totalField))}" readonly></td>` : ''}
+            ${totalField ? `<td><input class="excel-input excel-money-input" name="${esc(totalField.key)}" data-type="number" data-calculated="1" type="text" inputmode="decimal" value="${moneyInputValue(rowTotal(row))}" readonly></td>` : ''}
             <td style="text-align:center;">
-                <button type="button" class="excel-save-line" data-update="${row.id}" title="Save">Save</button>
                 <button type="button" class="excel-delete" data-delete="${row.id}" title="Delete">&times;</button>
             </td>
         </tr>
@@ -811,7 +1035,7 @@ function renderInputRow(values, normalFields, totalField) {
             <td class="excel-seq">+</td>
             ${normalFields.map(field => `
                 <td class="${field.key === 'item_name' ? 'excel-name' : ''}">
-                    ${field.key === 'item_name' ? renderChartAccountSelect(field) : `
+                    ${field.key === 'item_name' ? renderChartAccountSelect(field, values.reference || '', values.item_name || '') : `
                         <input class="excel-input ${field.type === 'number' ? 'excel-money-input' : ''}" name="${esc(field.key)}" data-type="${esc(field.type)}" type="${field.type === 'number' ? 'text' : field.type === 'date' ? 'date' : 'text'}"
                                inputmode="${field.type === 'number' ? 'decimal' : 'text'}" value="${esc(field.type === 'number' ? moneyInputValue(values[field.key]) : values[field.key])}" placeholder="${esc(field.label)}" ${field.required ? 'required' : ''}>
                     `}
@@ -841,6 +1065,73 @@ function renderChartAccountSelect(field, selectedCode = '', selectedName = '') {
     `;
 }
 
+function findSubsection(subsectionId) {
+    return SECTIONS.flatMap(section => section.subsections).find(subsection => Number(subsection.id) === Number(subsectionId));
+}
+
+function fieldSettingValue(subsection, field, key, fallback = '') {
+    const setting = subsectionFieldSetting(subsection, field);
+    return setting?.[key] ?? fallback;
+}
+
+function openFieldSettingsModal(subsectionId) {
+    const subsection = findSubsection(subsectionId);
+    if (!subsection) return;
+
+    const pattern = PATTERNS[subsection.default_pattern_id];
+    const fields = fieldsForSubsection(pattern, subsection).filter(field => field.key !== 'reference');
+    const form = document.getElementById('fieldSettingsForm');
+    form.dataset.subsection = subsection.id;
+    form.action = `/head-of-finance/expense/${PLANNING_YEAR_ID}/subsections/${subsection.id}/field-settings`;
+    document.getElementById('fieldSettingsSubtitle').textContent = `${subsection.code} - ${subsection.name}`;
+    document.getElementById('fieldSettingsRows').innerHTML = fields.map(field => `
+        <tr data-field="${field.id}">
+            <td class="excel-field-key">
+                ${esc(field.key)}
+                <input type="hidden" name="pattern_field_id" value="${field.id}">
+            </td>
+            <td><input type="text" name="label" value="${esc(field.label)}" placeholder="${esc(field.label)}"></td>
+            <td><input type="number" name="display_order" min="0" max="999" value="${esc(field.order ?? '')}"></td>
+            <td><input type="text" name="default_value" value="${esc(field.default_value ?? '')}"></td>
+            <td style="text-align:center;"><input type="checkbox" name="is_required" value="1" ${field.required ? 'checked' : ''}></td>
+            <td style="text-align:center;"><input type="checkbox" name="is_active" value="1" ${field.active ? 'checked' : ''}></td>
+        </tr>
+    `).join('');
+
+    openModal(document.getElementById('fieldSettingsModal'));
+}
+
+async function saveFieldSettings(event) {
+    event.preventDefault();
+    const form = event.target;
+    const subsectionId = Number(form.dataset.subsection);
+    const fields = Array.from(form.querySelectorAll('tbody tr')).map(row => ({
+        pattern_field_id: Number(row.querySelector('input[name="pattern_field_id"]').value),
+        label: row.querySelector('input[name="label"]').value,
+        display_order: row.querySelector('input[name="display_order"]').value || null,
+        default_value: row.querySelector('input[name="default_value"]').value,
+        is_required: row.querySelector('input[name="is_required"]').checked,
+        is_active: row.querySelector('input[name="is_active"]').checked,
+    }));
+
+    const response = await fetch(form.action, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF},
+        body: JSON.stringify({fields}),
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+        toast('Could not save field labels');
+        return;
+    }
+
+    SUBSECTION_FIELD_SETTINGS[subsectionId] = data.settings;
+    closeModal(document.getElementById('fieldSettingsModal'));
+    renderSheet();
+    toast('Field labels saved');
+}
+
 function bindSheetEvents() {
     document.querySelectorAll('.excel-block').forEach(block => updateBlockTotal(block));
 
@@ -861,15 +1152,24 @@ function bindSheetEvents() {
     });
 
     document.querySelectorAll('.excel-add').forEach(button => {
-        button.addEventListener('click', event => saveBlockRow(event.target.closest('.excel-block')));
-    });
-
-    document.querySelectorAll('.excel-save-line').forEach(button => {
-        button.addEventListener('click', event => updateSavedRow(event.target.closest('.excel-saved-row')));
+        button.addEventListener('click', event => openAddRowModal(event.target.closest('.excel-block')));
     });
 
     document.querySelectorAll('.excel-delete').forEach(button => {
         button.addEventListener('click', event => deleteRow(event.target.dataset.delete));
+    });
+
+    document.querySelectorAll('.excel-saved-row input').forEach(input => {
+        input.addEventListener('change', event => updateSavedRow(event.target.closest('.excel-saved-row')));
+        input.addEventListener('keydown', event => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            event.target.blur();
+        });
+    });
+
+    document.querySelectorAll('.excel-field-settings-btn').forEach(button => {
+        button.addEventListener('click', event => openFieldSettingsModal(event.target.dataset.fieldSettings));
     });
 }
 
@@ -880,14 +1180,60 @@ function inputValues(block) {
 function lineValues(row) {
     const values = {};
     row.querySelectorAll('input, select').forEach(input => {
+        if (input.name === '_token' || input.name === '_method') return;
         if (!input.name || input.name === 'chart_account_id' || input.name === 'chart_account_search') return;
         values[input.name] = input.dataset.type === 'number' ? numberValue(input.value) : input.value;
     });
     return values;
 }
 
+function bindAddModalInputs(form) {
+    form.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', event => {
+            if (event.target.dataset.type === 'number' && !event.target.readOnly) {
+                event.target.value = moneyInputValue(event.target.value);
+            }
+            if (activeAddBlock) updateSourceTotal(activeAddBlock, form);
+        });
+    });
+
+    form.querySelectorAll('.excel-account-search').forEach(input => {
+        input.addEventListener('input', event => syncChartAccount(event.target));
+        input.addEventListener('change', event => syncChartAccount(event.target));
+    });
+}
+
+function openAddRowModal(block) {
+    activeAddBlock = block;
+    const sectionId = Number(block.dataset.section);
+    const subsectionId = Number(block.dataset.subsection);
+    const subsection = SECTIONS.find(section => Number(section.id) === sectionId)?.subsections.find(sub => Number(sub.id) === subsectionId);
+    const headers = Array.from(block.querySelectorAll('thead th')).slice(1, -1);
+    const cells = Array.from(block.querySelectorAll('.excel-add-row td')).slice(1, -1);
+    const fields = document.getElementById('addExpenseRowFields');
+    const form = document.getElementById('addExpenseRowForm');
+
+    document.getElementById('addExpenseRowSubtitle').textContent = subsection
+        ? `${subsection.code} - ${subsection.name}`
+        : '';
+
+    form.dataset.section = block.dataset.section;
+    form.dataset.subsection = block.dataset.subsection;
+    form.dataset.pattern = block.dataset.pattern;
+    fields.innerHTML = cells.map((cell, index) => `
+        <label class="${cell.querySelector('input[name="item_name"]') ? 'excel-modal-wide' : ''}">
+            <span>${esc(headers[index]?.textContent || 'Field')}</span>
+            <div>${cell.innerHTML}</div>
+        </label>
+    `).join('');
+
+    bindAddModalInputs(form);
+    updateSourceTotal(block, form);
+    openModal(document.getElementById('addExpenseRowModal'));
+}
+
 function syncChartAccount(searchInput) {
-    const row = searchInput.closest('tr');
+    const row = searchInput.closest('tr, form');
     const value = searchInput.value.trim().toLowerCase();
     const account = CHART_ACCOUNTS.find(item =>
         `${item.code} - ${item.name}`.toLowerCase() === value ||
@@ -899,13 +1245,8 @@ function syncChartAccount(searchInput) {
     row.querySelector('input[name="reference"]').value = account?.code || '';
 }
 
-function updateBlockTotal(block) {
-    updateLineTotal(block.querySelector('.excel-add-row'));
-}
-
-function updateLineTotal(row) {
-    if (!row) return;
-    const block = row.closest('.excel-block');
+function updateSourceTotal(block, row) {
+    if (!block || !row) return;
     const sectionId = Number(block.dataset.section);
     const subsectionId = Number(row.dataset.subsection || block.dataset.subsection);
     const patternId = Number(row.dataset.pattern || block.dataset.pattern);
@@ -916,10 +1257,20 @@ function updateLineTotal(row) {
     if (totalInput) totalInput.value = moneyInputValue(total);
 }
 
-async function saveBlockRow(block) {
-    updateBlockTotal(block);
-    const accountSearch = block.querySelector('.excel-account-search');
-    if (accountSearch && accountSearch.value.trim() && !block.querySelector('input[name="chart_account_id"]').value) {
+function updateBlockTotal(block) {
+    updateSourceTotal(block, block.querySelector('.excel-add-row'));
+}
+
+function updateLineTotal(row) {
+    if (!row) return;
+    const block = row.closest('.excel-block');
+    updateSourceTotal(block, row);
+}
+
+async function saveBlockRow(block, sourceRow = block.querySelector('.excel-add-row')) {
+    updateSourceTotal(block, sourceRow);
+    const accountSearch = sourceRow.querySelector('.excel-account-search');
+    if (accountSearch && accountSearch.value.trim() && !sourceRow.querySelector('input[name="chart_account_id"]').value) {
         toast('Choose an account from the search list');
         accountSearch.focus();
         return;
@@ -929,7 +1280,7 @@ async function saveBlockRow(block) {
     const subsectionId = Number(block.dataset.subsection);
     const patternId = Number(block.dataset.pattern);
     const subsection = SECTIONS.find(section => Number(section.id) === sectionId)?.subsections.find(sub => Number(sub.id) === subsectionId);
-    const values = inputValues(block);
+    const values = lineValues(sourceRow);
     const planDetail = values.item_name || subsection?.name || 'Expense row';
 
     const response = await fetch(@json(route('head_of_finance.expense-plan-rows.store')), {
@@ -1018,6 +1369,58 @@ async function deleteRow(id) {
     toast('Deleted');
 }
 
+function bindSummaryCountEvents() {
+    document.querySelectorAll('[data-summary-section], [data-summary-subsection]').forEach(input => {
+        input.addEventListener('change', event => saveSummaryCount(event.target));
+        input.addEventListener('keydown', event => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            event.target.blur();
+        });
+    });
+}
+
+async function saveSummaryCount(input) {
+    const count = numberValue(input.value);
+    if (count <= 0) {
+        input.value = '12';
+        toast('ຈ/ນ must be more than 0');
+        return;
+    }
+
+    const sectionId = input.dataset.summarySection;
+    const subsectionId = input.dataset.summarySubsection;
+    const url = sectionId
+        ? `/head-of-finance/expense/${PLANNING_YEAR_ID}/sections/${sectionId}/summary-settings`
+        : `/head-of-finance/expense/${PLANNING_YEAR_ID}/subsections/${subsectionId}/summary-settings`;
+
+    const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF},
+        body: JSON.stringify({summary_period_count: count}),
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+        toast('Could not save ຈ/ນ');
+        return;
+    }
+
+    if (sectionId) {
+        const section = SECTIONS.find(item => Number(item.id) === Number(sectionId));
+        if (section) section.summary_period_count = data.section.summary_period_count;
+    } else {
+        const subsection = SECTIONS.flatMap(section => section.subsections).find(item => Number(item.id) === Number(subsectionId));
+        if (subsection) subsection.summary_period_count = data.subsection.summary_period_count;
+    }
+
+    renderTabs();
+    renderSheet();
+    closeModal(document.getElementById('addExpenseRowModal'));
+    activeAddBlock = null;
+    toast('Saved');
+}
+
 function toast(message) {
     const el = document.createElement('div');
     el.className = 'excel-toast';
@@ -1052,6 +1455,9 @@ document.getElementById('backFromTotalPage').addEventListener('click', () => {
 
 const sectionModal = document.getElementById('sectionModal');
 const subsectionModal = document.getElementById('subsectionModal');
+const fieldSettingsModal = document.getElementById('fieldSettingsModal');
+const addExpenseRowModal = document.getElementById('addExpenseRowModal');
+const addExpenseRowForm = document.getElementById('addExpenseRowForm');
 const subsectionForm = document.getElementById('subsectionForm');
 const subsectionSection = document.getElementById('subsectionSection');
 const subsectionParent = document.getElementById('subsectionParent');
@@ -1098,12 +1504,21 @@ document.getElementById('openSubsectionModal').addEventListener('click', () => {
 });
 
 subsectionSection?.addEventListener('change', syncSubsectionModal);
+document.getElementById('fieldSettingsForm')?.addEventListener('submit', saveFieldSettings);
+addExpenseRowForm?.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!activeAddBlock) return;
+    saveBlockRow(activeAddBlock, event.target);
+});
 
 document.addEventListener('click', event => {
     if (!event.target.matches('[data-close-modal]') && !event.target.classList.contains('excel-modal')) return;
 
     closeModal(sectionModal);
     closeModal(subsectionModal);
+    closeModal(fieldSettingsModal);
+    closeModal(addExpenseRowModal);
+    activeAddBlock = null;
 });
 
 document.addEventListener('keydown', event => {
@@ -1111,6 +1526,9 @@ document.addEventListener('keydown', event => {
 
     closeModal(sectionModal);
     closeModal(subsectionModal);
+    closeModal(fieldSettingsModal);
+    closeModal(addExpenseRowModal);
+    activeAddBlock = null;
 });
 
 renderTabs();

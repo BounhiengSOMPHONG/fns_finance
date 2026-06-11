@@ -40,6 +40,8 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             Route::patch('expense-pattern-fields/{expensePatternField}', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'updateField'])->name('expense-pattern-fields.update');
             Route::delete('expense-pattern-fields/{expensePatternField}', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'destroyField'])->name('expense-pattern-fields.destroy');
             Route::get('expense-structure', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'index'])->name('expense-structure.index');
+            Route::get('expense-default-rows/accounts', [\App\Http\Controllers\FinanceHead\Settings\ExpenseDefaultRowAccountController::class, 'index'])->name('expense-default-rows.accounts.index');
+            Route::patch('expense-default-rows/{expenseSubsectionDefaultRow}/account', [\App\Http\Controllers\FinanceHead\Settings\ExpenseDefaultRowAccountController::class, 'update'])->name('expense-default-rows.account.update');
             Route::post('expense-structure/sections', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'storeSection'])->name('expense-structure.sections.store');
             Route::patch('expense-structure/sections/{expenseSection}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'updateSection'])->name('expense-structure.sections.update');
             Route::delete('expense-structure/sections/{expenseSection}', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'destroySection'])->name('expense-structure.sections.destroy');
@@ -60,6 +62,9 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         ])->except(['edit', 'update', 'show']);
         Route::get('expense/{expensePlan}/manage', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'manage'])->name('expense.manage');
         Route::post('expense/{expensePlan}/approve', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'approve'])->name('expense.approve');
+        Route::patch('expense/{expensePlan}/sections/{expenseSection}/summary-settings', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'updateSectionSummarySettings'])->name('expense.section-summary-settings.update');
+        Route::patch('expense/{expensePlan}/subsections/{expenseSubsection}/summary-settings', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'updateSubsectionSummarySettings'])->name('expense.subsection-summary-settings.update');
+        Route::patch('expense/{expensePlan}/subsections/{expenseSubsection}/field-settings', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'updateSubsectionFieldSettings'])->name('expense.subsection-field-settings.update');
 
         // Expense plan rows (AJAX dynamic fields)
         Route::post('expense-plan-rows', [\App\Http\Controllers\FinanceHead\ExpensePlanRowController::class, 'store'])->name('expense-plan-rows.store');

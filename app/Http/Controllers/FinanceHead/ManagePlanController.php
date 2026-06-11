@@ -7,6 +7,7 @@ use App\Models\AcademicIncomePlan;
 use App\Models\ExpenseCalculationRule;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
+use App\Models\ExpenseSubsectionFieldSetting;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use App\Models\SalaryPlan;
@@ -128,6 +129,7 @@ class ManagePlanController extends Controller
                 'name' => $sourceSection->name,
                 'description' => $sourceSection->description,
                 'display_order' => $sourceSection->display_order,
+                'summary_period_count' => $sourceSection->summary_period_count ?? 12,
                 'is_active' => $sourceSection->is_active,
             ]);
 
@@ -141,6 +143,7 @@ class ManagePlanController extends Controller
                     'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
                     'default_pattern_id' => $sourceSubsection->default_pattern_id,
+                    'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,
                     'display_order' => $sourceSubsection->display_order,
                     'is_active' => $sourceSubsection->is_active,
                 ]);
@@ -163,6 +166,21 @@ class ManagePlanController extends Controller
             ->each(function (PlanningYearFieldSetting $setting) use ($targetYear): void {
                 PlanningYearFieldSetting::updateOrCreate([
                     'planning_year_id' => $targetYear->id,
+                    'pattern_field_id' => $setting->pattern_field_id,
+                ], [
+                    'label' => $setting->label,
+                    'display_order' => $setting->display_order,
+                    'is_required' => $setting->is_required,
+                    'is_active' => $setting->is_active,
+                    'default_value' => $setting->default_value,
+                ]);
+            });
+
+        ExpenseSubsectionFieldSetting::whereIn('subsection_id', array_keys($subsectionIdMap))
+            ->get()
+            ->each(function (ExpenseSubsectionFieldSetting $setting) use ($subsectionIdMap): void {
+                ExpenseSubsectionFieldSetting::updateOrCreate([
+                    'subsection_id' => $subsectionIdMap[$setting->subsection_id],
                     'pattern_field_id' => $setting->pattern_field_id,
                 ], [
                     'label' => $setting->label,

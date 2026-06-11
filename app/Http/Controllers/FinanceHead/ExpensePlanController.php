@@ -9,9 +9,12 @@ use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
+use App\Models\ExpenseSubsectionDefaultRow;
+use App\Models\ExpenseSubsectionFieldSetting;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ExpensePlanController extends Controller
@@ -85,6 +88,8 @@ class ExpensePlanController extends Controller
             ->where('is_active', true)
             ->get();
 
+        $this->ensureDefaultExpenseRows($planningYear, $sections, $patterns, $rules);
+
         $expenseRows = ExpensePlan::with(['values', 'section', 'subsection', 'pattern'])
             ->where('planning_year_id', $planningYear->id)
             ->orderBy('section_id')
@@ -96,6 +101,33 @@ class ExpensePlanController extends Controller
             ->orderBy('account_code')
             ->get(['id', 'account_code', 'account_name']);
 
+        $subsectionCodes = $sections
+            ->flatMap(fn ($section) => $section->subsections->pluck('code'))
+            ->unique()
+            ->values();
+        $subsectionIds = $sections
+            ->flatMap(fn ($section) => $section->subsections->pluck('id'))
+            ->unique()
+            ->values();
+
+        $defaultRows = ExpenseSubsectionDefaultRow::whereIn('subsection_code', $subsectionCodes)
+            ->where('is_active', true)
+            ->orderBy('subsection_code')
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('subsection_code')
+            ->map(fn ($rows) => $rows->map(fn ($row) => [
+                'item_name' => $row->item_name,
+                'reference' => $row->reference,
+                'note' => $row->note,
+                'values' => $row->default_values ?? [],
+            ])->values());
+
+        $subsectionFieldSettings = ExpenseSubsectionFieldSetting::whereIn('subsection_id', $subsectionIds)
+            ->get()
+            ->groupBy('subsection_id')
+            ->map(fn ($settings) => $settings->keyBy('pattern_field_id'));
+
         return view('dashboards.finance_head.expense.manage', [
             'planningYear' => $planningYear,
             'sections' => $sections,
@@ -104,7 +136,179 @@ class ExpensePlanController extends Controller
             'rules' => $rules,
             'expenseRows' => $expenseRows,
             'chartAccounts' => $chartAccounts,
+            'defaultRows' => $defaultRows,
+            'subsectionFieldSettings' => $subsectionFieldSettings,
         ]);
+    }
+
+    private function ensureDefaultExpenseRows(PlanningYear $planningYear, $sections, $patterns, $rules): void
+    {
+        $subsections = $sections->flatMap(fn ($section) => $section->subsections);
+        $subsectionCodes = $subsections->pluck('code')->unique()->values();
+        $defaultsByCode = ExpenseSubsectionDefaultRow::whereIn('subsection_code', $subsectionCodes)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('subsection_code');
+
+        if ($defaultsByCode->isEmpty()) {
+            return;
+        }
+
+        $patternsById = $patterns->keyBy('id');
+
+        DB::transaction(function () use ($planningYear, $subsections, $defaultsByCode, $patternsById, $rules): void {
+            $existingKeys = ExpensePlan::where('planning_year_id', $planningYear->id)
+                ->whereIn('subsection_id', $subsections->pluck('id')->filter()->values())
+                ->get(['subsection_id', 'plan_detail'])
+                ->mapWithKeys(fn (ExpensePlan $row) => [
+                    $row->subsection_id . '|' . trim((string) $row->plan_detail) => true,
+                ]);
+
+            $planRows = [];
+            $valueRowsByKey = [];
+            $userId = Auth::id();
+            $now = now();
+
+            foreach ($subsections as $subsection) {
+                $defaultRows = $defaultsByCode->get($subsection->code);
+                if (!$defaultRows || !$subsection->default_pattern_id) {
+                    continue;
+                }
+
+                $pattern = $patternsById->get($subsection->default_pattern_id);
+                if (!$pattern) {
+                    continue;
+                }
+
+                foreach ($defaultRows as $defaultRow) {
+                    $itemName = trim((string) $defaultRow->item_name);
+                    $rowKey = $subsection->id . '|' . $itemName;
+
+                    if ($existingKeys->has($rowKey)) {
+                        continue;
+                    }
+
+                    $values = array_merge([
+                        'item_name' => $defaultRow->item_name,
+                        'reference' => $defaultRow->reference,
+                        'note' => $defaultRow->note,
+                    ], $defaultRow->default_values ?? []);
+
+                    $rule = $rules
+                        ->where('pattern_id', $pattern->id)
+                        ->filter(fn ($rule) => $rule->section_id === null || (int) $rule->section_id === (int) $subsection->section_id)
+                        ->filter(fn ($rule) => $rule->subsection_id === null || (int) $rule->subsection_id === (int) $subsection->id)
+                        ->sortBy(fn ($rule) => ($rule->subsection_id === null ? 1 : 0) + ($rule->section_id === null ? 1 : 0))
+                        ->first();
+
+                    if ($rule) {
+                        $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
+                    }
+
+                    $planRows[] = [
+                        'planning_year_id' => $planningYear->id,
+                        'section_id' => $subsection->section_id,
+                        'subsection_id' => $subsection->id,
+                        'pattern_id' => $pattern->id,
+                        'version' => (string) $planningYear->year,
+                        'plan_type' => $pattern->key,
+                        'plan_detail' => $defaultRow->item_name,
+                        'detail' => $defaultRow->note,
+                        'created_by' => $userId,
+                        'updated_by' => $userId,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+
+                    $fieldValues = [];
+                    foreach ($pattern->fields as $field) {
+                        if (array_key_exists($field->field_key, $values)) {
+                            $fieldValues[] = $this->makeExpensePlanValuePayload(
+                                $field->field_key,
+                                $field->data_type,
+                                $values[$field->field_key],
+                                $now
+                            );
+                        }
+                    }
+
+                    $valueRowsByKey[$rowKey] = $fieldValues;
+                    $existingKeys->put($rowKey, true);
+                }
+            }
+
+            if ($planRows === []) {
+                return;
+            }
+
+            foreach (array_chunk($planRows, 200) as $chunk) {
+                ExpensePlan::insert($chunk);
+            }
+
+            $insertedPlans = ExpensePlan::where('planning_year_id', $planningYear->id)
+                ->whereIn('subsection_id', collect($planRows)->pluck('subsection_id')->unique()->values())
+                ->whereIn('plan_detail', collect($planRows)->pluck('plan_detail')->unique()->values())
+                ->get(['id', 'subsection_id', 'plan_detail']);
+
+            $valueRows = [];
+            foreach ($insertedPlans as $expensePlan) {
+                $rowKey = $expensePlan->subsection_id . '|' . trim((string) $expensePlan->plan_detail);
+                foreach ($valueRowsByKey[$rowKey] ?? [] as $payload) {
+                    $payload['expense_plan_id'] = $expensePlan->id;
+                    $valueRows[] = $payload;
+                }
+            }
+
+            foreach (array_chunk($valueRows, 500) as $chunk) {
+                DB::table('expense_plan_values')->insert($chunk);
+            }
+        });
+    }
+
+    private function calculateFormula(string $formula, array $values): float
+    {
+        $sum = 0.0;
+        foreach (explode('+', $formula) as $addend) {
+            $product = 1.0;
+            foreach (explode('*', $addend) as $token) {
+                $key = trim($token);
+                if ($key === '') {
+                    continue;
+                }
+
+                $product *= is_numeric($key) ? (float) $key : (float) ($values[$key] ?? 0);
+            }
+            $sum += $product;
+        }
+
+        return $sum;
+    }
+
+    private function makeExpensePlanValuePayload(string $fieldKey, string $dataType, mixed $value, $now): array
+    {
+        $payload = [
+            'expense_plan_id' => null,
+            'field_key' => $fieldKey,
+            'value_text' => null,
+            'value_number' => null,
+            'value_date' => null,
+            'value_boolean' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
+
+        if ($dataType === 'number') {
+            $payload['value_number'] = is_numeric($value) ? $value : 0;
+        } elseif ($dataType === 'date') {
+            $payload['value_date'] = $value ?: null;
+        } elseif ($dataType === 'boolean') {
+            $payload['value_boolean'] = (bool) $value;
+        } else {
+            $payload['value_text'] = $value;
+        }
+
+        return $payload;
     }
 
     public function destroy(PlanningYear $expensePlan)
@@ -120,6 +324,87 @@ class ExpensePlanController extends Controller
         $expensePlan->update(['is_active' => true]);
 
         return back()->with('success', 'ຕັ້ງແຜນນີ້ເປັນແຜນທີ່ໃຊ້ງານແລ້ວ');
+    }
+
+    public function updateSubsectionFieldSettings(Request $request, PlanningYear $expensePlan, ExpenseSubsection $expenseSubsection)
+    {
+        abort_unless(
+            (int) $expenseSubsection->section?->planning_year_id === (int) $expensePlan->id,
+            404
+        );
+
+        $data = $request->validate([
+            'fields' => 'required|array',
+            'fields.*.pattern_field_id' => 'required|exists:expense_pattern_fields,id',
+            'fields.*.label' => 'nullable|string|max:255',
+            'fields.*.display_order' => 'nullable|integer|min:0|max:999',
+            'fields.*.is_required' => 'nullable|boolean',
+            'fields.*.is_active' => 'nullable|boolean',
+            'fields.*.default_value' => 'nullable|string|max:255',
+        ]);
+
+        $settings = collect($data['fields'])->map(function (array $field) use ($expenseSubsection) {
+            return ExpenseSubsectionFieldSetting::updateOrCreate([
+                'subsection_id' => $expenseSubsection->id,
+                'pattern_field_id' => $field['pattern_field_id'],
+            ], [
+                'label' => $field['label'] ?? null,
+                'display_order' => $field['display_order'] ?? null,
+                'is_required' => $field['is_required'] ?? false,
+                'is_active' => $field['is_active'] ?? true,
+                'default_value' => $field['default_value'] ?? null,
+            ]);
+        })->keyBy('pattern_field_id');
+
+        return response()->json([
+            'success' => true,
+            'settings' => $settings,
+        ]);
+    }
+
+    public function updateSectionSummarySettings(Request $request, PlanningYear $expensePlan, ExpenseSection $expenseSection)
+    {
+        abort_unless((int) $expenseSection->planning_year_id === (int) $expensePlan->id, 404);
+
+        $data = $request->validate([
+            'summary_period_count' => 'required|numeric|min:1|max:999',
+        ]);
+
+        $expenseSection->update([
+            'summary_period_count' => $data['summary_period_count'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'section' => [
+                'id' => $expenseSection->id,
+                'summary_period_count' => $expenseSection->summary_period_count,
+            ],
+        ]);
+    }
+
+    public function updateSubsectionSummarySettings(Request $request, PlanningYear $expensePlan, ExpenseSubsection $expenseSubsection)
+    {
+        abort_unless(
+            (int) $expenseSubsection->section?->planning_year_id === (int) $expensePlan->id,
+            404
+        );
+
+        $data = $request->validate([
+            'summary_period_count' => 'required|numeric|min:1|max:999',
+        ]);
+
+        $expenseSubsection->update([
+            'summary_period_count' => $data['summary_period_count'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'subsection' => [
+                'id' => $expenseSubsection->id,
+                'summary_period_count' => $expenseSubsection->summary_period_count,
+            ],
+        ]);
     }
 
     private function copyYearStructure(PlanningYear $sourceYear, PlanningYear $targetYear): void
@@ -139,6 +424,7 @@ class ExpensePlanController extends Controller
                 'name' => $sourceSection->name,
                 'description' => $sourceSection->description,
                 'display_order' => $sourceSection->display_order,
+                'summary_period_count' => $sourceSection->summary_period_count ?? 12,
                 'is_active' => $sourceSection->is_active,
             ]);
 
@@ -152,6 +438,7 @@ class ExpensePlanController extends Controller
                     'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
                     'default_pattern_id' => $sourceSubsection->default_pattern_id,
+                    'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,
                     'display_order' => $sourceSubsection->display_order,
                     'is_active' => $sourceSubsection->is_active,
                 ]);
@@ -174,6 +461,20 @@ class ExpensePlanController extends Controller
             ->each(function (PlanningYearFieldSetting $setting) use ($targetYear) {
                 PlanningYearFieldSetting::create([
                     'planning_year_id' => $targetYear->id,
+                    'pattern_field_id' => $setting->pattern_field_id,
+                    'label' => $setting->label,
+                    'display_order' => $setting->display_order,
+                    'is_required' => $setting->is_required,
+                    'is_active' => $setting->is_active,
+                    'default_value' => $setting->default_value,
+                ]);
+            });
+
+        ExpenseSubsectionFieldSetting::whereIn('subsection_id', array_keys($subsectionIdMap))
+            ->get()
+            ->each(function (ExpenseSubsectionFieldSetting $setting) use ($subsectionIdMap) {
+                ExpenseSubsectionFieldSetting::create([
+                    'subsection_id' => $subsectionIdMap[$setting->subsection_id],
                     'pattern_field_id' => $setting->pattern_field_id,
                     'label' => $setting->label,
                     'display_order' => $setting->display_order,

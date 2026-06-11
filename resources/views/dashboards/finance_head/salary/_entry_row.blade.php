@@ -1,15 +1,26 @@
-{{-- One salary entry row. Vars: $e (SalaryEntry|null) --}}
-<tr class="smg-row" data-item-id="{{ $e?->id }}" data-coa-id="{{ $e?->chart_of_account_id }}">
+{{-- One salary entry row. Vars: $e (SalaryEntry|null), $account (array|null) --}}
+@php
+    $rowAccountId = $e?->chart_of_account_id ?? data_get($account ?? null, 'id');
+    $rowAccountCode = $e?->chartOfAccount?->account_code ?? data_get($account ?? null, 'code');
+    $rowAccountName = $e?->chartOfAccount?->account_name ?? data_get($account ?? null, 'name');
+    $hasAccount = filled($rowAccountId);
+@endphp
+<tr class="smg-row"
+    data-item-id="{{ $e?->id }}"
+    data-coa-id="{{ $rowAccountId }}"
+    data-default-row="{{ $account ? '1' : '0' }}">
     <td>
-        <button type="button" class="smg-coa-trigger {{ $e?->chartOfAccount ? '' : 'is-empty' }}">
-            <span class="smg-coa-trigger-code">{{ $e?->chartOfAccount?->account_code ?? 'ເລືອກລະຫັດ' }}</span>
+        <button type="button"
+                class="smg-coa-trigger {{ $hasAccount ? '' : 'is-empty' }}"
+                @if($account) disabled @endif>
+            <span class="smg-coa-trigger-code">{{ $rowAccountCode ?? 'ເລືອກລະຫັດ' }}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
     </td>
     <td>
-        <span class="smg-name {{ $e?->chartOfAccount ? '' : 'smg-name-empty' }}"
-              title="{{ $e?->chartOfAccount?->account_name }}">
-            {{ $e?->chartOfAccount?->account_name ?? 'ເລືອກລະຫັດບັນຊີ...' }}
+        <span class="smg-name {{ $hasAccount ? '' : 'smg-name-empty' }}"
+              title="{{ $rowAccountName }}">
+            {{ $rowAccountName ?? 'ເລືອກລະຫັດບັນຊີ...' }}
         </span>
     </td>
     <td class="smg-cell-center">
@@ -19,9 +30,4 @@
     <td><input class="smg-input smg-atm"  type="number" min="0" step="0.01" value="{{ $e ? (float) $e->atm_amount  : 0 }}"></td>
     <td><input class="smg-input smg-cash" type="number" min="0" step="0.01" value="{{ $e ? (float) $e->cash_amount : 0 }}"></td>
     <td><input class="smg-input smg-remark" type="text" value="{{ $e?->remark }}" placeholder="ໝາຍເຫດ..."></td>
-    <td style="text-align:center;">
-        <button class="smg-btn-del" type="button" title="ລຶບລາຍການ" aria-label="ລຶບລາຍການ">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/></svg>
-        </button>
-    </td>
 </tr>

@@ -76,6 +76,9 @@
                     <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action mp-action-strong">
                         <x-icons.book-open /> ລາຍຈ່າຍ
                     </a>
+                    <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}" class="mp-action mp-action-preview">
+                        <x-icons.book-open /> ຂຶ້ນແຜນ
+                    </a>
                     @if(!$incomePlan || !$salaryPlan)
                         <form method="POST" action="{{ route('head_of_finance.manage-plan.sync', $plan) }}">
                             @csrf
@@ -191,6 +194,7 @@
     }
     .mp-action svg { width:15px; height:15px; }
     .mp-action-strong { background:var(--fns-navy); border-color:var(--fns-navy); color:#fff; }
+    .mp-action-preview { background:#fff7df; border-color:#f4d37a; color:#72500b; }
     .mp-action-light { background:#fbfbfc; }
     .mp-action-danger { border-color:#fecaca; background:#fff5f5; color:#b91c1c; }
     .mp-action-danger:hover { border-color:#f87171; background:#fee2e2; color:#991b1b; }

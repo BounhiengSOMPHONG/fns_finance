@@ -322,9 +322,32 @@
     .excel-parent-title { padding:.2rem .1rem; }
     .excel-parent-title h3 { margin:0; color:#061226; font-size:1.15rem; font-weight:900; line-height:1.35; }
     .excel-block { border:1px solid #d8dce5; border-radius:6px; overflow:hidden; background:#fff; }
+    .excel-block.is-collapsed .excel-block-title { border-bottom:0; }
+    .excel-block.is-collapsed .excel-block-body { display:none; }
     .excel-block-title { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:.8rem .95rem; border-bottom:1px solid #d8dce5; background:#fff; }
+    .excel-block-title-main { display:flex; align-items:flex-start; gap:.65rem; min-width:0; }
     .excel-block-title h3 { margin:0; color:#061226; font-size:1rem; line-height:1.35; font-weight:900; }
     .excel-block-title p { margin:.3rem 0 0; color:var(--fns-gray-500); font-size:.75rem; }
+    .excel-collapse-btn {
+        flex:0 0 auto;
+        width:2rem;
+        height:2rem;
+        border:1px solid var(--fns-gray-200);
+        border-radius:6px;
+        background:#f8fafc;
+        color:var(--fns-navy);
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-family:inherit;
+        font-size:1rem;
+        font-weight:900;
+        line-height:1;
+        cursor:pointer;
+    }
+    .excel-collapse-btn:hover { border-color:var(--fns-gold); background:#fffdf4; color:#111b33; }
+    .excel-collapse-icon { transform:rotate(90deg); transition:transform .16s ease; }
+    .excel-block.is-collapsed .excel-collapse-icon { transform:rotate(0deg); }
     .excel-field-settings-btn {
         flex:0 0 auto;
         border:1px solid var(--fns-gray-200);
@@ -459,6 +482,7 @@ const SUBSECTION_FIELD_SETTINGS = @json($subsectionFieldSettingsPayload);
 let ROWS = @json($rowsPayload);
 let selectedSectionId = SECTIONS[0]?.id || null;
 let lastInputSectionId = SECTIONS[0]?.id || null;
+const collapsedSubsections = new Set(SECTIONS.flatMap(section => section.subsections.map(subsection => Number(subsection.id))));
 const fmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 
 function esc(value) {
@@ -847,37 +871,45 @@ function renderSubsection(section, subsection) {
     const totalField = fields.find(field => field.key === 'yearly_total') || fields.find(field => field.calculated);
     const rows = rowsFor(section.id, subsection.id);
     const subtotal = totalFor(section.id, subsection.id);
+    const isCollapsed = collapsedSubsections.has(Number(subsection.id));
     return `
-        <article class="excel-block" data-section="${section.id}" data-subsection="${subsection.id}" data-pattern="${pattern?.id || ''}">
+        <article class="excel-block ${isCollapsed ? 'is-collapsed' : ''}" data-section="${section.id}" data-subsection="${subsection.id}" data-pattern="${pattern?.id || ''}">
             <div class="excel-block-title">
-                <div>
-                    <h3>${esc(subsection.code)} &nbsp;${esc(subsection.name)}</h3>
-                <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
+                <div class="excel-block-title-main">
+                    <button type="button" class="excel-collapse-btn" data-collapse-subsection="${subsection.id}" aria-expanded="${isCollapsed ? 'false' : 'true'}" aria-label="${isCollapsed ? 'ເປີດລາຍລະອຽດ' : 'ພັບລາຍລະອຽດ'} ${esc(subsection.code)} ${esc(subsection.name)}">
+                        <span class="excel-collapse-icon">›</span>
+                    </button>
+                    <div>
+                        <h3>${esc(subsection.code)} &nbsp;${esc(subsection.name)}</h3>
+                        <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
+                    </div>
                 </div>
                 <button type="button" class="excel-field-settings-btn" data-field-settings="${subsection.id}">Field labels</button>
             </div>
-            <div class="excel-unit">ໜ່ວຍ: ກີບ</div>
-            <div class="excel-table-wrap">
-                <table class="excel-table">
-                    <thead>
-                        <tr>
-                            <th class="excel-seq">ລ/ດ</th>
-                            ${normalFields.map(field => `<th>${esc(field.label)}</th>`).join('')}
-                            ${totalField ? `<th>${esc(totalField.label)}</th>` : ''}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows.length ? rows.map((row, index) => renderSavedRow(row, index + 1, normalFields, totalField)).join('') : `
-                            <tr><td colspan="${normalFields.length + (totalField ? 2 : 1)}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
-                        `}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="${normalFields.length + 1}" class="excel-number">ລວມ</td>
-                            ${totalField ? `<td class="excel-number">${fmt.format(subtotal)}</td>` : ''}
-                        </tr>
-                    </tfoot>
-                </table>
+            <div class="excel-block-body">
+                <div class="excel-unit">ໜ່ວຍ: ກີບ</div>
+                <div class="excel-table-wrap">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th class="excel-seq">ລ/ດ</th>
+                                ${normalFields.map(field => `<th>${esc(field.label)}</th>`).join('')}
+                                ${totalField ? `<th>${esc(totalField.label)}</th>` : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.length ? rows.map((row, index) => renderSavedRow(row, index + 1, normalFields, totalField)).join('') : `
+                                <tr><td colspan="${normalFields.length + (totalField ? 2 : 1)}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
+                            `}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="${normalFields.length + 1}" class="excel-number">ລວມ</td>
+                                ${totalField ? `<td class="excel-number">${fmt.format(subtotal)}</td>` : ''}
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </article>
     `;
@@ -997,6 +1029,20 @@ function bindSheetEvents() {
 
     document.querySelectorAll('.excel-field-settings-btn').forEach(button => {
         button.addEventListener('click', event => openFieldSettingsModal(event.target.dataset.fieldSettings));
+    });
+
+    document.querySelectorAll('.excel-collapse-btn').forEach(button => {
+        button.addEventListener('click', event => {
+            const subsectionId = Number(event.currentTarget.dataset.collapseSubsection);
+
+            if (collapsedSubsections.has(subsectionId)) {
+                collapsedSubsections.delete(subsectionId);
+            } else {
+                collapsedSubsections.add(subsectionId);
+            }
+
+            renderSheet();
+        });
     });
 }
 

@@ -10,7 +10,6 @@ use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
-use App\Models\ExpenseSubsectionFieldSetting;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use Illuminate\Http\Request;
@@ -103,11 +102,6 @@ class ExpensePlanController extends Controller
             ->flatMap(fn ($section) => $section->subsections->pluck('code'))
             ->unique()
             ->values();
-        $subsectionIds = $sections
-            ->flatMap(fn ($section) => $section->subsections->pluck('id'))
-            ->unique()
-            ->values();
-
         $defaultRows = ExpenseSubsectionDefaultRow::with('chartOfAccount')
             ->whereIn('subsection_code', $subsectionCodes)
             ->where('is_active', true)
@@ -126,11 +120,6 @@ class ExpensePlanController extends Controller
                 ];
             })->values());
 
-        $subsectionFieldSettings = ExpenseSubsectionFieldSetting::whereIn('subsection_id', $subsectionIds)
-            ->get()
-            ->groupBy('subsection_id')
-            ->map(fn ($settings) => $settings->keyBy('pattern_field_id'));
-
         return view('dashboards.finance_head.expense.manage', [
             'planningYear' => $planningYear,
             'sections' => $sections,
@@ -140,7 +129,6 @@ class ExpensePlanController extends Controller
             'expenseRows' => $expenseRows,
             'chartAccounts' => $chartAccounts,
             'defaultRows' => $defaultRows,
-            'subsectionFieldSettings' => $subsectionFieldSettings,
         ]);
     }
 
@@ -332,42 +320,6 @@ class ExpensePlanController extends Controller
         return back()->with('success', 'ຕັ້ງແຜນນີ້ເປັນແຜນທີ່ໃຊ້ງານແລ້ວ');
     }
 
-    public function updateSubsectionFieldSettings(Request $request, PlanningYear $expensePlan, ExpenseSubsection $expenseSubsection)
-    {
-        abort_unless(
-            (int) $expenseSubsection->section?->planning_year_id === (int) $expensePlan->id,
-            404
-        );
-
-        $data = $request->validate([
-            'fields' => 'required|array',
-            'fields.*.pattern_field_id' => 'required|exists:expense_pattern_fields,id',
-            'fields.*.label' => 'nullable|string|max:255',
-            'fields.*.display_order' => 'nullable|integer|min:0|max:999',
-            'fields.*.is_required' => 'nullable|boolean',
-            'fields.*.is_active' => 'nullable|boolean',
-            'fields.*.default_value' => 'nullable|string|max:255',
-        ]);
-
-        $settings = collect($data['fields'])->map(function (array $field) use ($expenseSubsection) {
-            return ExpenseSubsectionFieldSetting::updateOrCreate([
-                'subsection_id' => $expenseSubsection->id,
-                'pattern_field_id' => $field['pattern_field_id'],
-            ], [
-                'label' => $field['label'] ?? null,
-                'display_order' => $field['display_order'] ?? null,
-                'is_required' => $field['is_required'] ?? false,
-                'is_active' => $field['is_active'] ?? true,
-                'default_value' => $field['default_value'] ?? null,
-            ]);
-        })->keyBy('pattern_field_id');
-
-        return response()->json([
-            'success' => true,
-            'settings' => $settings,
-        ]);
-    }
-
     public function updateSectionSummarySettings(Request $request, PlanningYear $expensePlan, ExpenseSection $expenseSection)
     {
         abort_unless((int) $expenseSection->planning_year_id === (int) $expensePlan->id, 404);
@@ -467,20 +419,6 @@ class ExpensePlanController extends Controller
             ->each(function (PlanningYearFieldSetting $setting) use ($targetYear) {
                 PlanningYearFieldSetting::create([
                     'planning_year_id' => $targetYear->id,
-                    'pattern_field_id' => $setting->pattern_field_id,
-                    'label' => $setting->label,
-                    'display_order' => $setting->display_order,
-                    'is_required' => $setting->is_required,
-                    'is_active' => $setting->is_active,
-                    'default_value' => $setting->default_value,
-                ]);
-            });
-
-        ExpenseSubsectionFieldSetting::whereIn('subsection_id', array_keys($subsectionIdMap))
-            ->get()
-            ->each(function (ExpenseSubsectionFieldSetting $setting) use ($subsectionIdMap) {
-                ExpenseSubsectionFieldSetting::create([
-                    'subsection_id' => $subsectionIdMap[$setting->subsection_id],
                     'pattern_field_id' => $setting->pattern_field_id,
                     'label' => $setting->label,
                     'display_order' => $setting->display_order,

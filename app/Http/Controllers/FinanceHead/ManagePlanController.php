@@ -9,7 +9,6 @@ use App\Models\ExpensePattern;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
-use App\Models\ExpenseSubsectionFieldSetting;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use App\Models\SalaryPlan;
@@ -100,7 +99,6 @@ class ManagePlanController extends Controller
             DB::table('planning_year_field_settings')->where('planning_year_id', $planningYear->id)->delete();
 
             if ($subsectionIds->isNotEmpty()) {
-                DB::table('expense_subsection_field_settings')->whereIn('subsection_id', $subsectionIds)->delete();
                 DB::table('expense_subsections')->whereIn('id', $subsectionIds)->update(['parent_id' => null]);
                 DB::table('expense_subsections')->whereIn('id', $subsectionIds)->delete();
             }
@@ -289,21 +287,6 @@ class ManagePlanController extends Controller
             ->each(function (PlanningYearFieldSetting $setting) use ($targetYear): void {
                 PlanningYearFieldSetting::updateOrCreate([
                     'planning_year_id' => $targetYear->id,
-                    'pattern_field_id' => $setting->pattern_field_id,
-                ], [
-                    'label' => $setting->label,
-                    'display_order' => $setting->display_order,
-                    'is_required' => $setting->is_required,
-                    'is_active' => $setting->is_active,
-                    'default_value' => $setting->default_value,
-                ]);
-            });
-
-        ExpenseSubsectionFieldSetting::whereIn('subsection_id', array_keys($subsectionIdMap))
-            ->get()
-            ->each(function (ExpenseSubsectionFieldSetting $setting) use ($subsectionIdMap): void {
-                ExpenseSubsectionFieldSetting::updateOrCreate([
-                    'subsection_id' => $subsectionIdMap[$setting->subsection_id],
                     'pattern_field_id' => $setting->pattern_field_id,
                 ], [
                     'label' => $setting->label,

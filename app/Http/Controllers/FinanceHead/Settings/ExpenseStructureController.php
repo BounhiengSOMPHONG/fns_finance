@@ -25,6 +25,10 @@ class ExpenseStructureController extends Controller
         $sections = collect();
         $defaultRowsByCode = collect();
         if ($planningYear) {
+            if (! ExpenseSection::where('planning_year_id', $planningYear->id)->exists()) {
+                $this->buildStructureFromDefaultRows($planningYear);
+            }
+
             $sections = ExpenseSection::with(['subsections.defaultPattern', 'subsections.children'])
                 ->where('planning_year_id', $planningYear->id)
                 ->orderBy('display_order')
@@ -235,5 +239,80 @@ class ExpenseStructureController extends Controller
         }
 
         return $account->account_code . ' - ' . implode(' / ', $parts);
+    }
+
+    private function buildStructureFromDefaultRows(PlanningYear $planningYear): void
+    {
+        $codes = ExpenseSubsectionDefaultRow::query()
+            ->select('subsection_code')
+            ->distinct()
+            ->orderBy('subsection_code')
+            ->pluck('subsection_code')
+            ->filter()
+            ->values();
+
+        if ($codes->isEmpty()) {
+            return;
+        }
+
+        $defaultPatternId = ExpensePattern::where('is_active', true)->orderBy('id')->value('id');
+        $sectionsByCode = [];
+
+        $sectionCodes = $codes
+            ->map(fn (string $code) => implode('.', array_slice(explode('.', $code), 0, 2)))
+            ->unique()
+            ->values();
+
+        foreach ($sectionCodes as $index => $sectionCode) {
+            $sectionsByCode[$sectionCode] = ExpenseSection::create([
+                'planning_year_id' => $planningYear->id,
+                'code' => $sectionCode,
+                'name' => 'ກຸ່ມລາຍຈ່າຍ ' . $sectionCode,
+                'description' => null,
+                'display_order' => $index + 1,
+                'summary_period_count' => 12,
+                'is_active' => true,
+            ]);
+        }
+
+        $subsectionCodes = collect();
+        foreach ($codes as $code) {
+            $parts = explode('.', $code);
+            for ($length = 3; $length <= count($parts); $length++) {
+                $subsectionCodes->push(implode('.', array_slice($parts, 0, $length)));
+            }
+        }
+
+        $subsectionsByCode = [];
+        foreach ($subsectionCodes->unique()->sort()->values() as $index => $code) {
+            $sectionCode = implode('.', array_slice(explode('.', $code), 0, 2));
+            if (! isset($sectionsByCode[$sectionCode])) {
+                continue;
+            }
+
+            $subsectionsByCode[$code] = ExpenseSubsection::create([
+                'section_id' => $sectionsByCode[$sectionCode]->id,
+                'parent_id' => null,
+                'code' => $code,
+                'name' => 'ລາຍການ ' . $code,
+                'description' => null,
+                'default_pattern_id' => $defaultPatternId,
+                'summary_period_count' => 12,
+                'display_order' => $index + 1,
+                'is_active' => true,
+            ]);
+        }
+
+        foreach ($subsectionsByCode as $code => $subsection) {
+            $parts = explode('.', $code);
+            if (count($parts) <= 3) {
+                continue;
+            }
+
+            $parentCode = implode('.', array_slice($parts, 0, -1));
+            if (isset($subsectionsByCode[$parentCode])) {
+                $subsection->update(['parent_id' => $subsectionsByCode[$parentCode]->id]);
+            }
+        }
     }
 }

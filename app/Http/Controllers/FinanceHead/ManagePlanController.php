@@ -76,6 +76,53 @@ class ManagePlanController extends Controller
         return back()->with('success', 'ກວດແລະສ້າງແຜນທີ່ຂາດສຳເລັດ');
     }
 
+    public function destroy(PlanningYear $planningYear)
+    {
+        $year = $planningYear->year;
+
+        DB::transaction(function () use ($planningYear): void {
+            $incomePlanIds = $planningYear->academicIncomePlans()->pluck('id');
+            if ($incomePlanIds->isNotEmpty()) {
+                DB::table('academic_income_items')->whereIn('plan_id', $incomePlanIds)->delete();
+                DB::table('academic_income_plans')->whereIn('id', $incomePlanIds)->delete();
+            }
+
+            $salaryPlanIds = $planningYear->salaryPlans()->pluck('id');
+            if ($salaryPlanIds->isNotEmpty()) {
+                DB::table('salary_entries')->whereIn('plan_id', $salaryPlanIds)->delete();
+                DB::table('salary_plans')->whereIn('id', $salaryPlanIds)->delete();
+            }
+
+            $expensePlanIds = $planningYear->expensePlans()->pluck('id');
+            if ($expensePlanIds->isNotEmpty()) {
+                DB::table('expense_plan_values')->whereIn('expense_plan_id', $expensePlanIds)->delete();
+                DB::table('expense_plans')->whereIn('id', $expensePlanIds)->delete();
+            }
+
+            $sectionIds = $planningYear->sections()->pluck('id');
+            $subsectionIds = ExpenseSubsection::whereIn('section_id', $sectionIds)->pluck('id');
+
+            DB::table('expense_calculation_rules')->where('planning_year_id', $planningYear->id)->delete();
+            DB::table('planning_year_field_settings')->where('planning_year_id', $planningYear->id)->delete();
+
+            if ($subsectionIds->isNotEmpty()) {
+                DB::table('expense_subsection_field_settings')->whereIn('subsection_id', $subsectionIds)->delete();
+                DB::table('expense_subsections')->whereIn('id', $subsectionIds)->update(['parent_id' => null]);
+                DB::table('expense_subsections')->whereIn('id', $subsectionIds)->delete();
+            }
+
+            if ($sectionIds->isNotEmpty()) {
+                DB::table('expense_sections')->whereIn('id', $sectionIds)->delete();
+            }
+
+            $planningYear->delete();
+        });
+
+        return redirect()
+            ->route('head_of_finance.manage-plan.index')
+            ->with('success', 'ລຶບແຜນປະຈຳປີ ' . $year . ' ສຳເລັດ');
+    }
+
     private function ensureCompanionPlans(PlanningYear $planningYear): void
     {
         AcademicIncomePlan::firstOrCreate(

@@ -92,7 +92,7 @@ class ExpensePlanRowController extends Controller
 
     public function update(Request $request, int $expensePlanRow)
     {
-        $expensePlan = ExpensePlan::with('pattern.fields')->findOrFail($expensePlanRow);
+        $expensePlan = ExpensePlan::with(['pattern.fields', 'values'])->findOrFail($expensePlanRow);
 
         $data = $request->validate([
             'plan_detail' => 'required|string|max:255',
@@ -116,14 +116,14 @@ class ExpensePlanRowController extends Controller
             ->orderByRaw('section_id IS NULL')
             ->first();
 
-        $values = $data['values'];
+        $values = $this->preserveLockedRowValues($expensePlan, $data['values']);
         if ($rule) {
             $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
         }
 
         DB::transaction(function () use ($expensePlan, $data, $values) {
             $expensePlan->update([
-                'plan_detail' => $data['plan_detail'],
+                'plan_detail' => $expensePlan->plan_detail,
                 'detail' => $data['detail'] ?? null,
                 'updated_by' => Auth::id(),
             ]);
@@ -144,14 +144,29 @@ class ExpensePlanRowController extends Controller
 
     public function destroy(Request $request, int $expensePlanRow)
     {
-        $expensePlan = ExpensePlan::findOrFail($expensePlanRow);
-        $expensePlan->delete();
-
         if ($request->expectsJson()) {
-            return response()->json(['success' => true]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Expense rows can be added or removed from expense structure only.',
+            ], 403);
         }
 
-        return back()->with('success', 'ລຶບລາຍການສຳເລັດ');
+        return back()->with('error', 'ຕ້ອງເພີ່ມ ຫຼື ລຶບລາຍການທີ່ໜ້າ Expense structure ເທົ່ານັ້ນ');
+    }
+
+    private function preserveLockedRowValues(ExpensePlan $expensePlan, array $values): array
+    {
+        $currentValues = $expensePlan->values->mapWithKeys(function (ExpensePlanValue $value) {
+            return [$value->field_key => $value->value_number ?? $value->value_text ?? $value->value_date ?? $value->value_boolean];
+        });
+
+        foreach (['item_name', 'reference'] as $fieldKey) {
+            if ($currentValues->has($fieldKey)) {
+                $values[$fieldKey] = $currentValues->get($fieldKey);
+            }
+        }
+
+        return $values;
     }
 
     private function storeValue(ExpensePlan $expensePlan, string $fieldKey, string $dataType, mixed $value): void

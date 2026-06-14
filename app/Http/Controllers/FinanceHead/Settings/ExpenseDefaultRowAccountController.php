@@ -52,6 +52,34 @@ class ExpenseDefaultRowAccountController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'subsection_code' => ['required', 'string', 'max:30'],
+            'item_name' => ['required', 'string', 'max:255'],
+            'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
+            'note' => ['nullable', 'string', 'max:1000'],
+            'sort_order' => ['required', 'integer', 'min:1', 'max:999'],
+        ]);
+
+        $account = ! empty($data['chart_of_account_id'])
+            ? ChartOfAccount::findOrFail($data['chart_of_account_id'])
+            : null;
+
+        ExpenseSubsectionDefaultRow::create([
+            'subsection_code' => $data['subsection_code'],
+            'item_name' => $data['item_name'],
+            'reference' => $account?->account_code,
+            'chart_of_account_id' => $account?->id,
+            'note' => $data['note'] ?? null,
+            'sort_order' => $data['sort_order'],
+            'default_values' => [],
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Default row added.');
+    }
+
     public function update(Request $request, ExpenseSubsectionDefaultRow $expenseSubsectionDefaultRow)
     {
         $data = $request->validate([

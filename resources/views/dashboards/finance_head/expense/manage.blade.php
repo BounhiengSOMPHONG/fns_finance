@@ -123,10 +123,6 @@
                 <h2 id="sectionTitle">-</h2>
                 <p id="sectionMeta">-</p>
             </div>
-            <div class="excel-section-actions">
-                <button type="button" class="excel-structure-btn" id="openSectionModal">+ ເພີ່ມຫົວຂໍ້ຫຼັກ</button>
-                <button type="button" class="excel-structure-btn" id="openSubsectionModal">+ ເພີ່ມຫົວຂໍ້ຍ່ອຍ</button>
-            </div>
             <div class="excel-section-total">
                 <span>ລວມພາກນີ້</span>
                 <strong id="sectionTotal">0</strong>
@@ -135,100 +131,6 @@
 
         <div id="subsectionSheets" class="excel-subsections"></div>
     </section>
-</div>
-
-<div class="excel-modal" id="sectionModal" aria-hidden="true">
-    <div class="excel-modal-panel" role="dialog" aria-modal="true" aria-labelledby="sectionModalTitle">
-        <div class="excel-modal-head">
-            <h2 id="sectionModalTitle">ເພີ່ມພາກ</h2>
-            <button type="button" class="excel-modal-close" data-close-modal>&times;</button>
-        </div>
-        <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.store') }}" class="excel-modal-body">
-            @csrf
-            <input type="hidden" name="planning_year_id" value="{{ $planningYear->id }}">
-            <input type="hidden" name="description" value="">
-            <input type="hidden" name="is_active" value="1">
-
-            <div class="excel-modal-grid">
-                <label>
-                    <span>ລະຫັດ</span>
-                    <input name="code" class="fns-input" placeholder="2.7" required>
-                </label>
-                <label>
-                    <span>ລຳດັບ</span>
-                    <input type="number" name="display_order" class="fns-input" min="0" max="999" value="{{ ($sections->max('display_order') ?? 0) + 1 }}" required>
-                </label>
-                <label class="excel-modal-wide">
-                    <span>ຊື່ພາກ</span>
-                    <input name="name" class="fns-input" placeholder="ຊື່ພາກ" required>
-                </label>
-            </div>
-
-            <div class="excel-modal-actions">
-                <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>ຍົກເລີກ</button>
-                <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="excel-modal" id="subsectionModal" aria-hidden="true">
-    <div class="excel-modal-panel" role="dialog" aria-modal="true" aria-labelledby="subsectionModalTitle">
-        <div class="excel-modal-head">
-            <h2 id="subsectionModalTitle">ເພີ່ມຫົວຂໍ້ຍ່ອຍ</h2>
-            <button type="button" class="excel-modal-close" data-close-modal>&times;</button>
-        </div>
-        <form method="POST" id="subsectionForm" class="excel-modal-body">
-            @csrf
-            <input type="hidden" name="description" value="">
-            <input type="hidden" name="is_active" value="1">
-
-            <div class="excel-modal-grid">
-                <label class="excel-modal-wide">
-                    <span>ພາກ</span>
-                    <select id="subsectionSection" class="fns-input" required>
-                        @foreach($sections as $section)
-                            <option value="{{ $section->id }}" data-url="{{ route('head_of_finance.settings.expense-structure.subsections.store', $section) }}">
-                                {{ $section->code }} - {{ $section->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </label>
-                <label>
-                    <span>ລະຫັດ</span>
-                    <input name="code" class="fns-input" placeholder="2.1.12" required>
-                </label>
-                <label>
-                    <span>ລຳດັບ</span>
-                    <input type="number" name="display_order" id="subsectionOrder" class="fns-input" min="0" max="999" required>
-                </label>
-                <label class="excel-modal-wide">
-                    <span>ຊື່ຫົວຂໍ້ຍ່ອຍ</span>
-                    <input name="name" class="fns-input" placeholder="ຊື່ຫົວຂໍ້ຍ່ອຍ" required>
-                </label>
-                <label>
-                    <span>ຫົວຂໍ້ແມ່</span>
-                    <select name="parent_id" id="subsectionParent" class="fns-input">
-                        <option value="">No parent</option>
-                    </select>
-                </label>
-                <label>
-                    <span>Pattern</span>
-                    <select name="default_pattern_id" class="fns-input">
-                        <option value="">No pattern</option>
-                        @foreach($patterns as $pattern)
-                            <option value="{{ $pattern->id }}">{{ $pattern->name }}</option>
-                        @endforeach
-                    </select>
-                </label>
-            </div>
-
-            <div class="excel-modal-actions">
-                <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>ຍົກເລີກ</button>
-                <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
-            </div>
-        </form>
-    </div>
 </div>
 
 <div class="excel-modal" id="fieldSettingsModal" aria-hidden="true">
@@ -261,26 +163,6 @@
             <div class="excel-modal-actions">
                 <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>Cancel</button>
                 <button type="submit" class="fns-btn fns-btn-primary">Save labels</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="excel-modal" id="addExpenseRowModal" aria-hidden="true">
-    <div class="excel-modal-panel excel-modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="addExpenseRowTitle">
-        <div class="excel-modal-head">
-            <div>
-                <h2 id="addExpenseRowTitle">ເພີ່ມລາຍການ</h2>
-                <p id="addExpenseRowSubtitle"></p>
-            </div>
-            <button type="button" class="excel-modal-close" data-close-modal>&times;</button>
-        </div>
-        <form method="POST" id="addExpenseRowForm" class="excel-modal-body">
-            @csrf
-            <div id="addExpenseRowFields" class="excel-modal-grid"></div>
-            <div class="excel-modal-actions">
-                <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>ຍົກເລີກ</button>
-                <button type="submit" class="fns-btn fns-btn-primary">ເພີ່ມ</button>
             </div>
         </form>
     </div>
@@ -473,10 +355,6 @@
     }
     .excel-account-search { min-width:340px; }
     .excel-money-input { text-align:right; font-variant-numeric:tabular-nums; }
-    .excel-add-row td { background:#fffdf7; }
-    .excel-add-row td:not(.excel-seq):not(:has(.excel-add)) { display:none; }
-    .excel-add-row td:has(.excel-add) { text-align:center; }
-    .excel-add { border:0; border-radius:6px; background:var(--fns-gold); color:#111b33; font-weight:900; padding:.45rem .75rem; cursor:pointer; white-space:nowrap; }
     .excel-delete { border:0; background:transparent; color:#dc2626; font-size:1rem; cursor:pointer; line-height:1; }
     .excel-empty { color:var(--fns-gray-400); text-align:center; padding:.8rem; }
     .excel-unit { text-align:right; color:#111b33; font-weight:800; padding:.45rem .65rem; background:#f7f8fa; border-bottom:1px solid #d8dce5; }
@@ -579,7 +457,6 @@ const SUBSECTION_FIELD_SETTINGS = @json($subsectionFieldSettingsPayload);
 let ROWS = @json($rowsPayload);
 let selectedSectionId = SECTIONS[0]?.id || null;
 let lastInputSectionId = SECTIONS[0]?.id || null;
-let activeAddBlock = null;
 const fmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
 
 function esc(value) {
@@ -968,8 +845,6 @@ function renderSubsection(section, subsection) {
     const totalField = fields.find(field => field.key === 'yearly_total') || fields.find(field => field.calculated);
     const rows = rowsFor(section.id, subsection.id);
     const subtotal = totalFor(section.id, subsection.id);
-    const inputRow = Object.fromEntries(fields.map(field => [field.key, field.default_value ?? '']));
-    if (!inputRow.item_name) inputRow.item_name = '';
     return `
         <article class="excel-block" data-section="${section.id}" data-subsection="${subsection.id}" data-pattern="${pattern?.id || ''}">
             <div class="excel-block-title">
@@ -994,7 +869,6 @@ function renderSubsection(section, subsection) {
                         ${rows.length ? rows.map((row, index) => renderSavedRow(row, index + 1, normalFields, totalField)).join('') : `
                             <tr><td colspan="${normalFields.length + (totalField ? 3 : 2)}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
                         `}
-                        ${renderInputRow(inputRow, normalFields, totalField)}
                     </tbody>
                     <tfoot>
                         <tr>
@@ -1025,24 +899,6 @@ function renderSavedRow(row, index, normalFields, totalField) {
             <td style="text-align:center;">
                 <button type="button" class="excel-delete" data-delete="${row.id}" title="Delete">&times;</button>
             </td>
-        </tr>
-    `;
-}
-
-function renderInputRow(values, normalFields, totalField) {
-    return `
-        <tr class="excel-add-row">
-            <td class="excel-seq">+</td>
-            ${normalFields.map(field => `
-                <td class="${field.key === 'item_name' ? 'excel-name' : ''}">
-                    ${field.key === 'item_name' ? renderChartAccountSelect(field, values.reference || '', values.item_name || '') : `
-                        <input class="excel-input ${field.type === 'number' ? 'excel-money-input' : ''}" name="${esc(field.key)}" data-type="${esc(field.type)}" type="${field.type === 'number' ? 'text' : field.type === 'date' ? 'date' : 'text'}"
-                               inputmode="${field.type === 'number' ? 'decimal' : 'text'}" value="${esc(field.type === 'number' ? moneyInputValue(values[field.key]) : values[field.key])}" placeholder="${esc(field.label)}" ${field.required ? 'required' : ''}>
-                    `}
-                </td>
-            `).join('')}
-            ${totalField ? `<td><input class="excel-input excel-money-input" name="${esc(totalField.key)}" data-type="number" data-calculated="1" type="text" inputmode="decimal" value="0" readonly></td>` : ''}
-            <td style="text-align:center;"><button type="button" class="excel-add">ເພີ່ມ</button></td>
         </tr>
     `;
 }
@@ -1135,7 +991,7 @@ async function saveFieldSettings(event) {
 function bindSheetEvents() {
     document.querySelectorAll('.excel-block').forEach(block => updateBlockTotal(block));
 
-    document.querySelectorAll('.excel-add-row input, .excel-saved-row input').forEach(input => {
+    document.querySelectorAll('.excel-saved-row input').forEach(input => {
         input.addEventListener('input', event => {
             if (event.target.dataset.type === 'number' && !event.target.readOnly) {
                 event.target.value = moneyInputValue(event.target.value);
@@ -1149,10 +1005,6 @@ function bindSheetEvents() {
             syncChartAccount(event.target);
         });
         input.addEventListener('change', event => syncChartAccount(event.target));
-    });
-
-    document.querySelectorAll('.excel-add').forEach(button => {
-        button.addEventListener('click', event => openAddRowModal(event.target.closest('.excel-block')));
     });
 
     document.querySelectorAll('.excel-delete').forEach(button => {
@@ -1173,10 +1025,6 @@ function bindSheetEvents() {
     });
 }
 
-function inputValues(block) {
-    return lineValues(block.querySelector('.excel-add-row'));
-}
-
 function lineValues(row) {
     const values = {};
     row.querySelectorAll('input, select').forEach(input => {
@@ -1185,51 +1033,6 @@ function lineValues(row) {
         values[input.name] = input.dataset.type === 'number' ? numberValue(input.value) : input.value;
     });
     return values;
-}
-
-function bindAddModalInputs(form) {
-    form.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('input', event => {
-            if (event.target.dataset.type === 'number' && !event.target.readOnly) {
-                event.target.value = moneyInputValue(event.target.value);
-            }
-            if (activeAddBlock) updateSourceTotal(activeAddBlock, form);
-        });
-    });
-
-    form.querySelectorAll('.excel-account-search').forEach(input => {
-        input.addEventListener('input', event => syncChartAccount(event.target));
-        input.addEventListener('change', event => syncChartAccount(event.target));
-    });
-}
-
-function openAddRowModal(block) {
-    activeAddBlock = block;
-    const sectionId = Number(block.dataset.section);
-    const subsectionId = Number(block.dataset.subsection);
-    const subsection = SECTIONS.find(section => Number(section.id) === sectionId)?.subsections.find(sub => Number(sub.id) === subsectionId);
-    const headers = Array.from(block.querySelectorAll('thead th')).slice(1, -1);
-    const cells = Array.from(block.querySelectorAll('.excel-add-row td')).slice(1, -1);
-    const fields = document.getElementById('addExpenseRowFields');
-    const form = document.getElementById('addExpenseRowForm');
-
-    document.getElementById('addExpenseRowSubtitle').textContent = subsection
-        ? `${subsection.code} - ${subsection.name}`
-        : '';
-
-    form.dataset.section = block.dataset.section;
-    form.dataset.subsection = block.dataset.subsection;
-    form.dataset.pattern = block.dataset.pattern;
-    fields.innerHTML = cells.map((cell, index) => `
-        <label class="${cell.querySelector('input[name="item_name"]') ? 'excel-modal-wide' : ''}">
-            <span>${esc(headers[index]?.textContent || 'Field')}</span>
-            <div>${cell.innerHTML}</div>
-        </label>
-    `).join('');
-
-    bindAddModalInputs(form);
-    updateSourceTotal(block, form);
-    openModal(document.getElementById('addExpenseRowModal'));
 }
 
 function syncChartAccount(searchInput) {
@@ -1258,59 +1061,13 @@ function updateSourceTotal(block, row) {
 }
 
 function updateBlockTotal(block) {
-    updateSourceTotal(block, block.querySelector('.excel-add-row'));
+    block.querySelectorAll('.excel-saved-row').forEach(row => updateSourceTotal(block, row));
 }
 
 function updateLineTotal(row) {
     if (!row) return;
     const block = row.closest('.excel-block');
     updateSourceTotal(block, row);
-}
-
-async function saveBlockRow(block, sourceRow = block.querySelector('.excel-add-row')) {
-    updateSourceTotal(block, sourceRow);
-    const accountSearch = sourceRow.querySelector('.excel-account-search');
-    if (accountSearch && accountSearch.value.trim() && !sourceRow.querySelector('input[name="chart_account_id"]').value) {
-        toast('Choose an account from the search list');
-        accountSearch.focus();
-        return;
-    }
-
-    const sectionId = Number(block.dataset.section);
-    const subsectionId = Number(block.dataset.subsection);
-    const patternId = Number(block.dataset.pattern);
-    const subsection = SECTIONS.find(section => Number(section.id) === sectionId)?.subsections.find(sub => Number(sub.id) === subsectionId);
-    const values = lineValues(sourceRow);
-    const planDetail = values.item_name || subsection?.name || 'Expense row';
-
-    const response = await fetch(@json(route('head_of_finance.expense-plan-rows.store')), {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF},
-        body: JSON.stringify({
-            planning_year_id: PLANNING_YEAR_ID,
-            section_id: sectionId,
-            subsection_id: subsectionId,
-            pattern_id: patternId,
-            plan_detail: planDetail,
-            detail: values.note || null,
-            values,
-        }),
-    });
-
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-        toast('Could not save row');
-        return;
-    }
-
-    ROWS.push({
-        ...data.entry,
-        code: subsection?.code,
-        label: subsection?.name,
-    });
-    renderTabs();
-    renderSheet();
-    toast('Saved');
 }
 
 async function updateSavedRow(row) {
@@ -1416,8 +1173,6 @@ async function saveSummaryCount(input) {
 
     renderTabs();
     renderSheet();
-    closeModal(document.getElementById('addExpenseRowModal'));
-    activeAddBlock = null;
     toast('Saved');
 }
 
@@ -1453,15 +1208,7 @@ document.getElementById('backFromTotalPage')?.addEventListener('click', () => {
     document.querySelector('.excel-plan')?.scrollIntoView({behavior: 'smooth', block: 'start'});
 });
 
-const sectionModal = document.getElementById('sectionModal');
-const subsectionModal = document.getElementById('subsectionModal');
 const fieldSettingsModal = document.getElementById('fieldSettingsModal');
-const addExpenseRowModal = document.getElementById('addExpenseRowModal');
-const addExpenseRowForm = document.getElementById('addExpenseRowForm');
-const subsectionForm = document.getElementById('subsectionForm');
-const subsectionSection = document.getElementById('subsectionSection');
-const subsectionParent = document.getElementById('subsectionParent');
-const subsectionOrder = document.getElementById('subsectionOrder');
 
 function openModal(modal) {
     modal.classList.add('is-open');
@@ -1474,61 +1221,18 @@ function closeModal(modal) {
     modal.setAttribute('aria-hidden', 'true');
 }
 
-function syncSubsectionModal() {
-    if (!subsectionSection) return;
-
-    const selected = subsectionSection.options[subsectionSection.selectedIndex];
-    const section = SECTIONS.find(item => Number(item.id) === Number(subsectionSection.value));
-    subsectionForm.action = selected?.dataset.url || '';
-    subsectionParent.innerHTML = '<option value="">No parent</option>';
-
-    if (section) {
-        section.subsections
-            .filter(subsection => subsection.parent_id === null)
-            .forEach(subsection => {
-                const option = document.createElement('option');
-                option.value = subsection.id;
-                option.textContent = `${subsection.code} - ${subsection.name}`;
-                subsectionParent.appendChild(option);
-            });
-
-        subsectionOrder.value = section.subsections.length + 1;
-    }
-}
-
-document.getElementById('openSectionModal').addEventListener('click', () => openModal(sectionModal));
-document.getElementById('openSubsectionModal').addEventListener('click', () => {
-    if (subsectionSection && selectedSectionId !== 'overview') subsectionSection.value = String(selectedSectionId);
-    syncSubsectionModal();
-    openModal(subsectionModal);
-});
-
-subsectionSection?.addEventListener('change', syncSubsectionModal);
 document.getElementById('fieldSettingsForm')?.addEventListener('submit', saveFieldSettings);
-addExpenseRowForm?.addEventListener('submit', event => {
-    event.preventDefault();
-    if (!activeAddBlock) return;
-    saveBlockRow(activeAddBlock, event.target);
-});
 
 document.addEventListener('click', event => {
     if (!event.target.matches('[data-close-modal]') && !event.target.classList.contains('excel-modal')) return;
 
-    closeModal(sectionModal);
-    closeModal(subsectionModal);
     closeModal(fieldSettingsModal);
-    closeModal(addExpenseRowModal);
-    activeAddBlock = null;
 });
 
 document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
 
-    closeModal(sectionModal);
-    closeModal(subsectionModal);
     closeModal(fieldSettingsModal);
-    closeModal(addExpenseRowModal);
-    activeAddBlock = null;
 });
 
 renderTabs();

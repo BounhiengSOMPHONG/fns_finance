@@ -186,18 +186,25 @@
 </div>
 
 @push('scripts')
+@php
+    $settingsJson = $settings->mapWithKeys(function ($setting) {
+        return [
+            $setting->id => [
+                'section_type' => $setting->section_type,
+                'gov_doc_id' => $setting->gov_doc_id,
+                'start_year' => $setting->start_year,
+                'items' => $setting->items->map(fn ($item) => [
+                    'name' => $item->name,
+                    'amount' => (float) $item->amount,
+                    'nuol_pct' => rtrim(rtrim(number_format($item->nuol_pct * 100, 2, '.', ''), '0'), '.'),
+                ])->values(),
+            ],
+        ];
+    });
+@endphp
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const settings = @json($settings->mapWithKeys(fn ($s) => [$s->id => [
-        'section_type' => $s->section_type,
-        'gov_doc_id' => $s->gov_doc_id,
-        'start_year' => $s->start_year,
-        'items' => $s->items->map(fn ($item) => [
-            'name' => $item->name,
-            'amount' => (float) $item->amount,
-            'nuol_pct' => rtrim(rtrim(number_format($item->nuol_pct * 100, 2, '.', ''), '0'), '.'),
-        ])->values(),
-    ]]));
+    const settings = @json($settingsJson);
 
     const modal = document.getElementById('rf-modal');
     const form = document.getElementById('rf-modal-form');

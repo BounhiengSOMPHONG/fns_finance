@@ -251,68 +251,95 @@
                                         </td>
                                     </form>
                                 </tr>
-                                @if($defaultRowsForSubsection->isNotEmpty())
-                                    <tr class="es-account-row">
-                                        <td colspan="8" class="px-3 pb-4 pt-0">
-                                            <details class="es-account-panel">
-                                                <summary>
-                                                    <span class="min-w-0 truncate">
-                                                        Manage accounts for {{ $subsection->code }} - {{ $subsection->name }}
+                                <tr class="es-account-row">
+                                    <td colspan="8" class="px-3 pb-4 pt-0">
+                                        <details class="es-account-panel">
+                                            <summary>
+                                                <span class="min-w-0 truncate">
+                                                    Manage default rows for {{ $subsection->code }} - {{ $subsection->name }}
+                                                </span>
+                                                <span class="flex shrink-0 items-center gap-2 text-xs">
+                                                    <span class="js-default-group-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : 'is-warn' }}">
+                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' linked' : 'No defaults' }}
                                                     </span>
-                                                    <span class="flex shrink-0 items-center gap-2 text-xs">
-                                                        <span class="js-default-group-badge es-pill {{ $missingLinksForSubsection ? 'is-warn' : 'is-ok' }}">
-                                                            {{ $linkedRowsForSubsection }}/{{ $defaultRowsForSubsection->count() }} linked
-                                                        </span>
-                                                        <span class="es-summary-action">Open</span>
-                                                    </span>
-                                                </summary>
+                                                    <span class="es-summary-action">Open</span>
+                                                </span>
+                                            </summary>
 
-                                                <div class="es-default-list">
-                                                    @foreach($defaultRowsForSubsection as $defaultRow)
-                                                        @php
-                                                            $selectedAccount = $accountOptionsById->get($defaultRow->chart_of_account_id);
-                                                            $selectedLabel = $selectedAccount['label'] ?? '';
-                                                        @endphp
-                                                        <div class="js-default-account-row es-default-row"
-                                                             data-row="{{ $defaultRow->id }}"
-                                                             data-url="{{ route('head_of_finance.settings.expense-default-rows.account.update', $defaultRow) }}">
-                                                            <div class="min-w-0">
-                                                                <div class="truncate text-sm font-semibold text-slate-950">{{ $defaultRow->item_name }}</div>
-                                                                <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
-                                                                    <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                                                                        Ref: <span class="js-default-reference">{{ $defaultRow->reference ?: '-' }}</span>
-                                                                    </span>
-                                                                    <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">Order: {{ $defaultRow->sort_order }}</span>
-                                                                </div>
-                                                                @if($defaultRow->note)
-                                                                    <div class="mt-1 text-xs text-slate-500">{{ $defaultRow->note }}</div>
-                                                                @endif
-                                                            </div>
-
-                                                            <div class="flex min-w-0 gap-2">
-                                                                <div class="min-w-0 flex-1">
-                                                                    <input class="fns-input js-default-account-search"
-                                                                           list="expense-structure-account-options"
-                                                                           value="{{ $selectedLabel }}"
-                                                                           placeholder="Type account code or name"
-                                                                           autocomplete="off">
-                                                                    <input type="hidden" name="chart_of_account_id" value="{{ $defaultRow->chart_of_account_id }}">
-                                                                </div>
-                                                                <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">Clear</button>
-                                                            </div>
-
-                                                            <div>
-                                                                <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? 'is-ok' : '' }}">
-                                                                    {{ $defaultRow->chart_of_account_id ? 'Linked' : 'No link' }}
+                                            <div class="es-default-list">
+                                                @forelse($defaultRowsForSubsection as $defaultRow)
+                                                    @php
+                                                        $selectedAccount = $accountOptionsById->get($defaultRow->chart_of_account_id);
+                                                        $selectedLabel = $selectedAccount['label'] ?? '';
+                                                    @endphp
+                                                    <div class="js-default-account-row es-default-row"
+                                                         data-row="{{ $defaultRow->id }}"
+                                                         data-url="{{ route('head_of_finance.settings.expense-default-rows.account.update', $defaultRow) }}">
+                                                        <div class="min-w-0">
+                                                            <div class="truncate text-sm font-semibold text-slate-950">{{ $defaultRow->item_name }}</div>
+                                                            <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
+                                                                <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
+                                                                    Ref: <span class="js-default-reference">{{ $defaultRow->reference ?: '-' }}</span>
                                                                 </span>
+                                                                <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">Order: {{ $defaultRow->sort_order }}</span>
                                                             </div>
+                                                            @if($defaultRow->note)
+                                                                <div class="mt-1 text-xs text-slate-500">{{ $defaultRow->note }}</div>
+                                                            @endif
                                                         </div>
-                                                    @endforeach
-                                                </div>
-                                            </details>
-                                        </td>
-                                    </tr>
-                                @endif
+
+                                                        <div class="flex min-w-0 gap-2">
+                                                            <div class="min-w-0 flex-1">
+                                                                <input class="fns-input js-default-account-search"
+                                                                       list="expense-structure-account-options"
+                                                                       value="{{ $selectedLabel }}"
+                                                                       placeholder="Type account code or name"
+                                                                       autocomplete="off">
+                                                                <input type="hidden" name="chart_of_account_id" value="{{ $defaultRow->chart_of_account_id }}">
+                                                            </div>
+                                                            <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">Clear</button>
+                                                        </div>
+
+                                                        <div>
+                                                            <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? 'is-ok' : '' }}">
+                                                                {{ $defaultRow->chart_of_account_id ? 'Linked' : 'No link' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                @empty
+                                                    <div class="es-default-empty">No default rows yet.</div>
+                                                @endforelse
+
+                                                <form method="POST" action="{{ route('head_of_finance.settings.expense-default-rows.store') }}" class="es-default-add-form">
+                                                    @csrf
+                                                    <input type="hidden" name="subsection_code" value="{{ $subsection->code }}">
+                                                    <label>
+                                                        <span>Row name</span>
+                                                        <input name="item_name" class="fns-input" placeholder="Default row name" required>
+                                                    </label>
+                                                    <label>
+                                                        <span>Account</span>
+                                                        <select name="chart_of_account_id" class="fns-input">
+                                                            <option value="">No account</option>
+                                                            @foreach($accountOptions as $account)
+                                                                <option value="{{ $account['id'] }}">{{ $account['label'] }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </label>
+                                                    <label>
+                                                        <span>Note</span>
+                                                        <input name="note" class="fns-input" placeholder="Optional">
+                                                    </label>
+                                                    <label>
+                                                        <span>Order</span>
+                                                        <input type="number" name="sort_order" class="fns-input" min="1" max="999" value="{{ ($defaultRowsForSubsection->max('sort_order') ?? 0) + 1 }}" required>
+                                                    </label>
+                                                    <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">Add default row</button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    </td>
+                                </tr>
                             @endforeach
 
                             <tr class="es-add-subsection-row">
@@ -594,6 +621,16 @@
     .es-account-panel { border-color:#dbe2ec; }
     .es-account-panel > summary { padding:.6rem .8rem; background:#fff; }
     .es-default-list { display:grid; gap:.55rem; border-top:1px solid var(--fns-gray-200); padding:.75rem; background:#fbfcfe; }
+    .es-default-empty {
+        border:1px dashed #cbd5e1;
+        border-radius:7px;
+        background:#fff;
+        color:#64748b;
+        padding:.75rem;
+        font-size:.78rem;
+        font-weight:800;
+        text-align:center;
+    }
     .es-default-row {
         display:grid;
         grid-template-columns:minmax(15rem,1fr) minmax(22rem,2fr) 6.5rem;
@@ -605,6 +642,26 @@
         padding:.7rem;
     }
     .es-default-row .fns-input { padding:.48rem .6rem; font-size:.78rem; }
+    .es-default-add-form {
+        display:grid;
+        grid-template-columns:minmax(14rem,1.2fr) minmax(20rem,2fr) minmax(10rem,1fr) 5.5rem auto;
+        align-items:end;
+        gap:.6rem;
+        border:1px solid #e2e8f0;
+        border-radius:7px;
+        background:#fff;
+        padding:.75rem;
+    }
+    .es-default-add-form label { min-width:0; }
+    .es-default-add-form label span {
+        display:block;
+        margin-bottom:.2rem;
+        color:#64748b;
+        font-size:.66rem;
+        font-weight:900;
+        text-transform:uppercase;
+    }
+    .es-default-add-form .fns-input { padding:.48rem .6rem; font-size:.78rem; }
     @media (max-width:900px) {
         .es-hero { flex-direction:column; }
         .es-year-form { width:100%; }
@@ -614,6 +671,7 @@
         .es-section-title { grid-template-columns:auto 1fr; }
         .es-section-title > .es-pill { grid-column:1 / -1; justify-self:start; }
         .es-default-row { grid-template-columns:1fr; }
+        .es-default-add-form { grid-template-columns:1fr; }
     }
 </style>
 

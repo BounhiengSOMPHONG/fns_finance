@@ -73,7 +73,6 @@ class ExpenseDefaultRowAccountController extends Controller
             'item_name' => $data['item_name'],
             'reference' => $account?->account_code,
             'chart_of_account_id' => $account?->id,
-            'note' => null,
             'sort_order' => $data['sort_order'],
             'default_values' => [],
             'is_active' => true,

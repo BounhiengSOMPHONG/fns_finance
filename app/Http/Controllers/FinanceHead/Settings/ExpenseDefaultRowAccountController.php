@@ -22,7 +22,10 @@ class ExpenseDefaultRowAccountController extends Controller
                 $builder->where(function ($nested) use ($query) {
                     $nested->where('item_name', 'like', "%{$query}%")
                         ->orWhere('subsection_code', 'like', "%{$query}%")
-                        ->orWhere('reference', 'like', "%{$query}%");
+                        ->orWhereHas('chartOfAccount', function ($accountQuery) use ($query): void {
+                            $accountQuery->where('account_code', 'like', "%{$query}%")
+                                ->orWhere('account_name', 'like', "%{$query}%");
+                        });
                 });
             })
             ->orderBy('subsection_code')
@@ -71,7 +74,6 @@ class ExpenseDefaultRowAccountController extends Controller
         ExpenseSubsectionDefaultRow::create([
             'subsection_code' => $data['subsection_code'],
             'item_name' => $data['item_name'],
-            'reference' => $account?->account_code,
             'chart_of_account_id' => $account?->id,
             'sort_order' => $data['sort_order'],
             'default_values' => [],
@@ -95,7 +97,6 @@ class ExpenseDefaultRowAccountController extends Controller
 
         $payload = [
             'chart_of_account_id' => $account?->id,
-            'reference' => $account?->account_code,
         ];
 
         foreach (['item_name', 'sort_order'] as $field) {
@@ -108,6 +109,7 @@ class ExpenseDefaultRowAccountController extends Controller
 
         DB::transaction(function () use ($expenseSubsectionDefaultRow, $payload, $oldItemName): void {
             $expenseSubsectionDefaultRow->update($payload);
+            $expenseSubsectionDefaultRow->load('chartOfAccount');
             $this->syncPlanRowsFromDefaultRow($expenseSubsectionDefaultRow, $oldItemName);
         });
 
@@ -117,7 +119,7 @@ class ExpenseDefaultRowAccountController extends Controller
                 'row' => [
                     'id' => $expenseSubsectionDefaultRow->id,
                     'chart_of_account_id' => $expenseSubsectionDefaultRow->chart_of_account_id,
-                    'reference' => $expenseSubsectionDefaultRow->reference,
+                    'reference' => $account?->account_code,
                     'account_label' => $account ? $this->accountLabel($account) : null,
                 ],
             ]);
@@ -154,7 +156,7 @@ class ExpenseDefaultRowAccountController extends Controller
             ]);
 
             $this->setPlanTextValue($plan, 'item_name', $defaultRow->item_name);
-            $this->setPlanTextValue($plan, 'reference', $defaultRow->reference);
+            $this->setPlanTextValue($plan, 'reference', $defaultRow->chartOfAccount?->account_code);
         }
     }
 

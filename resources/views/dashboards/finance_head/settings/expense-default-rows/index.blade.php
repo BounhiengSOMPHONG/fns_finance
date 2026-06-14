@@ -82,6 +82,7 @@
                                 @php
                                     $selectedAccount = $accountOptionsById->get($row->chart_of_account_id);
                                     $selectedLabel = $selectedAccount['label'] ?? '';
+                                    $selectedReference = $selectedAccount['code'] ?? null;
                                 @endphp
                                 <div class="js-account-row rounded-lg border border-slate-200 p-4" data-row="{{ $row->id }}">
                                     <div class="grid gap-3 xl:grid-cols-[minmax(18rem,1fr)_minmax(34rem,2fr)_8rem] xl:items-start">
@@ -89,7 +90,7 @@
                                             <div class="font-semibold text-slate-950">{{ $row->item_name }}</div>
                                             <div class="mt-2 flex flex-wrap gap-2 text-xs">
                                                 <span class="rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-700">
-                                                    Ref: <span class="js-reference">{{ $row->reference ?: '-' }}</span>
+                                                    Ref: <span class="js-reference">{{ $selectedReference ?: '-' }}</span>
                                                 </span>
                                                 <span class="rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-700">
                                                     Order: {{ $row->sort_order }}

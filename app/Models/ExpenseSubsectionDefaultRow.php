@@ -10,7 +10,6 @@ class ExpenseSubsectionDefaultRow extends Model
     protected $fillable = [
         'subsection_code',
         'item_name',
-        'reference',
         'chart_of_account_id',
         'sort_order',
         'default_values',

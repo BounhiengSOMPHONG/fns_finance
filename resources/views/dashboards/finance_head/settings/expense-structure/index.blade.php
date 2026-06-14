@@ -271,6 +271,7 @@
                                                     @php
                                                         $selectedAccount = $accountOptionsById->get($defaultRow->chart_of_account_id);
                                                         $selectedLabel = $selectedAccount['label'] ?? '';
+                                                        $selectedReference = $selectedAccount['code'] ?? null;
                                                     @endphp
                                                     <form method="POST"
                                                           action="{{ route('head_of_finance.settings.expense-default-rows.update', $defaultRow) }}"
@@ -286,7 +287,7 @@
                                                             </label>
                                                             <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
                                                                 <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                                                                    Ref: <span class="js-default-reference">{{ $defaultRow->reference ?: '-' }}</span>
+                                                                    Ref: <span class="js-default-reference">{{ $selectedReference ?: '-' }}</span>
                                                                 </span>
                                                             </div>
                                                         </div>

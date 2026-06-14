@@ -5,8 +5,10 @@ namespace App\Http\Controllers\FinanceHead;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
 use App\Models\ExpenseCalculationRule;
+use App\Models\ExpensePattern;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
+use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\ExpenseSubsectionFieldSetting;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
@@ -40,11 +42,6 @@ class ManagePlanController extends Controller
         ]);
 
         $planningYear = DB::transaction(function () use ($data) {
-            $sourceYear = PlanningYear::where('year', '<', $data['year'])
-                ->whereHas('sections')
-                ->orderByDesc('year')
-                ->first();
-
             $planningYear = PlanningYear::create([
                 'year' => (int) $data['year'],
                 'name' => $data['name'] ?: 'Planning ' . $data['year'],
@@ -52,11 +49,8 @@ class ManagePlanController extends Controller
                 'is_active' => true,
             ]);
 
-            if ($sourceYear) {
-                $this->copyExpenseStructure($sourceYear, $planningYear);
-            }
-
             $this->ensureCompanionPlans($planningYear);
+            $this->ensureExpenseStructure($planningYear);
 
             return $planningYear;
         });
@@ -160,6 +154,84 @@ class ManagePlanController extends Controller
 
         if ($sourceYear) {
             $this->copyExpenseStructure($sourceYear, $planningYear);
+            return;
+        }
+
+        $this->buildExpenseStructureFromDefaultRows($planningYear);
+    }
+
+    private function buildExpenseStructureFromDefaultRows(PlanningYear $planningYear): void
+    {
+        $codes = ExpenseSubsectionDefaultRow::query()
+            ->select('subsection_code')
+            ->distinct()
+            ->orderBy('subsection_code')
+            ->pluck('subsection_code')
+            ->filter()
+            ->values();
+
+        if ($codes->isEmpty()) {
+            return;
+        }
+
+        $defaultPatternId = ExpensePattern::where('is_active', true)->orderBy('id')->value('id');
+
+        $sectionCodes = $codes
+            ->map(fn (string $code) => implode('.', array_slice(explode('.', $code), 0, 2)))
+            ->unique()
+            ->values();
+
+        $sectionsByCode = [];
+        foreach ($sectionCodes as $index => $sectionCode) {
+            $sectionsByCode[$sectionCode] = ExpenseSection::create([
+                'planning_year_id' => $planningYear->id,
+                'code' => $sectionCode,
+                'name' => 'ກຸ່ມລາຍຈ່າຍ ' . $sectionCode,
+                'description' => null,
+                'display_order' => $index + 1,
+                'summary_period_count' => 12,
+                'is_active' => true,
+            ]);
+        }
+
+        $subsectionCodes = collect();
+        foreach ($codes as $code) {
+            $parts = explode('.', $code);
+            for ($length = 3; $length <= count($parts); $length++) {
+                $subsectionCodes->push(implode('.', array_slice($parts, 0, $length)));
+            }
+        }
+
+        $subsectionsByCode = [];
+        foreach ($subsectionCodes->unique()->sort()->values() as $index => $code) {
+            $sectionCode = implode('.', array_slice(explode('.', $code), 0, 2));
+            if (! isset($sectionsByCode[$sectionCode])) {
+                continue;
+            }
+
+            $subsectionsByCode[$code] = ExpenseSubsection::create([
+                'section_id' => $sectionsByCode[$sectionCode]->id,
+                'parent_id' => null,
+                'code' => $code,
+                'name' => 'ລາຍການ ' . $code,
+                'description' => null,
+                'default_pattern_id' => $defaultPatternId,
+                'summary_period_count' => 12,
+                'display_order' => $index + 1,
+                'is_active' => true,
+            ]);
+        }
+
+        foreach ($subsectionsByCode as $code => $subsection) {
+            $parts = explode('.', $code);
+            if (count($parts) <= 3) {
+                continue;
+            }
+
+            $parentCode = implode('.', array_slice($parts, 0, -1));
+            if (isset($subsectionsByCode[$parentCode])) {
+                $subsection->update(['parent_id' => $subsectionsByCode[$parentCode]->id]);
+            }
         }
     }
 

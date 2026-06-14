@@ -26,6 +26,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('/home', [\App\Http\Controllers\FinanceHead\HomeController::class, 'index'])->name('home');
         Route::get('manage-plan', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'index'])->name('manage-plan.index');
         Route::post('manage-plan', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'store'])->name('manage-plan.store');
+        Route::get('manage-plan/{planningYear}/preview', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'preview'])->name('manage-plan.preview');
         Route::delete('manage-plan/{planningYear}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'destroy'])->name('manage-plan.destroy');
         Route::post('manage-plan/{planningYear}/sync', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'sync'])->name('manage-plan.sync');
 

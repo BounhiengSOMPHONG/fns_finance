@@ -356,6 +356,8 @@
     .excel-account-search { min-width:340px; }
     .excel-money-input { text-align:right; font-variant-numeric:tabular-nums; }
     .excel-delete { border:0; background:transparent; color:#dc2626; font-size:1rem; cursor:pointer; line-height:1; }
+    .excel-readonly-value { color:#111827; font-weight:800; line-height:1.35; }
+    .excel-readonly-muted { color:#64748b; font-size:.76rem; line-height:1.35; }
     .excel-empty { color:var(--fns-gray-400); text-align:center; padding:.8rem; }
     .excel-unit { text-align:right; color:#111b33; font-weight:800; padding:.45rem .65rem; background:#f7f8fa; border-bottom:1px solid #d8dce5; }
     .excel-toast { position:fixed; right:1rem; bottom:1rem; z-index:10000; background:var(--fns-navy); color:#fff; border-radius:8px; padding:.75rem .9rem; box-shadow:0 18px 38px rgba(17,27,51,.22); font-size:.82rem; }
@@ -862,19 +864,17 @@ function renderSubsection(section, subsection) {
                             <th class="excel-seq">ລ/ດ</th>
                             ${normalFields.map(field => `<th>${esc(field.label)}</th>`).join('')}
                             ${totalField ? `<th>${esc(totalField.label)}</th>` : ''}
-                            <th>ຈັດການ</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${rows.length ? rows.map((row, index) => renderSavedRow(row, index + 1, normalFields, totalField)).join('') : `
-                            <tr><td colspan="${normalFields.length + (totalField ? 3 : 2)}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
+                            <tr><td colspan="${normalFields.length + (totalField ? 2 : 1)}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
                         `}
                     </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="${normalFields.length + 1}" class="excel-number">ລວມ</td>
                             ${totalField ? `<td class="excel-number">${fmt.format(subtotal)}</td>` : ''}
-                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -889,35 +889,21 @@ function renderSavedRow(row, index, normalFields, totalField) {
             <td class="excel-seq">${index}</td>
             ${normalFields.map(field => `
                 <td class="${field.type === 'number' ? 'excel-number' : field.key === 'item_name' ? 'excel-name' : ''}">
-                    ${field.key === 'item_name'
-                        ? renderChartAccountSelect(field, row.values?.reference || '', rowDisplayValue(row, field))
+                    ${['item_name', 'reference'].includes(field.key)
+                        ? renderLockedField(field, rowDisplayValue(row, field))
                         : `<input class="excel-input ${field.type === 'number' ? 'excel-money-input' : ''}" name="${esc(field.key)}" data-type="${esc(field.type)}" type="${field.type === 'number' ? 'text' : field.type === 'date' ? 'date' : 'text'}"
                                   inputmode="${field.type === 'number' ? 'decimal' : 'text'}" value="${esc(field.type === 'number' ? moneyInputValue(rowDisplayValue(row, field)) : rowDisplayValue(row, field))}" placeholder="${esc(field.label)}" ${field.required ? 'required' : ''}>`}
                 </td>
             `).join('')}
             ${totalField ? `<td><input class="excel-input excel-money-input" name="${esc(totalField.key)}" data-type="number" data-calculated="1" type="text" inputmode="decimal" value="${moneyInputValue(rowTotal(row))}" readonly></td>` : ''}
-            <td style="text-align:center;">
-                <button type="button" class="excel-delete" data-delete="${row.id}" title="Delete">&times;</button>
-            </td>
         </tr>
     `;
 }
 
-function renderChartAccountSelect(field, selectedCode = '', selectedName = '') {
-    const listId = `chartAccounts-${Math.random().toString(36).slice(2)}`;
-    const selectedValue = selectedCode || selectedName ? `${selectedCode} - ${selectedName}`.replace(/^ - /, '').trim() : '';
-
+function renderLockedField(field, value = '') {
     return `
-        <input class="excel-input excel-account-search" name="chart_account_search" data-type="text"
-               list="${listId}" placeholder="${esc(field.label)}" autocomplete="off" value="${esc(selectedValue)}" ${field.required ? 'required' : ''}>
-        <datalist id="${listId}">
-            ${CHART_ACCOUNTS.map(account => `
-                <option value="${esc(account.code)} - ${esc(account.name)}"></option>
-            `).join('')}
-        </datalist>
-        <input type="hidden" name="chart_account_id" data-type="text" value="">
-        <input type="hidden" name="item_name" data-type="text" value="${esc(selectedName)}">
-        <input type="hidden" name="reference" data-type="text" value="${esc(selectedCode)}">
+        <div class="${field.key === 'item_name' ? 'excel-readonly-value' : 'excel-readonly-muted'}">${esc(value || '-')}</div>
+        <input type="hidden" name="${esc(field.key)}" data-type="${esc(field.type)}" value="${esc(value)}">
     `;
 }
 
@@ -1000,17 +986,6 @@ function bindSheetEvents() {
         });
     });
 
-    document.querySelectorAll('.excel-account-search').forEach(input => {
-        input.addEventListener('input', event => {
-            syncChartAccount(event.target);
-        });
-        input.addEventListener('change', event => syncChartAccount(event.target));
-    });
-
-    document.querySelectorAll('.excel-delete').forEach(button => {
-        button.addEventListener('click', event => deleteRow(event.target.dataset.delete));
-    });
-
     document.querySelectorAll('.excel-saved-row input').forEach(input => {
         input.addEventListener('change', event => updateSavedRow(event.target.closest('.excel-saved-row')));
         input.addEventListener('keydown', event => {
@@ -1033,19 +1008,6 @@ function lineValues(row) {
         values[input.name] = input.dataset.type === 'number' ? numberValue(input.value) : input.value;
     });
     return values;
-}
-
-function syncChartAccount(searchInput) {
-    const row = searchInput.closest('tr, form');
-    const value = searchInput.value.trim().toLowerCase();
-    const account = CHART_ACCOUNTS.find(item =>
-        `${item.code} - ${item.name}`.toLowerCase() === value ||
-        String(item.code).toLowerCase() === value
-    );
-
-    row.querySelector('input[name="chart_account_id"]').value = account?.id || '';
-    row.querySelector('input[name="item_name"]').value = account?.name || '';
-    row.querySelector('input[name="reference"]').value = account?.code || '';
 }
 
 function updateSourceTotal(block, row) {
@@ -1072,12 +1034,6 @@ function updateLineTotal(row) {
 
 async function updateSavedRow(row) {
     updateLineTotal(row);
-    const accountSearch = row.querySelector('.excel-account-search');
-    if (accountSearch && accountSearch.value.trim() && !row.querySelector('input[name="reference"]').value) {
-        toast('Choose an account from the search list');
-        accountSearch.focus();
-        return;
-    }
 
     const rowId = Number(row.dataset.row);
     const values = lineValues(row);
@@ -1108,22 +1064,6 @@ async function updateSavedRow(row) {
     renderTabs();
     renderSheet();
     toast('Updated');
-}
-
-async function deleteRow(id) {
-    if (!confirm('Delete this row?')) return;
-    const response = await fetch(`/head-of-finance/expense-plan-rows/${id}`, {
-        method: 'DELETE',
-        headers: {'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF},
-    });
-    if (!response.ok) {
-        toast('Could not delete');
-        return;
-    }
-    ROWS = ROWS.filter(row => Number(row.id) !== Number(id));
-    renderTabs();
-    renderSheet();
-    toast('Deleted');
 }
 
 function bindSummaryCountEvents() {

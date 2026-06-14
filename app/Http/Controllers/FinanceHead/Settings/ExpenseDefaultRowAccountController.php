@@ -4,9 +4,12 @@ namespace App\Http\Controllers\FinanceHead\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
+use App\Models\ExpensePlan;
+use App\Models\ExpensePlanValue;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseDefaultRowAccountController extends Controller
 {
@@ -58,7 +61,6 @@ class ExpenseDefaultRowAccountController extends Controller
             'subsection_code' => ['required', 'string', 'max:30'],
             'item_name' => ['required', 'string', 'max:255'],
             'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
-            'note' => ['nullable', 'string', 'max:1000'],
             'sort_order' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
@@ -71,7 +73,7 @@ class ExpenseDefaultRowAccountController extends Controller
             'item_name' => $data['item_name'],
             'reference' => $account?->account_code,
             'chart_of_account_id' => $account?->id,
-            'note' => $data['note'] ?? null,
+            'note' => null,
             'sort_order' => $data['sort_order'],
             'default_values' => [],
             'is_active' => true,
@@ -83,17 +85,32 @@ class ExpenseDefaultRowAccountController extends Controller
     public function update(Request $request, ExpenseSubsectionDefaultRow $expenseSubsectionDefaultRow)
     {
         $data = $request->validate([
+            'item_name' => ['sometimes', 'required', 'string', 'max:255'],
             'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
+            'sort_order' => ['sometimes', 'required', 'integer', 'min:1', 'max:999'],
         ]);
 
         $account = ! empty($data['chart_of_account_id'])
             ? ChartOfAccount::findOrFail($data['chart_of_account_id'])
             : null;
 
-        $expenseSubsectionDefaultRow->update([
+        $payload = [
             'chart_of_account_id' => $account?->id,
             'reference' => $account?->account_code,
-        ]);
+        ];
+
+        foreach (['item_name', 'sort_order'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $payload[$field] = $data[$field];
+            }
+        }
+
+        $oldItemName = $expenseSubsectionDefaultRow->item_name;
+
+        DB::transaction(function () use ($expenseSubsectionDefaultRow, $payload, $oldItemName): void {
+            $expenseSubsectionDefaultRow->update($payload);
+            $this->syncPlanRowsFromDefaultRow($expenseSubsectionDefaultRow, $oldItemName);
+        });
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -107,7 +124,68 @@ class ExpenseDefaultRowAccountController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Default row account link saved.');
+        return back()->with('success', 'Default row saved.');
+    }
+
+    public function destroy(ExpenseSubsectionDefaultRow $expenseSubsectionDefaultRow)
+    {
+        DB::transaction(function () use ($expenseSubsectionDefaultRow): void {
+            $this->deletePlanRowsForDefaultRow($expenseSubsectionDefaultRow);
+            $expenseSubsectionDefaultRow->delete();
+        });
+
+        return back()->with('success', 'Default row deleted.');
+    }
+
+    private function syncPlanRowsFromDefaultRow(ExpenseSubsectionDefaultRow $defaultRow, string $oldItemName): void
+    {
+        $subsectionIds = ExpenseSubsection::where('code', $defaultRow->subsection_code)->pluck('id');
+
+        if ($subsectionIds->isEmpty()) {
+            return;
+        }
+
+        $plans = ExpensePlan::whereIn('subsection_id', $subsectionIds)
+            ->where('plan_detail', $oldItemName)
+            ->get();
+
+        foreach ($plans as $plan) {
+            $plan->update([
+                'plan_detail' => $defaultRow->item_name,
+            ]);
+
+            $this->setPlanTextValue($plan, 'item_name', $defaultRow->item_name);
+            $this->setPlanTextValue($plan, 'reference', $defaultRow->reference);
+        }
+    }
+
+    private function deletePlanRowsForDefaultRow(ExpenseSubsectionDefaultRow $defaultRow): void
+    {
+        $subsectionIds = ExpenseSubsection::where('code', $defaultRow->subsection_code)->pluck('id');
+
+        if ($subsectionIds->isEmpty()) {
+            return;
+        }
+
+        $plans = ExpensePlan::whereIn('subsection_id', $subsectionIds)
+            ->where('plan_detail', $defaultRow->item_name)
+            ->get();
+
+        ExpensePlanValue::whereIn('expense_plan_id', $plans->pluck('id'))->delete();
+        ExpensePlan::whereIn('id', $plans->pluck('id'))->delete();
+    }
+
+    private function setPlanTextValue(ExpensePlan $plan, string $fieldKey, ?string $value): void
+    {
+        ExpensePlanValue::updateOrCreate([
+            'expense_plan_id' => $plan->id,
+            'field_key' => $fieldKey,
+        ], [
+            'value_text' => $value,
+            'value_number' => null,
+            'value_date' => null,
+            'value_boolean' => null,
+        ]);
     }
 
     private function accountLabel(ChartOfAccount $account): string

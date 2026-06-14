@@ -272,40 +272,55 @@
                                                         $selectedAccount = $accountOptionsById->get($defaultRow->chart_of_account_id);
                                                         $selectedLabel = $selectedAccount['label'] ?? '';
                                                     @endphp
-                                                    <div class="js-default-account-row es-default-row"
-                                                         data-row="{{ $defaultRow->id }}"
-                                                         data-url="{{ route('head_of_finance.settings.expense-default-rows.account.update', $defaultRow) }}">
+                                                    <form method="POST"
+                                                          action="{{ route('head_of_finance.settings.expense-default-rows.update', $defaultRow) }}"
+                                                          class="js-default-account-row es-default-row"
+                                                          data-row="{{ $defaultRow->id }}"
+                                                          data-url="{{ route('head_of_finance.settings.expense-default-rows.account.update', $defaultRow) }}">
+                                                        @csrf
+                                                        @method('PATCH')
                                                         <div class="min-w-0">
-                                                            <div class="truncate text-sm font-semibold text-slate-950">{{ $defaultRow->item_name }}</div>
+                                                            <label class="es-default-field">
+                                                                <span>Row name</span>
+                                                                <input name="item_name" value="{{ $defaultRow->item_name }}" class="fns-input" required>
+                                                            </label>
                                                             <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
                                                                 <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
                                                                     Ref: <span class="js-default-reference">{{ $defaultRow->reference ?: '-' }}</span>
                                                                 </span>
-                                                                <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">Order: {{ $defaultRow->sort_order }}</span>
                                                             </div>
-                                                            @if($defaultRow->note)
-                                                                <div class="mt-1 text-xs text-slate-500">{{ $defaultRow->note }}</div>
-                                                            @endif
                                                         </div>
 
-                                                        <div class="flex min-w-0 gap-2">
-                                                            <div class="min-w-0 flex-1">
+                                                        <div class="es-default-fields">
+                                                            <label class="es-default-field">
+                                                                <span>Account</span>
                                                                 <input class="fns-input js-default-account-search"
                                                                        list="expense-structure-account-options"
                                                                        value="{{ $selectedLabel }}"
                                                                        placeholder="Type account code or name"
                                                                        autocomplete="off">
                                                                 <input type="hidden" name="chart_of_account_id" value="{{ $defaultRow->chart_of_account_id }}">
-                                                            </div>
-                                                            <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">Clear</button>
+                                                            </label>
+                                                            <label class="es-default-field es-default-order">
+                                                                <span>Order</span>
+                                                                <input type="number" name="sort_order" value="{{ $defaultRow->sort_order }}" class="fns-input" min="1" max="999" required>
+                                                            </label>
                                                         </div>
 
-                                                        <div>
+                                                        <div class="es-default-actions">
                                                             <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? 'is-ok' : '' }}">
                                                                 {{ $defaultRow->chart_of_account_id ? 'Linked' : 'No link' }}
                                                             </span>
+                                                            <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">Save</button>
+                                                            <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">Clear account</button>
+                                                            <button type="button"
+                                                                    class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
+                                                                    data-url="{{ route('head_of_finance.settings.expense-default-rows.destroy', $defaultRow) }}"
+                                                                    data-message="Delete this default row?">
+                                                                Delete
+                                                            </button>
                                                         </div>
-                                                    </div>
+                                                    </form>
                                                 @empty
                                                     <div class="es-default-empty">No default rows yet.</div>
                                                 @endforelse
@@ -325,10 +340,6 @@
                                                                 <option value="{{ $account['id'] }}">{{ $account['label'] }}</option>
                                                             @endforeach
                                                         </select>
-                                                    </label>
-                                                    <label>
-                                                        <span>Note</span>
-                                                        <input name="note" class="fns-input" placeholder="Optional">
                                                     </label>
                                                     <label>
                                                         <span>Order</span>
@@ -633,7 +644,7 @@
     }
     .es-default-row {
         display:grid;
-        grid-template-columns:minmax(15rem,1fr) minmax(22rem,2fr) 6.5rem;
+        grid-template-columns:minmax(13rem,1fr) minmax(24rem,2fr) minmax(8rem,auto);
         align-items:start;
         gap:.75rem;
         border:1px solid #e2e8f0;
@@ -642,9 +653,30 @@
         padding:.7rem;
     }
     .es-default-row .fns-input { padding:.48rem .6rem; font-size:.78rem; }
+    .es-default-fields {
+        display:grid;
+        grid-template-columns:minmax(14rem,1fr) 5.5rem;
+        gap:.55rem;
+        min-width:0;
+    }
+    .es-default-field { display:block; min-width:0; }
+    .es-default-field span {
+        display:block;
+        margin-bottom:.2rem;
+        color:#64748b;
+        font-size:.66rem;
+        font-weight:900;
+        text-transform:uppercase;
+    }
+    .es-default-actions {
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        gap:.4rem;
+    }
     .es-default-add-form {
         display:grid;
-        grid-template-columns:minmax(14rem,1.2fr) minmax(20rem,2fr) minmax(10rem,1fr) 5.5rem auto;
+        grid-template-columns:minmax(14rem,1.2fr) minmax(20rem,2fr) 5.5rem auto;
         align-items:end;
         gap:.6rem;
         border:1px solid #e2e8f0;
@@ -671,6 +703,8 @@
         .es-section-title { grid-template-columns:auto 1fr; }
         .es-section-title > .es-pill { grid-column:1 / -1; justify-self:start; }
         .es-default-row { grid-template-columns:1fr; }
+        .es-default-fields { grid-template-columns:1fr; }
+        .es-default-actions { justify-content:flex-start; }
         .es-default-add-form { grid-template-columns:1fr; }
     }
 </style>

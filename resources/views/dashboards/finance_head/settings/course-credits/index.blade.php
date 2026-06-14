@@ -4,322 +4,211 @@
 @section('page-title', 'ການຕັ້ງລາຄາ & ໜ່ວຍກິດ & ມຊ%')
 
 @section('content')
-
 @php
     $levelMeta = [
-        'bachelor' => [
-            'label' => 'ປ.ຕີ', 
-            'full' => 'ປະລິນຍາຕີ (ປ.ຕີ)', 
-            'badge' => 'bg-blue-50 text-blue-700 border-blue-200',
-            'dot' => 'bg-blue-400',
-            'hover' => 'hover:border-blue-300 focus-within:border-blue-500 focus-within:ring-blue-500',
-            'btn' => 'bg-blue-600 hover:bg-blue-700',
-            'input_focus' => 'focus:border-blue-500 focus:ring-blue-500/20'
-        ],
-        'master'   => [
-            'label' => 'ປ.ໂທ', 
-            'full' => 'ປະລິນຍາໂທ (ປ.ໂທ)', 
-            'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-            'dot' => 'bg-emerald-400',
-            'hover' => 'hover:border-emerald-300 focus-within:border-emerald-500 focus-within:ring-emerald-500',
-            'btn' => 'bg-emerald-600 hover:bg-emerald-700',
-            'input_focus' => 'focus:border-emerald-500 focus:ring-emerald-500/20'
-        ],
-        'phd'      => [
-            'label' => 'ປ.ເອກ', 
-            'full' => 'ປະລິນຍາເອກ (ປ.ເອກ)', 
-            'badge' => 'bg-purple-50 text-purple-700 border-purple-200',
-            'dot' => 'bg-purple-400',
-            'hover' => 'hover:border-purple-300 focus-within:border-purple-500 focus-within:ring-purple-500',
-            'btn' => 'bg-purple-600 hover:bg-purple-700',
-            'input_focus' => 'focus:border-purple-500 focus:ring-purple-500/20'
-        ],
+        'bachelor' => ['label' => 'ປ.ຕີ', 'full' => 'ປະລິນຍາຕີ'],
+        'master' => ['label' => 'ປ.ໂທ', 'full' => 'ປະລິນຍາໂທ'],
+        'phd' => ['label' => 'ປ.ເອກ', 'full' => 'ປະລິນຍາເອກ'],
     ];
-    $byLevel = $courseCredits->groupBy(fn($s) => $s->degreeProgram?->level);
+    $pct = fn ($value) => rtrim(rtrim(number_format((float) $value * 100, 4, '.', ''), '0'), '.');
+    $configuredPrices = $prices->filter()->count();
+    $configuredNuol = $nuolPcts->filter()->count();
 @endphp
 
-<div class="max-w-7xl mx-auto space-y-8 pb-12">
-    
-    <!-- Header Section -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<section class="erp-shell">
+    <div class="erp-topbar">
         <div>
-            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">ການຕັ້ງຄ່າທາງການເງິນ</h2>
-            <p class="text-sm text-slate-500 mt-1">ຈັດການລາຄາໜ່ວຍກິດ, ເປີເຊັນ ມຊ ແລະ ຈຳນວນໜ່ວຍກິດຂອງແຕ່ລະຫຼັກສູດ.</p>
+            <span class="erp-kicker">Finance settings</span>
+            <h2>ການຕັ້ງຄ່າທາງການເງິນ</h2>
+            <p>ຈັດການລາຄາໜ່ວຍກິດ, ມຊ%, ແລະ ໜ່ວຍກິດຫຼັກສູດຈາກໜ້າດຽວ.</p>
+        </div>
+        <button type="button" id="cc-open-create" class="erp-btn erp-btn-primary">
+            <span aria-hidden="true">+</span>
+            ເພີ່ມໃໝ່
+        </button>
+    </div>
+
+    <div class="erp-summary">
+        <div class="erp-metric">
+            <span>ລາຄາໜ່ວຍກິດ</span>
+            <strong>{{ $configuredPrices }}/3</strong>
+            <em>ລະດັບທີ່ຕັ້ງຄ່າແລ້ວ</em>
+        </div>
+        <div class="erp-metric">
+            <span>ມຊ%</span>
+            <strong>{{ $configuredNuol }}/3</strong>
+            <em>ອັດຕາທີ່ພ້ອມໃຊ້</em>
+        </div>
+        <div class="erp-metric">
+            <span>ຫຼັກສູດ</span>
+            <strong>{{ number_format($courseCredits->count()) }}</strong>
+            <em>ລາຍການໜ່ວຍກິດ</em>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        <!-- Credit Price Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden flex flex-col">
-            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm border border-blue-100/50">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-slate-800">ລາຄາຕໍ່ໜ່ວຍກິດ</h3>
-                        <p class="text-xs text-slate-500">ກຳນົດລາຄາ (ກີບ) ຕາມລະດັບການສຶກສາ</p>
-                    </div>
-                </div>
+    <section class="erp-panel">
+        <div class="erp-panel-head">
+            <div>
+                <h3>ລາຄາຕໍ່ໜ່ວຍກິດ & ມຊ%</h3>
+                <p>ແກ້ໄຂຄ່າຕັ້ງຕົ້ນຕາມລະດັບການສຶກສາ.</p>
             </div>
-            
-            <div class="p-6 flex-1 flex flex-col gap-5">
-                @foreach($levelMeta as $key => $meta)
-                    @php $price = $prices->get($key); @endphp
+            <span class="erp-status erp-status-warning">ຕ້ອງບັນທຶກແຕ່ລະຟອມ</span>
+        </div>
+
+        <div class="erp-rate-table">
+            <div class="erp-rate-header">
+                <span>ລະດັບ</span>
+                <span>ລາຄາ / ໜ່ວຍກິດ</span>
+                <span>% ມຊ</span>
+                <span>ປີທີ່ໃຊ້</span>
+                <span>Action</span>
+            </div>
+            @foreach($levelMeta as $key => $meta)
+                @php
+                    $price = $prices->get($key);
+                    $n = $nuolPcts->get($key);
+                @endphp
+                <div class="erp-rate-row">
+                    <div class="erp-level-cell">
+                        <strong>{{ $meta['label'] }}</strong>
+                        <span>{{ $meta['full'] }}</span>
+                    </div>
+
                     @if($price)
-                        <form method="POST" action="{{ route('head_of_finance.settings.credit-unit-price.update', $price) }}" class="relative group bg-white border border-slate-200 rounded-xl p-4 transition-all focus-within:ring-1 dirty-form {{ $meta['hover'] }}">
-                            @csrf @method('PUT')
+                        <form method="POST" action="{{ route('head_of_finance.settings.credit-unit-price.update', $price) }}" class="erp-inline-form dirty-form erp-price-form">
+                            @csrf
+                            @method('PUT')
                             <input type="hidden" name="level" value="{{ $key }}">
-                            
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border {{ $meta['badge'] }}">
-                                    {{ $meta['full'] }}
-                                </span>
-                                <button type="submit" class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity inline-flex items-center justify-center px-4 py-1.5 text-xs font-semibold rounded-lg text-white shadow-sm disabled:opacity-50 btn-save {{ $meta['btn'] }}">
-                                    ບັນທຶກ
-                                </button>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">ລາຄາ / ໜ່ວຍກິດ (ກີບ)</label>
-                                    <div class="relative">
-                                        <input type="number" name="credit_unit_price" step="0.01" min="0" required
-                                            value="{{ (float) $price->credit_unit_price }}" class="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 font-medium focus:bg-white focus:ring-2 transition-all text-right font-mono data-dirty {{ $meta['input_focus'] }}">
-                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono">₭</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">ເລກທີເອກະສານ</label>
-                                    <input type="text" name="gov_doc_id" value="{{ $price->gov_doc_id }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:bg-white focus:ring-2 transition-all data-dirty {{ $meta['input_focus'] }}">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">ປີທີ່ໃຊ້</label>
-                                    <input type="number" name="start_year" min="2000" max="2100" required
-                                        value="{{ $price->start_year }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:bg-white focus:ring-2 transition-all data-dirty {{ $meta['input_focus'] }}">
-                                </div>
-                            </div>
+                            <label>
+                                <span>ລາຄາ / ໜ່ວຍ</span>
+                                <input type="number" name="credit_unit_price" step="0.01" min="0" required value="{{ (float) $price->credit_unit_price }}" class="erp-input erp-input-num data-dirty">
+                            </label>
+                            <label>
+                                <span>ເອກະສານ</span>
+                                <input type="text" name="gov_doc_id" value="{{ $price->gov_doc_id }}" class="erp-input data-dirty">
+                            </label>
+                            <label>
+                                <span>ປີ</span>
+                                <input type="number" name="start_year" min="2000" max="2100" required value="{{ $price->start_year }}" class="erp-input erp-input-year data-dirty">
+                            </label>
+                            <button type="submit" class="erp-btn erp-btn-save btn-save">ບັນທຶກລາຄາ</button>
                         </form>
                     @else
-                        <div class="flex items-center justify-between p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/50">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border {{ $meta['badge'] }}">
-                                {{ $meta['full'] }}
-                            </span>
-                            <span class="text-sm text-slate-400 italic">ຍັງບໍ່ໄດ້ຕັ້ງຄ່າ</span>
-                        </div>
+                        <div class="erp-missing erp-price-form">ຍັງບໍ່ມີລາຄາຂອງລະດັບນີ້</div>
                     @endif
-                @endforeach
-            </div>
-        </div>
 
-        <!-- NUOL % Section -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden flex flex-col">
-            <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm border border-purple-100/50">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-slate-800">ເປີເຊັນ ມຊ (%)</h3>
-                        <p class="text-xs text-slate-500">ອັດຕາສ່ວນແບ່ງໃຫ້ ມຊ ຕາມລະດັບການສຶກສາ</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="p-6 flex-1 flex flex-col gap-5">
-                @foreach($levelMeta as $key => $meta)
-                    @php $n = $nuolPcts->get($key); @endphp
                     @if($n)
-                        <form method="POST" action="{{ route('head_of_finance.settings.nuol-pct.update', $n) }}" class="relative group bg-white border border-slate-200 rounded-xl p-4 transition-all focus-within:ring-1 dirty-form {{ $meta['hover'] }}">
-                            @csrf @method('PUT')
+                        <form method="POST" action="{{ route('head_of_finance.settings.nuol-pct.update', $n) }}" class="erp-inline-form dirty-form erp-nuol-form">
+                            @csrf
+                            @method('PUT')
                             <input type="hidden" name="level" value="{{ $key }}">
-                            
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border {{ $meta['badge'] }}">
-                                    {{ $meta['full'] }}
-                                </span>
-                                <button type="submit" class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity inline-flex items-center justify-center px-4 py-1.5 text-xs font-semibold rounded-lg text-white shadow-sm disabled:opacity-50 btn-save {{ $meta['btn'] }}">
-                                    ບັນທຶກ
-                                </button>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">ເປີເຊັນ ມຊ (%)</label>
-                                    <div class="relative">
-                                        <input type="number" name="percentage" step="0.01" min="0" max="100" required
-                                            value="{{ rtrim(rtrim(number_format($n->percentage * 100, 4, '.', ''), '0'), '.') }}" class="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 font-medium focus:bg-white focus:ring-2 transition-all text-right font-mono data-dirty {{ $meta['input_focus'] }}">
-                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono">%</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">ເລກທີເອກະສານ</label>
-                                    <input type="text" name="gov_doc_id" value="{{ $n->gov_doc_id }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:bg-white focus:ring-2 transition-all data-dirty {{ $meta['input_focus'] }}">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">ປີທີ່ໃຊ້</label>
-                                    <input type="number" name="start_year" min="2000" max="2100" required
-                                        value="{{ $n->start_year }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:bg-white focus:ring-2 transition-all data-dirty {{ $meta['input_focus'] }}">
-                                </div>
-                            </div>
+                            <label>
+                                <span>% ມຊ</span>
+                                <input type="number" name="percentage" step="0.01" min="0" max="100" required value="{{ $pct($n->percentage) }}" class="erp-input erp-input-num data-dirty">
+                            </label>
+                            <label>
+                                <span>ເອກະສານ</span>
+                                <input type="text" name="gov_doc_id" value="{{ $n->gov_doc_id }}" class="erp-input data-dirty">
+                            </label>
+                            <label>
+                                <span>ປີ</span>
+                                <input type="number" name="start_year" min="2000" max="2100" required value="{{ $n->start_year }}" class="erp-input erp-input-year data-dirty">
+                            </label>
+                            <button type="submit" class="erp-btn erp-btn-save btn-save">ບັນທຶກ ມຊ%</button>
                         </form>
                     @else
-                        <div class="flex items-center justify-between p-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/50">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border {{ $meta['badge'] }}">
-                                {{ $meta['full'] }}
-                            </span>
-                            <span class="text-sm text-slate-400 italic">ຍັງບໍ່ໄດ້ຕັ້ງຄ່າ</span>
-                        </div>
+                        <div class="erp-missing erp-nuol-form">ຍັງບໍ່ມີ % ມຊ ຂອງລະດັບນີ້</div>
                     @endif
-                @endforeach
+                </div>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="erp-panel">
+        <div class="erp-panel-head erp-table-head">
+            <div>
+                <h3>ໜ່ວຍກິດຕາມຫຼັກສູດ</h3>
+                <p>ຄົ້ນຫາ ແລະ ແກ້ໄຂຈຳນວນໜ່ວຍກິດຂອງແຕ່ລະສາຂາ.</p>
+            </div>
+            <div class="erp-toolbar">
+                <div class="erp-search">
+                    <span aria-hidden="true">⌕</span>
+                    <input type="text" id="cc-filter" placeholder="ຄົ້ນຫາຫຼັກສູດ..." autocomplete="off">
+                </div>
+                <select id="cc-level-filter" class="erp-select" aria-label="Filter by level">
+                    <option value="">ທຸກລະດັບ</option>
+                    @foreach($levelMeta as $key => $meta)
+                        <option value="{{ $key }}">{{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+                <span class="erp-count"><b id="cc-visible-count">{{ $courseCredits->count() }}</b> / {{ $courseCredits->count() }}</span>
             </div>
         </div>
 
-    </div>
-
-    <!-- Course Credits List -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden mt-8">
-        <!-- Header & Toolbar -->
-        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm border border-emerald-100/50">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-lg font-semibold text-slate-800">ໜ່ວຍກິດຕາມຫຼັກສູດ</h3>
-                        <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-xs font-medium">{{ $courseCredits->count() }} ລາຍການ</span>
-                    </div>
-                    <p class="text-xs text-slate-500">ຈຳນວນໜ່ວຍກິດຂອງແຕ່ລະສາຂາວິຊາ</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <div class="relative flex-1 md:w-64">
-                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input type="text" id="cc-filter" placeholder="ຄົ້ນຫາຫຼັກສູດ / ສາຂາວິຊາ..." autocomplete="off"
-                        class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
-                </div>
-                <button type="button" id="cc-open-create"
-                   class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 focus:ring-4 focus:ring-slate-200 transition-all shadow-sm shrink-0">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    ເພີ່ມໃໝ່
-                </button>
-            </div>
+        <div class="erp-table-wrap">
+            <table class="erp-data-table">
+                <thead>
+                    <tr>
+                        <th>ຫຼັກສູດ</th>
+                        <th>ລະດັບ</th>
+                        <th class="erp-num">ປີຮຽນ</th>
+                        <th class="erp-num">ໜ່ວຍກິດ</th>
+                        <th class="erp-num">ປີເລີ່ມ</th>
+                        <th>ເອກະສານ</th>
+                        <th class="erp-actions-col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($courseCredits as $s)
+                        @php
+                            $level = $s->degreeProgram?->level;
+                            $meta = $levelMeta[$level] ?? ['label' => $level ?: '-', 'full' => $level ?: '-'];
+                            $programName = $s->degreeProgram?->name ?? '-';
+                            $totalCreditUnit = (float) $s->course_credit_unit + (float) $s->year1_credit_unit;
+                        @endphp
+                        <tr class="cc-row" data-level="{{ $level }}" data-name="{{ \Illuminate\Support\Str::lower($programName) }}">
+                            <td>
+                                <strong class="erp-program">{{ $programName }}</strong>
+                            </td>
+                            <td><span class="erp-badge">{{ $meta['label'] }}</span></td>
+                            <td class="erp-num">{{ $s->degreeProgram?->study_year ?: '-' }}</td>
+                            <td class="erp-num">{{ $totalCreditUnit }}</td>
+                            <td class="erp-num">{{ $s->start_year }}</td>
+                            <td>{{ $s->gov_doc_id ?: '-' }}</td>
+                            <td class="erp-actions">
+                                <button type="button"
+                                    class="erp-icon-btn js-cc-edit"
+                                    title="ແກ້ໄຂ"
+                                    data-url="{{ route('head_of_finance.settings.course-credits.update', $s) }}"
+                                    data-degree-program-id="{{ $s->degree_program_id }}"
+                                    data-level="{{ $level }}"
+                                    data-course-credit-unit="{{ (float) $s->course_credit_unit }}"
+                                    data-year1-credit-unit="{{ (float) $s->year1_credit_unit }}"
+                                    data-gov-doc-id="{{ $s->gov_doc_id }}"
+                                    data-start-year="{{ $s->start_year }}">
+                                    ✎
+                                </button>
+                                <form method="POST" action="{{ route('head_of_finance.settings.course-credits.destroy', $s) }}" onsubmit="return confirm('ທ່ານຕ້ອງການລຶບຂໍ້ມູນນີ້ແທ້ບໍ?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="erp-icon-btn erp-icon-danger" title="ລຶບ">×</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="erp-empty">ຍັງບໍ່ມີຂໍ້ມູນໜ່ວຍກິດ</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
-        <!-- List Content -->
-        <div class="p-6">
-            @forelse($levelMeta as $key => $meta)
-                @php $items = $byLevel->get($key); @endphp
-                @if($items && $items->count())
-                <div class="mb-8 last:mb-0" data-group>
-                    
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-semibold border shadow-sm {{ $meta['badge'] }}">
-                            {{ $meta['full'] }}
-                        </span>
-                        <div class="h-px bg-slate-200 flex-1"></div>
-                        <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{{ $items->count() }} ສາຂາ</span>
-                    </div>
-
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4" data-group-rows>
-                        @foreach($items as $s)
-                            <div class="group flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:border-slate-300 hover:shadow-md transition-all cc-row" data-name="{{ \Illuminate\Support\Str::lower($s->degreeProgram?->name) }}">
-                                
-                                <div class="flex items-start gap-3 overflow-hidden pr-4">
-                                    <div class="mt-1.5 w-2 h-2 rounded-full shrink-0 {{ $meta['dot'] }}"></div>
-                                    <div class="min-w-0">
-                                        <h4 class="text-sm font-semibold text-slate-800 truncate" title="{{ $s->degreeProgram?->name }}">
-                                            {{ $s->degreeProgram?->name ?? '—' }}
-                                        </h4>
-                                        <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                                            @if($s->degreeProgram?->study_year)
-                                                <span class="inline-flex items-center gap-1">
-                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    {{ $s->degreeProgram->study_year }} ປີ
-                                                </span>
-                                            @endif
-                                            <span class="inline-flex items-center gap-1">
-                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                ເລີ່ມປີ {{ $s->start_year }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-6 shrink-0">
-                                    <div class="text-right">
-                                        <div class="text-base font-bold text-slate-800 font-mono tracking-tight">{{ (float) $s->course_credit_unit }} <span class="text-xs font-normal text-slate-500 font-sans">ໜ່ວຍ</span></div>
-                                        @if($s->year1_credit_unit)
-                                            <div class="text-[11px] font-medium text-emerald-600">ປີ 1: {{ (float) $s->year1_credit_unit }}</div>
-                                        @endif
-                                    </div>
-                                    
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                        <button type="button"
-                                           class="js-cc-edit p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           title="ແກ້ໄຂ"
-                                           data-url="{{ route('head_of_finance.settings.course-credits.update', $s) }}"
-                                           data-degree-program-id="{{ $s->degree_program_id }}"
-                                           data-level="{{ $s->degreeProgram?->level }}"
-                                           data-course-credit-unit="{{ (float) $s->course_credit_unit }}"
-                                           data-year1-credit-unit="{{ (float) $s->year1_credit_unit }}"
-                                           data-gov-doc-id="{{ $s->gov_doc_id }}"
-                                           data-start-year="{{ $s->start_year }}">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </button>
-                                        <form method="POST" action="{{ route('head_of_finance.settings.course-credits.destroy', $s) }}" onsubmit="return confirm('ທ່ານຕ້ອງການລຶບຂໍ້ມູນນີ້ແທ້ບໍ?')" class="inline-block">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500" title="ລຶບ">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                            </div>
-                        @endforeach
-                    </div>
-
-                </div>
-                @endif
-            @empty
-            @endforelse
-
-            @if($courseCredits->isEmpty())
-                <div class="text-center py-16 px-4">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
-                        <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-sm font-semibold text-slate-800 mb-1">ຍັງບໍ່ມີຂໍ້ມູນໜ່ວຍກິດ</h3>
-                    <p class="text-xs text-slate-500 mb-4">ກົດປຸ່ມ "ເພີ່ມໃໝ່" ເພື່ອເລີ່ມຕົ້ນເພີ່ມຂໍ້ມູນໜ່ວຍກິດຕາມຫຼັກສູດ.</p>
-                </div>
-            @endif
-            
-            <div id="cc-nores" class="hidden text-center py-12">
-                <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <p class="text-sm text-slate-500">ບໍ່ພົບສາຂາວິຊາທີ່ກົງກັບການຄົ້ນຫາ</p>
-            </div>
+        <div id="cc-nores" class="erp-empty erp-empty-hidden">
+            ບໍ່ພົບສາຂາວິຊາທີ່ກົງກັບການຄົ້ນຫາ
         </div>
-    </div>
-</div>
+    </section>
+</section>
 
 <div id="cc-modal" class="cc-modal" aria-hidden="true">
     <div class="cc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cc-modal-title">
@@ -331,108 +220,194 @@
             @csrf
             <input type="hidden" name="_method" id="cc-form-method" value="PUT" disabled>
 
-            <div class="fns-form-group">
-                <label class="fns-label">ສາຂາວິຊາ <span style="color:red;">*</span></label>
-                <select name="degree_program_id" id="cc-degree-program" class="fns-input" required>
-                    <option value="">-- ເລືອກສາຂາວິຊາ --</option>
-                    @foreach($programs as $p)
-                        <option value="{{ $p->id }}" data-level="{{ $p->level }}">
-                            [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $p->name }}
-                        </option>
-                    @endforeach
-                </select>
+            <div class="erp-modal-grid erp-modal-grid-wide">
+                <label class="erp-field">
+                    <span>ສາຂາວິຊາ <b>*</b></span>
+                    <select name="degree_program_id" id="cc-degree-program" class="erp-input" required>
+                        <option value="">-- ເລືອກສາຂາວິຊາ --</option>
+                        @foreach($programs as $p)
+                            <option value="{{ $p->id }}" data-level="{{ $p->level }}">
+                                [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $p->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </label>
             </div>
 
-            <div id="cc-mp-fields" style="display:none;">
-                <div class="rounded-lg border border-sky-200 bg-sky-50 p-3 mb-3">
-                    <label class="fns-label" style="color:#0369a1;">ໜ່ວຍກິດລວມທັງໝົດ</label>
-                    <input type="number" id="cc-total-units" min="1" max="9999" step="1" class="fns-input" placeholder="ເຊັ່ນ: 115">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="fns-form-group">
-                        <label class="fns-label">ລາຍຮັບ ປີ 2+ (ກີບ) <span id="cc-yr2-hint" class="text-xs text-slate-400"></span></label>
-                        <input type="number" id="cc-income-yr2" min="0" step="1" class="fns-input">
-                    </div>
-                    <div class="fns-form-group">
-                        <label class="fns-label">ລາຍຮັບ ປີ 1 - 60% (ກີບ) <span id="cc-yr1-hint" class="text-xs text-slate-400"></span></label>
-                        <input type="number" id="cc-income-yr1" min="0" step="1" class="fns-input">
-                    </div>
+            <div id="cc-mp-fields" class="erp-calc-panel" style="display:none;">
+                <label class="erp-field">
+                    <span>ໜ່ວຍກິດລວມທັງໝົດ</span>
+                    <input type="number" id="cc-total-units" min="1" max="9999" step="1" class="erp-input" placeholder="ເຊັ່ນ: 115">
+                </label>
+                <div class="erp-modal-grid">
+                    <label class="erp-field">
+                        <span>ສັດສ່ວນ ປີ 2+ (%)</span>
+                        <input type="number" id="cc-ratio-yr2" min="0" max="100" step="1" class="erp-input" value="40">
+                    </label>
+                    <label class="erp-field">
+                        <span>ສັດສ່ວນ ປີ 1 (%)</span>
+                        <input type="number" id="cc-ratio-yr1" min="0" max="100" step="1" class="erp-input" value="60">
+                    </label>
                 </div>
                 <input type="hidden" id="cc-unit-mp">
                 <input type="hidden" id="cc-yr1-unit-mp">
             </div>
 
-            <div id="cc-bachelor-fields">
-                <div class="fns-form-group">
-                    <label class="fns-label">ໜ່ວຍກິດ <span style="color:red;">*</span></label>
-                    <input type="number" id="cc-unit-bach" name="course_credit_unit" min="1" max="999" step="0.5" class="fns-input">
-                </div>
+            <div id="cc-bachelor-fields" class="erp-modal-grid erp-modal-grid-wide">
+                <label class="erp-field">
+                    <span>ໜ່ວຍກິດ <b>*</b></span>
+                    <input type="number" id="cc-unit-bach" name="course_credit_unit" min="1" max="999" step="0.5" class="erp-input">
+                </label>
             </div>
 
-            <div class="fns-form-group">
-                <label class="fns-label">ເລກທີເອກະສານອ້າງອີງ</label>
-                <input type="text" name="gov_doc_id" id="cc-gov-doc" class="fns-input">
-            </div>
-
-            <div class="fns-form-group">
-                <label class="fns-label">ປີທີ່ເລີ່ມໃຊ້ <span style="color:red;">*</span></label>
-                <input type="number" name="start_year" id="cc-start-year" min="2000" max="2100" value="{{ date('Y') }}" class="fns-input" required>
+            <div class="erp-modal-grid">
+                <label class="erp-field">
+                    <span>ເລກທີເອກະສານອ້າງອີງ</span>
+                    <input type="text" name="gov_doc_id" id="cc-gov-doc" class="erp-input">
+                </label>
+                <label class="erp-field">
+                    <span>ປີທີ່ເລີ່ມໃຊ້ <b>*</b></span>
+                    <input type="number" name="start_year" id="cc-start-year" min="2000" max="2100" value="{{ date('Y') }}" class="erp-input" required>
+                </label>
             </div>
 
             <div class="cc-modal-actions">
-                <button type="button" class="fns-btn fns-btn-secondary" data-cc-close>ຍົກເລີກ</button>
-                <button type="submit" class="fns-btn fns-btn-primary" id="cc-submit">ບັນທຶກ</button>
+                <button type="button" class="erp-btn erp-btn-secondary" data-cc-close>ຍົກເລີກ</button>
+                <button type="submit" class="erp-btn erp-btn-primary" id="cc-submit">ບັນທຶກ</button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-.cc-modal {
-    position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
-    padding: 1rem; background: rgba(15, 23, 42, 0.48);
-}
-.cc-modal.is-open { display: flex; }
-.cc-modal-panel {
-    width: min(620px, 100%); max-height: calc(100vh - 2rem); overflow: auto;
-    border-radius: 16px; border: 1px solid #e2e8f0; background: #fff;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
-}
-.cc-modal-head {
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    padding: 1rem 1.15rem; border-bottom: 1px solid #e2e8f0; background: #fbfbfc;
-}
-.cc-modal-head h2 { margin: 0; color: #172642; font-size: 1rem; font-weight: 900; }
-.cc-modal-close { border: 0; background: transparent; color: #64748b; font-size: 1.45rem; line-height: 1; cursor: pointer; }
-.cc-modal-body { padding: 1.15rem; }
-.cc-modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1.25rem; }
-.dirty-form.is-dirty {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -1px rgba(59, 130, 246, 0.06) !important;
-    background-color: #f8fafc !important;
-}
-.dirty-form.is-dirty .btn-save {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    animation: pulse-soft 2s infinite;
-}
-.btn-save {
-    pointer-events: none;
-}
-.group:hover .btn-save, .group:focus-within .btn-save {
-    pointer-events: auto;
-}
-
-@keyframes pulse-soft {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-}
+    .erp-shell { display:flex; flex-direction:column; gap:.85rem; padding-bottom:1.25rem; }
+    .erp-topbar, .erp-panel, .erp-metric {
+        background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 1px 3px rgba(15,23,42,.05);
+    }
+    .erp-topbar {
+        display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.9rem 1rem;
+    }
+    .erp-kicker { color:#64748b; font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .erp-topbar h2 { margin:.12rem 0; color:#172642; font-size:1.08rem; font-weight:900; }
+    .erp-topbar p { margin:0; color:#64748b; font-size:.78rem; }
+    .erp-summary { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.7rem; }
+    .erp-metric { padding:.75rem .85rem; }
+    .erp-metric span { display:block; color:#64748b; font-size:.7rem; font-weight:800; }
+    .erp-metric strong { display:block; margin:.08rem 0; color:#111827; font-size:1.2rem; line-height:1; font-variant-numeric:tabular-nums; }
+    .erp-metric em { color:#94a3b8; font-style:normal; font-size:.68rem; }
+    .erp-panel { overflow:hidden; }
+    .erp-panel-head {
+        display:flex; align-items:center; justify-content:space-between; gap:1rem;
+        padding:.75rem .9rem; border-bottom:1px solid #e5e7eb; background:#f8fafc;
+    }
+    .erp-panel-head h3 { margin:0; color:#172642; font-size:.95rem; font-weight:900; }
+    .erp-panel-head p { margin:.15rem 0 0; color:#64748b; font-size:.72rem; }
+    .erp-status { border-radius:999px; padding:.22rem .55rem; font-size:.68rem; font-weight:800; white-space:nowrap; }
+    .erp-status-warning { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
+    .erp-rate-table { overflow-x:auto; }
+    .erp-rate-header, .erp-rate-row {
+        display:grid; grid-template-columns:130px minmax(430px, 1.2fr) minmax(430px, 1.2fr);
+        gap:.7rem; min-width:1010px; align-items:center;
+    }
+    .erp-rate-header {
+        padding:.55rem .85rem; background:#fff; border-bottom:1px solid #e5e7eb;
+        color:#64748b; font-size:.68rem; font-weight:900; text-transform:uppercase;
+    }
+    .erp-rate-header span:nth-child(4), .erp-rate-header span:nth-child(5) { display:none; }
+    .erp-rate-row { padding:.7rem .85rem; border-bottom:1px solid #eef2f7; }
+    .erp-rate-row:last-child { border-bottom:0; }
+    .erp-level-cell strong { display:block; color:#172642; font-size:.88rem; }
+    .erp-level-cell span, .erp-inline-form label span, .erp-field span {
+        display:block; color:#64748b; font-size:.68rem; font-weight:800; margin-bottom:.18rem;
+    }
+    .erp-inline-form { display:grid; grid-template-columns:1fr 1fr 86px auto; gap:.45rem; align-items:end; }
+    .erp-input, .erp-select, .erp-search input {
+        width:100%; height:42px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;
+        color:#172642; font-size:.82rem; padding:0 .65rem; outline:none;
+    }
+    .erp-input:focus, .erp-select:focus, .erp-search input:focus {
+        border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12);
+    }
+    .erp-input-num { text-align:right; font-variant-numeric:tabular-nums; }
+    .erp-input-year { text-align:center; }
+    .erp-btn {
+        display:inline-flex; align-items:center; justify-content:center; gap:.35rem; height:40px;
+        border-radius:6px; border:1px solid transparent; padding:0 .75rem;
+        font-size:.78rem; font-weight:900; text-decoration:none; cursor:pointer; white-space:nowrap;
+    }
+    .erp-btn-primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .erp-btn-primary:hover { background:#1d4ed8; border-color:#1d4ed8; }
+    .erp-btn-secondary { background:#fff; border-color:#cbd5e1; color:#172642; }
+    .erp-btn-save { background:#f8fafc; border-color:#cbd5e1; color:#334155; }
+    .dirty-form.is-dirty .erp-btn-save { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .erp-missing { color:#94a3b8; border:1px dashed #cbd5e1; border-radius:6px; padding:.7rem; font-size:.78rem; }
+    .erp-table-head { align-items:flex-end; }
+    .erp-toolbar { display:flex; align-items:center; gap:.5rem; }
+    .erp-search { position:relative; width:260px; }
+    .erp-search span { position:absolute; left:.65rem; top:50%; transform:translateY(-50%); color:#94a3b8; font-weight:900; }
+    .erp-search input { padding-left:1.8rem; }
+    .erp-select { width:132px; }
+    .erp-count { color:#64748b; font-size:.76rem; white-space:nowrap; }
+    .erp-count b { color:#172642; font-variant-numeric:tabular-nums; }
+    .erp-table-wrap { overflow-x:auto; }
+    .erp-data-table { width:100%; min-width:840px; border-collapse:collapse; }
+    .erp-data-table th, .erp-data-table td {
+        padding:.55rem .7rem; border-bottom:1px solid #e5e7eb; color:#172642; font-size:.8rem; text-align:left;
+        vertical-align:middle;
+    }
+    .erp-data-table th { background:#f8fafc; color:#64748b; font-size:.68rem; font-weight:900; text-transform:uppercase; white-space:nowrap; }
+    .erp-program { display:block; max-width:330px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .erp-num { text-align:right !important; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .erp-badge { display:inline-flex; border:1px solid #cbd5e1; border-radius:999px; padding:.12rem .45rem; color:#334155; background:#f8fafc; font-size:.72rem; font-weight:900; }
+    .erp-actions-col { width:92px; text-align:center !important; }
+    .erp-actions { display:flex; align-items:center; justify-content:center; gap:.3rem; }
+    .erp-actions form { margin:0; }
+    .erp-icon-btn {
+        width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;
+        border:1px solid #cbd5e1; border-radius:6px; background:#fff; color:#2563eb;
+        font-size:.9rem; font-weight:900; cursor:pointer;
+    }
+    .erp-icon-btn:hover { background:#eff6ff; border-color:#93c5fd; }
+    .erp-icon-danger { color:#dc2626; }
+    .erp-icon-danger:hover { background:#fef2f2; border-color:#fecaca; }
+    .erp-empty { padding:1rem; text-align:center; color:#94a3b8; font-size:.82rem; }
+    .erp-empty-hidden { display:none; border-top:1px solid #e5e7eb; }
+    .cc-modal {
+        position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center;
+        padding:1rem; background:rgba(15,23,42,.48);
+    }
+    .cc-modal.is-open { display:flex; }
+    .cc-modal-panel {
+        width:min(680px, 100%); max-height:calc(100vh - 2rem); overflow:auto;
+        border-radius:8px; border:1px solid #e5e7eb; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.28);
+    }
+    .cc-modal-head {
+        display:flex; align-items:center; justify-content:space-between; gap:1rem;
+        padding:.75rem .9rem; border-bottom:1px solid #e5e7eb; background:#f8fafc;
+    }
+    .cc-modal-head h2 { margin:0; color:#172642; font-size:.98rem; font-weight:900; }
+    .cc-modal-close { border:0; background:transparent; color:#64748b; font-size:1.35rem; line-height:1; cursor:pointer; }
+    .cc-modal-body { display:grid; gap:.75rem; padding:.9rem; }
+    .erp-modal-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.7rem; }
+    .erp-modal-grid-wide { grid-template-columns:1fr; }
+    .erp-field b { color:#dc2626; }
+    .erp-field em { color:#f97316; font-style:normal; font-size:.68rem; }
+    .erp-calc-panel { border:1px solid #bfdbfe; background:#eff6ff; border-radius:8px; padding:.75rem; }
+    .cc-modal-actions { display:flex; justify-content:flex-end; gap:.5rem; padding-top:.2rem; }
+    @media (max-width:900px) {
+        .erp-topbar, .erp-panel-head { align-items:stretch; flex-direction:column; }
+        .erp-summary { grid-template-columns:1fr; }
+        .erp-toolbar { width:100%; align-items:stretch; flex-direction:column; }
+        .erp-search, .erp-select { width:100%; }
+    }
+    @media (max-width:640px) {
+        .erp-modal-grid { grid-template-columns:1fr; }
+    }
 </style>
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Dirty form handling
     document.querySelectorAll('.dirty-form').forEach(form => {
         const mark = () => form.classList.add('is-dirty');
         form.querySelectorAll('.data-dirty').forEach(el => {
@@ -441,38 +416,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Filtering
     const filter = document.getElementById('cc-filter');
-    const nores  = document.getElementById('cc-nores');
-    
-    if (filter) {
-        filter.addEventListener('input', () => {
-            const q = filter.value.trim().toLowerCase();
-            let any = false;
-            
-            document.querySelectorAll('.cc-row').forEach(r => {
-                const name = (r.dataset.name || '').toLowerCase();
-                const hit = !q || name.includes(q);
-                r.style.display = hit ? '' : 'none';
-                if (hit) any = true;
-            });
-            
-            // Hide empty groups
-            document.querySelectorAll('[data-group-rows]').forEach(g => {
-                const visible = g.querySelector('.cc-row:not([style*="display: none"])');
-                g.style.display = visible ? '' : 'none';
-                
-                const groupContainer = g.closest('[data-group]');
-                if (groupContainer) {
-                    groupContainer.style.display = visible ? '' : 'none';
-                }
-            });
-            
-            if (nores) {
-                nores.classList.toggle('hidden', any || q === '');
-            }
+    const levelFilter = document.getElementById('cc-level-filter');
+    const nores = document.getElementById('cc-nores');
+    const visibleCount = document.getElementById('cc-visible-count');
+
+    function applyFilters() {
+        const q = (filter?.value || '').trim().toLowerCase();
+        const level = levelFilter?.value || '';
+        let visible = 0;
+
+        document.querySelectorAll('.cc-row').forEach(row => {
+            const name = (row.dataset.name || '').toLowerCase();
+            const rowLevel = row.dataset.level || '';
+            const hit = (!q || name.includes(q)) && (!level || rowLevel === level);
+            row.style.display = hit ? '' : 'none';
+            if (hit) visible++;
         });
+
+        if (visibleCount) visibleCount.textContent = visible;
+        if (nores) nores.style.display = visible === 0 ? 'block' : 'none';
     }
+
+    filter?.addEventListener('input', applyFilters);
+    levelFilter?.addEventListener('change', applyFilters);
 
     const modal = document.getElementById('cc-modal');
     const modalTitle = document.getElementById('cc-modal-title');
@@ -482,15 +449,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const mpFields = document.getElementById('cc-mp-fields');
     const bachelorFields = document.getElementById('cc-bachelor-fields');
     const totalUnits = document.getElementById('cc-total-units');
-    const incomeYr2 = document.getElementById('cc-income-yr2');
-    const incomeYr1 = document.getElementById('cc-income-yr1');
+    const ratioYr2 = document.getElementById('cc-ratio-yr2');
+    const ratioYr1 = document.getElementById('cc-ratio-yr1');
     const unitMp = document.getElementById('cc-unit-mp');
     const yr1UnitMp = document.getElementById('cc-yr1-unit-mp');
     const unitBach = document.getElementById('cc-unit-bach');
     const govDoc = document.getElementById('cc-gov-doc');
     const startYear = document.getElementById('cc-start-year');
     const submit = document.getElementById('cc-submit');
-    const prices = @json($creditPrices ?? []);
     const createUrl = @json(route('head_of_finance.settings.course-credits.store'));
 
     function currentLevel() {
@@ -502,50 +468,43 @@ document.addEventListener('DOMContentLoaded', function () {
         return ['master', 'phd'].includes(currentLevel());
     }
 
-    function price() {
-        return Number(prices[currentLevel()] || 0);
-    }
-
-    function setHints(yr2Units, yr1Units) {
-        document.getElementById('cc-yr2-hint').textContent = yr2Units ? `= ${yr2Units} ໜ່ວຍ` : '';
-        document.getElementById('cc-yr1-hint').textContent = yr1Units ? `= ${yr1Units} ໜ່ວຍ` : '';
-    }
-
-    function kipToUnit(kip) {
-        const p = price();
-        if (!p || !kip) return 0;
-        return Math.round(kip / p * 10) / 10;
-    }
-
-    function syncHiddenUnits() {
-        const yr2Units = kipToUnit(Number(incomeYr2.value) || 0);
-        const yr1Units = kipToUnit(Number(incomeYr1.value) || 0);
-        unitMp.value = yr2Units || '';
-        yr1UnitMp.value = yr1Units || '';
-        setHints(unitMp.value, yr1UnitMp.value);
-    }
-
     function fillFromTotal() {
         const total = Number(totalUnits.value);
-        const p = price();
-        if (!total || !p) return;
+        if (!total) {
+            unitMp.value = '';
+            yr1UnitMp.value = '';
+            return;
+        }
 
-        const yr1Units = Math.round(total * 0.6);
-        const yr2Units = Math.round(total * 0.4);
-        incomeYr1.value = yr1Units * p;
-        incomeYr2.value = yr2Units * p;
+        const yr2Pct = Number(ratioYr2.value) || 0;
+        const yr2Units = Math.round(total * yr2Pct) / 100;
+        const yr1Units = Math.round((total - yr2Units) * 10) / 10;
         unitMp.value = yr2Units;
         yr1UnitMp.value = yr1Units;
-        setHints(yr2Units, yr1Units);
     }
 
-    function prefillKipFromUnits() {
-        const p = price();
+    function prefillTotalFromUnits() {
         const yr2Units = Number(unitMp.value) || 0;
         const yr1Units = Number(yr1UnitMp.value) || 0;
-        incomeYr2.value = yr2Units && p ? yr2Units * p : '';
-        incomeYr1.value = yr1Units && p ? yr1Units * p : '';
-        setHints(yr2Units || '', yr1Units || '');
+        const total = yr2Units + yr1Units;
+        totalUnits.value = total || '';
+
+        if (total) {
+            ratioYr2.value = Math.round((yr2Units / total) * 100);
+            ratioYr1.value = 100 - Number(ratioYr2.value);
+        } else {
+            ratioYr2.value = 40;
+            ratioYr1.value = 60;
+        }
+    }
+
+    function syncRatio(changed) {
+        const source = changed === 'yr1' ? ratioYr1 : ratioYr2;
+        const target = changed === 'yr1' ? ratioYr2 : ratioYr1;
+        const value = Math.max(0, Math.min(100, Number(source.value) || 0));
+        source.value = value;
+        target.value = 100 - value;
+        fillFromTotal();
     }
 
     function toggleCreditFields() {
@@ -558,7 +517,8 @@ document.addEventListener('DOMContentLoaded', function () {
             unitBach.removeAttribute('required');
             unitMp.setAttribute('name', 'course_credit_unit');
             yr1UnitMp.setAttribute('name', 'year1_credit_unit');
-            prefillKipFromUnits();
+            totalUnits.setAttribute('required', '');
+            prefillTotalFromUnits();
             return;
         }
 
@@ -566,6 +526,8 @@ document.addEventListener('DOMContentLoaded', function () {
         unitBach.setAttribute('required', '');
         unitMp.removeAttribute('name');
         yr1UnitMp.removeAttribute('name');
+        totalUnits.removeAttribute('required');
+        totalUnits.value = '';
     }
 
     function openModal(mode, data = {}) {
@@ -579,6 +541,8 @@ document.addEventListener('DOMContentLoaded', function () {
         unitBach.value = data.courseCreditUnit || '';
         unitMp.value = data.courseCreditUnit || '';
         yr1UnitMp.value = data.year1CreditUnit || '';
+        ratioYr2.value = 40;
+        ratioYr1.value = 60;
         govDoc.value = data.govDocId || '';
         startYear.value = data.startYear || @json(date('Y'));
         toggleCreditFields();
@@ -617,8 +581,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     degreeProgram.addEventListener('change', toggleCreditFields);
     totalUnits.addEventListener('input', fillFromTotal);
-    incomeYr2.addEventListener('input', syncHiddenUnits);
-    incomeYr1.addEventListener('input', syncHiddenUnits);
+    ratioYr2.addEventListener('input', () => syncRatio('yr2'));
+    ratioYr1.addEventListener('input', () => syncRatio('yr1'));
 });
 </script>
 @endpush

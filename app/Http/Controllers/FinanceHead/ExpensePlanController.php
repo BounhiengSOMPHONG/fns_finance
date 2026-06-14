@@ -108,17 +108,23 @@ class ExpensePlanController extends Controller
             ->unique()
             ->values();
 
-        $defaultRows = ExpenseSubsectionDefaultRow::whereIn('subsection_code', $subsectionCodes)
+        $defaultRows = ExpenseSubsectionDefaultRow::with('chartOfAccount')
+            ->whereIn('subsection_code', $subsectionCodes)
             ->where('is_active', true)
             ->orderBy('subsection_code')
             ->orderBy('sort_order')
             ->get()
             ->groupBy('subsection_code')
-            ->map(fn ($rows) => $rows->map(fn ($row) => [
-                'item_name' => $row->item_name,
-                'reference' => $row->reference,
-                'values' => $row->default_values ?? [],
-            ])->values());
+            ->map(fn ($rows) => $rows->map(function ($row) {
+                $values = $row->default_values ?? [];
+                unset($values['note'], $values['reference']);
+
+                return [
+                    'item_name' => $row->item_name,
+                    'reference' => $row->chartOfAccount?->account_code,
+                    'values' => $values,
+                ];
+            })->values());
 
         $subsectionFieldSettings = ExpenseSubsectionFieldSetting::whereIn('subsection_id', $subsectionIds)
             ->get()
@@ -142,7 +148,8 @@ class ExpensePlanController extends Controller
     {
         $subsections = $sections->flatMap(fn ($section) => $section->subsections);
         $subsectionCodes = $subsections->pluck('code')->unique()->values();
-        $defaultsByCode = ExpenseSubsectionDefaultRow::whereIn('subsection_code', $subsectionCodes)
+        $defaultsByCode = ExpenseSubsectionDefaultRow::with('chartOfAccount')
+            ->whereIn('subsection_code', $subsectionCodes)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->get()
@@ -186,11 +193,13 @@ class ExpensePlanController extends Controller
                         continue;
                     }
 
-                    $values = array_merge([
+                    $defaultValues = $defaultRow->default_values ?? [];
+                    unset($defaultValues['note'], $defaultValues['reference']);
+
+                    $values = array_merge($defaultValues, [
                         'item_name' => $defaultRow->item_name,
-                        'reference' => $defaultRow->reference,
-                    ], $defaultRow->default_values ?? []);
-                    unset($values['note']);
+                        'reference' => $defaultRow->chartOfAccount?->account_code,
+                    ]);
 
                     $rule = $rules
                         ->where('pattern_id', $pattern->id)

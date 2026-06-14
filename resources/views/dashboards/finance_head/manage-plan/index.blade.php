@@ -84,6 +84,13 @@
                             </button>
                         </form>
                     @endif
+                    <form method="POST" action="{{ route('head_of_finance.manage-plan.destroy', $plan) }}" onsubmit="return confirm('ລຶບແຜນປະຈຳປີ {{ $plan->year }} ແລະຂໍ້ມູນລາຍຮັບ, ເງິນເດືອນ, ລາຍຈ່າຍຂອງປີນີ້ທັງໝົດ?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="mp-action mp-action-danger">
+                            ລຶບແຜນ
+                        </button>
+                    </form>
                 </div>
             </article>
         @empty
@@ -185,6 +192,8 @@
     .mp-action svg { width:15px; height:15px; }
     .mp-action-strong { background:var(--fns-navy); border-color:var(--fns-navy); color:#fff; }
     .mp-action-light { background:#fbfbfc; }
+    .mp-action-danger { border-color:#fecaca; background:#fff5f5; color:#b91c1c; }
+    .mp-action-danger:hover { border-color:#f87171; background:#fee2e2; color:#991b1b; }
     .mp-empty { grid-column:1 / -1; text-align:center; background:#fff; border:1px dashed var(--fns-gray-200); border-radius:8px; padding:2rem; color:var(--fns-gray-500); }
     .mp-empty strong { display:block; color:var(--fns-navy); font-size:1rem; }
     .mp-pagination { margin-top:.25rem; }

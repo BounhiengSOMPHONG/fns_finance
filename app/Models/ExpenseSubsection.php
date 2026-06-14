@@ -45,9 +45,4 @@ class ExpenseSubsection extends Model
     {
         return $this->belongsTo(ExpensePattern::class, 'default_pattern_id');
     }
-
-    public function fieldSettings(): HasMany
-    {
-        return $this->hasMany(ExpenseSubsectionFieldSetting::class, 'subsection_id');
-    }
 }

@@ -83,14 +83,6 @@
     ])->values();
 
     $defaultRowsPayload = $defaultRows ?? collect();
-    $subsectionFieldSettingsPayload = ($subsectionFieldSettings ?? collect())->map(fn ($settings) => $settings->map(fn ($setting) => [
-        'pattern_field_id' => $setting->pattern_field_id,
-        'label' => $setting->label,
-        'display_order' => $setting->display_order,
-        'is_required' => $setting->is_required,
-        'is_active' => $setting->is_active,
-        'default_value' => $setting->default_value,
-    ]));
 @endphp
 
 <div class="excel-plan">
@@ -131,41 +123,6 @@
 
         <div id="subsectionSheets" class="excel-subsections"></div>
     </section>
-</div>
-
-<div class="excel-modal" id="fieldSettingsModal" aria-hidden="true">
-    <div class="excel-modal-panel excel-modal-panel-wide" role="dialog" aria-modal="true" aria-labelledby="fieldSettingsTitle">
-        <div class="excel-modal-head">
-            <div>
-                <h2 id="fieldSettingsTitle">Field labels</h2>
-                <p id="fieldSettingsSubtitle"></p>
-            </div>
-            <button type="button" class="excel-modal-close" data-close-modal>&times;</button>
-        </div>
-        <form method="POST" id="fieldSettingsForm" class="excel-modal-body">
-            @csrf
-            @method('PATCH')
-            <div class="excel-field-settings-table-wrap">
-                <table class="excel-field-settings-table">
-                    <thead>
-                        <tr>
-                            <th>Field key</th>
-                            <th>Label for this subsection</th>
-                            <th>Order</th>
-                            <th>Default</th>
-                            <th>Required</th>
-                            <th>Show</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fieldSettingsRows"></tbody>
-                </table>
-            </div>
-            <div class="excel-modal-actions">
-                <button type="button" class="fns-btn fns-btn-secondary" data-close-modal>Cancel</button>
-                <button type="submit" class="fns-btn fns-btn-primary">Save labels</button>
-            </div>
-        </form>
-    </div>
 </div>
 
 <style>
@@ -348,19 +305,6 @@
     .excel-collapse-btn:hover { border-color:var(--fns-gold); background:#fffdf4; color:#111b33; }
     .excel-collapse-icon { transform:rotate(90deg); transition:transform .16s ease; }
     .excel-block.is-collapsed .excel-collapse-icon { transform:rotate(0deg); }
-    .excel-field-settings-btn {
-        flex:0 0 auto;
-        border:1px solid var(--fns-gray-200);
-        border-radius:6px;
-        background:#fff;
-        color:var(--fns-navy);
-        padding:.38rem .55rem;
-        font-family:inherit;
-        font-size:.72rem;
-        font-weight:900;
-        cursor:pointer;
-    }
-    .excel-field-settings-btn:hover { border-color:var(--fns-gold); color:#111b33; }
     .excel-table-wrap { overflow:auto; }
     .excel-table { width:100%; min-width:880px; border-collapse:collapse; font-size:.82rem; }
     .excel-table th {
@@ -384,79 +328,6 @@
     .excel-empty { color:var(--fns-gray-400); text-align:center; padding:.8rem; }
     .excel-unit { text-align:right; color:#111b33; font-weight:800; padding:.45rem .65rem; background:#f7f8fa; border-bottom:1px solid #d8dce5; }
     .excel-toast { position:fixed; right:1rem; bottom:1rem; z-index:10000; background:var(--fns-navy); color:#fff; border-radius:8px; padding:.75rem .9rem; box-shadow:0 18px 38px rgba(17,27,51,.22); font-size:.82rem; }
-    .excel-modal {
-        position:fixed;
-        inset:0;
-        z-index:1000;
-        display:none;
-        align-items:center;
-        justify-content:center;
-        padding:1rem;
-        background:rgba(15,23,42,.48);
-    }
-    .excel-modal.is-open { display:flex; }
-    .excel-modal-panel {
-        width:min(620px, 100%);
-        max-height:calc(100vh - 2rem);
-        overflow:auto;
-        border:1px solid var(--fns-gray-200);
-        border-radius:12px;
-        background:#fff;
-        box-shadow:0 24px 70px rgba(15,23,42,.28);
-    }
-    .excel-modal-panel-wide { width:min(960px, 100%); }
-    .excel-modal-head {
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:1rem;
-        padding:1rem 1.15rem;
-        border-bottom:1px solid var(--fns-gray-200);
-        background:#fbfbfc;
-    }
-    .excel-modal-head h2 { margin:0; color:var(--fns-navy); font-size:1rem; font-weight:900; }
-    .excel-modal-head p { margin:.2rem 0 0; color:var(--fns-gray-500); font-size:.78rem; font-weight:800; }
-    .excel-modal-close {
-        border:0;
-        background:transparent;
-        color:var(--fns-gray-500);
-        font-size:1.45rem;
-        line-height:1;
-        cursor:pointer;
-    }
-    .excel-modal-body { padding:1.15rem; }
-    .excel-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
-    .excel-modal-grid label span {
-        display:block;
-        margin-bottom:.35rem;
-        color:var(--fns-gray-500);
-        font-size:.76rem;
-        font-weight:900;
-    }
-    .excel-modal-wide { grid-column:1 / -1; }
-    .excel-modal-actions { display:flex; justify-content:flex-end; gap:.55rem; margin-top:1.25rem; }
-    .excel-field-settings-table-wrap { overflow:auto; }
-    .excel-field-settings-table { width:100%; min-width:760px; border-collapse:collapse; font-size:.82rem; }
-    .excel-field-settings-table th {
-        border-bottom:1px solid var(--fns-gray-200);
-        color:var(--fns-gray-500);
-        padding:.45rem .5rem;
-        text-align:left;
-        font-size:.72rem;
-        font-weight:900;
-        text-transform:uppercase;
-    }
-    .excel-field-settings-table td { border-bottom:1px solid #eef1f5; padding:.45rem .5rem; vertical-align:middle; }
-    .excel-field-key { color:var(--fns-navy); font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.78rem; }
-    .excel-field-settings-table input[type="text"],
-    .excel-field-settings-table input[type="number"] {
-        width:100%;
-        border:1px solid var(--fns-gray-200);
-        border-radius:7px;
-        padding:.48rem .55rem;
-        color:var(--fns-navy);
-        font:inherit;
-    }
     @media (max-width:760px) {
         .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
         .excel-section-actions { width:100%; justify-content:flex-start; margin-left:0; }
@@ -465,8 +336,6 @@
         .excel-section-nav { grid-template-columns:auto auto; }
         .excel-tabs { grid-column:1 / -1; order:2; }
         .excel-nav-btn { min-height:34px; }
-        .excel-modal-grid { grid-template-columns:1fr; }
-        .excel-modal-wide { grid-column:auto; }
     }
 </style>
 
@@ -478,7 +347,6 @@ const PATTERNS = @json($patternsPayload);
 const RULES = @json($rulesPayload);
 const CHART_ACCOUNTS = @json($chartAccountsPayload);
 const DEFAULT_ROWS = @json($defaultRowsPayload);
-const SUBSECTION_FIELD_SETTINGS = @json($subsectionFieldSettingsPayload);
 let ROWS = @json($rowsPayload);
 let selectedSectionId = SECTIONS[0]?.id || null;
 let lastInputSectionId = SECTIONS[0]?.id || null;
@@ -698,28 +566,13 @@ function rowTotal(row) {
     return numberValue(row.values?.yearly_total ?? row.total);
 }
 
-function subsectionFieldSetting(subsection, field) {
-    return SUBSECTION_FIELD_SETTINGS?.[subsection?.id]?.[field.id] || null;
-}
-
-function fieldsForSubsection(pattern, subsection) {
-    return (pattern?.fields || []).map(field => {
-        const setting = subsectionFieldSetting(subsection, field);
-
-        return {
-            ...field,
-            label: setting?.label || field.label,
-            order: setting?.display_order ?? field.order,
-            required: setting?.is_required ?? field.required,
-            active: setting?.is_active ?? field.active,
-            default_value: setting?.default_value ?? field.default_value,
-        };
-    }).filter(field => field.active)
+function fieldsForPattern(pattern) {
+    return (pattern?.fields || []).filter(field => field.active)
       .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
 }
 
 function visibleFields(pattern, subsection) {
-    return fieldsForSubsection(pattern, subsection).filter(field => field.key !== 'reference');
+    return fieldsForPattern(pattern).filter(field => field.key !== 'reference');
 }
 
 function rowDisplayValue(row, field) {
@@ -884,7 +737,6 @@ function renderSubsection(section, subsection) {
                         <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
                     </div>
                 </div>
-                <button type="button" class="excel-field-settings-btn" data-field-settings="${subsection.id}">Field labels</button>
             </div>
             <div class="excel-block-body">
                 <div class="excel-unit">ໜ່ວຍ: ກີບ</div>
@@ -943,69 +795,6 @@ function findSubsection(subsectionId) {
     return SECTIONS.flatMap(section => section.subsections).find(subsection => Number(subsection.id) === Number(subsectionId));
 }
 
-function fieldSettingValue(subsection, field, key, fallback = '') {
-    const setting = subsectionFieldSetting(subsection, field);
-    return setting?.[key] ?? fallback;
-}
-
-function openFieldSettingsModal(subsectionId) {
-    const subsection = findSubsection(subsectionId);
-    if (!subsection) return;
-
-    const pattern = PATTERNS[subsection.default_pattern_id];
-    const fields = fieldsForSubsection(pattern, subsection).filter(field => field.key !== 'reference');
-    const form = document.getElementById('fieldSettingsForm');
-    form.dataset.subsection = subsection.id;
-    form.action = `/head-of-finance/expense/${PLANNING_YEAR_ID}/subsections/${subsection.id}/field-settings`;
-    document.getElementById('fieldSettingsSubtitle').textContent = `${subsection.code} - ${subsection.name}`;
-    document.getElementById('fieldSettingsRows').innerHTML = fields.map(field => `
-        <tr data-field="${field.id}">
-            <td class="excel-field-key">
-                ${esc(field.key)}
-                <input type="hidden" name="pattern_field_id" value="${field.id}">
-            </td>
-            <td><input type="text" name="label" value="${esc(field.label)}" placeholder="${esc(field.label)}"></td>
-            <td><input type="number" name="display_order" min="0" max="999" value="${esc(field.order ?? '')}"></td>
-            <td><input type="text" name="default_value" value="${esc(field.default_value ?? '')}"></td>
-            <td style="text-align:center;"><input type="checkbox" name="is_required" value="1" ${field.required ? 'checked' : ''}></td>
-            <td style="text-align:center;"><input type="checkbox" name="is_active" value="1" ${field.active ? 'checked' : ''}></td>
-        </tr>
-    `).join('');
-
-    openModal(document.getElementById('fieldSettingsModal'));
-}
-
-async function saveFieldSettings(event) {
-    event.preventDefault();
-    const form = event.target;
-    const subsectionId = Number(form.dataset.subsection);
-    const fields = Array.from(form.querySelectorAll('tbody tr')).map(row => ({
-        pattern_field_id: Number(row.querySelector('input[name="pattern_field_id"]').value),
-        label: row.querySelector('input[name="label"]').value,
-        display_order: row.querySelector('input[name="display_order"]').value || null,
-        default_value: row.querySelector('input[name="default_value"]').value,
-        is_required: row.querySelector('input[name="is_required"]').checked,
-        is_active: row.querySelector('input[name="is_active"]').checked,
-    }));
-
-    const response = await fetch(form.action, {
-        method: 'PATCH',
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF},
-        body: JSON.stringify({fields}),
-    });
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-        toast('Could not save field labels');
-        return;
-    }
-
-    SUBSECTION_FIELD_SETTINGS[subsectionId] = data.settings;
-    closeModal(document.getElementById('fieldSettingsModal'));
-    renderSheet();
-    toast('Field labels saved');
-}
-
 function bindSheetEvents() {
     document.querySelectorAll('.excel-block').forEach(block => updateBlockTotal(block));
 
@@ -1025,10 +814,6 @@ function bindSheetEvents() {
             event.preventDefault();
             event.target.blur();
         });
-    });
-
-    document.querySelectorAll('.excel-field-settings-btn').forEach(button => {
-        button.addEventListener('click', event => openFieldSettingsModal(event.target.dataset.fieldSettings));
     });
 
     document.querySelectorAll('.excel-collapse-btn').forEach(button => {
@@ -1192,33 +977,6 @@ document.getElementById('backFromTotalPage')?.addEventListener('click', () => {
     renderTabs();
     renderSheet();
     document.querySelector('.excel-plan')?.scrollIntoView({behavior: 'smooth', block: 'start'});
-});
-
-const fieldSettingsModal = document.getElementById('fieldSettingsModal');
-
-function openModal(modal) {
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-    setTimeout(() => modal.querySelector('input, select, textarea')?.focus(), 50);
-}
-
-function closeModal(modal) {
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-}
-
-document.getElementById('fieldSettingsForm')?.addEventListener('submit', saveFieldSettings);
-
-document.addEventListener('click', event => {
-    if (!event.target.matches('[data-close-modal]') && !event.target.classList.contains('excel-modal')) return;
-
-    closeModal(fieldSettingsModal);
-});
-
-document.addEventListener('keydown', event => {
-    if (event.key !== 'Escape') return;
-
-    closeModal(fieldSettingsModal);
 });
 
 renderTabs();

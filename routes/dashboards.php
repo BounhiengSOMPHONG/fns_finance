@@ -68,7 +68,6 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::post('expense/{expensePlan}/approve', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'approve'])->name('expense.approve');
         Route::patch('expense/{expensePlan}/sections/{expenseSection}/summary-settings', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'updateSectionSummarySettings'])->name('expense.section-summary-settings.update');
         Route::patch('expense/{expensePlan}/subsections/{expenseSubsection}/summary-settings', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'updateSubsectionSummarySettings'])->name('expense.subsection-summary-settings.update');
-        Route::patch('expense/{expensePlan}/subsections/{expenseSubsection}/field-settings', [\App\Http\Controllers\FinanceHead\ExpensePlanController::class, 'updateSubsectionFieldSettings'])->name('expense.subsection-field-settings.update');
 
         // Expense plan rows (AJAX dynamic fields)
         Route::post('expense-plan-rows', [\App\Http\Controllers\FinanceHead\ExpensePlanRowController::class, 'store'])->name('expense-plan-rows.store');

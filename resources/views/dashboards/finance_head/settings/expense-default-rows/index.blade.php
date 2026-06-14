@@ -95,9 +95,6 @@
                                                     Order: {{ $row->sort_order }}
                                                 </span>
                                             </div>
-                                            @if($row->note)
-                                                <div class="mt-2 text-xs text-slate-500">{{ $row->note }}</div>
-                                            @endif
                                         </div>
 
                                         <form method="POST"

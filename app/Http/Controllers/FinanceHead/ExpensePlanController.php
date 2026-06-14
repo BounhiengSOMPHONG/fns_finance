@@ -117,7 +117,6 @@ class ExpensePlanController extends Controller
             ->map(fn ($rows) => $rows->map(fn ($row) => [
                 'item_name' => $row->item_name,
                 'reference' => $row->reference,
-                'note' => $row->note,
                 'values' => $row->default_values ?? [],
             ])->values());
 
@@ -190,8 +189,8 @@ class ExpensePlanController extends Controller
                     $values = array_merge([
                         'item_name' => $defaultRow->item_name,
                         'reference' => $defaultRow->reference,
-                        'note' => $defaultRow->note,
                     ], $defaultRow->default_values ?? []);
+                    unset($values['note']);
 
                     $rule = $rules
                         ->where('pattern_id', $pattern->id)
@@ -212,7 +211,7 @@ class ExpensePlanController extends Controller
                         'version' => (string) $planningYear->year,
                         'plan_type' => $pattern->key,
                         'plan_detail' => $defaultRow->item_name,
-                        'detail' => $defaultRow->note,
+                        'detail' => null,
                         'created_by' => $userId,
                         'updated_by' => $userId,
                         'created_at' => $now,

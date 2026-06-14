@@ -12,7 +12,6 @@ class ExpenseSubsectionDefaultRow extends Model
         'item_name',
         'reference',
         'chart_of_account_id',
-        'note',
         'sort_order',
         'default_values',
         'is_active',

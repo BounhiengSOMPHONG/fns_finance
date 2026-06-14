@@ -88,12 +88,8 @@
                             <x-icons.settings /> Expense patterns
                         </a>
                         <a href="{{ route('head_of_finance.settings.expense-structure.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-structure.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Expense structure
-                        </a>
-                        <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-default-rows.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Default row accounts
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-structure.*') || request()->routeIs('head_of_finance.settings.expense-default-rows.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> Expense structure & accounts
                         </a>
                         <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">

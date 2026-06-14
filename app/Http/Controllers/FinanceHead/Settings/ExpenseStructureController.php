@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\FinanceHead\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChartOfAccount;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
+use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -21,22 +23,51 @@ class ExpenseStructureController extends Controller
             : $years->first();
 
         $sections = collect();
+        $defaultRowsByCode = collect();
         if ($planningYear) {
             $sections = ExpenseSection::with(['subsections.defaultPattern', 'subsections.children'])
                 ->where('planning_year_id', $planningYear->id)
                 ->orderBy('display_order')
                 ->get();
+
+            $subsectionCodes = $sections
+                ->flatMap(fn (ExpenseSection $section) => $section->subsections->pluck('code'))
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($subsectionCodes->isNotEmpty()) {
+                $defaultRowsByCode = ExpenseSubsectionDefaultRow::with('chartOfAccount.parent')
+                    ->whereIn('subsection_code', $subsectionCodes)
+                    ->orderBy('subsection_code')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->groupBy('subsection_code');
+            }
         }
 
         $patterns = ExpensePattern::where('is_active', true)
             ->orderBy('id')
             ->get();
 
+        $accountOptions = ChartOfAccount::with('parent')
+            ->whereDoesntHave('children')
+            ->orderBy('account_code')
+            ->get()
+            ->map(fn (ChartOfAccount $account) => [
+                'id' => $account->id,
+                'code' => $account->account_code,
+                'name' => $account->account_name,
+                'label' => $this->accountLabel($account),
+            ]);
+
         return view('dashboards.finance_head.settings.expense-structure.index', [
             'years' => $years,
             'planningYear' => $planningYear,
             'sections' => $sections,
             'patterns' => $patterns,
+            'defaultRowsByCode' => $defaultRowsByCode,
+            'accountOptions' => $accountOptions,
         ]);
     }
 
@@ -190,5 +221,19 @@ class ExpenseStructureController extends Controller
         $expenseSubsection->delete();
 
         return back()->with('success', 'Expense subsection deleted.');
+    }
+
+    private function accountLabel(ChartOfAccount $account): string
+    {
+        $parts = [];
+        $node = $account;
+        $guard = 0;
+
+        while ($node && $guard++ < 10) {
+            array_unshift($parts, $node->account_name);
+            $node = $node->parent;
+        }
+
+        return $account->account_code . ' - ' . implode(' / ', $parts);
     }
 }

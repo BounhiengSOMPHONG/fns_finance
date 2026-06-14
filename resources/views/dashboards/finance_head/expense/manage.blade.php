@@ -94,25 +94,6 @@
 @endphp
 
 <div class="excel-plan">
-    <div class="excel-toolbar">
-        <a href="{{ route('head_of_finance.manage-plan.index') }}" class="excel-back">
-            <span>&larr;</span>
-            Back
-        </a>
-        <div class="excel-title">
-            <span>ແຜນລາຍຈ່າຍປະຈຳປີ</span>
-            <strong>{{ $planningYear->year }}</strong>
-        </div>
-        <div class="excel-toolbar-actions">
-            <button type="button" class="excel-structure-btn excel-total-shortcut" id="openTotalPage">ໜ້າສະຫຼຸບ</button>
-            <button type="button" class="excel-structure-btn is-hidden" id="backFromTotalPage">ກັບໄປໜ້າປ້ອນ</button>
-        </div>
-        <div class="excel-grand">
-            <span>ລວມທັງໝົດ</span>
-            <strong id="grandTotal">0</strong>
-        </div>
-    </div>
-
     <section class="excel-overview" id="overviewPage">
         <div class="excel-overview-head">
             <div>
@@ -126,9 +107,15 @@
     </section>
 
     <div class="excel-section-nav">
-        <button type="button" id="prevSection" class="excel-nav-btn">Previous</button>
+        <button type="button" id="prevSection" class="excel-nav-btn">
+            <span>&larr;</span>
+            <span>ກ່ອນ</span>
+        </button>
         <div id="sectionTabs" class="excel-tabs"></div>
-        <button type="button" id="nextSection" class="excel-nav-btn">Next</button>
+        <button type="button" id="nextSection" class="excel-nav-btn">
+            <span>ຕໍ່ໄປ</span>
+            <span>&rarr;</span>
+        </button>
     </div>
     <section class="excel-sheet">
         <div class="excel-section-head">
@@ -301,18 +288,7 @@
 
 <style>
     .excel-plan { display:flex; flex-direction:column; gap:1rem; }
-    .excel-toolbar {
-        display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:1rem;
-        background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; padding:.8rem 1rem;
-        box-shadow:0 2px 12px rgba(26,39,68,.05);
-    }
-    .excel-back { display:inline-flex; align-items:center; gap:.45rem; color:var(--fns-navy); font-weight:800; font-size:.82rem; }
-    .excel-back span { font-size:1.1rem; }
-    .excel-title span, .excel-grand span, .excel-section-total span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-    .excel-title strong { color:var(--fns-navy); font-size:1.05rem; }
-    .excel-toolbar-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; }
-    .excel-grand { min-width:180px; text-align:right; padding:.55rem .8rem; border-radius:8px; background:var(--fns-navy); color:#fff; }
-    .excel-grand strong { display:block; color:var(--fns-gold-light); font-family:'Cinzel',serif; font-size:1.35rem; line-height:1.1; }
+    .excel-section-total span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
     .excel-overview {
         background:#fff;
         border:1px solid var(--fns-gray-200);
@@ -349,23 +325,32 @@
     .excel-section-nav {
         display:grid;
         grid-template-columns:auto 1fr auto;
-        align-items:stretch;
-        gap:.65rem;
+        align-items:start;
+        gap:.45rem;
+        padding:.35rem;
+        background:#fff;
+        border:1px solid var(--fns-gray-200);
+        border-radius:8px;
+        box-shadow:0 1px 8px rgba(26,39,68,.04);
     }
     .excel-nav-btn {
         border:1px solid var(--fns-gray-200);
-        border-radius:8px;
-        background:#fff;
+        border-radius:6px;
+        background:#f8fafc;
         color:var(--fns-navy);
-        padding:0 .85rem;
-        min-width:92px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:.35rem;
+        min-width:74px;
+        min-height:36px;
+        padding:0 .65rem;
         font-family:inherit;
-        font-size:.78rem;
+        font-size:.72rem;
         font-weight:900;
         cursor:pointer;
-        box-shadow:0 2px 10px rgba(26,39,68,.04);
     }
-    .excel-nav-btn:hover:not(:disabled) { border-color:var(--fns-gold); color:#111b33; }
+    .excel-nav-btn:hover:not(:disabled) { border-color:var(--fns-gold); background:#fffdf4; color:#111b33; }
     .excel-nav-btn:disabled { cursor:not-allowed; opacity:.45; }
     .excel-structure-btn {
         border:1px solid var(--fns-gray-200);
@@ -384,29 +369,39 @@
     .excel-total-shortcut:hover { background:#dcb236; border-color:#dcb236; }
     .excel-tabs {
         display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
-        gap:.55rem;
-        padding-bottom:.2rem;
+        grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));
+        gap:.4rem;
     }
     .excel-tab {
         display:grid;
         grid-template-columns:auto 1fr auto;
         align-items:center;
-        gap:.55rem;
-        min-height:52px;
-        border:1px solid var(--fns-gray-200); background:#fff; color:var(--fns-navy); border-radius:8px;
-        padding:.55rem .65rem; font-family:inherit; text-align:left; cursor:pointer;
+        gap:.45rem;
+        min-height:42px;
+        border:1px solid #e4e8f0; background:#fff; color:var(--fns-navy); border-radius:7px;
+        padding:.42rem .52rem; font-family:inherit; text-align:left; cursor:pointer;
+        overflow:hidden;
     }
-    .excel-tab.active { background:var(--fns-gold); border-color:var(--fns-gold); color:#111b33; box-shadow:0 8px 18px rgba(201,153,26,.24); }
+    .excel-tab:hover { border-color:#d4d9e4; background:#fbfcfe; }
+    .excel-tab.active { background:#d2a112; border-color:#d2a112; color:#061226; box-shadow:0 3px 10px rgba(201,153,26,.18); }
     .excel-tab-code {
-        display:inline-flex; align-items:center; justify-content:center; min-width:2.7rem;
-        border-radius:6px; background:#eef2f7; padding:.28rem .45rem; font-weight:900; font-size:.8rem;
+        display:inline-flex; align-items:center; justify-content:center; min-width:2.25rem;
+        border-radius:6px; background:#eef2f7; padding:.22rem .36rem; font-weight:900; font-size:.76rem;
     }
-    .excel-tab-name { min-width:0; font-weight:900; font-size:.78rem; line-height:1.3; }
+    .excel-tab-name {
+        min-width:0;
+        font-weight:900;
+        font-size:.72rem;
+        line-height:1.25;
+        display:-webkit-box;
+        -webkit-line-clamp:2;
+        -webkit-box-orient:vertical;
+        overflow:hidden;
+    }
     .excel-tab-name small {
-        display:block; margin-top:.15rem; color:var(--fns-gray-500); font-size:.68rem; font-weight:800;
+        display:block; margin-top:.08rem; color:var(--fns-gray-500); font-size:.63rem; font-weight:800;
     }
-    .excel-tab-total { color:var(--fns-navy); font-variant-numeric:tabular-nums; font-weight:900; font-size:.78rem; white-space:nowrap; }
+    .excel-tab-total { color:var(--fns-navy); font-variant-numeric:tabular-nums; font-weight:900; font-size:.72rem; white-space:nowrap; }
     .excel-tab.active .excel-tab-code { background:rgba(255,255,255,.42); }
     .excel-tab.active .excel-tab-name small { color:#3b3218; }
     .excel-sheet { background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; overflow:hidden; box-shadow:0 2px 12px rgba(26,39,68,.05); }
@@ -560,14 +555,13 @@
         font:inherit;
     }
     @media (max-width:760px) {
-        .excel-toolbar, .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
-        .excel-toolbar-actions { width:100%; justify-content:flex-start; }
+        .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
         .excel-section-actions { width:100%; justify-content:flex-start; margin-left:0; }
-        .excel-grand, .excel-section-total { width:100%; text-align:left; }
+        .excel-section-total { width:100%; text-align:left; }
         .excel-overview-head { flex-direction:column; }
-        .excel-section-nav { grid-template-columns:1fr 1fr; }
+        .excel-section-nav { grid-template-columns:auto auto; }
         .excel-tabs { grid-column:1 / -1; order:2; }
-        .excel-nav-btn { min-height:40px; }
+        .excel-nav-btn { min-height:34px; }
         .excel-modal-grid { grid-template-columns:1fr; }
         .excel-modal-wide { grid-column:auto; }
     }
@@ -836,11 +830,14 @@ function renderSheet() {
     document.getElementById('overviewPage').classList.toggle('is-hidden', !isOverview);
     document.querySelector('.excel-section-nav').classList.toggle('is-hidden', isOverview);
     document.querySelector('.excel-sheet').classList.toggle('is-hidden', isOverview);
-    document.getElementById('backFromTotalPage').classList.toggle('is-hidden', !isOverview);
+    document.getElementById('backFromTotalPage')?.classList.toggle('is-hidden', !isOverview);
 
     if (isOverview) {
         renderOverviewSummary();
-        document.getElementById('grandTotal').textContent = fmt.format(SECTIONS.reduce((sum, section) => sum + sectionSummaryValues(section).total, 0));
+        const grandTotalEl = document.getElementById('grandTotal');
+        if (grandTotalEl) {
+            grandTotalEl.textContent = fmt.format(SECTIONS.reduce((sum, section) => sum + sectionSummaryValues(section).total, 0));
+        }
         syncSectionNavButtons();
         return;
     }
@@ -856,7 +853,10 @@ function renderSheet() {
     );
     document.getElementById('sectionMeta').textContent = `${finalSubsections.length} ຫົວຂໍ້ຍ່ອຍ`;
     document.getElementById('sectionTotal').textContent = fmt.format(sectionSummaryValues(section).total);
-    document.getElementById('grandTotal').textContent = fmt.format(SECTIONS.reduce((sum, item) => sum + sectionSummaryValues(item).total, 0));
+    const grandTotalEl = document.getElementById('grandTotal');
+    if (grandTotalEl) {
+        grandTotalEl.textContent = fmt.format(SECTIONS.reduce((sum, item) => sum + sectionSummaryValues(item).total, 0));
+    }
     document.getElementById('subsectionSheets').innerHTML = section.subsections
         .filter(subsection => subsection.parent_id === null)
         .map(subsection => renderSubsectionGroup(section, subsection))
@@ -1439,14 +1439,14 @@ document.getElementById('sectionTabs').addEventListener('click', event => {
 
 document.getElementById('prevSection').addEventListener('click', () => moveSection(-1));
 document.getElementById('nextSection').addEventListener('click', () => moveSection(1));
-document.getElementById('openTotalPage').addEventListener('click', () => {
+document.getElementById('openTotalPage')?.addEventListener('click', () => {
     if (selectedSectionId !== 'overview') lastInputSectionId = selectedSectionId;
     selectedSectionId = 'overview';
     renderTabs();
     renderSheet();
     document.querySelector('.excel-plan')?.scrollIntoView({behavior: 'smooth', block: 'start'});
 });
-document.getElementById('backFromTotalPage').addEventListener('click', () => {
+document.getElementById('backFromTotalPage')?.addEventListener('click', () => {
     selectedSectionId = lastInputSectionId || SECTIONS[0]?.id || null;
     renderTabs();
     renderSheet();

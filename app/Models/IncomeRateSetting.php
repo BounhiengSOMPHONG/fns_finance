@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class IncomeRateSetting extends Model
 {
-    protected $fillable = ['key', 'label', 'rate'];
+    protected $fillable = ['setting_set_id', 'key', 'label', 'rate'];
 
     protected $casts = [
         'rate' => 'decimal:2',
@@ -26,5 +27,10 @@ class IncomeRateSetting extends Model
     public static function allKeyed(): \Illuminate\Support\Collection
     {
         return static::all()->keyBy('key');
+    }
+
+    public function settingSet(): BelongsTo
+    {
+        return $this->belongsTo(AcademicIncomeSettingSet::class, 'setting_set_id');
     }
 }

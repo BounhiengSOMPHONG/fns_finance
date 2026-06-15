@@ -173,16 +173,8 @@
 }
 .ai-nav-btn:hover { background:#f8fafc; }
 .ai-nav-btn-primary { border-color:var(--fns-gold); background:var(--fns-gold); color:#111b33; box-shadow:0 8px 18px rgba(201,153,26,.2); }
-.ai-submit-bar {
-    position:sticky; bottom:0; z-index:20; display:flex; align-items:center; gap:.65rem;
-    padding:.85rem 1rem; border:1px solid var(--fns-gray-200); border-radius:8px;
-    background:rgba(248,247,244,.96); box-shadow:0 -10px 28px rgba(17,27,51,.08); backdrop-filter:blur(10px);
-}
-.ai-submit-bar .fns-btn-primary { padding:.65rem 1.15rem; font-size:.86rem; }
-.ai-submit-note { margin-left:auto; color:var(--fns-gray-500); font-size:.78rem; text-align:right; }
-.ai-submit-note b { display:block; color:var(--fns-navy); font-size:.86rem; }
 .ai-toasts {
-    position:fixed; right:1.2rem; bottom:5.5rem; z-index:9500;
+    position:fixed; right:1.5rem; bottom:1.5rem; z-index:9500;
     display:flex; flex-direction:column; gap:.55rem; pointer-events:none;
 }
 .ai-toast {
@@ -203,15 +195,15 @@
     .ai-panel-head { grid-template-columns:1fr; }
 }
 @media (max-width: 560px) {
-    .ai-top, .ai-submit-bar { border-radius:0; margin-left:-1rem; margin-right:-1rem; }
+    .ai-top { border-radius:0; margin-left:-1rem; margin-right:-1rem; }
     .ai-stats { grid-template-columns:1fr; }
     .ai-rows, .ai-fee-grid { grid-template-columns:1fr; }
     .ai-item { flex-direction:column; }
     .ai-item-side { width:100%; justify-content:space-between; }
-    .ai-panel-actions, .ai-submit-bar { align-items:stretch; flex-direction:column; }
-    .ai-action-group, .ai-submit-bar .fns-btn { width:100%; }
+    .ai-panel-actions { align-items:stretch; flex-direction:column; }
+    .ai-action-group { width:100%; }
     .ai-action-group .ai-nav-btn { flex:1; }
-    .ai-submit-note { margin-left:0; text-align:left; }
+    .ai-toasts { right:1rem; left:1rem; bottom:1rem; }
 }
 </style>
 
@@ -252,12 +244,9 @@
         <div class="ai-heading">
             <span class="ai-kicker">ປ້ອນຈຳນວນນັກສຶກສາ</span>
             <h1 class="ai-title">ປະເມີນລາຍຮັບວິຊາການ ສົກປີ {{ $academicIncome->fiscal_year }}</h1>
-            <div class="ai-meta">
-                @if($academicIncome->creator)
-                    ສ້າງໂດຍ {{ $academicIncome->creator->full_name ?? $academicIncome->creator->username }} ·
-                @endif
-                ກອກຈຳນວນຄົນ ແລ້ວລະບົບຈະຄຳນວນລາຍຮັບໃຫ້
-            </div>
+            @if($academicIncome->creator)
+                <div class="ai-meta">ສ້າງໂດຍ {{ $academicIncome->creator->full_name ?? $academicIncome->creator->username }}</div>
+            @endif
         </div>
         <div class="ai-stats" aria-live="polite">
             <div class="ai-stat"><span>ຂັ້ນຕອນ</span><b><span id="ai-step-current">1</span>/3</b></div>
@@ -424,17 +413,6 @@
         </div>
     </section>
 
-    <div class="ai-submit-bar">
-        <button type="submit" class="fns-btn fns-btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-            ບັນທຶກ
-        </button>
-        <a href="{{ route('head_of_finance.manage-plan.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
-        <span class="ai-submit-note">
-            <b>ລະບົບຈະຄຳນວນລາຍຮັບໃຫ້ອັດຕະໂນມັດ</b>
-            ກວດຈຳນວນຄົນໃຫ້ຄົບກ່ອນບັນທຶກ
-        </span>
-    </div>
 </form>
 
 <div id="aiToasts" class="ai-toasts" aria-live="polite"></div>
@@ -593,6 +571,7 @@
 
             target.classList.add('row-saved');
             setTimeout(() => target.classList.remove('row-saved'), 900);
+            showToast('ບັນທຶກແລ້ວ', 'success');
         } catch {
             target.classList.add('row-error');
             setTimeout(() => target.classList.remove('row-error'), 900);
@@ -616,13 +595,10 @@
         const payload = {
             type: 'count',
             student_count: parseInt(input.value, 10) || 0,
+            input_prefix: row.dataset.inputPrefix || null,
+            program_id: row.dataset.programId || null,
+            item_name: row.dataset.itemName || null,
         };
-        if (row.dataset.programId) {
-            payload.input_prefix = row.dataset.inputPrefix;
-            payload.program_id = row.dataset.programId;
-        } else {
-            payload.item_name = row.dataset.itemName;
-        }
 
         sendAutosave(row, payload);
     }

@@ -92,10 +92,6 @@ class AcademicIncomePlanSeeder extends Seeder
                 'section_code'               => '1.1',
                 'degree_program_id'          => $r['dp'],
                 'student_count'              => $r['n'],
-                'snap_credit_unit_price'     => $r['rate'],
-                'snap_course_credit_unit'    => 1,
-                'snap_registration_fee_rate' => null,
-                'snap_nuol_pct'              => $r['nuol'],
                 'total_income'               => $total,
                 'first_payment_amount'       => round($total * 0.60, 2),
                 'second_payment_amount'      => round($total * 0.40, 2),
@@ -111,10 +107,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'section_code'               => '1.2',
             'degree_program_id'          => null,
             'student_count'              => 705,
-            'snap_credit_unit_price'     => null,
-            'snap_course_credit_unit'    => null,
-            'snap_registration_fee_rate' => 210000,
-            'snap_nuol_pct'              => null,
             'total_income'               => 131482500,
             'first_payment_amount'       => 131482500,
             'second_payment_amount'      => 0,
@@ -149,18 +141,14 @@ class AcademicIncomePlanSeeder extends Seeder
                 'section_code'               => '1.3',
                 'degree_program_id'          => $r['dp'],
                 'student_count'              => $r['n'],
-                'snap_credit_unit_price'     => $r['rate'],
-                'snap_course_credit_unit'    => 1,
-                'snap_registration_fee_rate' => null,
-                'snap_nuol_pct'              => 0.17,
                 'total_income'               => $total,
                 'first_payment_amount'       => round($total * 0.60, 2),
                 'second_payment_amount'      => 0,
             ]);
         }
 
-        // Master/PhD year 1: snap_course_credit_unit = year1_credit_unit (60% of total program)
-        // snap_credit_unit_price = price/unit (240,000 master, 600,000 phd)
+        // Master/PhD year 1: year1_credit_unit is 60% of the total program.
+        // The price per unit now lives in academic income settings.
         // gross = year1_credit_unit × price/unit × count  (same formula as sec 1.1 yr2+)
         $items13_master = [
             // ['dp', 'n', 'year1_cu', 'price_per_unit']
@@ -183,10 +171,6 @@ class AcademicIncomePlanSeeder extends Seeder
                 'section_code'               => '1.3',
                 'degree_program_id'          => $r['dp'],
                 'student_count'              => $r['n'],
-                'snap_credit_unit_price'     => $r['price'],
-                'snap_course_credit_unit'    => $r['cu'],
-                'snap_registration_fee_rate' => null,
-                'snap_nuol_pct'              => 0.10,
                 'total_income'               => $total,
                 'first_payment_amount'       => round($total * 0.60, 2),
                 'second_payment_amount'      => 0,
@@ -202,10 +186,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'section_code'               => '1.4',
             'degree_program_id'          => null,
             'student_count'              => 324,
-            'snap_credit_unit_price'     => null,
-            'snap_course_credit_unit'    => null,
-            'snap_registration_fee_rate' => 210000,
-            'snap_nuol_pct'              => null,
             'total_income'               => 51516000,
             'first_payment_amount'       => 51516000,
             'second_payment_amount'      => 0,
@@ -220,10 +200,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'section_code'               => '4',
             'degree_program_id'          => null,
             'student_count'              => 1029,
-            'snap_credit_unit_price'     => null,
-            'snap_course_credit_unit'    => null,
-            'snap_registration_fee_rate' => 50000,
-            'snap_nuol_pct'              => null,
             'total_income'               => 51450000,
             'first_payment_amount'       => 51450000,
             'second_payment_amount'      => 0,
@@ -238,10 +214,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'section_code'               => '5',
             'degree_program_id'          => null,
             'student_count'              => 1029,
-            'snap_credit_unit_price'     => null,
-            'snap_course_credit_unit'    => null,
-            'snap_registration_fee_rate' => 20000,
-            'snap_nuol_pct'              => null,
             'total_income'               => 20580000,
             'first_payment_amount'       => 20580000,
             'second_payment_amount'      => 0,

@@ -14,6 +14,7 @@ use App\Models\PlanningYearFieldSetting;
 use App\Models\SalaryPlan;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
+use App\Services\SalaryReportBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,10 +24,10 @@ class ManagePlanController extends Controller
     public function index()
     {
         $plans = PlanningYear::with([
-                'academicIncomePlans.items',
-                'salaryPlans.entries',
-                'expensePlans.values' => fn ($query) => $query->where('field_key', 'yearly_total'),
-            ])
+            'academicIncomePlans.items',
+            'salaryPlans.entries',
+            'expensePlans.values' => fn ($query) => $query->where('field_key', 'yearly_total'),
+        ])
             ->withCount('expensePlans')
             ->orderByDesc('year')
             ->paginate(12);
@@ -34,19 +35,25 @@ class ManagePlanController extends Controller
         return view('dashboards.finance_head.manage-plan.index', compact('plans'));
     }
 
-    public function preview(PlanningYear $planningYear, AcademicIncomeReportBuilder $reportBuilder, ExpenseReportBuilder $expenseReportBuilder)
-    {
+    public function preview(
+        PlanningYear $planningYear,
+        AcademicIncomeReportBuilder $reportBuilder,
+        ExpenseReportBuilder $expenseReportBuilder,
+        SalaryReportBuilder $salaryReportBuilder
+    ) {
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
         ]);
 
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
         $expenseReport = $expenseReportBuilder->buildForPlanningYear($planningYear);
+        $salaryReport = $salaryReportBuilder->buildForPlanningYear($planningYear);
 
         return view('dashboards.finance_head.manage-plan.preview', compact(
             'planningYear',
             'report',
             'expenseReport',
+            'salaryReport',
         ));
     }
 
@@ -61,7 +68,7 @@ class ManagePlanController extends Controller
         $planningYear = DB::transaction(function () use ($data) {
             $planningYear = PlanningYear::create([
                 'year' => (int) $data['year'],
-                'name' => $data['name'] ?: 'Planning ' . $data['year'],
+                'name' => $data['name'] ?: 'Planning '.$data['year'],
                 'description' => $data['description'] ?? null,
                 'is_active' => true,
             ]);
@@ -74,7 +81,7 @@ class ManagePlanController extends Controller
 
         return redirect()
             ->route('head_of_finance.manage-plan.index')
-            ->with('success', 'ສ້າງແຜນລວມປະຈຳປີ ' . $planningYear->year . ' ສຳເລັດ');
+            ->with('success', 'ສ້າງແຜນລວມປະຈຳປີ '.$planningYear->year.' ສຳເລັດ');
     }
 
     public function sync(PlanningYear $planningYear)
@@ -130,7 +137,7 @@ class ManagePlanController extends Controller
 
         return redirect()
             ->route('head_of_finance.manage-plan.index')
-            ->with('success', 'ລຶບແຜນປະຈຳປີ ' . $year . ' ສຳເລັດ');
+            ->with('success', 'ລຶບແຜນປະຈຳປີ '.$year.' ສຳເລັດ');
     }
 
     private function ensureCompanionPlans(PlanningYear $planningYear): void
@@ -170,6 +177,7 @@ class ManagePlanController extends Controller
 
         if ($sourceYear) {
             $this->copyExpenseStructure($sourceYear, $planningYear);
+
             return;
         }
 
@@ -202,7 +210,7 @@ class ManagePlanController extends Controller
             $sectionsByCode[$sectionCode] = ExpenseSection::create([
                 'planning_year_id' => $planningYear->id,
                 'code' => $sectionCode,
-                'name' => 'ກຸ່ມລາຍຈ່າຍ ' . $sectionCode,
+                'name' => 'ກຸ່ມລາຍຈ່າຍ '.$sectionCode,
                 'description' => null,
                 'display_order' => $index + 1,
                 'summary_period_count' => 12,
@@ -229,7 +237,7 @@ class ManagePlanController extends Controller
                 'section_id' => $sectionsByCode[$sectionCode]->id,
                 'parent_id' => null,
                 'code' => $code,
-                'name' => 'ລາຍການ ' . $code,
+                'name' => 'ລາຍການ '.$code,
                 'description' => null,
                 'default_pattern_id' => $defaultPatternId,
                 'summary_period_count' => 12,

@@ -14,6 +14,10 @@
     $feeYear1 = $report['feeYear1'];
     $s1_2 = $report['s1_2'];
     $s1_1 = $report['s1_1'];
+    $salaryRows = collect($salaryReport['rows']);
+    $salaryTotals = $salaryReport['totals'];
+    $salaryMonth = $salaryReport['month'] ? str_pad((string) $salaryReport['month'], 2, '0', STR_PAD_LEFT) : '01';
+    $salaryFiscalYear = $salaryReport['fiscal_year'] ?? $planningYear->year;
 
     $money = fn ($amount) => number_format((float) $amount, 0);
     $blankMoney = fn ($amount) => (float) $amount === 0.0 ? '0' : number_format((float) $amount, 0);
@@ -618,6 +622,85 @@
             @endforeach
         </section>
     @endforeach
+
+    <section class="paper salary-paper">
+        <div class="official-header salary-header">
+            <div class="org-left">
+                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
+            </div>
+            <div class="nation-right">
+                <strong>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</strong>
+                <span>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນາຖາວອນ</span>
+            </div>
+        </div>
+
+        <h2 class="report-title salary-title">ຕາຕະລາງສັງລວມລາຍຈ່າຍເງິນເດືອນ ຕາມສາລະບານງົບປະມານ</h2>
+        <div class="salary-meta">
+            <span>ເດືອນ {{ $salaryMonth }}/{{ $salaryFiscalYear }}</span>
+            <span>ງວດທີ 1 ສົກປີ {{ $salaryFiscalYear }}</span>
+            <span>ໜ່ວຍ: ກີບ</span>
+        </div>
+
+        <table class="report-table salary-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:92px">ພ ພສ</th>
+                    <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
+                    <th rowspan="2" style="width:78px">ຈຳນວນພົນ</th>
+                    <th colspan="4">ຈຳນວນເງິນຖອນຕົວຈິງໃນ 1 ເດືອນ</th>
+                    <th rowspan="2" style="width:128px">ລວມ 12 ເດືອນ</th>
+                </tr>
+                <tr>
+                    <th style="width:128px">ໂອນເຂົ້າ ATM</th>
+                    <th style="width:128px">ຖອນເງິນສົດ</th>
+                    <th style="width:128px">ລວມ</th>
+                    <th style="width:118px">ໝາຍເຫດ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($salaryRows as $row)
+                    <tr class="{{ $row['is_group'] ? 'salary-group-row' : '' }}">
+                        <td class="center">{{ $row['code'] }}</td>
+                        <td class="salary-name" style="padding-left: {{ 0.45 + ((int) $row['level'] * 0.72) }}rem !important;">{{ $row['title'] }}</td>
+                        <td class="num">{{ $row['person_count'] }}</td>
+                        <td class="num">{{ $money($row['transfer_amount']) }}</td>
+                        <td class="num">{{ $money($row['cash_amount']) }}</td>
+                        <td class="num">{{ $money($row['monthly_total']) }}</td>
+                        <td></td>
+                        <td class="num">{{ $money($row['annual_total']) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="center">60</td>
+                        <td colspan="7" class="center">ຍັງບໍ່ມີລະຫັດບັນຊີເງິນເດືອນ</td>
+                    </tr>
+                @endforelse
+                <tr class="total-row salary-grand-total">
+                    <td></td>
+                    <td class="center">ລວມຍອດເງິນໄດ້ຮັບທັງໝົດ</td>
+                    <td class="num">{{ $salaryTotals['person_count'] }}</td>
+                    <td class="num">{{ $money($salaryTotals['transfer_amount']) }}</td>
+                    <td class="num">{{ $money($salaryTotals['cash_amount']) }}</td>
+                    <td class="num">{{ $money($salaryTotals['monthly_total']) }}</td>
+                    <td></td>
+                    <td class="num">{{ $money($salaryTotals['annual_total']) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature-grid salary-signatures">
+            @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
+                <div class="signature">
+                    <span>ວັນທີ ......./......./.......</span>
+                    <div></div>
+                    <strong>{{ $signature }}</strong>
+                </div>
+            @endforeach
+        </div>
+
+        <h2 class="summary-caption salary-caption">3. ແຜນງົບປະມານລາຍຈ່າຍເງິນເດືອນ ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+    </section>
 </div>
 
 <style>
@@ -719,6 +802,54 @@
     .expense-detail-table {
         margin-bottom: .95rem;
         min-width: 920px;
+    }
+
+    .salary-paper {
+        break-inside: auto;
+    }
+
+    .salary-title {
+        margin-bottom: .35rem;
+    }
+
+    .salary-meta {
+        display: flex;
+        font-size: .78rem;
+        font-weight: 700;
+        gap: 1rem;
+        justify-content: center;
+        margin: 0 0 .75rem;
+    }
+
+    .salary-table {
+        font-size: .72rem;
+        min-width: 1180px;
+    }
+
+    .salary-table th,
+    .salary-table td {
+        padding: .32rem .4rem;
+    }
+
+    .salary-name {
+        min-width: 260px;
+    }
+
+    .salary-group-row td {
+        background: #f8fafc;
+        font-weight: 800;
+    }
+
+    .salary-grand-total td {
+        border-top-width: 2px;
+    }
+
+    .salary-signatures {
+        margin-top: 1.45rem;
+    }
+
+    .salary-caption {
+        text-align: right;
     }
 
     .balance-paper {
@@ -892,6 +1023,48 @@
         .expense-subtitle {
             font-size: 8.8pt;
             margin: 8pt 0 4pt;
+        }
+
+        .salary-paper {
+            min-height: 185mm;
+        }
+
+        .salary-title {
+            font-size: 10pt;
+            margin: 7pt 0 3pt;
+        }
+
+        .salary-meta {
+            font-size: 7.6pt;
+            margin-bottom: 5pt;
+        }
+
+        .salary-table {
+            font-size: 6.9pt;
+            table-layout: fixed;
+        }
+
+        .salary-table th,
+        .salary-table td {
+            padding: 2.1pt 2.7pt;
+            white-space: normal;
+        }
+
+        .salary-table .num {
+            white-space: nowrap;
+        }
+
+        .salary-signatures {
+            margin-top: 12pt;
+        }
+
+        .salary-signatures .signature div {
+            height: 28pt;
+        }
+
+        .salary-caption {
+            font-size: 9pt;
+            margin-top: 8pt;
         }
 
         .report-table th,

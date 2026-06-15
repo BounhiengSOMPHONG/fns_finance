@@ -645,13 +645,17 @@
         <table class="report-table salary-table">
             <thead>
                 <tr>
-                    <th rowspan="2" style="width:92px">ພ ພສ</th>
+                    <th colspan="4">ສາລະບານງົບປະມານ</th>
                     <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                     <th rowspan="2" style="width:78px">ຈຳນວນພົນ</th>
                     <th colspan="4">ຈຳນວນເງິນຖອນຕົວຈິງໃນ 1 ເດືອນ</th>
                     <th rowspan="2" style="width:128px">ລວມ 12 ເດືອນ</th>
                 </tr>
                 <tr>
+                    <th style="width:38px">ພ</th>
+                    <th style="width:38px">ມສ</th>
+                    <th style="width:38px">ຮ່ວງ</th>
+                    <th style="width:38px">ລະ</th>
                     <th style="width:128px">ໂອນເຂົ້າ ATM</th>
                     <th style="width:128px">ຖອນເງິນສົດ</th>
                     <th style="width:128px">ລວມ</th>
@@ -660,9 +664,23 @@
             </thead>
             <tbody>
                 @forelse($salaryRows as $row)
+                    @php
+                        $code = str_pad((string) $row['code'], 8, '0', STR_PAD_LEFT);
+                        $codeParts = [
+                            substr($code, 0, 2),
+                            substr($code, 2, 2),
+                            substr($code, 4, 2),
+                            substr($code, 6, 2),
+                        ];
+                        $level = min((int) $row['level'], 3);
+                    @endphp
                     <tr class="{{ $row['is_group'] ? 'salary-group-row' : '' }}">
-                        <td class="center">{{ $row['code'] }}</td>
-                        <td class="salary-name" style="padding-left: {{ 0.45 + ((int) $row['level'] * 0.72) }}rem !important;">{{ $row['title'] }}</td>
+                        @foreach($codeParts as $partIndex => $part)
+                            <td class="center salary-code-cell {{ $partIndex === $level ? 'salary-code-main' : '' }}">
+                                {{ $partIndex < $level ? '' : $part }}
+                            </td>
+                        @endforeach
+                        <td class="salary-name">{{ $row['title'] }}</td>
                         <td class="num">{{ $row['person_count'] }}</td>
                         <td class="num">{{ $money($row['transfer_amount']) }}</td>
                         <td class="num">{{ $money($row['cash_amount']) }}</td>
@@ -673,10 +691,16 @@
                 @empty
                     <tr>
                         <td class="center">60</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                         <td colspan="7" class="center">ຍັງບໍ່ມີລະຫັດບັນຊີເງິນເດືອນ</td>
                     </tr>
                 @endforelse
                 <tr class="total-row salary-grand-total">
+                    <td></td>
+                    <td></td>
+                    <td></td>
                     <td></td>
                     <td class="center">ລວມຍອດເງິນໄດ້ຮັບທັງໝົດ</td>
                     <td class="num">{{ $salaryTotals['person_count'] }}</td>
@@ -823,7 +847,7 @@
 
     .salary-table {
         font-size: .72rem;
-        min-width: 1180px;
+        min-width: 1240px;
     }
 
     .salary-table th,
@@ -831,17 +855,35 @@
         padding: .32rem .4rem;
     }
 
+    .salary-code-cell {
+        font-variant-numeric: tabular-nums;
+        min-width: 38px;
+    }
+
+    .salary-code-main {
+        font-style: italic;
+        font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
     .salary-name {
         min-width: 260px;
     }
 
     .salary-group-row td {
-        background: #f8fafc;
+        background: #d9ffc7;
         font-weight: 800;
     }
 
     .salary-grand-total td {
         border-top-width: 2px;
+    }
+
+    .report-table.salary-table .salary-group-row .num,
+    .report-table.salary-table .salary-grand-total .num {
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 
     .salary-signatures {

@@ -264,7 +264,7 @@
                     <tr>
                         <td class="center">{{ $key }}</td>
                         <td class="indent">{{ $row['title'] }}</td>
-                        <td class="num">{{ $row['count'] ?: '' }}</td>
+                        <td class="num">{{ $row['count'] }}</td>
                         <td class="num">{{ $row['rate'] ? $money($row['rate']) : '' }}</td>
                         <td class="num">{{ $money($row['gross']) }}</td>
                         <td class="num">{{ $money($row['nuol']) }}</td>
@@ -290,7 +290,7 @@
                     <tr>
                         <td class="center">{{ $key }}</td>
                         <td class="indent">{{ $row['title'] }}</td>
-                        <td class="num">{{ $row['count'] ?: '' }}</td>
+                        <td class="num">{{ $row['count'] }}</td>
                         <td class="num">{{ $row['rate'] ? $money($row['rate']) : '' }}</td>
                         <td class="num">{{ $money($row['gross']) }}</td>
                         <td class="num">{{ $money($row['nuol']) }}</td>
@@ -305,7 +305,7 @@
                     <tr class="section-row">
                         <td class="center">{{ $number }}</td>
                         <td>{{ $row['title'] }}</td>
-                        <td class="num">{{ $row['count'] ?: '' }}</td>
+                        <td class="num">{{ $row['count'] }}</td>
                         <td class="num">{{ $row['rate'] ? $money($row['rate']) : '' }}</td>
                         <td class="num">{{ $money($row['gross']) }}</td>
                         <td class="num">{{ $money($row['nuol']) }}</td>

@@ -10,6 +10,7 @@ use App\Models\DegreeProgram;
 use App\Models\NuolPctSetting;
 use App\Models\RegistrationFeeSetting;
 use App\Models\IncomeRateSetting;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AcademicIncomeAssessmentController extends Controller
@@ -313,5 +314,160 @@ class AcademicIncomeAssessmentController extends Controller
         );
 
         return back()->with('success', 'ບັນທຶກປະເມີນລາຍຮັບສຳເລັດ');
+    }
+
+    public function saveField(Request $request, AcademicIncomePlan $academicIncome): JsonResponse
+    {
+        $data = $request->validate([
+            'type' => 'required|in:count,rate',
+            'student_count' => 'required_if:type,count|integer|min:0',
+            'input_prefix' => 'required_if:type,count|nullable|in:s11,s13,s13m',
+            'program_id' => 'required_with:input_prefix|nullable|integer|exists:degree_programs,id',
+            'item_name' => 'required_without:input_prefix|nullable|in:students_1_2,students_1_4,students_2_1,students_2_2,students_2_3,students_2_4',
+            'rate_key' => 'required_if:type,rate|nullable|in:item3_rate,item4_rate,item5_rate,item6_rate',
+            'rate' => 'required_if:type,rate|nullable|numeric|min:0',
+        ]);
+
+        if ($data['type'] === 'rate') {
+            IncomeRateSetting::where('key', $data['rate_key'])
+                ->update(['rate' => (float) $data['rate']]);
+
+            $itemName = match ($data['rate_key']) {
+                'item3_rate' => 'students_2_1',
+                'item4_rate' => 'students_2_2',
+                'item5_rate' => 'students_2_3',
+                'item6_rate' => 'students_2_4',
+            };
+            $item = $this->persistFlatItem($academicIncome, $itemName);
+
+            return response()->json([
+                'success' => true,
+                'item' => $this->serializeItem($item),
+            ]);
+        }
+
+        $item = filled($data['input_prefix'] ?? null)
+            ? $this->persistProgramItem(
+                $academicIncome,
+                $data['input_prefix'],
+                (int) $data['program_id'],
+                (int) $data['student_count']
+            )
+            : $this->persistFlatItem(
+                $academicIncome,
+                $data['item_name'],
+                (int) $data['student_count']
+            );
+
+        return response()->json([
+            'success' => true,
+            'item' => $this->serializeItem($item),
+        ]);
+    }
+
+    private function persistProgramItem(AcademicIncomePlan $academicIncome, string $inputPrefix, int $programId, int $count): AcademicIncomeItem
+    {
+        $program = DegreeProgram::where('is_active', true)
+            ->with('latestCourseCredit')
+            ->findOrFail($programId);
+
+        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
+            ->get()->groupBy('level')->map(fn($i) => $i->first());
+        $nuolByLevel = [
+            'bachelor' => NuolPctSetting::latestFor('bachelor')?->percentage ?? 0.17,
+            'master' => NuolPctSetting::latestFor('master')?->percentage ?? 0.10,
+            'phd' => NuolPctSetting::latestFor('phd')?->percentage ?? 0.10,
+        ];
+
+        $section = $inputPrefix === 's11' ? '1.1' : '1.3';
+        $nuol = $nuolByLevel[$program->level] ?? $nuolByLevel['bachelor'];
+        $creditUnit = $inputPrefix === 's13m'
+            ? ($program->latestCourseCredit?->year1_credit_unit ?? 0)
+            : ($program->latestCourseCredit?->course_credit_unit ?? 0);
+        $price = $creditPrices[$program->level]?->credit_unit_price ?? 0;
+        $total = $count * $creditUnit * $price * (1 - $nuol);
+
+        $teachingPct = match ($inputPrefix) {
+            's11' => $program->level === 'bachelor' ? 0.40 : 0.60,
+            's13m' => 0.60,
+            default => 0.40,
+        };
+
+        return AcademicIncomeItem::updateOrCreate(
+            ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => $program->id],
+            [
+                'student_count' => $count,
+                'snap_credit_unit_price' => $price,
+                'snap_course_credit_unit' => $creditUnit,
+                'snap_registration_fee_rate' => null,
+                'snap_nuol_pct' => $nuol,
+                'total_income' => $total,
+                'first_payment_amount' => round($total * (1 - $teachingPct), 2),
+                'second_payment_amount' => round($total * $teachingPct, 2),
+            ]
+        );
+    }
+
+    private function persistFlatItem(AcademicIncomePlan $academicIncome, string $itemName, ?int $count = null): AcademicIncomeItem
+    {
+        $existing = fn (string $section): int => (int) ($academicIncome->items()
+            ->where('section_code', $section)
+            ->whereNull('degree_program_id')
+            ->value('student_count') ?? 0);
+
+        $feeYear2_4 = RegistrationFeeSetting::where('section_type', 'year2_4')
+            ->with('items')->orderByDesc('start_year')->first();
+        $feeYear1 = RegistrationFeeSetting::where('section_type', 'year1')
+            ->with('items')->orderByDesc('start_year')->first();
+        $incomeRates = IncomeRateSetting::allKeyed();
+
+        return match ($itemName) {
+            'students_1_2' => $this->updateFlatItem($academicIncome, '1.2', $count ?? $existing('1.2'), null, $feeYear2_4?->total_rate ?? 0, $this->weightedNuol($feeYear2_4)),
+            'students_1_4' => $this->updateFlatItem($academicIncome, '1.4', $count ?? $existing('1.4'), null, $feeYear1?->total_rate ?? 0, $this->weightedNuol($feeYear1)),
+            'students_2_1' => $this->updateFlatItem($academicIncome, '2.1', $count ?? $existing('2.1'), (float) ($incomeRates->get('item3_rate')?->rate ?? 0), null, 0),
+            'students_2_2' => $this->updateFlatItem($academicIncome, '2.2', $count ?? $existing('2.2'), null, (float) ($incomeRates->get('item4_rate')?->rate ?? 0), 0),
+            'students_2_3' => $this->updateFlatItem($academicIncome, '2.3', $count ?? $existing('2.3'), null, (float) ($incomeRates->get('item5_rate')?->rate ?? 0), 0),
+            'students_2_4' => $this->updateFlatItem($academicIncome, '2.4', $count ?? $existing('2.4'), (float) ($incomeRates->get('item6_rate')?->rate ?? 0), null, 0),
+        };
+    }
+
+    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol): AcademicIncomeItem
+    {
+        $baseRate = $registrationRate ?? $creditPrice ?? 0;
+        $total = $count * $baseRate * (1 - $nuol);
+
+        return AcademicIncomeItem::updateOrCreate(
+            ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => null],
+            [
+                'student_count' => $count,
+                'snap_credit_unit_price' => $creditPrice,
+                'snap_course_credit_unit' => null,
+                'snap_registration_fee_rate' => $registrationRate,
+                'snap_nuol_pct' => $nuol,
+                'total_income' => $total,
+                'first_payment_amount' => 0,
+                'second_payment_amount' => 0,
+            ]
+        );
+    }
+
+    private function weightedNuol(?RegistrationFeeSetting $setting): float
+    {
+        if (! $setting || $setting->total_rate <= 0) {
+            return 0;
+        }
+
+        return (float) ($setting->items->sum(fn($item) => $item->amount * $item->nuol_pct) / $setting->total_rate);
+    }
+
+    private function serializeItem(AcademicIncomeItem $item): array
+    {
+        return [
+            'id' => $item->id,
+            'section_code' => $item->section_code,
+            'degree_program_id' => $item->degree_program_id,
+            'student_count' => $item->student_count,
+            'total_income' => (float) $item->total_income,
+        ];
     }
 }

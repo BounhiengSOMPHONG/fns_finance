@@ -95,6 +95,9 @@
 .ai-row:hover { background:#fffdf7; border-color:#ecd58f; }
 .ai-row.is-active { border-color:var(--fns-gold); box-shadow:0 0 0 3px rgba(201,153,26,.12); }
 .ai-row:not(.is-zero) { border-color:#cbd5e1; background:#fbfdff; }
+.ai-row.row-saving { opacity:.58; pointer-events:none; }
+.ai-row.row-saved { animation:aiFlashGreen .9s ease; }
+.ai-row.row-error { animation:aiFlashRed .9s ease; }
 .ai-row-name { flex:1; min-width:0; display:flex; align-items:center; gap:.4rem; color:#334155; font-size:.84rem; }
 .ai-row-txt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ai-row.is-zero .ai-row-name { color:var(--fns-gray-500); }
@@ -156,6 +159,9 @@
     width:7.6rem; border:1px solid #cbd5e1; border-radius:7px; padding:.4rem .5rem;
     color:var(--fns-navy); font-family:'Cinzel', serif; font-weight:800; text-align:right;
 }
+.ai-rate-field.row-saving { opacity:.58; pointer-events:none; }
+.ai-rate-field.row-saved { animation:aiFlashGreen .9s ease; }
+.ai-rate-field.row-error { animation:aiFlashRed .9s ease; }
 .ai-panel-actions {
     display:flex; justify-content:space-between; align-items:center; gap:.7rem;
     padding:.9rem 1.1rem; border-top:1px solid var(--fns-gray-200); background:#fbfbfc;
@@ -175,6 +181,20 @@
 .ai-submit-bar .fns-btn-primary { padding:.65rem 1.15rem; font-size:.86rem; }
 .ai-submit-note { margin-left:auto; color:var(--fns-gray-500); font-size:.78rem; text-align:right; }
 .ai-submit-note b { display:block; color:var(--fns-navy); font-size:.86rem; }
+.ai-toasts {
+    position:fixed; right:1.2rem; bottom:5.5rem; z-index:9500;
+    display:flex; flex-direction:column; gap:.55rem; pointer-events:none;
+}
+.ai-toast {
+    display:flex; align-items:center; gap:.5rem; padding:.65rem .85rem; border-radius:8px;
+    background:var(--fns-navy-deep); color:#fff; box-shadow:0 12px 30px -10px rgba(17,27,51,.48);
+    font-size:.8rem; animation:aiToastIn .22s ease-out; pointer-events:auto;
+}
+.ai-toast.is-success { background:#166534; }
+.ai-toast.is-error { background:#991b1b; }
+@keyframes aiToastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes aiFlashGreen { 0%,100% { background:inherit; } 25% { background:#bbf7d0; } }
+@keyframes aiFlashRed { 0%,100% { background:inherit; } 25% { background:#fecaca; } }
 
 @media (max-width: 920px) {
     .ai-top { grid-template-columns:auto 1fr; }
@@ -220,7 +240,10 @@
     $rateItems = collect($items)->filter(fn($it) => !empty($it['rateField']));
 @endphp
 
-<form method="POST" action="{{ route('head_of_finance.academic-income.saveEvaluate', $academicIncome) }}" class="ai-wrap">
+<form method="POST"
+      action="{{ route('head_of_finance.academic-income.saveEvaluate', $academicIncome) }}"
+      data-autosave-url="{{ route('head_of_finance.academic-income.saveField', $academicIncome) }}"
+      class="ai-wrap">
 @csrf
     <div class="ai-top">
         <a href="{{ route('head_of_finance.manage-plan.index') }}" class="ai-back" title="ກັບຄືນ">
@@ -352,7 +375,10 @@
             <div class="ai-fee-grid">
                 @foreach($items as $it)
                     @php $val = (int) old($it['name'], $existingItems->get($it['key'])?->student_count ?? 0); @endphp
-                    <label class="ai-row ai-item @if($val<=0) is-zero @endif" data-name="{{ \Illuminate\Support\Str::lower($it['title']) }}">
+                    <label class="ai-row ai-item @if($val<=0) is-zero @endif"
+                           data-name="{{ \Illuminate\Support\Str::lower($it['title']) }}"
+                           data-save-kind="count"
+                           data-item-name="{{ $it['name'] }}">
                         <span class="ai-row-name">
                             <span class="ai-item-title"><span class="ai-item-tag">{{ $it['tag'] }}</span> <span class="ai-row-txt" title="{{ $it['title'] }}">{{ $it['title'] }}</span></span>
                             @if(!empty($it['rateField']))
@@ -382,6 +408,7 @@
                             <input type="number" name="{{ $it['rateField'] }}" min="0" step="1"
                                 value="{{ old($it['rateField'], (int) $it['rateVal']) }}"
                                 data-rate-input="{{ $it['rateField'] }}"
+                                data-save-kind="rate"
                                 title="ແກ້ໄຂອັດຕາ (ກີບ)">
                         </label>
                     @endforeach
@@ -410,9 +437,14 @@
     </div>
 </form>
 
+<div id="aiToasts" class="ai-toasts" aria-live="polite"></div>
+
 @push('scripts')
 <script>
 (function () {
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const form = document.querySelector('.ai-wrap');
+    const AUTOSAVE_URL = form?.dataset.autosaveUrl;
     const nums = Array.from(document.querySelectorAll('.ai-num'));
     const stepTabs = Array.from(document.querySelectorAll('[data-step-target]'));
     const stepPanels = Array.from(document.querySelectorAll('[data-step-panel]'));
@@ -438,12 +470,17 @@
         el.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                saveCountRow(el.closest('.ai-row'));
                 const visibleNums = nums.filter(input => input.offsetParent !== null);
                 const next = visibleNums[visibleNums.indexOf(el) + 1];
                 if (next) next.focus(); else el.blur();
             }
         });
         el.addEventListener('input', recalc);
+        el.addEventListener('blur', () => setTimeout(() => {
+            if (el.closest('.ai-row')?.contains(document.activeElement)) return;
+            saveCountRow(el.closest('.ai-row'));
+        }, 120));
     });
 
     stepTabs.forEach(tab => tab.addEventListener('click', () => showStep(Number(tab.dataset.stepTarget))));
@@ -480,6 +517,7 @@
         if (!input) return;
         input.value = valueOf('students_1_2') + valueOf('students_1_4');
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        saveCountRow(input.closest('.ai-row'));
     }));
 
     document.querySelectorAll('[data-step-filter]').forEach(filter => {
@@ -510,7 +548,94 @@
             const preview = document.querySelector(`[data-rate-preview="${input.dataset.rateInput}"]`);
             if (preview) preview.textContent = fmt.format(parseFloat(input.value) || 0);
         });
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveRateInput(input);
+                input.blur();
+            }
+        });
+        input.addEventListener('blur', () => saveRateInput(input));
     });
+
+    function showToast(message, kind = 'success') {
+        const wrap = document.getElementById('aiToasts');
+        if (!wrap) return;
+        const toast = document.createElement('div');
+        toast.className = `ai-toast is-${kind}`;
+        toast.textContent = message;
+        wrap.appendChild(toast);
+        setTimeout(() => toast.remove(), 2200);
+    }
+
+    async function sendAutosave(target, payload) {
+        if (!AUTOSAVE_URL || !target) return;
+        if (target.dataset.isSaving === '1') {
+            target.dataset.pendingSave = JSON.stringify(payload);
+            return;
+        }
+
+        target.dataset.isSaving = '1';
+        target.classList.add('row-saving');
+        try {
+            const res = await fetch(AUTOSAVE_URL, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            target.classList.remove('row-saving');
+            if (!res.ok || !data.success) throw new Error(data.message || 'Error');
+
+            target.classList.add('row-saved');
+            setTimeout(() => target.classList.remove('row-saved'), 900);
+        } catch {
+            target.classList.add('row-error');
+            setTimeout(() => target.classList.remove('row-error'), 900);
+            showToast('ບໍ່ສາມາດບັນທຶກໄດ້', 'error');
+        } finally {
+            target.dataset.isSaving = '0';
+            target.classList.remove('row-saving');
+            if (target.dataset.pendingSave) {
+                const nextPayload = JSON.parse(target.dataset.pendingSave);
+                target.dataset.pendingSave = '';
+                sendAutosave(target, nextPayload);
+            }
+        }
+    }
+
+    function saveCountRow(row) {
+        if (!row || row.dataset.saveKind !== 'count') return;
+        const input = row.querySelector('.ai-num');
+        if (!input) return;
+
+        const payload = {
+            type: 'count',
+            student_count: parseInt(input.value, 10) || 0,
+        };
+        if (row.dataset.programId) {
+            payload.input_prefix = row.dataset.inputPrefix;
+            payload.program_id = row.dataset.programId;
+        } else {
+            payload.item_name = row.dataset.itemName;
+        }
+
+        sendAutosave(row, payload);
+    }
+
+    function saveRateInput(input) {
+        if (!input || input.dataset.saveKind !== 'rate') return;
+        const target = input.closest('.ai-rate-field');
+        sendAutosave(target, {
+            type: 'rate',
+            rate_key: input.dataset.rateInput,
+            rate: parseFloat(input.value) || 0,
+        });
+    }
 
     recalc();
 })();

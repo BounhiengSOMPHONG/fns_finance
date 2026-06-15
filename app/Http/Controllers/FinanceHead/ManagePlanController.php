@@ -13,6 +13,7 @@ use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use App\Models\SalaryPlan;
 use App\Services\AcademicIncomeReportBuilder;
+use App\Services\ExpenseReportBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -33,17 +34,19 @@ class ManagePlanController extends Controller
         return view('dashboards.finance_head.manage-plan.index', compact('plans'));
     }
 
-    public function preview(PlanningYear $planningYear, AcademicIncomeReportBuilder $reportBuilder)
+    public function preview(PlanningYear $planningYear, AcademicIncomeReportBuilder $reportBuilder, ExpenseReportBuilder $expenseReportBuilder)
     {
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
         ]);
 
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
+        $expenseReport = $expenseReportBuilder->buildForPlanningYear($planningYear);
 
         return view('dashboards.finance_head.manage-plan.preview', compact(
             'planningYear',
             'report',
+            'expenseReport',
         ));
     }
 

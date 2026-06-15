@@ -96,6 +96,7 @@ final class SalaryPlanController extends Controller
         $coa = $leafAccounts->sortBy('account_code')->values()->map(function ($a) use ($accountsByCode, $accountsById, $rootIdsLookup) {
             $groupCode = substr((string) $a->account_code, 0, 3) . '00000';
             $group = $accountsByCode->get($groupCode);
+            $topic = $accountsById->get($a->parent_id);
 
             if (! $group) {
                 $group = $a;
@@ -109,6 +110,8 @@ final class SalaryPlanController extends Controller
                 'id'   => $a->id,
                 'code' => $a->account_code,
                 'name' => $a->account_name,
+                'topic_code' => $topic?->account_code,
+                'topic_name' => $topic?->account_name,
                 'group_code' => $group?->account_code,
                 'group_name' => $group?->account_name,
             ];

@@ -446,12 +446,45 @@
         if (!coaId) return; // need a valid COA before persisting
 
         const itemId = row.dataset.itemId;
+        const personCount = parseInt(row.querySelector('.smg-persons')?.value || 0, 10) || 0;
+        const amount = num(row.querySelector('.smg-amount'));
+
+        if (personCount === 0 && amount === 0) {
+            if (!itemId) {
+                recalcTotals();
+                return;
+            }
+
+            row.classList.add('row-saving');
+            try {
+                const res = await fetch(`/head-of-finance/salary-entries/${itemId}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                });
+                const data = await res.json();
+                row.classList.remove('row-saving');
+                if (!res.ok || !data.success) throw new Error(data.message || 'Error');
+
+                row.dataset.itemId = '';
+                recalcTotals();
+                row.classList.add('row-saved');
+                setTimeout(() => row.classList.remove('row-saved'), 900);
+            } catch {
+                row.classList.remove('row-saving');
+                row.classList.add('row-error');
+                setTimeout(() => row.classList.remove('row-error'), 900);
+                showToast('ບໍ່ສາມາດລຶບລາຍການໄດ້', 'error');
+            }
+
+            return;
+        }
+
         const payload = {
             plan_id:             PLAN_ID,
             chart_of_account_id: coaId,
-            person_count:        parseInt(row.querySelector('.smg-persons')?.value || 0, 10) || 0,
+            person_count:        personCount,
             payment_type:        row.querySelector('.smg-payment-type')?.value || 'transfer',
-            amount:              num(row.querySelector('.smg-amount')),
+            amount:              amount,
         };
         const url = itemId ? `/head-of-finance/salary-entries/${itemId}` : '/head-of-finance/salary-entries';
         const method = itemId ? 'PATCH' : 'POST';

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\FinanceHead;
 use App\Http\Controllers\Controller;
 use App\Models\SalaryEntry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 final class SalaryEntryController extends Controller
@@ -24,20 +25,45 @@ final class SalaryEntryController extends Controller
         $amount = (float) ($data['amount'] ?? 0);
 
         if ($personCount === 0 && $amount === 0.0) {
+            SalaryEntry::query()
+                ->where('plan_id', (int) $data['plan_id'])
+                ->where('chart_of_account_id', (int) $data['chart_of_account_id'])
+                ->delete();
+
             return response()->json([
                 'success' => true,
-                'skipped' => true,
+                'deleted' => true,
                 'entry' => null,
             ]);
         }
 
-        $entry = SalaryEntry::create([
+        $entry = SalaryEntry::query()->firstOrNew([
             'plan_id' => (int) $data['plan_id'],
             'chart_of_account_id' => (int) $data['chart_of_account_id'],
-            'person_count' => $personCount,
-            'payment_type' => $data['payment_type'],
-            'amount' => $amount,
         ]);
+
+        $entry->person_count = $personCount;
+        $entry->payment_type = $data['payment_type'];
+        $entry->amount = $amount;
+
+        try {
+            $entry->save();
+        } catch (QueryException $exception) {
+            if ($exception->getCode() !== '23000') {
+                throw $exception;
+            }
+
+            $entry = SalaryEntry::query()
+                ->where('plan_id', (int) $data['plan_id'])
+                ->where('chart_of_account_id', (int) $data['chart_of_account_id'])
+                ->firstOrFail();
+
+            $entry->person_count = $personCount;
+            $entry->payment_type = $data['payment_type'];
+            $entry->amount = $amount;
+            $entry->save();
+        }
+
         $entry->load('chartOfAccount');
 
         return response()->json([

@@ -27,7 +27,7 @@ class ChartOfAccountController extends Controller
 
         $chartOfAccounts = $query->orderBy('account_code')->paginate(10)->withQueryString();
 
-        return view('admin.chart-of-accounts.index', compact('chartOfAccounts'));
+        return view('dashboards.admin.chart-of-accounts.index', compact('chartOfAccounts'));
     }
 
     /**
@@ -35,7 +35,7 @@ class ChartOfAccountController extends Controller
      */
     public function create()
     {
-        return view('admin.chart-of-accounts.create');
+        return view('dashboards.admin.chart-of-accounts.create');
     }
 
     /**
@@ -60,7 +60,7 @@ class ChartOfAccountController extends Controller
      */
     public function show(ChartOfAccount $chartOfAccount)
     {
-        return view('admin.chart-of-accounts.show', compact('chartOfAccount'));
+        return view('dashboards.admin.chart-of-accounts.show', compact('chartOfAccount'));
     }
 
     /**
@@ -68,7 +68,7 @@ class ChartOfAccountController extends Controller
      */
     public function edit(ChartOfAccount $chartOfAccount)
     {
-        return view('admin.chart-of-accounts.edit', compact('chartOfAccount'));
+        return view('dashboards.admin.chart-of-accounts.edit', compact('chartOfAccount'));
     }
 
     /**

@@ -47,7 +47,7 @@ class UserController extends Controller
         $roles = Role::orderBy('role_name')->get();
         $departments = Department::orderBy('department_name')->get();
 
-        return view('admin.users.index', compact('users', 'roles', 'departments'));
+        return view('dashboards.admin.users.index', compact('users', 'roles', 'departments'));
     }
 
     /**
@@ -58,7 +58,7 @@ class UserController extends Controller
         $roles = Role::orderBy('role_name')->get();
         $departments = Department::orderBy('department_name')->get();
 
-        return view('admin.users.create', compact('roles', 'departments'));
+        return view('dashboards.admin.users.create', compact('roles', 'departments'));
     }
 
     /**
@@ -92,7 +92,7 @@ class UserController extends Controller
     {
         $user->load(['role', 'department']);
 
-        return view('admin.users.show', compact('user'));
+        return view('dashboards.admin.users.show', compact('user'));
     }
 
     /**
@@ -103,7 +103,7 @@ class UserController extends Controller
         $roles = Role::orderBy('role_name')->get();
         $departments = Department::orderBy('department_name')->get();
 
-        return view('admin.users.edit', compact('user', 'roles', 'departments'));
+        return view('dashboards.admin.users.edit', compact('user', 'roles', 'departments'));
     }
 
     /**

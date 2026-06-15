@@ -37,7 +37,7 @@ class DepartmentController extends Controller
             return Department::distinct()->pluck('department_type')->filter()->values();
         });
 
-        return view('admin.departments.index', compact('departments', 'departmentTypes'));
+        return view('dashboards.admin.departments.index', compact('departments', 'departmentTypes'));
     }
 
     /**
@@ -45,7 +45,7 @@ class DepartmentController extends Controller
      */
     public function create()
     {
-        return view('admin.departments.create');
+        return view('dashboards.admin.departments.create');
     }
 
     /**
@@ -74,7 +74,7 @@ class DepartmentController extends Controller
             $query->with('role')->latest('id')->limit(10);
         }]);
 
-        return view('admin.departments.show', compact('department'));
+        return view('dashboards.admin.departments.show', compact('department'));
     }
 
     /**
@@ -82,7 +82,7 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
-        return view('admin.departments.edit', compact('department'));
+        return view('dashboards.admin.departments.edit', compact('department'));
     }
 
     /**

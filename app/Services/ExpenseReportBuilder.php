@@ -128,13 +128,14 @@ class ExpenseReportBuilder
     private function buildRow(ExpensePlan $plan, array $columns, int $number): array
     {
         $values = $this->valuesByKey($plan);
+        $total = $this->yearlyTotal($plan, $values);
 
         return [
             'number' => $number,
             'item_name' => $this->textValue($values, 'item_name') ?: $plan->plan_detail,
             'reference' => $this->textValue($values, 'reference'),
             'note' => $this->textValue($values, 'note') ?: $plan->detail,
-            'total' => $this->yearlyTotal($plan),
+            'total' => $total,
             'values' => collect($columns)
                 ->mapWithKeys(fn (array $column) => [$column['key'] => $this->value($values, $column['key'])])
                 ->all(),
@@ -199,9 +200,29 @@ class ExpenseReportBuilder
         return $value === null || $value === '' ? null : (string) $value;
     }
 
-    private function yearlyTotal(ExpensePlan $plan): float
+    private function yearlyTotal(ExpensePlan $plan, ?array $values = null): float
     {
-        return (float) ($plan->value('yearly_total')?->value_number ?? 0);
+        $total = (float) ($plan->value('yearly_total')?->value_number ?? 0);
+
+        if ($total > 0) {
+            return $total;
+        }
+
+        return $this->calculatedTotal($plan, $values ?? $this->valuesByKey($plan));
+    }
+
+    private function calculatedTotal(ExpensePlan $plan, array $values): float
+    {
+        $number = fn (string $key): float => (float) ($values[$key] ?? 0);
+
+        return match ($plan->pattern?->key) {
+            'monthly' => $number('amount_per_month') * $number('month_count'),
+            'unit_quantity' => $number('unit_price') * $number('quantity'),
+            'unit_quantity_frequency' => $number('unit_price') * $number('quantity') * $number('times_per_year'),
+            'frequency_based' => $number('unit_price') * $number('quantity') * $number('frequency_count'),
+            'event_based' => $number('unit_price') * $number('event_count') * $number('people_count'),
+            default => 0.0,
+        };
     }
 
     private function firstNote(Collection $plans): ?string

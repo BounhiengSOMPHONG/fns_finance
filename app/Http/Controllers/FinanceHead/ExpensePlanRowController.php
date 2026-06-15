@@ -52,6 +52,8 @@ class ExpensePlanRowController extends Controller
 
         if ($rule) {
             $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
+        } else {
+            $values['yearly_total'] = $this->calculatePatternTotal($pattern->key, $values);
         }
 
         $expensePlan = DB::transaction(function () use ($data, $planningYear, $section, $subsection, $pattern, $values) {
@@ -119,6 +121,8 @@ class ExpensePlanRowController extends Controller
         $values = $this->preserveLockedRowValues($expensePlan, $data['values']);
         if ($rule) {
             $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
+        } else {
+            $values['yearly_total'] = $this->calculatePatternTotal($expensePlan->pattern?->key, $values);
         }
 
         DB::transaction(function () use ($expensePlan, $data, $values) {
@@ -210,6 +214,20 @@ class ExpensePlanRowController extends Controller
         }
 
         return $sum;
+    }
+
+    private function calculatePatternTotal(?string $patternKey, array $values): float
+    {
+        $number = fn (string $key): float => (float) ($values[$key] ?? 0);
+
+        return match ($patternKey) {
+            'monthly' => $number('amount_per_month') * $number('month_count'),
+            'unit_quantity' => $number('unit_price') * $number('quantity'),
+            'unit_quantity_frequency' => $number('unit_price') * $number('quantity') * $number('times_per_year'),
+            'frequency_based' => $number('unit_price') * $number('quantity') * $number('frequency_count'),
+            'event_based' => $number('unit_price') * $number('event_count') * $number('people_count'),
+            default => (float) ($values['yearly_total'] ?? 0),
+        };
     }
 
     private function serializePlan(ExpensePlan $expensePlan): array

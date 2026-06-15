@@ -13,6 +13,7 @@ use App\Models\RegistrationFeeSetting;
 use App\Models\IncomeRateSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Schema;
 
 class AcademicIncomeAssessmentController extends Controller
@@ -136,7 +137,7 @@ class AcademicIncomeAssessmentController extends Controller
             // Bachelor: 60% first / 40% teaching. Master/PhD: 40% first / 60% teaching.
             $teachingPct = $program->level === 'bachelor' ? 0.40 : 0.60;
 
-            AcademicIncomeItem::updateOrCreate(
+            $this->saveIncomeItem(
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.1', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
@@ -156,7 +157,7 @@ class AcademicIncomeAssessmentController extends Controller
             $price      = $creditPrices['bachelor']?->credit_unit_price ?? 0;
             $total      = $count * $creditUnit * $price * (1 - $nuolBachelor);
 
-            AcademicIncomeItem::updateOrCreate(
+            $this->saveIncomeItem(
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.3', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
@@ -178,7 +179,7 @@ class AcademicIncomeAssessmentController extends Controller
             $price      = $creditPrices[$program->level]?->credit_unit_price ?? 0;
             $total      = $count * $creditUnit * $price * (1 - $nuol);
 
-            AcademicIncomeItem::updateOrCreate(
+            $this->saveIncomeItem(
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.3', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
@@ -199,7 +200,7 @@ class AcademicIncomeAssessmentController extends Controller
         $count12 = (int) $request->students_1_2;
         $total12 = $count12 * $feeRate2_4 * (1 - $weightedNuol24);
 
-        AcademicIncomeItem::updateOrCreate(
+        $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => '1.2', 'degree_program_id' => null],
             [
                 'student_count'              => $count12,
@@ -219,7 +220,7 @@ class AcademicIncomeAssessmentController extends Controller
         $count14 = (int) $request->students_1_4;
         $total14 = $count14 * $feeRate1 * (1 - $weightedNuol1);
 
-        AcademicIncomeItem::updateOrCreate(
+        $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => '1.4', 'degree_program_id' => null],
             [
                 'student_count'              => $count14,
@@ -236,7 +237,7 @@ class AcademicIncomeAssessmentController extends Controller
         // 2.1 — count × item3_rate
         $rate21  = (float) ($incomeRates->get('item3_rate')?->rate ?? 0);
         $count21 = (int) $request->students_2_1;
-        AcademicIncomeItem::updateOrCreate(
+        $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => '2.1', 'degree_program_id' => null],
             [
                 'student_count'              => $count21,
@@ -250,7 +251,7 @@ class AcademicIncomeAssessmentController extends Controller
         // 2.2 — count(1.2+1.4) × item4_rate
         $rate22  = (float) ($incomeRates->get('item4_rate')?->rate ?? 0);
         $count22 = (int) $request->students_2_2;
-        AcademicIncomeItem::updateOrCreate(
+        $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => '2.2', 'degree_program_id' => null],
             [
                 'student_count'              => $count22,
@@ -264,7 +265,7 @@ class AcademicIncomeAssessmentController extends Controller
         // 2.3 — count(1.2+1.4) × item5_rate
         $rate23  = (float) ($incomeRates->get('item5_rate')?->rate ?? 0);
         $count23 = (int) $request->students_2_3;
-        AcademicIncomeItem::updateOrCreate(
+        $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => '2.3', 'degree_program_id' => null],
             [
                 'student_count'              => $count23,
@@ -278,7 +279,7 @@ class AcademicIncomeAssessmentController extends Controller
         // 2.4 — count × item6_rate
         $rate24  = (float) ($incomeRates->get('item6_rate')?->rate ?? 0);
         $count24 = (int) $request->students_2_4;
-        AcademicIncomeItem::updateOrCreate(
+        $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => '2.4', 'degree_program_id' => null],
             [
                 'student_count'              => $count24,
@@ -297,9 +298,18 @@ class AcademicIncomeAssessmentController extends Controller
         $data = $request->validate([
             'type' => 'required|in:count,rate',
             'student_count' => 'required_if:type,count|integer|min:0',
-            'input_prefix' => 'required_if:type,count|nullable|in:s11,s13,s13m',
-            'program_id' => 'required_with:input_prefix|nullable|integer|exists:degree_programs,id',
-            'item_name' => 'required_without:input_prefix|nullable|in:students_1_2,students_1_4,students_2_1,students_2_2,students_2_3,students_2_4',
+            'input_prefix' => 'nullable|in:s11,s13,s13m',
+            'program_id' => [
+                Rule::requiredIf(fn () => $request->input('type') === 'count' && filled($request->input('input_prefix'))),
+                'nullable',
+                'integer',
+                'exists:degree_programs,id',
+            ],
+            'item_name' => [
+                Rule::requiredIf(fn () => $request->input('type') === 'count' && blank($request->input('input_prefix'))),
+                'nullable',
+                'in:students_1_2,students_1_4,students_2_1,students_2_2,students_2_3,students_2_4',
+            ],
             'rate_key' => 'required_if:type,rate|nullable|in:item3_rate,item4_rate,item5_rate,item6_rate',
             'rate' => 'required_if:type,rate|nullable|numeric|min:0',
         ]);
@@ -318,6 +328,7 @@ class AcademicIncomeAssessmentController extends Controller
 
             return response()->json([
                 'success' => true,
+                'deleted' => $item === null,
                 'item' => $this->serializeItem($item),
             ]);
         }
@@ -337,11 +348,12 @@ class AcademicIncomeAssessmentController extends Controller
 
         return response()->json([
             'success' => true,
+            'deleted' => $item === null,
             'item' => $this->serializeItem($item),
         ]);
     }
 
-    private function persistProgramItem(AcademicIncomePlan $academicIncome, string $inputPrefix, int $programId, int $count): AcademicIncomeItem
+    private function persistProgramItem(AcademicIncomePlan $academicIncome, string $inputPrefix, int $programId, int $count): ?AcademicIncomeItem
     {
         $settingSet = $this->settingSetFor($academicIncome);
         $program = DegreeProgram::where('is_active', true)
@@ -369,7 +381,7 @@ class AcademicIncomeAssessmentController extends Controller
             default => 0.40,
         };
 
-        return AcademicIncomeItem::updateOrCreate(
+        return $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => $program->id],
             [
                 'student_count' => $count,
@@ -381,7 +393,7 @@ class AcademicIncomeAssessmentController extends Controller
         );
     }
 
-    private function persistFlatItem(AcademicIncomePlan $academicIncome, string $itemName, ?int $count = null): AcademicIncomeItem
+    private function persistFlatItem(AcademicIncomePlan $academicIncome, string $itemName, ?int $count = null): ?AcademicIncomeItem
     {
         $settingSet = $this->settingSetFor($academicIncome);
         $existing = fn (string $section): int => (int) ($academicIncome->items()
@@ -405,12 +417,12 @@ class AcademicIncomeAssessmentController extends Controller
         };
     }
 
-    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol, ?AcademicIncomeSettingSet $settingSet): AcademicIncomeItem
+    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol, ?AcademicIncomeSettingSet $settingSet): ?AcademicIncomeItem
     {
         $baseRate = $registrationRate ?? $creditPrice ?? 0;
         $total = $count * $baseRate * (1 - $nuol);
 
-        return AcademicIncomeItem::updateOrCreate(
+        return $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => null],
             [
                 'student_count' => $count,
@@ -431,8 +443,25 @@ class AcademicIncomeAssessmentController extends Controller
         return (float) ($setting->items->sum(fn($item) => $item->amount * $item->nuol_pct) / $setting->total_rate);
     }
 
-    private function serializeItem(AcademicIncomeItem $item): array
+    private function saveIncomeItem(array $attributes, array $values): ?AcademicIncomeItem
     {
+        if ((int) ($values['student_count'] ?? 0) <= 0) {
+            AcademicIncomeItem::query()
+                ->where($attributes)
+                ->delete();
+
+            return null;
+        }
+
+        return AcademicIncomeItem::updateOrCreate($attributes, $values);
+    }
+
+    private function serializeItem(?AcademicIncomeItem $item): ?array
+    {
+        if (! $item) {
+            return null;
+        }
+
         return [
             'id' => $item->id,
             'section_code' => $item->section_code,

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\AcademicIncomeItem;
 use App\Models\AcademicIncomePlan;
+use App\Models\AcademicIncomeSettingSet;
+use App\Models\DegreeProgram;
 use App\Models\RegistrationFeeSetting;
 use Illuminate\Support\Collection;
 
@@ -11,11 +13,12 @@ class AcademicIncomeReportBuilder
 {
     public function buildForPlans(Collection $plans): array
     {
-        $plans->loadMissing('items.degreeProgram');
+        $plans->loadMissing('items.degreeProgram.latestCourseCredit', 'items.settingSet');
 
-        $items = $plans
+        $persistedItems = $plans
             ->flatMap(fn (AcademicIncomePlan $plan) => $plan->items)
             ->values();
+        $items = $this->withZeroPlaceholders($plans, $persistedItems);
 
         $s1_1 = $items->where('section_code', '1.4')->first();
         $s1_2 = $items->where('section_code', '1.2')->first();
@@ -189,5 +192,85 @@ class AcademicIncomeReportBuilder
         return [
             'fns_income' => collect($rows)->sum('fns_income'),
         ];
+    }
+
+    private function withZeroPlaceholders(Collection $plans, Collection $items): Collection
+    {
+        $plan = $plans->first();
+        if (! $plan) {
+            return $items;
+        }
+
+        $settingSet = AcademicIncomeSettingSet::latestForFiscalYear((int) $plan->fiscal_year);
+        $itemsByKey = $items->keyBy(fn (AcademicIncomeItem $item): string => $this->itemKey($item->section_code, $item->degree_program_id));
+        $programs = DegreeProgram::where('is_active', true)
+            ->with('latestCourseCredit')
+            ->orderBy('level')
+            ->orderByRaw('study_year IS NULL')
+            ->orderBy('study_year')
+            ->orderBy('name')
+            ->get();
+
+        $placeholders = collect();
+
+        $programs11 = $programs->filter(fn (DegreeProgram $program): bool => (
+            $program->level === 'bachelor' && (int) $program->study_year >= 2
+        ) || in_array($program->level, ['master', 'phd'], true));
+
+        foreach ($programs11 as $program) {
+            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $settingSet, '1.1', $program);
+        }
+
+        $programs13 = $programs->filter(fn (DegreeProgram $program): bool => (
+            $program->level === 'bachelor' && ((int) $program->study_year === 1 || $program->study_year === null)
+        ) || in_array($program->level, ['master', 'phd'], true));
+
+        foreach ($programs13 as $program) {
+            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $settingSet, '1.3', $program);
+        }
+
+        foreach (['1.2', '1.4', '2.1', '2.2', '2.3', '2.4'] as $section) {
+            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $settingSet, $section);
+        }
+
+        return $items->concat($placeholders)->values();
+    }
+
+    private function pushPlaceholderIfMissing(
+        Collection $placeholders,
+        Collection $itemsByKey,
+        AcademicIncomePlan $plan,
+        ?AcademicIncomeSettingSet $settingSet,
+        string $section,
+        ?DegreeProgram $program = null
+    ): void {
+        if ($itemsByKey->has($this->itemKey($section, $program?->id))) {
+            return;
+        }
+
+        $item = new AcademicIncomeItem([
+            'plan_id' => $plan->id,
+            'setting_set_id' => $settingSet?->id,
+            'section_code' => $section,
+            'degree_program_id' => $program?->id,
+            'student_count' => 0,
+            'total_income' => 0,
+            'first_payment_amount' => 0,
+            'second_payment_amount' => 0,
+        ]);
+
+        $item->exists = false;
+        $item->setRelation('plan', $plan);
+        $item->setRelation('settingSet', $settingSet);
+        if ($program) {
+            $item->setRelation('degreeProgram', $program);
+        }
+
+        $placeholders->push($item);
+    }
+
+    private function itemKey(string $section, ?int $programId): string
+    {
+        return $section.'_'.($programId ?? 'none');
     }
 }

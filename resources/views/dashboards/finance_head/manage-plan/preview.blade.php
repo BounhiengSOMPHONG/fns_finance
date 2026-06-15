@@ -17,6 +17,13 @@
 
     $money = fn ($amount) => number_format((float) $amount, 0);
     $blankMoney = fn ($amount) => (float) $amount === 0.0 ? '0' : number_format((float) $amount, 0);
+    $reportNumber = function ($value): string {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        return number_format((float) $value, 0);
+    };
     $pct = fn ($value) => rtrim(rtrim(number_format((float) $value, 2), '0'), '.');
     $grossIncome = function ($item): float {
         if (! $item) {
@@ -350,6 +357,167 @@
             'pct' => $pct,
         ])
     </section>
+
+    <section class="paper paper-summary expense-paper">
+        <div class="report-top">
+            <div>
+                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
+            </div>
+        </div>
+
+        <table class="report-table plan-table expense-summary-table">
+            <thead>
+                <tr>
+                    <th style="width:44px">ລ/ດ</th>
+                    <th>ລາຍການ</th>
+                    <th style="width:88px">ອ້າງອີງ</th>
+                    <th style="width:132px">ຕໍ່ເດືອນ</th>
+                    <th style="width:90px">ຈ/ນເດືອນ</th>
+                    <th style="width:132px">ຕໍ່ປີ</th>
+                    <th style="width:150px">ໝາຍເຫດ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($expenseReport['sections'] as $expenseSection)
+                    <tr>
+                        <td class="center">{{ $expenseSection['number'] }}</td>
+                        <td>{{ $expenseSection['title'] }}</td>
+                        <td class="center">{{ $expenseSection['code'] }}</td>
+                        <td class="num">{{ $money($expenseSection['period_total']) }}</td>
+                        <td class="num">{{ $reportNumber($expenseSection['period_count']) }}</td>
+                        <td class="num">{{ $money($expenseSection['total']) }}</td>
+                        <td>{{ $expenseSection['note'] }}</td>
+                    </tr>
+                @endforeach
+                <tr class="total-row">
+                    <td></td>
+                    <td class="center" colspan="2">ລວມ</td>
+                    <td class="num">{{ $money($expenseReport['periodTotal']) }}</td>
+                    <td></td>
+                    <td class="num">{{ $money($expenseReport['total']) }}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature-grid">
+            @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
+                <div class="signature">
+                    <span>ວັນທີ ......./......./.......</span>
+                    <div></div>
+                    <strong>{{ $signature }}</strong>
+                </div>
+            @endforeach
+        </div>
+
+        <h2 class="summary-caption">2. ແຜນງົບປະມານລາຍຈ່າຍບໍລິຫານຂອງ ຄວທ ປະຈຳ ສົກປີ {{ $planningYear->year }}</h2>
+    </section>
+
+    @foreach($expenseReport['sections'] as $expenseSection)
+        <section class="paper detail-paper expense-paper">
+            <div class="report-top">
+                <div>
+                    <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+                    <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
+                </div>
+                <span class="unit-label">ໜ່ວຍ: ກີບ</span>
+            </div>
+
+            <h2 class="detail-title">{{ $expenseSection['code'] }} ແຜນງົບປະມານ{{ $expenseSection['title'] }} ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+
+            <table class="report-table expense-summary-table">
+                <thead>
+                    <tr>
+                        <th style="width:44px">ລ/ດ</th>
+                        <th>ລາຍການ</th>
+                        <th style="width:92px">ອ້າງອີງ</th>
+                        <th style="width:132px">ຕໍ່ເດືອນ</th>
+                        <th style="width:94px">ຈ/ນເດືອນ</th>
+                        <th style="width:132px">ໝົດປີ</th>
+                        <th style="width:150px">ໝາຍເຫດ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($expenseSection['details'] as $detail)
+                        <tr>
+                            <td class="center">{{ $loop->iteration }}</td>
+                            <td>{{ $detail['title'] }}</td>
+                            <td class="center">{{ $detail['code'] }}</td>
+                            <td class="num">{{ $money($detail['total'] / max((float) $expenseSection['period_count'], 1)) }}</td>
+                            <td class="num">{{ $reportNumber($expenseSection['period_count']) }}</td>
+                            <td class="num">{{ $money($detail['total']) }}</td>
+                            <td></td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ຍັງບໍ່ມີລາຍການ</td>
+                            <td class="center">{{ $expenseSection['code'] }}</td>
+                            <td class="num">0</td>
+                            <td class="num">{{ $reportNumber($expenseSection['period_count']) }}</td>
+                            <td class="num">0</td>
+                            <td></td>
+                        </tr>
+                    @endforelse
+                    <tr class="total-row">
+                        <td></td>
+                        <td class="center" colspan="2">ລວມ</td>
+                        <td class="num">{{ $money($expenseSection['period_total']) }}</td>
+                        <td></td>
+                        <td class="num">{{ $money($expenseSection['total']) }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            @foreach($expenseSection['details'] as $detail)
+                <h3 class="expense-subtitle">{{ $detail['code'] }} {{ $detail['title'] }}</h3>
+                <table class="report-table expense-detail-table">
+                    <thead>
+                        <tr>
+                            <th style="width:44px">ລ/ດ</th>
+                            <th>ລາຍການ</th>
+                            @foreach($detail['columns'] as $column)
+                                <th>{{ $column['label'] }}</th>
+                            @endforeach
+                            <th>ຈຳນວນເງິນ</th>
+                            <th>ໝາຍເຫດ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($detail['rows'] as $row)
+                            <tr>
+                                <td class="center">{{ $row['number'] }}</td>
+                                <td>{{ $row['item_name'] }}</td>
+                                @foreach($detail['columns'] as $column)
+                                    <td class="num">{{ $reportNumber($row['values'][$column['key']] ?? null) }}</td>
+                                @endforeach
+                                <td class="num">{{ $money($row['total']) }}</td>
+                                <td>{{ $row['note'] }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td class="center">1</td>
+                                <td>ຍັງບໍ່ມີລາຍການ</td>
+                                @foreach($detail['columns'] as $column)
+                                    <td></td>
+                                @endforeach
+                                <td class="num">0</td>
+                                <td></td>
+                            </tr>
+                        @endforelse
+                        <tr class="total-row">
+                            <td></td>
+                            <td class="center" colspan="{{ count($detail['columns']) + 1 }}">ລວມ</td>
+                            <td class="num">{{ $money($detail['total']) }}</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            @endforeach
+        </section>
+    @endforeach
 </div>
 
 <style>
@@ -413,6 +581,26 @@
         text-align: left;
     }
 
+    .expense-paper {
+        break-inside: avoid;
+    }
+
+    .unit-label {
+        align-self: flex-start;
+        color: #374151;
+        font-size: .76rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .expense-subtitle {
+        color: #111827;
+        font-size: .86rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 1rem 0 .45rem;
+    }
+
     .report-table {
         border-collapse: collapse;
         font-size: .78rem;
@@ -421,6 +609,15 @@
     }
 
     .plan-table {
+        min-width: 920px;
+    }
+
+    .expense-summary-table {
+        min-width: 980px;
+    }
+
+    .expense-detail-table {
+        margin-bottom: .95rem;
         min-width: 920px;
     }
 
@@ -524,6 +721,11 @@
         .report-table {
             font-size: 8.2pt;
             min-width: 0;
+        }
+
+        .expense-subtitle {
+            font-size: 8.8pt;
+            margin: 8pt 0 4pt;
         }
 
         .report-table th,

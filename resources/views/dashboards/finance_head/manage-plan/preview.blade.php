@@ -54,9 +54,109 @@
 
         return $prefix . ' ' . $name;
     };
+
+    $incomeRows = collect($summaryRows)->values();
+    $expenseRows = collect($expenseReport['sections'])->values();
+    $balanceRowCount = max($incomeRows->count(), $expenseRows->count());
+    $balanceRows = ($balanceRowCount > 0 ? collect(range(0, $balanceRowCount - 1)) : collect())
+        ->map(function (int $index) use ($incomeRows, $expenseRows): array {
+            $income = $incomeRows->get($index);
+            $expense = $expenseRows->get($index);
+            $incomeYearly = $income ? (float) $income['planned'] : null;
+            $expenseYearly = $expense ? (float) $expense['total'] : null;
+
+            return [
+                'number' => $index + 1,
+                'income_title' => $income['title'] ?? null,
+                'income_yearly' => $incomeYearly,
+                'income_monthly' => $incomeYearly !== null ? $incomeYearly / 12 : null,
+                'expense_title' => $expense['title'] ?? null,
+                'expense_yearly' => $expenseYearly,
+                'expense_monthly' => $expense ? (float) $expense['period_total'] : null,
+            ];
+        });
+    $balanceIncomeYearly = (float) $report['summaryPlanTotal'];
+    $balanceIncomeMonthly = $balanceIncomeYearly / 12;
+    $balanceExpenseYearly = (float) $expenseReport['total'];
+    $balanceExpenseMonthly = (float) $expenseReport['periodTotal'];
+    $balanceYearly = $balanceIncomeYearly - $balanceExpenseYearly;
+    $balanceMonthly = $balanceIncomeMonthly - $balanceExpenseMonthly;
 @endphp
 
 <div class="income-preview">
+    <section class="paper balance-paper">
+        <div class="report-top">
+            <div>
+                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
+            </div>
+        </div>
+
+        <table class="report-table balance-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:40px">ລ/ດ</th>
+                    <th colspan="3">ລາຍຮັບ</th>
+                    <th colspan="3">ລາຍຈ່າຍ</th>
+                    <th colspan="2">ດຸນດ່ຽງ</th>
+                </tr>
+                <tr>
+                    <th>ລາຍການລາຍຮັບຈາກພາກສ່ວນຕ່າງໆ</th>
+                    <th style="width:112px">ງົບປະມານ/ປີ</th>
+                    <th style="width:112px">ງົບປະມານ/ເດືອນ</th>
+                    <th>ເນື້ອໃນລາຍຈ່າຍ</th>
+                    <th style="width:112px">ລາຍຈ່າຍ/ປີ</th>
+                    <th style="width:112px">ລາຍຈ່າຍ/ເດືອນ</th>
+                    <th style="width:112px">ດຸນດ່ຽງຕໍ່ປີ</th>
+                    <th style="width:112px">ດຸນດ່ຽງ/ເດືອນ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($balanceRows as $row)
+                    <tr>
+                        <td class="center">{{ $row['number'] }}</td>
+                        <td>{{ $row['income_title'] ?? '' }}</td>
+                        <td class="num">{{ $row['income_yearly'] !== null ? $money($row['income_yearly']) : '' }}</td>
+                        <td class="num">{{ $row['income_monthly'] !== null ? $money($row['income_monthly']) : '' }}</td>
+                        <td>{{ $row['expense_title'] ?? '' }}</td>
+                        <td class="num">{{ $row['expense_yearly'] !== null ? $money($row['expense_yearly']) : '' }}</td>
+                        <td class="num">{{ $row['expense_monthly'] !== null ? $money($row['expense_monthly']) : '' }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="center">1</td>
+                        <td colspan="8" class="center">ຍັງບໍ່ມີຂໍ້ມູນ</td>
+                    </tr>
+                @endforelse
+                <tr class="total-row balance-total-row">
+                    <td></td>
+                    <td class="center">ລວມ</td>
+                    <td class="num">{{ $money($balanceIncomeYearly) }}</td>
+                    <td class="num">{{ $money($balanceIncomeMonthly) }}</td>
+                    <td></td>
+                    <td class="num">{{ $money($balanceExpenseYearly) }}</td>
+                    <td class="num">{{ $money($balanceExpenseMonthly) }}</td>
+                    <td class="num">{{ $money($balanceYearly) }}</td>
+                    <td class="num">{{ $money($balanceMonthly) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature-grid balance-signatures">
+            @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
+                <div class="signature">
+                    <span>ວັນທີ ......./......./.......</span>
+                    <div></div>
+                    <strong>{{ $signature }}</strong>
+                </div>
+            @endforeach
+        </div>
+
+        <h2 class="summary-caption balance-caption">ແຜນງົບປະມານດຸນດ່ຽງລາຍຮັບ ແລະ ລາຍຈ່າຍວິຊາການ ຂອງ ຄວທ ປະຈຳ ສົກຮຽນ {{ $planningYear->year }}</h2>
+    </section>
+
     <section class="paper paper-summary">
         <div class="report-top">
             <div>
@@ -621,6 +721,40 @@
         min-width: 920px;
     }
 
+    .balance-paper {
+        break-inside: avoid;
+    }
+
+    .report-table.balance-table {
+        font-size: .72rem;
+        min-width: 1180px;
+    }
+
+    .report-table.balance-table th,
+    .report-table.balance-table td {
+        padding: .34rem .42rem;
+    }
+
+    .report-table.balance-table th {
+        white-space: normal;
+    }
+
+    .report-table.balance-table td {
+        min-height: 2.1rem;
+    }
+
+    .balance-total-row td {
+        border-top-width: 2px;
+    }
+
+    .balance-signatures {
+        margin-top: 1.55rem;
+    }
+
+    .balance-caption {
+        text-align: right;
+    }
+
     .report-table th,
     .report-table td {
         border: 1px solid #9ca3af;
@@ -721,6 +855,38 @@
         .report-table {
             font-size: 8.2pt;
             min-width: 0;
+        }
+
+        .balance-paper {
+            min-height: 185mm;
+        }
+
+        .report-table.balance-table {
+            font-size: 7.2pt;
+            table-layout: fixed;
+        }
+
+        .report-table.balance-table th,
+        .report-table.balance-table td {
+            padding: 2.4pt 3pt;
+            white-space: normal;
+        }
+
+        .report-table.balance-table .num {
+            white-space: nowrap;
+        }
+
+        .balance-signatures {
+            margin-top: 14pt;
+        }
+
+        .balance-signatures .signature div {
+            height: 28pt;
+        }
+
+        .balance-caption {
+            font-size: 9pt;
+            margin-top: 8pt;
         }
 
         .expense-subtitle {

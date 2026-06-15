@@ -35,5 +35,4 @@
         </select>
     </td>
     <td class="smg-editable-cell"><input class="smg-input smg-amount smg-money-input" type="text" inputmode="numeric" value="{{ number_format($e ? (float) $e->amount : 0, 0) }}"></td>
-    <td class="smg-editable-cell"><input class="smg-input smg-remark" type="text" value="{{ $e?->remark }}" placeholder="ພິມໝາຍເຫດ..."></td>
 </tr>

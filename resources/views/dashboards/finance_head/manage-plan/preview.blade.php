@@ -648,7 +648,7 @@
                     <th colspan="4">ສາລະບານງົບປະມານ</th>
                     <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                     <th rowspan="2" style="width:78px">ຈຳນວນພົນ</th>
-                    <th colspan="4">ຈຳນວນເງິນຖອນຕົວຈິງໃນ 1 ເດືອນ</th>
+                    <th colspan="3">ຈຳນວນເງິນຖອນຕົວຈິງໃນ 1 ເດືອນ</th>
                     <th rowspan="2" style="width:128px">ລວມ 12 ເດືອນ</th>
                 </tr>
                 <tr>
@@ -659,7 +659,6 @@
                     <th style="width:128px">ໂອນເຂົ້າ ATM</th>
                     <th style="width:128px">ຖອນເງິນສົດ</th>
                     <th style="width:128px">ລວມ</th>
-                    <th style="width:118px">ໝາຍເຫດ</th>
                 </tr>
             </thead>
             <tbody>
@@ -685,7 +684,6 @@
                         <td class="num">{{ $money($row['transfer_amount']) }}</td>
                         <td class="num">{{ $money($row['cash_amount']) }}</td>
                         <td class="num">{{ $money($row['monthly_total']) }}</td>
-                        <td></td>
                         <td class="num">{{ $money($row['annual_total']) }}</td>
                     </tr>
                 @empty
@@ -694,7 +692,7 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td colspan="7" class="center">ຍັງບໍ່ມີລະຫັດບັນຊີເງິນເດືອນ</td>
+                        <td colspan="6" class="center">ຍັງບໍ່ມີລະຫັດບັນຊີເງິນເດືອນ</td>
                     </tr>
                 @endforelse
                 <tr class="total-row salary-grand-total">
@@ -707,7 +705,6 @@
                     <td class="num">{{ $money($salaryTotals['transfer_amount']) }}</td>
                     <td class="num">{{ $money($salaryTotals['cash_amount']) }}</td>
                     <td class="num">{{ $money($salaryTotals['monthly_total']) }}</td>
-                    <td></td>
                     <td class="num">{{ $money($salaryTotals['annual_total']) }}</td>
                 </tr>
             </tbody>

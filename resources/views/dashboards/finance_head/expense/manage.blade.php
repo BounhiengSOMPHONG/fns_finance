@@ -556,6 +556,25 @@ function calculateFormula(formula, values) {
     }, 0);
 }
 
+function calculatedTotalForPattern(patternKey, values = {}) {
+    const number = key => numberValue(values[key]);
+
+    switch (patternKey) {
+        case 'monthly':
+            return number('amount_per_month') * number('month_count');
+        case 'unit_quantity':
+            return number('unit_price') * number('quantity');
+        case 'unit_quantity_frequency':
+            return number('unit_price') * number('quantity') * number('times_per_year');
+        case 'frequency_based':
+            return number('unit_price') * number('quantity') * number('frequency_count');
+        case 'event_based':
+            return number('unit_price') * number('event_count') * number('people_count');
+        default:
+            return 0;
+    }
+}
+
 function rowTotal(row) {
     const rule = activeRule(row.section_id, row.subsection_id, row.pattern_id);
 
@@ -563,7 +582,8 @@ function rowTotal(row) {
         return calculateFormula(rule.formula, row.values || {});
     }
 
-    return numberValue(row.values?.yearly_total ?? row.total);
+    const storedTotal = numberValue(row.values?.yearly_total ?? row.total);
+    return storedTotal > 0 ? storedTotal : calculatedTotalForPattern(row.pattern_key, row.values || {});
 }
 
 function fieldsForPattern(pattern) {
@@ -848,7 +868,10 @@ function updateSourceTotal(block, row) {
     const patternId = Number(row.dataset.pattern || block.dataset.pattern);
     const rule = activeRule(sectionId, subsectionId, patternId);
     const values = lineValues(row);
-    const total = rule ? calculateFormula(rule.formula, values) : numberValue(values.yearly_total);
+    const pattern = PATTERNS[patternId];
+    const total = rule
+        ? calculateFormula(rule.formula, values)
+        : calculatedTotalForPattern(pattern?.key, values);
     const totalInput = row.querySelector('input[name="yearly_total"]');
     if (totalInput) totalInput.value = moneyInputValue(total);
 }

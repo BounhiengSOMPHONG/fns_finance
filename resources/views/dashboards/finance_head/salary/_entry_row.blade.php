@@ -11,7 +11,7 @@
     $rowPaymentType = old('payment_type', $e?->payment_type ?? 'transfer');
     $hasAccount = filled($rowAccountId);
 @endphp
-<tr class="smg-row {{ $isChildAccount ? 'smg-row-child' : '' }}"
+<tr class="smg-row is-collapsed {{ $isChildAccount ? 'smg-row-child' : '' }}"
     data-item-id="{{ $e?->id }}"
     data-coa-id="{{ $rowAccountId }}"
     data-group="{{ $rowGroupKey }}"

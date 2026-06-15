@@ -54,7 +54,9 @@ final class SalaryEntryController extends Controller
         $salaryEntry->person_count = (int) ($data['person_count'] ?? 0);
         $salaryEntry->payment_type = $data['payment_type'];
         $salaryEntry->amount       = (float) ($data['amount'] ?? 0);
-        $salaryEntry->remark       = $data['remark'] ?? null;
+        if (array_key_exists('remark', $data)) {
+            $salaryEntry->remark = $data['remark'];
+        }
         $salaryEntry->save();
         $salaryEntry->load('chartOfAccount');
 

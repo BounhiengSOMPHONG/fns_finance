@@ -49,7 +49,6 @@
                 <th class="smg-th-editable" style="width:88px; text-align:center;">ຈຳນວນພົນ</th>
                 <th class="smg-th-editable" style="width:130px;">ປະເພດການຈ່າຍ</th>
                 <th class="smg-th-editable" style="width:150px; text-align:right;">ຈຳນວນເງິນ</th>
-                <th class="smg-th-editable" style="width:160px;">ໝາຍເຫດ</th>
             </tr>
         </thead>
         <tbody id="smg-body">
@@ -62,7 +61,7 @@
                         $groupKey = $lastGroupCode ? 'coa-' . $lastGroupCode : 'coa-other';
                     @endphp
                     <tr class="smg-group-row">
-                        <td colspan="6">
+                        <td colspan="5">
                             <button type="button"
                                     class="smg-group-toggle is-collapsed"
                                     data-group="{{ $groupKey }}"
@@ -453,7 +452,6 @@
             person_count:        parseInt(row.querySelector('.smg-persons')?.value || 0, 10) || 0,
             payment_type:        row.querySelector('.smg-payment-type')?.value || 'transfer',
             amount:              num(row.querySelector('.smg-amount')),
-            remark:              row.querySelector('.smg-remark')?.value || null,
         };
         const url = itemId ? `/head-of-finance/salary-entries/${itemId}` : '/head-of-finance/salary-entries';
         const method = itemId ? 'PATCH' : 'POST';

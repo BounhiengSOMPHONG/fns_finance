@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FinanceHead;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
 use App\Models\AcademicIncomeItem;
+use App\Models\AcademicIncomeSettingSet;
 use App\Models\CreditUnitPriceSetting;
 use App\Models\DegreeProgram;
 use App\Models\NuolPctSetting;
@@ -12,11 +13,14 @@ use App\Models\RegistrationFeeSetting;
 use App\Models\IncomeRateSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class AcademicIncomeAssessmentController extends Controller
 {
     public function evaluate(AcademicIncomePlan $academicIncome)
     {
+        $settingSet = $this->settingSetFor($academicIncome);
+
         $programs11 = DegreeProgram::where('is_active', true)
             ->with('latestCourseCredit')
             ->where(fn($q) => $q
@@ -39,8 +43,7 @@ class AcademicIncomeAssessmentController extends Controller
             ->orderBy('level')->orderBy('name')
             ->get();
 
-        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
-            ->get()->groupBy('level')->map(fn($i) => $i->first());
+        $creditPrices = $this->creditPricesFor($settingSet);
 
         $feeYear2_4 = RegistrationFeeSetting::where('section_type', 'year2_4')
             ->with('items')->orderByDesc('start_year')->first();
@@ -50,7 +53,7 @@ class AcademicIncomeAssessmentController extends Controller
 
         $existingItems = $academicIncome->items->keyBy(fn($item) => $item->section_code . '_' . $item->degree_program_id);
 
-        $incomeRates   = IncomeRateSetting::allKeyed();
+        $incomeRates = $this->incomeRatesFor($settingSet);
 
         return view('dashboards.finance_head.academic-income.evaluate', compact(
             'academicIncome', 'programs11', 'programs13_bach', 'programs13_master',
@@ -80,18 +83,19 @@ class AcademicIncomeAssessmentController extends Controller
             'item6_rate'   => 'nullable|numeric|min:0',
         ]);
 
+        $settingSet = $this->settingSetFor($academicIncome);
+
         // Income rates (items 3–6) are edited inline on this entry page; persist
         // any submitted values so the section 2.1–2.4 calculations below use them.
         foreach (['item3', 'item4', 'item5', 'item6'] as $rateKey) {
             if ($request->filled($rateKey . '_rate')) {
-                IncomeRateSetting::where('key', $rateKey . '_rate')
-                    ->update(['rate' => (float) $request->input($rateKey . '_rate')]);
+                $this->updateIncomeRate($rateKey . '_rate', (float) $request->input($rateKey . '_rate'), $settingSet);
             }
         }
 
-        $nuolBachelor = NuolPctSetting::latestFor('bachelor')?->percentage ?? 0.17;
-        $nuolMaster   = NuolPctSetting::latestFor('master')?->percentage ?? 0.10;
-        $nuolPhd      = NuolPctSetting::latestFor('phd')?->percentage ?? 0.10;
+        $nuolBachelor = $this->nuolFor('bachelor', $settingSet, 0.17);
+        $nuolMaster   = $this->nuolFor('master', $settingSet, 0.10);
+        $nuolPhd      = $this->nuolFor('phd', $settingSet, 0.10);
         $nuolByLevel  = ['bachelor' => $nuolBachelor, 'master' => $nuolMaster, 'phd' => $nuolPhd];
 
         $programs11 = DegreeProgram::where('is_active', true)
@@ -112,8 +116,7 @@ class AcademicIncomeAssessmentController extends Controller
             ->whereIn('level', ['master', 'phd'])
             ->get()->keyBy('id');
 
-        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
-            ->get()->groupBy('level')->map(fn($i) => $i->first());
+        $creditPrices = $this->creditPricesFor($settingSet);
 
         $feeYear2_4 = RegistrationFeeSetting::where('section_type', 'year2_4')
             ->with('items')->orderByDesc('start_year')->first();
@@ -137,6 +140,7 @@ class AcademicIncomeAssessmentController extends Controller
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.1', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
+                    'setting_set_id'              => $settingSet?->id,
                     'snap_credit_unit_price'     => $price,
                     'snap_course_credit_unit'    => $creditUnit,
                     'snap_registration_fee_rate' => null,
@@ -160,6 +164,7 @@ class AcademicIncomeAssessmentController extends Controller
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.3', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
+                    'setting_set_id'              => $settingSet?->id,
                     'snap_credit_unit_price'     => $price,
                     'snap_course_credit_unit'    => $creditUnit,
                     'snap_registration_fee_rate' => null,
@@ -185,6 +190,7 @@ class AcademicIncomeAssessmentController extends Controller
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.3', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
+                    'setting_set_id'              => $settingSet?->id,
                     'snap_credit_unit_price'     => $price,
                     'snap_course_credit_unit'    => $creditUnit,
                     'snap_registration_fee_rate' => null,
@@ -209,6 +215,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => '1.2', 'degree_program_id' => null],
             [
                 'student_count'              => $count12,
+                'setting_set_id'              => $settingSet?->id,
                 'snap_credit_unit_price'     => null,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => $feeRate2_4,
@@ -232,6 +239,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => '1.4', 'degree_program_id' => null],
             [
                 'student_count'              => $count14,
+                'setting_set_id'              => $settingSet?->id,
                 'snap_credit_unit_price'     => null,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => $feeRate1,
@@ -243,7 +251,7 @@ class AcademicIncomeAssessmentController extends Controller
         );
 
         // Sections 2.1–2.4 — income rate based items
-        $incomeRates = IncomeRateSetting::allKeyed();
+        $incomeRates = $this->incomeRatesFor($settingSet);
 
         // 2.1 — count × item3_rate
         $rate21  = (float) ($incomeRates->get('item3_rate')?->rate ?? 0);
@@ -252,6 +260,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => '2.1', 'degree_program_id' => null],
             [
                 'student_count'              => $count21,
+                'setting_set_id'              => $settingSet?->id,
                 'snap_credit_unit_price'     => $rate21,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => null,
@@ -269,6 +278,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => '2.2', 'degree_program_id' => null],
             [
                 'student_count'              => $count22,
+                'setting_set_id'              => $settingSet?->id,
                 'snap_credit_unit_price'     => null,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => $rate22,
@@ -286,6 +296,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => '2.3', 'degree_program_id' => null],
             [
                 'student_count'              => $count23,
+                'setting_set_id'              => $settingSet?->id,
                 'snap_credit_unit_price'     => null,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => $rate23,
@@ -303,6 +314,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => '2.4', 'degree_program_id' => null],
             [
                 'student_count'              => $count24,
+                'setting_set_id'              => $settingSet?->id,
                 'snap_credit_unit_price'     => $rate24,
                 'snap_course_credit_unit'    => null,
                 'snap_registration_fee_rate' => null,
@@ -329,8 +341,8 @@ class AcademicIncomeAssessmentController extends Controller
         ]);
 
         if ($data['type'] === 'rate') {
-            IncomeRateSetting::where('key', $data['rate_key'])
-                ->update(['rate' => (float) $data['rate']]);
+            $settingSet = $this->settingSetFor($academicIncome);
+            $this->updateIncomeRate($data['rate_key'], (float) $data['rate'], $settingSet);
 
             $itemName = match ($data['rate_key']) {
                 'item3_rate' => 'students_2_1',
@@ -367,16 +379,16 @@ class AcademicIncomeAssessmentController extends Controller
 
     private function persistProgramItem(AcademicIncomePlan $academicIncome, string $inputPrefix, int $programId, int $count): AcademicIncomeItem
     {
+        $settingSet = $this->settingSetFor($academicIncome);
         $program = DegreeProgram::where('is_active', true)
             ->with('latestCourseCredit')
             ->findOrFail($programId);
 
-        $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
-            ->get()->groupBy('level')->map(fn($i) => $i->first());
+        $creditPrices = $this->creditPricesFor($settingSet);
         $nuolByLevel = [
-            'bachelor' => NuolPctSetting::latestFor('bachelor')?->percentage ?? 0.17,
-            'master' => NuolPctSetting::latestFor('master')?->percentage ?? 0.10,
-            'phd' => NuolPctSetting::latestFor('phd')?->percentage ?? 0.10,
+            'bachelor' => $this->nuolFor('bachelor', $settingSet, 0.17),
+            'master' => $this->nuolFor('master', $settingSet, 0.10),
+            'phd' => $this->nuolFor('phd', $settingSet, 0.10),
         ];
 
         $section = $inputPrefix === 's11' ? '1.1' : '1.3';
@@ -397,6 +409,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => $program->id],
             [
                 'student_count' => $count,
+                'setting_set_id' => $settingSet?->id,
                 'snap_credit_unit_price' => $price,
                 'snap_course_credit_unit' => $creditUnit,
                 'snap_registration_fee_rate' => null,
@@ -410,6 +423,7 @@ class AcademicIncomeAssessmentController extends Controller
 
     private function persistFlatItem(AcademicIncomePlan $academicIncome, string $itemName, ?int $count = null): AcademicIncomeItem
     {
+        $settingSet = $this->settingSetFor($academicIncome);
         $existing = fn (string $section): int => (int) ($academicIncome->items()
             ->where('section_code', $section)
             ->whereNull('degree_program_id')
@@ -419,19 +433,19 @@ class AcademicIncomeAssessmentController extends Controller
             ->with('items')->orderByDesc('start_year')->first();
         $feeYear1 = RegistrationFeeSetting::where('section_type', 'year1')
             ->with('items')->orderByDesc('start_year')->first();
-        $incomeRates = IncomeRateSetting::allKeyed();
+        $incomeRates = $this->incomeRatesFor($settingSet);
 
         return match ($itemName) {
-            'students_1_2' => $this->updateFlatItem($academicIncome, '1.2', $count ?? $existing('1.2'), null, $feeYear2_4?->total_rate ?? 0, $this->weightedNuol($feeYear2_4)),
-            'students_1_4' => $this->updateFlatItem($academicIncome, '1.4', $count ?? $existing('1.4'), null, $feeYear1?->total_rate ?? 0, $this->weightedNuol($feeYear1)),
-            'students_2_1' => $this->updateFlatItem($academicIncome, '2.1', $count ?? $existing('2.1'), (float) ($incomeRates->get('item3_rate')?->rate ?? 0), null, 0),
-            'students_2_2' => $this->updateFlatItem($academicIncome, '2.2', $count ?? $existing('2.2'), null, (float) ($incomeRates->get('item4_rate')?->rate ?? 0), 0),
-            'students_2_3' => $this->updateFlatItem($academicIncome, '2.3', $count ?? $existing('2.3'), null, (float) ($incomeRates->get('item5_rate')?->rate ?? 0), 0),
-            'students_2_4' => $this->updateFlatItem($academicIncome, '2.4', $count ?? $existing('2.4'), (float) ($incomeRates->get('item6_rate')?->rate ?? 0), null, 0),
+            'students_1_2' => $this->updateFlatItem($academicIncome, '1.2', $count ?? $existing('1.2'), null, $feeYear2_4?->total_rate ?? 0, $this->weightedNuol($feeYear2_4), $settingSet),
+            'students_1_4' => $this->updateFlatItem($academicIncome, '1.4', $count ?? $existing('1.4'), null, $feeYear1?->total_rate ?? 0, $this->weightedNuol($feeYear1), $settingSet),
+            'students_2_1' => $this->updateFlatItem($academicIncome, '2.1', $count ?? $existing('2.1'), (float) ($incomeRates->get('item3_rate')?->rate ?? 0), null, 0, $settingSet),
+            'students_2_2' => $this->updateFlatItem($academicIncome, '2.2', $count ?? $existing('2.2'), null, (float) ($incomeRates->get('item4_rate')?->rate ?? 0), 0, $settingSet),
+            'students_2_3' => $this->updateFlatItem($academicIncome, '2.3', $count ?? $existing('2.3'), null, (float) ($incomeRates->get('item5_rate')?->rate ?? 0), 0, $settingSet),
+            'students_2_4' => $this->updateFlatItem($academicIncome, '2.4', $count ?? $existing('2.4'), (float) ($incomeRates->get('item6_rate')?->rate ?? 0), null, 0, $settingSet),
         };
     }
 
-    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol): AcademicIncomeItem
+    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol, ?AcademicIncomeSettingSet $settingSet): AcademicIncomeItem
     {
         $baseRate = $registrationRate ?? $creditPrice ?? 0;
         $total = $count * $baseRate * (1 - $nuol);
@@ -440,6 +454,7 @@ class AcademicIncomeAssessmentController extends Controller
             ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => null],
             [
                 'student_count' => $count,
+                'setting_set_id' => $settingSet?->id,
                 'snap_credit_unit_price' => $creditPrice,
                 'snap_course_credit_unit' => null,
                 'snap_registration_fee_rate' => $registrationRate,
@@ -469,5 +484,62 @@ class AcademicIncomeAssessmentController extends Controller
             'student_count' => $item->student_count,
             'total_income' => (float) $item->total_income,
         ];
+    }
+
+    private function settingSetFor(AcademicIncomePlan $academicIncome): ?AcademicIncomeSettingSet
+    {
+        return AcademicIncomeSettingSet::latestForFiscalYear((int) $academicIncome->fiscal_year);
+    }
+
+    private function creditPricesFor(?AcademicIncomeSettingSet $settingSet): \Illuminate\Support\Collection
+    {
+        $query = CreditUnitPriceSetting::query();
+        if ($settingSet && Schema::hasColumn('credit_unit_price_settings', 'setting_set_id')) {
+            $scoped = CreditUnitPriceSetting::where('setting_set_id', $settingSet->id);
+            if ($scoped->exists()) {
+                $query = $scoped;
+            }
+        }
+
+        return $query->orderByDesc('start_year')->get()->groupBy('level')->map(fn ($items) => $items->first());
+    }
+
+    private function incomeRatesFor(?AcademicIncomeSettingSet $settingSet): \Illuminate\Support\Collection
+    {
+        $query = IncomeRateSetting::query();
+        if ($settingSet && Schema::hasColumn('income_rate_settings', 'setting_set_id')) {
+            $scoped = IncomeRateSetting::where('setting_set_id', $settingSet->id);
+            if ($scoped->exists()) {
+                $query = $scoped;
+            }
+        }
+
+        return $query->get()->keyBy('key');
+    }
+
+    private function nuolFor(string $level, ?AcademicIncomeSettingSet $settingSet, float $default): float
+    {
+        $query = NuolPctSetting::where('level', $level);
+        if ($settingSet && Schema::hasColumn('nuol_pct_settings', 'setting_set_id')) {
+            $scoped = NuolPctSetting::where('setting_set_id', $settingSet->id)->where('level', $level);
+            if ($scoped->exists()) {
+                $query = $scoped;
+            }
+        }
+
+        return (float) ($query->orderByDesc('start_year')->first()?->percentage ?? $default);
+    }
+
+    private function updateIncomeRate(string $key, float $rate, ?AcademicIncomeSettingSet $settingSet): void
+    {
+        $query = IncomeRateSetting::where('key', $key);
+        if ($settingSet && Schema::hasColumn('income_rate_settings', 'setting_set_id')) {
+            $scoped = IncomeRateSetting::where('setting_set_id', $settingSet->id)->where('key', $key);
+            if ($scoped->exists()) {
+                $query = $scoped;
+            }
+        }
+
+        $query->update(['rate' => $rate]);
     }
 }

@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NuolPctSetting extends Model
 {
-    protected $fillable = ['level', 'percentage', 'gov_doc_id', 'start_year'];
+    protected $fillable = ['setting_set_id', 'level', 'percentage', 'gov_doc_id', 'start_year'];
 
     protected $casts = ['percentage' => 'decimal:4'];
 
@@ -24,5 +25,10 @@ class NuolPctSetting extends Model
     public static function latestFor(string $level): ?self
     {
         return static::where('level', $level)->orderByDesc('start_year')->first();
+    }
+
+    public function settingSet(): BelongsTo
+    {
+        return $this->belongsTo(AcademicIncomeSettingSet::class, 'setting_set_id');
     }
 }

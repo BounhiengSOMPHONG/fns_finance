@@ -12,6 +12,7 @@ use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use App\Models\SalaryPlan;
+use App\Services\AcademicIncomeReportBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,72 +33,17 @@ class ManagePlanController extends Controller
         return view('dashboards.finance_head.manage-plan.index', compact('plans'));
     }
 
-    public function preview(PlanningYear $planningYear)
+    public function preview(PlanningYear $planningYear, AcademicIncomeReportBuilder $reportBuilder)
     {
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
-            'salaryPlans.entries.chartOfAccount',
-            'expensePlans.section',
-            'expensePlans.subsection',
-            'expensePlans.values' => fn ($query) => $query->where('field_key', 'yearly_total'),
         ]);
 
-        $incomeRows = $planningYear->academicIncomePlans
-            ->flatMap(fn ($plan) => $plan->items->map(fn ($item) => [
-                'section_code' => $item->section_code,
-                'program' => $item->degreeProgram?->name ?? '-',
-                'students' => (int) $item->student_count,
-                'total' => (float) $item->total_income,
-            ]))
-            ->sortBy([
-                ['section_code', 'asc'],
-                ['program', 'asc'],
-            ])
-            ->values();
-
-        $salaryRows = $planningYear->salaryPlans
-            ->flatMap(fn ($plan) => $plan->entries->map(fn ($entry) => [
-                'month' => $plan->monthLabel(),
-                'account_code' => $entry->chartOfAccount?->account_code ?? '-',
-                'account_name' => $entry->chartOfAccount?->account_name ?? '-',
-                'person_count' => (int) $entry->person_count,
-                'annual_amount' => (float) $entry->annual_amount,
-            ]))
-            ->sortBy([
-                ['account_code', 'asc'],
-                ['month', 'asc'],
-            ])
-            ->values();
-
-        $expenseRows = $planningYear->expensePlans
-            ->map(fn ($expensePlan) => [
-                'section_code' => $expensePlan->section?->code ?? '',
-                'section_name' => $expensePlan->section?->name ?? '-',
-                'subsection_code' => $expensePlan->subsection?->code ?? '',
-                'subsection_name' => $expensePlan->subsection?->name ?? '-',
-                'plan_detail' => $expensePlan->plan_detail ?: '-',
-                'detail' => $expensePlan->detail,
-                'yearly_total' => (float) ($expensePlan->values->firstWhere('field_key', 'yearly_total')?->value_number ?? 0),
-            ])
-            ->sortBy([
-                ['section_code', 'asc'],
-                ['subsection_code', 'asc'],
-                ['plan_detail', 'asc'],
-            ])
-            ->values();
-
-        $incomeTotal = (float) $incomeRows->sum('total');
-        $salaryTotal = (float) $salaryRows->sum('annual_amount');
-        $expenseTotal = (float) $expenseRows->sum('yearly_total');
+        $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
 
         return view('dashboards.finance_head.manage-plan.preview', compact(
             'planningYear',
-            'incomeRows',
-            'salaryRows',
-            'expenseRows',
-            'incomeTotal',
-            'salaryTotal',
-            'expenseTotal',
+            'report',
         ));
     }
 

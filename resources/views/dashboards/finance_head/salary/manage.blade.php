@@ -66,21 +66,27 @@
                     @endphp
                     <tr class="smg-group-row">
                         <td colspan="5">
-                            <div class="smg-group-heading" data-group="{{ $groupKey }}">
+                            <button type="button"
+                                    class="smg-group-toggle is-collapsed"
+                                    data-group="{{ $groupKey }}"
+                                    aria-expanded="false">
+                                <span class="smg-group-chevron" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </span>
                                 <span class="smg-group-title">{{ $groupName }}</span>
                                 <span class="smg-group-total">
                                     <span>ລວມ</span>
                                     <strong data-group-total="{{ $groupKey }}">0</strong>
                                     <span>ກີບ</span>
                                 </span>
-                            </div>
+                            </button>
                         </td>
                     </tr>
                 @endif
 
                 @if(($account['topic_code'] ?? null) && ($account['topic_code'] ?? null) !== $lastTopicCode && ($account['topic_code'] ?? null) !== ($account['group_code'] ?? null))
                     @php $lastTopicCode = $account['topic_code']; @endphp
-                    <tr class="smg-topic-row" data-group="{{ $groupKey }}">
+                    <tr class="smg-topic-row is-collapsed" data-group="{{ $groupKey }}">
                         <td colspan="5">
                             <span class="smg-topic-code">{{ $account['topic_code'] }}</span>
                             <span class="smg-topic-name">{{ $account['topic_name'] }}</span>
@@ -215,13 +221,35 @@
         font-weight: 800;
     }
     .smg-table tbody tr.smg-group-row:first-child td { border-top: none; }
-    .smg-group-heading {
+    .smg-group-toggle {
         width: 100%;
         display: flex; align-items: center; gap: .65rem;
         padding: 0;
+        border: 0;
+        background: transparent;
         color: inherit;
+        font: inherit;
         text-align: left;
+        cursor: pointer;
     }
+    .smg-group-toggle:focus-visible {
+        outline: 3px solid rgba(46,63,110,0.25);
+        outline-offset: 4px;
+        border-radius: 8px;
+    }
+    .smg-group-chevron {
+        width: 24px; height: 24px;
+        display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 7px;
+        background: #fff;
+        color: var(--fns-navy);
+        box-shadow: inset 0 0 0 1px var(--fns-gray-200);
+        transition: transform .16s ease, background .16s ease;
+        flex: 0 0 auto;
+    }
+    .smg-group-chevron svg { width: 15px; height: 15px; }
+    .smg-group-toggle:hover .smg-group-chevron { background: #fff9e6; }
+    .smg-group-toggle.is-collapsed .smg-group-chevron { transform: rotate(-90deg); }
     .smg-topic-code {
         display: inline-flex;
         min-width: 7.2rem;
@@ -275,6 +303,8 @@
         font-size: .88rem;
         font-variant-numeric: tabular-nums;
     }
+    .smg-row.is-collapsed,
+    .smg-topic-row.is-collapsed { display: none; }
     .smg-table thead th.smg-th-editable::after {
         content: "ແກ້ໄຂໄດ້";
         display: inline-flex;
@@ -577,6 +607,18 @@
     }
 
     document.querySelectorAll('.smg-row').forEach(bindRow);
+    document.querySelectorAll('.smg-group-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const group = toggle.dataset.group;
+            const isCollapsed = toggle.getAttribute('aria-expanded') === 'true';
+
+            toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+            toggle.classList.toggle('is-collapsed', isCollapsed);
+            document.querySelectorAll(`.smg-row[data-group="${group}"], .smg-topic-row[data-group="${group}"]`).forEach(row => {
+                row.classList.toggle('is-collapsed', isCollapsed);
+            });
+        });
+    });
     recalcTotals();
 })();
 </script>

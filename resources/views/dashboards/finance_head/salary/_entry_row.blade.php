@@ -3,12 +3,15 @@
     $rowAccountId = $e?->chart_of_account_id ?? data_get($account ?? null, 'id');
     $rowAccountCode = $e?->chartOfAccount?->account_code ?? data_get($account ?? null, 'code');
     $rowAccountName = $e?->chartOfAccount?->account_name ?? data_get($account ?? null, 'name');
+    $rowTopicName = data_get($account ?? null, 'topic_name');
     $rowGroupCode = data_get($account ?? null, 'group_code');
     $rowGroupKey = $rowGroupCode ? 'coa-' . $rowGroupCode : 'coa-other';
+    $isChildAccount = filled(data_get($account ?? null, 'topic_code'))
+        && data_get($account ?? null, 'topic_code') !== $rowGroupCode;
     $rowPaymentType = old('payment_type', $e?->payment_type ?? 'transfer');
     $hasAccount = filled($rowAccountId);
 @endphp
-<tr class="smg-row is-collapsed"
+<tr class="smg-row {{ $isChildAccount ? 'smg-row-child' : '' }}"
     data-item-id="{{ $e?->id }}"
     data-coa-id="{{ $rowAccountId }}"
     data-group="{{ $rowGroupKey }}"
@@ -20,7 +23,7 @@
     </td>
     <td>
         <span class="smg-name {{ $hasAccount ? '' : 'smg-name-empty' }}"
-              title="{{ $rowAccountName }}">
+              title="{{ trim(($rowTopicName ? $rowTopicName . ' / ' : '') . ($rowAccountName ?? '')) }}">
             {{ $rowAccountName ?? 'ເລືອກລະຫັດບັນຊີ...' }}
         </span>
     </td>

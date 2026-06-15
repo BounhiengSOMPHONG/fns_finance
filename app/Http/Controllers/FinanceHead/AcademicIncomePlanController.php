@@ -10,15 +10,6 @@ use Illuminate\Http\Request;
 
 class AcademicIncomePlanController extends Controller
 {
-    public function index()
-    {
-        $plans = AcademicIncomePlan::with('creator')
-            ->orderByDesc('fiscal_year')
-            ->paginate(15);
-
-        return view('dashboards.finance_head.academic-income.index', compact('plans'));
-    }
-
     public function create()
     {
         return view('dashboards.finance_head.academic-income.create');
@@ -186,7 +177,7 @@ class AcademicIncomePlanController extends Controller
         $academicIncome->delete();
 
         return redirect()
-            ->route('head_of_finance.academic-income.index')
+            ->route('head_of_finance.manage-plan.index')
             ->with('success', 'ລຶບແຜນລາຍຮັບວິຊາການສຳເລັດ');
     }
 }

@@ -150,7 +150,7 @@
 
 {{-- ── Sticky context + search bar ─────────────────────────── --}}
 <div class="ai-bar">
-    <a href="{{ route('head_of_finance.academic-income.index') }}" class="ai-back" title="ກັບຄືນ">
+    <a href="{{ route('head_of_finance.manage-plan.index') }}" class="ai-back" title="ກັບຄືນ">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </a>
     <div class="ai-fy-chip">
@@ -288,7 +288,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
         ບັນທຶກ
     </button>
-    <a href="{{ route('head_of_finance.academic-income.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
+    <a href="{{ route('head_of_finance.manage-plan.index') }}" class="fns-btn fns-btn-secondary">ຍົກເລີກ</a>
     <span class="ai-submit-note">
         <span class="ai-submit-note-k">ລວມ ນ/ສ ຄ່າໜ່ວຍກິດ</span>
         <span class="ai-submit-note-v"><b id="ai-grand">0</b><span>ຄົນ</span></span>

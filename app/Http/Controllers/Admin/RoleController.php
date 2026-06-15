@@ -24,7 +24,7 @@ class RoleController extends Controller
 
         $roles = $query->latest('id')->paginate(10)->withQueryString();
 
-        return view('admin.roles.index', compact('roles'));
+        return view('dashboards.admin.roles.index', compact('roles'));
     }
 
     /**
@@ -32,7 +32,7 @@ class RoleController extends Controller
      */
     public function create()
     {
-        return view('admin.roles.create');
+        return view('dashboards.admin.roles.create');
     }
 
     /**
@@ -60,7 +60,7 @@ class RoleController extends Controller
             $query->with('department')->latest('id')->limit(10);
         }]);
 
-        return view('admin.roles.show', compact('role'));
+        return view('dashboards.admin.roles.show', compact('role'));
     }
 
     /**
@@ -68,7 +68,7 @@ class RoleController extends Controller
      */
     public function edit(Role $role)
     {
-        return view('admin.roles.edit', compact('role'));
+        return view('dashboards.admin.roles.edit', compact('role'));
     }
 
     /**

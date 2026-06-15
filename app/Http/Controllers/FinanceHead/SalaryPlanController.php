@@ -88,8 +88,7 @@ final class SalaryPlanController extends Controller
         }
 
         $parentAccountIds = $all->pluck('parent_id')->filter()->unique();
-        $leafAccounts = $subAccounts->reject(fn ($a) => $parentAccountIds->contains($a->id)
-            || preg_match('/^\d{3}0{5}$/', (string) $a->account_code));
+        $leafAccounts = $subAccounts->reject(fn ($a) => $parentAccountIds->contains($a->id));
         $accountsById = $all->keyBy('id');
         $rootIdsLookup = $rootIds->flip();
         $accountsByCode = $all->keyBy('account_code');

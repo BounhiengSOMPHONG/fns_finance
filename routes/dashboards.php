@@ -61,6 +61,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('academic-income', fn () => redirect()->route('head_of_finance.manage-plan.index'));
         Route::resource('academic-income', \App\Http\Controllers\FinanceHead\AcademicIncomePlanController::class, ['parameters' => ['academic-income' => 'academicIncome']])->except(['index', 'edit', 'update']);
         Route::get('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'evaluate'])->name('academic-income.evaluate');
+        Route::patch('academic-income/{academicIncome}/evaluate-field', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'saveField'])->name('academic-income.saveField');
         Route::post('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'saveEvaluate'])->name('academic-income.saveEvaluate');
 
         // Expense Plans

@@ -11,7 +11,10 @@
         $val      = (int) old($inputPrefix . '.' . $p->id, $existing?->student_count ?? 0);
     @endphp
     <label class="ai-row @if($warn) is-warn @endif @if($val<=0) is-zero @endif"
-           data-name="{{ \Illuminate\Support\Str::lower($p->name) }}">
+           data-name="{{ \Illuminate\Support\Str::lower($p->name) }}"
+           data-save-kind="count"
+           data-input-prefix="{{ $inputPrefix }}"
+           data-program-id="{{ $p->id }}">
         <span class="ai-row-name">
             @if($warn)<span class="ai-warn-dot" title="ຍັງບໍ່ໄດ້ຕັ້ງຄ່າໜ່ວຍກິດ / ລາຄາ"></span>@endif
             <span class="ai-row-txt" title="{{ $p->name }}">{{ $p->name }}</span>

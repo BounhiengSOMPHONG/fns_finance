@@ -12,7 +12,7 @@ final class SalaryEntry extends Model
     protected $fillable = [
         'plan_id', 'chart_of_account_id',
         'person_count', 'payment_type', 'amount',
-        'monthly_total', 'annual_amount', 'remark',
+        'monthly_total', 'annual_amount',
     ];
 
     protected $casts = [
@@ -26,7 +26,7 @@ final class SalaryEntry extends Model
     {
         parent::boot();
 
-        static::saving(function (self $entry): void {
+        self::saving(function (self $entry): void {
             $entry->monthly_total = (float) $entry->amount;
             $entry->annual_amount = $entry->monthly_total * 12;
         });

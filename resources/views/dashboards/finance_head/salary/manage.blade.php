@@ -442,6 +442,11 @@
     }
 
     async function saveRow(row) {
+        if (row.dataset.isSaving === '1') {
+            row.dataset.pendingSave = '1';
+            return;
+        }
+
         const coaId = row.dataset.coaId;
         if (!coaId) return; // need a valid COA before persisting
 
@@ -455,6 +460,7 @@
                 return;
             }
 
+            row.dataset.isSaving = '1';
             row.classList.add('row-saving');
             try {
                 const res = await fetch(`/head-of-finance/salary-entries/${itemId}`, {
@@ -470,10 +476,16 @@
                 row.classList.add('row-saved');
                 setTimeout(() => row.classList.remove('row-saved'), 900);
             } catch {
-                row.classList.remove('row-saving');
                 row.classList.add('row-error');
                 setTimeout(() => row.classList.remove('row-error'), 900);
                 showToast('ບໍ່ສາມາດລຶບລາຍການໄດ້', 'error');
+            } finally {
+                row.dataset.isSaving = '0';
+                row.classList.remove('row-saving');
+                if (row.dataset.pendingSave === '1') {
+                    row.dataset.pendingSave = '0';
+                    saveRow(row);
+                }
             }
 
             return;
@@ -489,6 +501,7 @@
         const url = itemId ? `/head-of-finance/salary-entries/${itemId}` : '/head-of-finance/salary-entries';
         const method = itemId ? 'PATCH' : 'POST';
 
+        row.dataset.isSaving = '1';
         row.classList.add('row-saving');
         try {
             const res = await fetch(url, {
@@ -507,10 +520,16 @@
             setTimeout(() => row.classList.remove('row-saved'), 900);
             if (wasNew) showToast('ບັນທຶກລາຍການໃໝ່ສຳເລັດ', 'success');
         } catch {
-            row.classList.remove('row-saving');
             row.classList.add('row-error');
             setTimeout(() => row.classList.remove('row-error'), 900);
             showToast('ບໍ່ສາມາດບັນທຶກໄດ້', 'error');
+        } finally {
+            row.dataset.isSaving = '0';
+            row.classList.remove('row-saving');
+            if (row.dataset.pendingSave === '1') {
+                row.dataset.pendingSave = '0';
+                saveRow(row);
+            }
         }
     }
 

@@ -20,13 +20,23 @@ final class SalaryEntryController extends Controller
             'payment_type' => 'required|in:cash,transfer',
             'amount' => 'nullable|numeric|min:0',
         ]);
+        $personCount = (int) ($data['person_count'] ?? 0);
+        $amount = (float) ($data['amount'] ?? 0);
+
+        if ($personCount === 0 && $amount === 0.0) {
+            return response()->json([
+                'success' => true,
+                'skipped' => true,
+                'entry' => null,
+            ]);
+        }
 
         $entry = SalaryEntry::create([
             'plan_id' => (int) $data['plan_id'],
             'chart_of_account_id' => (int) $data['chart_of_account_id'],
-            'person_count' => (int) ($data['person_count'] ?? 0),
+            'person_count' => $personCount,
             'payment_type' => $data['payment_type'],
-            'amount' => (float) ($data['amount'] ?? 0),
+            'amount' => $amount,
         ]);
         $entry->load('chartOfAccount');
 
@@ -44,13 +54,25 @@ final class SalaryEntryController extends Controller
             'payment_type' => 'required|in:cash,transfer',
             'amount' => 'nullable|numeric|min:0',
         ]);
+        $personCount = (int) ($data['person_count'] ?? 0);
+        $amount = (float) ($data['amount'] ?? 0);
+
+        if ($personCount === 0 && $amount === 0.0) {
+            $salaryEntry->delete();
+
+            return response()->json([
+                'success' => true,
+                'deleted' => true,
+                'entry' => null,
+            ]);
+        }
 
         if (array_key_exists('chart_of_account_id', $data)) {
             $salaryEntry->chart_of_account_id = (int) $data['chart_of_account_id'];
         }
-        $salaryEntry->person_count = (int) ($data['person_count'] ?? 0);
+        $salaryEntry->person_count = $personCount;
         $salaryEntry->payment_type = $data['payment_type'];
-        $salaryEntry->amount = (float) ($data['amount'] ?? 0);
+        $salaryEntry->amount = $amount;
         $salaryEntry->save();
         $salaryEntry->load('chartOfAccount');
 

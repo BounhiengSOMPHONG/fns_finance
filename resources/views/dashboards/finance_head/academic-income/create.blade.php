@@ -28,7 +28,7 @@
                 </div>
 
                 <div class="aic-foot">
-                    <a href="{{ route('head_of_finance.academic-income.index') }}"
+                    <a href="{{ route('head_of_finance.manage-plan.index') }}"
                         class="aic-btn aic-btn-secondary">ຍົກເລີກ</a>
                     <button type="submit" class="aic-btn aic-btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"

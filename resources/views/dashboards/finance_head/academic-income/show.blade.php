@@ -43,7 +43,7 @@ body{background:#fff!important}
 
 <div class="rpt-wrap">
 <div class="rpt-actions">
-    <a href="{{ route('head_of_finance.academic-income.index') }}" style="background:#fff;border:1px solid var(--fns-gray-200);padding:.5rem 1rem;border-radius:8px;font-weight:600;color:var(--fns-navy);text-decoration:none;font-size:.85rem">← ກັບຄືນ</a>
+    <a href="{{ route('head_of_finance.manage-plan.index') }}" style="background:#fff;border:1px solid var(--fns-gray-200);padding:.5rem 1rem;border-radius:8px;font-weight:600;color:var(--fns-navy);text-decoration:none;font-size:.85rem">← ກັບຄືນ</a>
     <button type="button" id="btn-print" style="background:var(--fns-navy);border:none;padding:.5rem 1rem;border-radius:8px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;gap:.4rem;font-size:.85rem">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         ພິມ

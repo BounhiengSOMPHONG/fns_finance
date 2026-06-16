@@ -16,10 +16,11 @@ class PlanYearReportBuilder
         $accounts = ChartOfAccount::orderBy('account_code')->get(['id', 'account_code', 'account_name', 'parent_id']);
         $accountsById = $accounts->keyBy('id');
         $accountsByCode = $accounts->keyBy('account_code');
+        $parentIds = $accounts->pluck('parent_id')->filter()->unique()->flip();
 
         $rows = $accounts
             ->mapWithKeys(fn (ChartOfAccount $account): array => [
-                $account->id => $this->emptyRow($account, $accountsById),
+                $account->id => $this->emptyRow($account, $accountsById, $parentIds->has($account->id)),
             ])
             ->all();
 
@@ -154,13 +155,14 @@ class PlanYearReportBuilder
         }
     }
 
-    private function emptyRow(ChartOfAccount $account, Collection $accountsById): array
+    private function emptyRow(ChartOfAccount $account, Collection $accountsById, bool $isGroup): array
     {
         return [
             'id' => $account->id,
             'code' => (string) $account->account_code,
             'title' => (string) $account->account_name,
             'level' => $this->levelFor($account, $accountsById),
+            'is_group' => $isGroup,
             'total_amount' => 0.0,
             'state_amount' => 0.0,
             'faculty_amount' => 0.0,

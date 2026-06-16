@@ -352,13 +352,13 @@
                         ];
                         $level = min((int) $row['level'], 3);
                     @endphp
-                    <tr class="{{ $row['level'] === 0 ? 'plan-year-root-row' : '' }}">
+                    <tr class="{{ $row['level'] === 0 ? 'plan-year-root-row' : '' }} {{ ! empty($row['is_group']) ? 'plan-year-group-row' : '' }}">
                         @foreach($codeParts as $partIndex => $part)
                             <td class="center plan-year-code-cell {{ $partIndex === $level ? 'plan-year-code-main' : '' }}">
                                 {{ $partIndex < $level ? '' : $part }}
                             </td>
                         @endforeach
-                        <td class="plan-year-name" style="padding-left:{{ 8 + ((int) $row['level'] * 16) }}px">{{ $row['title'] }}</td>
+                        <td class="plan-year-name">{{ $row['title'] }}</td>
                         <td class="num">{{ $money($row['total_amount']) }}</td>
                         <td class="num">{{ $money($row['state_amount']) }}</td>
                         <td class="num">{{ $money($row['faculty_amount']) }}</td>
@@ -982,7 +982,7 @@
                         ];
                         $level = min((int) $row['level'], 3);
                     @endphp
-                    <tr class="{{ $row['is_group'] ? 'salary-group-row' : '' }}">
+                    <tr class="{{ $row['level'] === 0 ? 'salary-root-row' : '' }} {{ $row['is_group'] ? 'salary-group-row' : '' }}">
                         @foreach($codeParts as $partIndex => $part)
                             <td class="center salary-code-cell {{ $partIndex === $level ? 'salary-code-main' : '' }}">
                                 {{ $partIndex < $level ? '' : $part }}
@@ -1588,6 +1588,7 @@
     }
 
     .report-table.plan-year-table .plan-year-root-row .num,
+    .report-table.plan-year-table .plan-year-group-row .num,
     .report-table.plan-year-table .plan-year-grand-total .num {
         text-decoration: underline;
         text-underline-offset: 2px;
@@ -1610,6 +1611,7 @@
 
     .plan-year-name {
         min-width: 0;
+        padding-left: 4px !important;
         text-align: left;
     }
 
@@ -1787,9 +1789,11 @@
 
     .salary-name {
         min-width: 260px;
+        padding-left: 4px !important;
+        text-align: left;
     }
 
-    .salary-group-row td {
+    .salary-root-row td {
         background: #d9ffc7;
         font-weight: 800;
     }

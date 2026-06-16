@@ -61,6 +61,8 @@ class PlanYearReportBuilderTest extends TestCase
 
         $this->assertSame(1200.0, $rows->get('60000000')['state_amount']);
         $this->assertSame(1200.0, $rows->get('60100100')['state_amount']);
+        $this->assertTrue($rows->get('60100000')['is_group']);
+        $this->assertFalse($rows->get('60100100')['is_group']);
         $this->assertSame(150.0, $rows->get('62000000')['faculty_amount']);
         $this->assertSame(0.0, $rows->get('60100100')['faculty_amount']);
         $this->assertSame(150.0, $rows->get('62100201')['faculty_amount']);

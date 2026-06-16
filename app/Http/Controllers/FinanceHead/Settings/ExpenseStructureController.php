@@ -10,6 +10,7 @@ use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
+use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -267,7 +268,7 @@ class ExpenseStructureController extends Controller
             $sectionsByCode[$sectionCode] = ExpenseSection::create([
                 'planning_year_id' => $planningYear->id,
                 'code' => $sectionCode,
-                'name' => 'ກຸ່ມລາຍຈ່າຍ ' . $sectionCode,
+                'name' => ExpenseStructureNames::fallbackSectionName($sectionCode),
                 'description' => null,
                 'display_order' => $index + 1,
                 'summary_period_count' => 12,
@@ -294,7 +295,7 @@ class ExpenseStructureController extends Controller
                 'section_id' => $sectionsByCode[$sectionCode]->id,
                 'parent_id' => null,
                 'code' => $code,
-                'name' => 'ລາຍການ ' . $code,
+                'name' => ExpenseStructureNames::fallbackSubsectionName($code),
                 'description' => null,
                 'default_pattern_id' => $defaultPatternId,
                 'summary_period_count' => 12,

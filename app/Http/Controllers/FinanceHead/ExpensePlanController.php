@@ -12,6 +12,7 @@ use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
+use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -379,7 +380,7 @@ class ExpensePlanController extends Controller
             $section = ExpenseSection::create([
                 'planning_year_id' => $targetYear->id,
                 'code' => $sourceSection->code,
-                'name' => $sourceSection->name,
+                'name' => ExpenseStructureNames::nameFor($sourceSection->code) ?? $sourceSection->name,
                 'description' => $sourceSection->description,
                 'display_order' => $sourceSection->display_order,
                 'summary_period_count' => $sourceSection->summary_period_count ?? 12,
@@ -393,7 +394,7 @@ class ExpensePlanController extends Controller
                     'section_id' => $section->id,
                     'parent_id' => null,
                     'code' => $sourceSubsection->code,
-                    'name' => $sourceSubsection->name,
+                    'name' => ExpenseStructureNames::nameFor($sourceSubsection->code) ?? $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
                     'default_pattern_id' => $sourceSubsection->default_pattern_id,
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,

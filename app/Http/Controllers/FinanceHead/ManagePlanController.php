@@ -15,6 +15,7 @@ use App\Models\SalaryPlan;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
 use App\Services\SalaryReportBuilder;
+use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -210,7 +211,7 @@ class ManagePlanController extends Controller
             $sectionsByCode[$sectionCode] = ExpenseSection::create([
                 'planning_year_id' => $planningYear->id,
                 'code' => $sectionCode,
-                'name' => 'ກຸ່ມລາຍຈ່າຍ '.$sectionCode,
+                'name' => ExpenseStructureNames::fallbackSectionName($sectionCode),
                 'description' => null,
                 'display_order' => $index + 1,
                 'summary_period_count' => 12,
@@ -237,7 +238,7 @@ class ManagePlanController extends Controller
                 'section_id' => $sectionsByCode[$sectionCode]->id,
                 'parent_id' => null,
                 'code' => $code,
-                'name' => 'ລາຍການ '.$code,
+                'name' => ExpenseStructureNames::fallbackSubsectionName($code),
                 'description' => null,
                 'default_pattern_id' => $defaultPatternId,
                 'summary_period_count' => 12,
@@ -273,7 +274,7 @@ class ManagePlanController extends Controller
             $section = ExpenseSection::create([
                 'planning_year_id' => $targetYear->id,
                 'code' => $sourceSection->code,
-                'name' => $sourceSection->name,
+                'name' => ExpenseStructureNames::nameFor($sourceSection->code) ?? $sourceSection->name,
                 'description' => $sourceSection->description,
                 'display_order' => $sourceSection->display_order,
                 'summary_period_count' => $sourceSection->summary_period_count ?? 12,
@@ -287,7 +288,7 @@ class ManagePlanController extends Controller
                     'section_id' => $section->id,
                     'parent_id' => null,
                     'code' => $sourceSubsection->code,
-                    'name' => $sourceSubsection->name,
+                    'name' => ExpenseStructureNames::nameFor($sourceSubsection->code) ?? $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
                     'default_pattern_id' => $sourceSubsection->default_pattern_id,
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,

@@ -50,21 +50,11 @@
                     ໜ້າຫຼັກ
                 </a>
 
-                {{-- Manage plan dropdown --}}
-                <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
-                    <button type="button" class="fns-topnav-item {{ $managePlanActive ? 'active' : '' }}"
-                            @click="open = !open" :aria-expanded="open">
-                        <x-icons.book-open />
-                        Manage plan
-                        <svg class="fns-topnav-chev" :class="{ 'is-open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="fns-topnav-menu" x-show="open" x-transition.opacity.duration.150ms style="display:none;">
-                        <a href="{{ route('head_of_finance.manage-plan.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.manage-plan.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Manage plan
-                        </a>
-                    </div>
-                </div>
+                <a href="{{ route('head_of_finance.manage-plan.index') }}"
+                   class="fns-topnav-item {{ $managePlanActive ? 'active' : '' }}">
+                    <x-icons.book-open />
+                    Manage plan
+                </a>
 
                 {{-- Settings dropdown --}}
                 <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">

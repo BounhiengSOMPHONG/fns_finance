@@ -53,6 +53,9 @@ class PlanningYearReviewController extends Controller
             'currentReviewRound.comments.agreements.user',
             'reviewRounds.requester',
             'reviewRounds.closer',
+            'reviewRounds.reviewers.user.role',
+            'reviewRounds.comments.user.role',
+            'reviewRounds.comments.agreements.user',
         ]);
 
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);

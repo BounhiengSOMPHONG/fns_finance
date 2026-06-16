@@ -105,7 +105,9 @@
     ];
     $reviewerUsers = $reviewerUsers ?? collect();
     $currentRound = $planningYear->currentReviewRound;
-    $reviewComments = $currentRound?->comments ?? collect();
+    $reviewRounds = $planningYear->reviewRounds
+        ->sortByDesc('round_number')
+        ->values();
     $statusLabels = [
         'DRAFT' => 'Draft',
         'PENDING_REVIEW' => 'Pending review',
@@ -184,68 +186,79 @@
     </div>
 @endif
 
-@if($reviewContext['show_review_panel'] && $currentRound)
+@if($reviewContext['show_review_panel'] && $reviewRounds->isNotEmpty())
     <section class="review-panel">
-        <div class="review-panel-head">
-            <div>
-                <span>Review round {{ $currentRound->round_number }}</span>
-                <h3>ຄວາມເຫັນຈາກຜູ້ກວດສອບ</h3>
-            </div>
-            <div class="review-panel-meta">
-                <span>ຜູ້ກວດ {{ $currentRound->reviewers->count() }} ຄົນ</span>
-                <span>{{ optional($currentRound->requested_at)->format('d/m/Y H:i') }}</span>
-            </div>
-        </div>
-
-        @if($currentRound->note)
-            <p class="review-note">{{ $currentRound->note }}</p>
-        @endif
-
-        <div class="reviewer-list">
-            @foreach($currentRound->reviewers as $reviewer)
-                <span>{{ $reviewer->user?->full_name ?? $reviewer->user?->username ?? '-' }}</span>
-            @endforeach
-        </div>
-
-        @if($reviewContext['can_comment'])
-            <form method="POST" action="{{ route('reviews.planning-years.comments.store', $planningYear) }}" class="review-comment-form">
-                @csrf
-                <textarea name="comment" rows="3" maxlength="3000" required placeholder="ຂຽນຄວາມເຫັນຂອງທ່ານ"></textarea>
-                <button type="submit" class="review-primary-btn">ສົ່ງຄວາມເຫັນ</button>
-            </form>
-        @endif
-
-        <div class="review-comments">
-            @forelse($reviewComments as $comment)
-                @php
-                    $agreementCount = $comment->agreements->count();
-                    $agreedByMe = $comment->agreements->contains('user_id', $reviewContext['current_user_id']);
-                @endphp
-                <article class="review-comment">
-                    <div class="review-comment-top">
-                        <div>
-                            <strong>{{ $comment->user?->full_name ?? $comment->user?->username ?? '-' }}</strong>
-                            <span>{{ $comment->user?->role?->role_name ?? '' }}</span>
-                        </div>
-                        <time>{{ $comment->created_at?->format('d/m/Y H:i') }}</time>
+        @foreach($reviewRounds as $round)
+            @php
+                $isCurrentRound = $currentRound && (int) $round->id === (int) $currentRound->id;
+                $roundComments = $round->comments ?? collect();
+            @endphp
+            <div class="review-round {{ $isCurrentRound ? 'is-current' : '' }}">
+                <div class="review-panel-head">
+                    <div>
+                        <span>Review round {{ $round->round_number }}{{ $isCurrentRound ? ' · Current' : '' }}</span>
+                        <h3>{{ $isCurrentRound ? 'ຄວາມເຫັນຈາກຜູ້ກວດສອບ' : 'ປະຫວັດຄວາມເຫັນ' }}</h3>
                     </div>
-                    <p>{{ $comment->comment }}</p>
-                    <div class="review-comment-actions">
-                        <span>{{ $agreementCount }} ເຫັນດີ</span>
-                        @if($reviewContext['can_agree'] && (int) $comment->user_id !== (int) $reviewContext['current_user_id'])
-                            <form method="POST" action="{{ route('reviews.planning-years.comments.agreement', [$planningYear, $comment]) }}">
-                                @csrf
-                                <button type="submit" class="{{ $agreedByMe ? 'is-agreed' : '' }}">
-                                    {{ $agreedByMe ? 'ຍົກເລີກເຫັນດີ' : 'ເຫັນດີ' }}
-                                </button>
-                            </form>
+                    <div class="review-panel-meta">
+                        <span>ຜູ້ກວດ {{ $round->reviewers->count() }} ຄົນ</span>
+                        <span>{{ optional($round->requested_at)->format('d/m/Y H:i') }}</span>
+                        @if($round->closed_at)
+                            <span>ປິດ {{ optional($round->closed_at)->format('d/m/Y H:i') }}</span>
                         @endif
                     </div>
-                </article>
-            @empty
-                <div class="review-empty">ຍັງບໍ່ມີຄວາມເຫັນ</div>
-            @endforelse
-        </div>
+                </div>
+
+                @if($round->note)
+                    <p class="review-note">{{ $round->note }}</p>
+                @endif
+
+                <div class="reviewer-list">
+                    @foreach($round->reviewers as $reviewer)
+                        <span>{{ $reviewer->user?->full_name ?? $reviewer->user?->username ?? '-' }}</span>
+                    @endforeach
+                </div>
+
+                @if($isCurrentRound && $reviewContext['can_comment'])
+                    <form method="POST" action="{{ route('reviews.planning-years.comments.store', $planningYear) }}" class="review-comment-form">
+                        @csrf
+                        <textarea name="comment" rows="3" maxlength="3000" required placeholder="ຂຽນຄວາມເຫັນຂອງທ່ານ"></textarea>
+                        <button type="submit" class="review-primary-btn">ສົ່ງຄວາມເຫັນ</button>
+                    </form>
+                @endif
+
+                <div class="review-comments">
+                    @forelse($roundComments as $comment)
+                        @php
+                            $agreementCount = $comment->agreements->count();
+                            $agreedByMe = $comment->agreements->contains('user_id', $reviewContext['current_user_id']);
+                        @endphp
+                        <article class="review-comment">
+                            <div class="review-comment-top">
+                                <div>
+                                    <strong>{{ $comment->user?->full_name ?? $comment->user?->username ?? '-' }}</strong>
+                                    <span>{{ $comment->user?->role?->role_name ?? '' }}</span>
+                                </div>
+                                <time>{{ $comment->created_at?->format('d/m/Y H:i') }}</time>
+                            </div>
+                            <p>{{ $comment->comment }}</p>
+                            <div class="review-comment-actions">
+                                <span>{{ $agreementCount }} ເຫັນດີ</span>
+                                @if($isCurrentRound && $reviewContext['can_agree'] && (int) $comment->user_id !== (int) $reviewContext['current_user_id'])
+                                    <form method="POST" action="{{ route('reviews.planning-years.comments.agreement', [$planningYear, $comment]) }}">
+                                        @csrf
+                                        <button type="submit" class="{{ $agreedByMe ? 'is-agreed' : '' }}">
+                                            {{ $agreedByMe ? 'ຍົກເລີກເຫັນດີ' : 'ເຫັນດີ' }}
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </article>
+                    @empty
+                        <div class="review-empty">ຍັງບໍ່ມີຄວາມເຫັນ</div>
+                    @endforelse
+                </div>
+            </div>
+        @endforeach
     </section>
 @endif
 
@@ -1218,6 +1231,19 @@
     .review-panel {
         display: grid;
         gap: .8rem;
+    }
+
+    .review-round {
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        display: grid;
+        gap: .8rem;
+        padding: .85rem;
+    }
+
+    .review-round.is-current {
+        border-color: rgba(201, 153, 26, .42);
+        box-shadow: inset 3px 0 0 var(--fns-gold);
     }
 
     .review-panel-head {

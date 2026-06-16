@@ -214,6 +214,7 @@
                     @endphp
                     <div class="review-round {{ $isCurrentRound ? 'is-current' : '' }}">
                         <div class="review-panel-head">
+                            <span class="review-round-line">Review round {{ $round->round_number }}{{ $isCurrentRound ? ' · Current' : '' }}</span>
                             <div class="review-panel-meta">
                                 <span>ຜູ້ກວດ {{ $round->reviewers->count() }} ຄົນ</span>
                                 @if($round->closed_at)
@@ -252,7 +253,7 @@
                                             <strong>{{ $comment->user?->full_name ?? $comment->user?->username ?? '-' }}</strong>
                                             <span>{{ $comment->user?->role?->role_name ?? '' }}</span>
                                         </div>
-                                        <time>Review round {{ $round->round_number }} · {{ $comment->created_at?->format('d/m/Y H:i') }}</time>
+                                        <time>{{ $comment->created_at?->format('d/m/Y H:i') }}</time>
                                     </div>
                                     <p>{{ $comment->comment }}</p>
                                     <div class="review-comment-actions">
@@ -1363,7 +1364,7 @@
     .review-panel-head {
         align-items: center;
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         gap: 1rem;
     }
 

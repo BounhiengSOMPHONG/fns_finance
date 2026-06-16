@@ -924,6 +924,11 @@
         font-weight: 900;
     }
 
+    .plan-year-overall-row .num {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
     .plan-year-overall-row td:first-child {
         border-right-color: transparent;
     }
@@ -933,8 +938,14 @@
     }
 
     .plan-year-root-row td {
-        background: #fff;
+        background: #d9ffc7;
         font-weight: 900;
+    }
+
+    .report-table.plan-year-table .plan-year-root-row .num,
+    .report-table.plan-year-table .plan-year-grand-total .num {
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 
     .plan-year-code-cell {
@@ -946,12 +957,19 @@
 
     .plan-year-code-main {
         color: #111827;
+        font-style: italic;
         font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 
     .plan-year-name {
         min-width: 0;
         text-align: left;
+    }
+
+    .plan-year-grand-total td {
+        border-top-width: 2px;
     }
 
     .plan-year-title-block {
@@ -1454,6 +1472,7 @@
 
         .report-table th,
         .grand-row td,
+        .plan-year-root-row td,
         .total-row td,
         .section-row td {
             print-color-adjust: exact;

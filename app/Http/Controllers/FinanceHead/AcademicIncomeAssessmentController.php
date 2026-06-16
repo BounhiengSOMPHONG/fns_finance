@@ -28,20 +28,20 @@ class AcademicIncomeAssessmentController extends Controller
                 ->where(fn($q2) => $q2->where('level', 'bachelor')->where('study_year', '>=', 2))
                 ->orWhereIn('level', ['master', 'phd'])
             )
-            ->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')
+            ->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('id')
             ->get();
 
         $programs13_bach = DegreeProgram::where('is_active', true)
             ->with('latestCourseCredit')
             ->where('level', 'bachelor')
             ->where(fn($q) => $q->where('study_year', 1)->orWhereNull('study_year'))
-            ->orderBy('name')
+            ->orderBy('id')
             ->get();
 
         $programs13_master = DegreeProgram::where('is_active', true)
             ->with('latestCourseCredit')
             ->whereIn('level', ['master', 'phd'])
-            ->orderBy('level')->orderBy('name')
+            ->orderBy('level')->orderBy('id')
             ->get();
 
         $creditPrices = $this->creditPricesFor($settingSet);

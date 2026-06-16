@@ -135,6 +135,18 @@
     opacity: 0.85;
 }
 .fns-topnav-item.active svg { opacity: 1; }
+.fns-topnav-badge {
+    align-items: center;
+    background: var(--fns-gold);
+    border-radius: 999px;
+    color: var(--fns-navy-deep);
+    display: inline-flex;
+    font-size: 0.68rem;
+    font-weight: 800;
+    justify-content: center;
+    min-width: 1.2rem;
+    padding: 0.05rem 0.35rem;
+}
 .fns-topnav-chev {
     margin-left: 0.15rem;
     transition: transform 0.18s;
@@ -202,6 +214,13 @@
     background: rgba(255,255,255,0.06);
     color: rgba(255,255,255,0.78);
     border: 1px solid rgba(255,255,255,0.08);
+}
+.fns-topnav-pill-link {
+    text-decoration: none;
+}
+.fns-topnav-pill-link:hover {
+    background: rgba(201,153,26,0.16);
+    color: var(--fns-gold-light);
 }
 .fns-btn-logout {
     display: inline-flex;
@@ -772,4 +791,3 @@
 }
 .fns-grand-total-label  { font-size: 0.88rem; color: rgba(255,255,255,0.65); font-weight: 500; }
 .fns-grand-total-amount { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; color: var(--fns-gold-light); letter-spacing: 0.03em; }
-

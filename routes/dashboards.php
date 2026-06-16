@@ -30,6 +30,8 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('manage-plan/{planningYear}/previewview', fn (\App\Models\PlanningYear $planningYear) => redirect()->route('head_of_finance.manage-plan.preview', $planningYear))->name('manage-plan.previewview');
         Route::delete('manage-plan/{planningYear}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'destroy'])->name('manage-plan.destroy');
         Route::post('manage-plan/{planningYear}/sync', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'sync'])->name('manage-plan.sync');
+        Route::post('manage-plan/{planningYear}/request-review', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'requestReview'])->name('manage-plan.request-review');
+        Route::post('manage-plan/{planningYear}/close-review', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'closeReview'])->name('manage-plan.close-review');
 
         // Settings
         Route::prefix('settings')->name('settings.')->group(function () {
@@ -85,9 +87,9 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('salary/{salaryPlan}/manage', [\App\Http\Controllers\FinanceHead\SalaryPlanController::class, 'manage'])->name('salary.manage');
 
         // Salary Entries (AJAX)
-        Route::post('salary-entries',                [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'store'])->name('salary-entries.store');
+        Route::post('salary-entries', [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'store'])->name('salary-entries.store');
         Route::patch('salary-entries/{salaryEntry}', [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'update'])->name('salary-entries.update');
-        Route::delete('salary-entries/{salaryEntry}',[\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'destroy'])->name('salary-entries.destroy');
+        Route::delete('salary-entries/{salaryEntry}', [\App\Http\Controllers\FinanceHead\SalaryEntryController::class, 'destroy'])->name('salary-entries.destroy');
     });
 
 // 3. Faculty Head
@@ -112,4 +114,14 @@ Route::middleware(['auth', 'check.active', 'role:accountant'])
     ->name('accountant.')
     ->group(function () {
         Route::get('/home', [\App\Http\Controllers\Accountant\HomeController::class, 'index'])->name('home');
+    });
+
+Route::middleware(['auth', 'check.active'])
+    ->prefix('reviews')
+    ->name('reviews.')
+    ->group(function () {
+        Route::get('planning-years', [\App\Http\Controllers\Review\PlanningYearReviewController::class, 'index'])->name('planning-years.index');
+        Route::get('planning-years/{planningYear}', [\App\Http\Controllers\Review\PlanningYearReviewController::class, 'show'])->name('planning-years.show');
+        Route::post('planning-years/{planningYear}/comments', [\App\Http\Controllers\Review\PlanningYearReviewController::class, 'storeComment'])->name('planning-years.comments.store');
+        Route::post('planning-years/{planningYear}/comments/{comment}/agreement', [\App\Http\Controllers\Review\PlanningYearReviewController::class, 'toggleAgreement'])->name('planning-years.comments.agreement');
     });

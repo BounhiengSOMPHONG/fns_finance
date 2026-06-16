@@ -11,7 +11,10 @@ use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
+use App\Models\PlanningYearReviewRound;
 use App\Models\SalaryPlan;
+use App\Models\User;
+use App\Notifications\PlanningYearReviewRequested;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
 use App\Services\PlanYearReportBuilder;
@@ -46,12 +49,30 @@ class ManagePlanController extends Controller
     ) {
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
+            'currentReviewRound.reviewers.user.role',
+            'currentReviewRound.comments.user.role',
+            'currentReviewRound.comments.agreements.user',
+            'reviewRounds.requester',
+            'reviewRounds.closer',
         ]);
 
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
         $expenseReport = $expenseReportBuilder->buildForPlanningYear($planningYear);
         $salaryReport = $salaryReportBuilder->buildForPlanningYear($planningYear);
         $planYearReport = $planYearReportBuilder->buildForPlanningYear($planningYear);
+        $reviewerUsers = User::with('role')
+            ->where('is_active', true)
+            ->whereKeyNot(Auth::id())
+            ->orderBy('full_name')
+            ->get();
+        $reviewContext = [
+            'mode' => 'finance',
+            'can_manage_review' => true,
+            'can_comment' => false,
+            'can_agree' => false,
+            'show_review_panel' => true,
+            'current_user_id' => Auth::id(),
+        ];
 
         return view('dashboards.finance_head.manage-plan.preview', compact(
             'planningYear',
@@ -59,6 +80,8 @@ class ManagePlanController extends Controller
             'expenseReport',
             'salaryReport',
             'planYearReport',
+            'reviewerUsers',
+            'reviewContext',
         ));
     }
 
@@ -76,6 +99,7 @@ class ManagePlanController extends Controller
                 'name' => $data['name'] ?: 'Planning '.$data['year'],
                 'description' => $data['description'] ?? null,
                 'is_active' => true,
+                'status' => PlanningYear::STATUS_DRAFT,
             ]);
 
             $this->ensureCompanionPlans($planningYear);
@@ -87,6 +111,82 @@ class ManagePlanController extends Controller
         return redirect()
             ->route('head_of_finance.manage-plan.index')
             ->with('success', 'ສ້າງແຜນລວມປະຈຳປີ '.$planningYear->year.' ສຳເລັດ');
+    }
+
+    public function requestReview(Request $request, PlanningYear $planningYear)
+    {
+        $data = $request->validate([
+            'reviewer_ids' => ['required', 'array', 'min:1'],
+            'reviewer_ids.*' => ['integer', 'distinct', 'exists:users,id'],
+            'note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $reviewers = User::query()
+            ->whereIn('id', $data['reviewer_ids'])
+            ->where('is_active', true)
+            ->get();
+
+        if ($reviewers->count() !== count(array_unique($data['reviewer_ids']))) {
+            return back()->with('error', 'ກະລຸນາເລືອກຜູ້ກວດສອບທີ່ຍັງເປີດໃຊ້ງານ');
+        }
+
+        if (! $planningYear->canRequestReview()) {
+            return back()->with('error', 'ສາມາດສົ່ງຂໍຄວາມເຫັນໄດ້ຈາກສະຖານະ Draft ຫຼື Modifying ເທົ່ານັ້ນ');
+        }
+
+        $reviewRound = DB::transaction(function () use ($planningYear, $reviewers, $data): PlanningYearReviewRound {
+            $roundNumber = ((int) $planningYear->reviewRounds()->max('round_number')) + 1;
+
+            $reviewRound = $planningYear->reviewRounds()->create([
+                'requested_by' => Auth::id(),
+                'round_number' => $roundNumber,
+                'note' => $data['note'] ?? null,
+                'requested_at' => now(),
+            ]);
+
+            foreach ($reviewers as $reviewer) {
+                $reviewRound->reviewers()->create([
+                    'user_id' => $reviewer->id,
+                    'notified_at' => now(),
+                ]);
+            }
+
+            $planningYear->update([
+                'status' => PlanningYear::STATUS_PENDING_REVIEW,
+                'current_review_round_id' => $reviewRound->id,
+                'review_requested_at' => now(),
+                'review_closed_at' => null,
+            ]);
+
+            return $reviewRound->load('planningYear');
+        });
+
+        foreach ($reviewers as $reviewer) {
+            $reviewer->notify(new PlanningYearReviewRequested($reviewRound));
+        }
+
+        return back()->with('success', 'ສົ່ງຂໍຄວາມເຫັນໃຫ້ຜູ້ກວດສອບສຳເລັດ');
+    }
+
+    public function closeReview(PlanningYear $planningYear)
+    {
+        if (! $planningYear->isPendingReview() || ! $planningYear->current_review_round_id) {
+            return back()->with('error', 'ແຜນນີ້ບໍ່ໄດ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ');
+        }
+
+        DB::transaction(function () use ($planningYear): void {
+            $planningYear->currentReviewRound()->update([
+                'closed_by' => Auth::id(),
+                'closed_at' => now(),
+            ]);
+
+            $planningYear->update([
+                'status' => PlanningYear::STATUS_MODIFYING,
+                'review_closed_at' => now(),
+            ]);
+        });
+
+        return back()->with('success', 'ປິດຮອບຂໍຄວາມເຫັນ ແລະ ເຂົ້າສະຖານະກຳລັງແກ້ໄຂແລ້ວ');
     }
 
     public function sync(PlanningYear $planningYear)

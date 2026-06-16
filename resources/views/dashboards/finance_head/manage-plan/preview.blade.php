@@ -95,7 +95,159 @@
     $balanceExpenseMonthly = (float) $expenseReport['periodTotal'];
     $balanceYearly = $balanceIncomeYearly - $balanceExpenseYearly;
     $balanceMonthly = $balanceIncomeMonthly - $balanceExpenseMonthly;
+    $reviewContext = $reviewContext ?? [
+        'mode' => 'finance',
+        'can_manage_review' => true,
+        'can_comment' => false,
+        'can_agree' => false,
+        'show_review_panel' => true,
+        'current_user_id' => auth()->id(),
+    ];
+    $reviewerUsers = $reviewerUsers ?? collect();
+    $currentRound = $planningYear->currentReviewRound;
+    $reviewComments = $currentRound?->comments ?? collect();
+    $statusLabels = [
+        'DRAFT' => 'Draft',
+        'PENDING_REVIEW' => 'Pending review',
+        'MODIFYING' => 'Modifying',
+    ];
 @endphp
+
+<div class="review-toolbar">
+    <div>
+        <span class="review-status review-status-{{ strtolower($planningYear->status ?? 'draft') }}">
+            {{ $statusLabels[$planningYear->status ?? 'DRAFT'] ?? ($planningYear->status ?? 'DRAFT') }}
+        </span>
+        <h2>ແຜນປີ {{ $planningYear->year }}</h2>
+        <p>{{ $planningYear->name }}</p>
+    </div>
+
+    <div class="review-toolbar-actions">
+        @if(($reviewContext['mode'] ?? 'finance') === 'reviewer')
+            <a href="{{ route('reviews.planning-years.index') }}" class="review-secondary-btn">ກັບໄປ Review</a>
+        @else
+            <a href="{{ route('head_of_finance.manage-plan.index') }}" class="review-secondary-btn">ກັບຄືນ</a>
+        @endif
+
+        @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
+            <button type="button" class="review-primary-btn" data-open-review-modal>
+                ສົ່ງຂໍຄວາມເຫັນ
+            </button>
+        @endif
+
+        @if($reviewContext['can_manage_review'] && $planningYear->isPendingReview())
+            <form method="POST" action="{{ route('head_of_finance.manage-plan.close-review', $planningYear) }}">
+                @csrf
+                <button type="submit" class="review-warning-btn" onclick="return confirm('ປິດຮອບຂໍຄວາມເຫັນ ແລະ ເຂົ້າສະຖານະກຳລັງແກ້ໄຂ?')">
+                    ປິດຮອບ ແລະ ແກ້ໄຂ
+                </button>
+            </form>
+        @endif
+    </div>
+</div>
+
+@if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
+    <div class="review-modal-backdrop" data-review-modal hidden>
+        <div class="review-modal" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+            <div class="review-modal-head">
+                <h3 id="reviewModalTitle">ສົ່ງຂໍຄວາມເຫັນ</h3>
+                <button type="button" data-close-review-modal>&times;</button>
+            </div>
+            <form method="POST" action="{{ route('head_of_finance.manage-plan.request-review', $planningYear) }}" class="review-modal-body">
+                @csrf
+                <label class="review-field">
+                    <span>ຜູ້ກວດສອບ</span>
+                    <div class="reviewer-picker">
+                        @forelse($reviewerUsers as $reviewerUser)
+                            <label>
+                                <input type="checkbox" name="reviewer_ids[]" value="{{ $reviewerUser->id }}">
+                                <span>
+                                    <strong>{{ $reviewerUser->full_name ?? $reviewerUser->username }}</strong>
+                                    <small>{{ $reviewerUser->role?->role_name ?? '-' }}</small>
+                                </span>
+                            </label>
+                        @empty
+                            <p>ບໍ່ມີຜູ້ໃຊ້ active ສຳລັບເລືອກ</p>
+                        @endforelse
+                    </div>
+                </label>
+                <label class="review-field">
+                    <span>ໝາຍເຫດ</span>
+                    <textarea name="note" rows="3" maxlength="1000" placeholder="ຂໍ້ຄວາມສັ້ນໆ ສຳລັບຜູ້ກວດ"></textarea>
+                </label>
+                <div class="review-modal-actions">
+                    <button type="button" class="review-secondary-btn" data-close-review-modal>ຍົກເລີກ</button>
+                    <button type="submit" class="review-primary-btn">ສົ່ງຂໍຄວາມເຫັນ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endif
+
+@if($reviewContext['show_review_panel'] && $currentRound)
+    <section class="review-panel">
+        <div class="review-panel-head">
+            <div>
+                <span>Review round {{ $currentRound->round_number }}</span>
+                <h3>ຄວາມເຫັນຈາກຜູ້ກວດສອບ</h3>
+            </div>
+            <div class="review-panel-meta">
+                <span>ຜູ້ກວດ {{ $currentRound->reviewers->count() }} ຄົນ</span>
+                <span>{{ optional($currentRound->requested_at)->format('d/m/Y H:i') }}</span>
+            </div>
+        </div>
+
+        @if($currentRound->note)
+            <p class="review-note">{{ $currentRound->note }}</p>
+        @endif
+
+        <div class="reviewer-list">
+            @foreach($currentRound->reviewers as $reviewer)
+                <span>{{ $reviewer->user?->full_name ?? $reviewer->user?->username ?? '-' }}</span>
+            @endforeach
+        </div>
+
+        @if($reviewContext['can_comment'])
+            <form method="POST" action="{{ route('reviews.planning-years.comments.store', $planningYear) }}" class="review-comment-form">
+                @csrf
+                <textarea name="comment" rows="3" maxlength="3000" required placeholder="ຂຽນຄວາມເຫັນຂອງທ່ານ"></textarea>
+                <button type="submit" class="review-primary-btn">ສົ່ງຄວາມເຫັນ</button>
+            </form>
+        @endif
+
+        <div class="review-comments">
+            @forelse($reviewComments as $comment)
+                @php
+                    $agreementCount = $comment->agreements->count();
+                    $agreedByMe = $comment->agreements->contains('user_id', $reviewContext['current_user_id']);
+                @endphp
+                <article class="review-comment">
+                    <div class="review-comment-top">
+                        <div>
+                            <strong>{{ $comment->user?->full_name ?? $comment->user?->username ?? '-' }}</strong>
+                            <span>{{ $comment->user?->role?->role_name ?? '' }}</span>
+                        </div>
+                        <time>{{ $comment->created_at?->format('d/m/Y H:i') }}</time>
+                    </div>
+                    <p>{{ $comment->comment }}</p>
+                    <div class="review-comment-actions">
+                        <span>{{ $agreementCount }} ເຫັນດີ</span>
+                        @if($reviewContext['can_agree'] && (int) $comment->user_id !== (int) $reviewContext['current_user_id'])
+                            <form method="POST" action="{{ route('reviews.planning-years.comments.agreement', [$planningYear, $comment]) }}">
+                                @csrf
+                                <button type="submit" class="{{ $agreedByMe ? 'is-agreed' : '' }}">
+                                    {{ $agreedByMe ? 'ຍົກເລີກເຫັນດີ' : 'ເຫັນດີ' }}
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </article>
+            @empty
+                <div class="review-empty">ຍັງບໍ່ມີຄວາມເຫັນ</div>
+            @endforelse
+        </div>
+    </section>
+@endif
 
 <div class="income-preview">
     <section class="paper plan-year-paper">
@@ -852,6 +1004,338 @@
 </div>
 
 <style>
+    .review-toolbar,
+    .review-panel {
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(17, 27, 51, .06);
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    .review-toolbar {
+        align-items: center;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    .review-toolbar h2 {
+        color: var(--fns-navy);
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin: .3rem 0 .1rem;
+    }
+
+    .review-toolbar p,
+    .review-panel-meta,
+    .review-comment-top span,
+    .review-comment-top time {
+        color: var(--fns-gray-600);
+        font-size: .8rem;
+    }
+
+    .review-toolbar-actions,
+    .review-modal-actions,
+    .review-comment-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .55rem;
+        justify-content: flex-end;
+    }
+
+    .review-status {
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: .72rem;
+        font-weight: 800;
+        padding: .22rem .6rem;
+    }
+
+    .review-status-draft {
+        background: #eef2f7;
+        color: #475569;
+    }
+
+    .review-status-pending_review {
+        background: rgba(201, 153, 26, .15);
+        color: #8b6a12;
+    }
+
+    .review-status-modifying {
+        background: rgba(26, 74, 46, .12);
+        color: var(--fns-green);
+    }
+
+    .review-primary-btn,
+    .review-secondary-btn,
+    .review-warning-btn {
+        align-items: center;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        font-family: inherit;
+        font-size: .82rem;
+        font-weight: 800;
+        justify-content: center;
+        min-height: 38px;
+        padding: .55rem .9rem;
+        text-decoration: none;
+    }
+
+    .review-primary-btn {
+        background: var(--fns-navy);
+        border: 1px solid var(--fns-navy);
+        color: #fff;
+    }
+
+    .review-secondary-btn {
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        color: var(--fns-navy);
+    }
+
+    .review-warning-btn {
+        background: rgba(201, 153, 26, .16);
+        border: 1px solid rgba(201, 153, 26, .35);
+        color: #7a5b0b;
+    }
+
+    .review-modal-backdrop {
+        align-items: center;
+        background: rgba(17, 27, 51, .52);
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        left: 0;
+        padding: 1rem;
+        position: fixed;
+        right: 0;
+        top: 0;
+        z-index: 100;
+    }
+
+    .review-modal-backdrop[hidden] {
+        display: none;
+    }
+
+    .review-modal {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 24px 60px rgba(17, 27, 51, .28);
+        max-height: 90vh;
+        max-width: 720px;
+        overflow: auto;
+        width: min(720px, 100%);
+    }
+
+    .review-modal-head {
+        align-items: center;
+        border-bottom: 1px solid var(--fns-gray-200);
+        display: flex;
+        justify-content: space-between;
+        padding: .9rem 1rem;
+    }
+
+    .review-modal-head h3,
+    .review-panel h3 {
+        color: var(--fns-navy);
+        font-size: 1rem;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .review-modal-head button {
+        background: transparent;
+        border: 0;
+        color: var(--fns-gray-600);
+        cursor: pointer;
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .review-modal-body,
+    .review-field,
+    .review-comment-form {
+        display: grid;
+        gap: .8rem;
+    }
+
+    .review-modal-body {
+        padding: 1rem;
+    }
+
+    .review-field > span {
+        color: var(--fns-navy);
+        font-size: .82rem;
+        font-weight: 800;
+    }
+
+    .review-field textarea,
+    .review-comment-form textarea {
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: .88rem;
+        padding: .7rem;
+        resize: vertical;
+        width: 100%;
+    }
+
+    .reviewer-picker {
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        display: grid;
+        max-height: 310px;
+        overflow: auto;
+        padding: .35rem;
+    }
+
+    .reviewer-picker label {
+        align-items: center;
+        border-radius: 7px;
+        display: flex;
+        gap: .65rem;
+        padding: .55rem;
+    }
+
+    .reviewer-picker label:hover {
+        background: var(--fns-gray-100);
+    }
+
+    .reviewer-picker strong,
+    .reviewer-picker small {
+        display: block;
+    }
+
+    .reviewer-picker small {
+        color: var(--fns-gray-600);
+        font-size: .72rem;
+    }
+
+    .review-panel {
+        display: grid;
+        gap: .8rem;
+    }
+
+    .review-panel-head {
+        align-items: start;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .review-panel-head span:first-child {
+        color: #8b6a12;
+        font-size: .72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .review-panel-meta {
+        display: grid;
+        gap: .2rem;
+        text-align: right;
+    }
+
+    .review-note {
+        background: #fff8e5;
+        border: 1px solid #f1dc9a;
+        border-radius: 8px;
+        color: #6f520d;
+        font-size: .84rem;
+        margin: 0;
+        padding: .65rem .75rem;
+    }
+
+    .reviewer-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+    }
+
+    .reviewer-list span {
+        background: #eef2f7;
+        border-radius: 999px;
+        color: #475569;
+        font-size: .76rem;
+        font-weight: 700;
+        padding: .25rem .6rem;
+    }
+
+    .review-comment-form {
+        align-items: end;
+        grid-template-columns: 1fr auto;
+    }
+
+    .review-comments {
+        display: grid;
+        gap: .65rem;
+    }
+
+    .review-comment {
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        padding: .75rem;
+    }
+
+    .review-comment-top {
+        align-items: start;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .review-comment-top strong {
+        color: var(--fns-navy);
+        display: block;
+        font-size: .86rem;
+    }
+
+    .review-comment p {
+        color: #111827;
+        font-size: .9rem;
+        margin: .55rem 0;
+        white-space: pre-wrap;
+    }
+
+    .review-comment-actions {
+        justify-content: flex-start;
+    }
+
+    .review-comment-actions span,
+    .review-comment-actions button {
+        color: var(--fns-gray-600);
+        font-size: .78rem;
+    }
+
+    .review-comment-actions button {
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 999px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 800;
+        padding: .25rem .6rem;
+    }
+
+    .review-comment-actions button.is-agreed {
+        background: rgba(26, 74, 46, .1);
+        border-color: rgba(26, 74, 46, .22);
+        color: var(--fns-green);
+    }
+
+    .review-empty {
+        border: 1px dashed var(--fns-gray-200);
+        border-radius: 8px;
+        color: var(--fns-gray-600);
+        font-size: .85rem;
+        padding: .8rem;
+        text-align: center;
+    }
+
     .income-preview {
         display: flex;
         flex-direction: column;
@@ -1271,7 +1755,10 @@
         }
 
         .fns-topnav,
-        .fns-sidebar {
+        .fns-sidebar,
+        .review-toolbar,
+        .review-panel,
+        .review-modal-backdrop {
             display: none !important;
         }
 
@@ -1480,4 +1967,30 @@
         }
     }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.querySelector('[data-review-modal]');
+        const openButton = document.querySelector('[data-open-review-modal]');
+
+        if (!modal || !openButton) {
+            return;
+        }
+
+        const closeButtons = modal.querySelectorAll('[data-close-review-modal]');
+        const openModal = () => {
+            modal.hidden = false;
+        };
+        const closeModal = () => {
+            modal.hidden = true;
+        };
+
+        openButton.addEventListener('click', openModal);
+        closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    });
+</script>
 @endsection

@@ -1,6 +1,12 @@
 @php
     $isAdmin         = auth()->user()?->can('admin');
     $isHeadOfFinance = auth()->user()?->can('head_of_finance');
+    $reviewAssignmentCount = auth()->check()
+        ? auth()->user()->planningYearReviewAssignments()
+            ->whereHas('reviewRound.planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
+            ->count()
+        : 0;
+    $unreadNotificationCount = auth()->check() ? auth()->user()->unreadNotifications()->count() : 0;
 
     $settingsActive = request()->routeIs('head_of_finance.settings.degree-programs.*')
         || request()->routeIs('head_of_finance.settings.course-credits.*')
@@ -118,6 +124,15 @@
                     </div>
                 </div>
             @endif
+
+            @if($reviewAssignmentCount > 0)
+                <a href="{{ route('reviews.planning-years.index') }}"
+                   class="fns-topnav-item {{ request()->routeIs('reviews.planning-years.*') ? 'active' : '' }}">
+                    <x-icons.book-open />
+                    Review
+                    <span class="fns-topnav-badge">{{ $reviewAssignmentCount }}</span>
+                </a>
+            @endif
         </nav>
 
         {{-- ===== Right side: date + user + logout ===== --}}
@@ -128,6 +143,12 @@
             </span>
 
             @auth
+                @if($unreadNotificationCount > 0)
+                    <a href="{{ route('reviews.planning-years.index') }}" class="fns-topnav-pill fns-topnav-pill-link">
+                        {{ $unreadNotificationCount }} ແຈ້ງເຕືອນ
+                    </a>
+                @endif
+
                 <span class="fns-topnav-pill">
                     <x-icons.user style="width:13px;height:13px;opacity:0.7;" />
                     {{ Auth::user()->full_name ?? Auth::user()->username ?? 'Admin' }}

@@ -21,6 +21,13 @@
     $planYearRows = collect($planYearReport['rows'] ?? []);
     $planYearTotals = $planYearReport['totals'] ?? ['total_amount' => 0, 'state_amount' => 0, 'faculty_amount' => 0];
     $planYearWarnings = $planYearReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []];
+    $planYearSectionFormula = $planYearRows
+        ->filter(fn (array $row): bool => (int) ($row['level'] ?? 0) === 0)
+        ->map(fn (array $row): string => substr(str_pad((string) ($row['code'] ?? ''), 8, '0', STR_PAD_LEFT), 0, 2))
+        ->filter(fn (string $code): bool => $code !== '00')
+        ->unique()
+        ->values()
+        ->implode('+');
 
     $money = fn ($amount) => number_format((float) $amount, 0);
     $blankMoney = fn ($amount) => (float) $amount === 0.0 ? '0' : number_format((float) $amount, 0);
@@ -147,7 +154,7 @@
             <tbody>
                 <tr class="plan-year-overall-row">
                     <td colspan="4"></td>
-                    <td>ລວມຍອດ ເງິນ ພາກ ສ່ວນ (10+11+12+13+16+17) =</td>
+                    <td>ລວມຍອດ ເງິນ ພາກ ສ່ວນ ({{ $planYearSectionFormula ?: '...' }}) =</td>
                     <td class="num">{{ $money($planYearTotals['total_amount']) }}</td>
                     <td class="num">{{ $money($planYearTotals['state_amount']) }}</td>
                     <td class="num">{{ $money($planYearTotals['faculty_amount']) }}</td>

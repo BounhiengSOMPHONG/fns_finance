@@ -93,8 +93,6 @@ class AcademicIncomePlanSeeder extends Seeder
                 'degree_program_id'          => $r['dp'],
                 'student_count'              => $r['n'],
                 'total_income'               => $total,
-                'first_payment_amount'       => round($total * 0.60, 2),
-                'second_payment_amount'      => round($total * 0.40, 2),
             ]);
         }
 
@@ -108,8 +106,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'degree_program_id'          => null,
             'student_count'              => 705,
             'total_income'               => 131482500,
-            'first_payment_amount'       => 131482500,
-            'second_payment_amount'      => 0,
         ]);
 
         // ─────────────────────────────────────────────────────────────────
@@ -142,8 +138,6 @@ class AcademicIncomePlanSeeder extends Seeder
                 'degree_program_id'          => $r['dp'],
                 'student_count'              => $r['n'],
                 'total_income'               => $total,
-                'first_payment_amount'       => round($total * 0.60, 2),
-                'second_payment_amount'      => 0,
             ]);
         }
 
@@ -172,8 +166,6 @@ class AcademicIncomePlanSeeder extends Seeder
                 'degree_program_id'          => $r['dp'],
                 'student_count'              => $r['n'],
                 'total_income'               => $total,
-                'first_payment_amount'       => round($total * 0.60, 2),
-                'second_payment_amount'      => 0,
             ]);
         }
 
@@ -187,8 +179,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'degree_program_id'          => null,
             'student_count'              => 324,
             'total_income'               => 51516000,
-            'first_payment_amount'       => 51516000,
-            'second_payment_amount'      => 0,
         ]);
 
         // ─────────────────────────────────────────────────────────────────
@@ -201,8 +191,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'degree_program_id'          => null,
             'student_count'              => 1029,
             'total_income'               => 51450000,
-            'first_payment_amount'       => 51450000,
-            'second_payment_amount'      => 0,
         ]);
 
         // ─────────────────────────────────────────────────────────────────
@@ -215,8 +203,6 @@ class AcademicIncomePlanSeeder extends Seeder
             'degree_program_id'          => null,
             'student_count'              => 1029,
             'total_income'               => 20580000,
-            'first_payment_amount'       => 20580000,
-            'second_payment_amount'      => 0,
         ]);
     }
 }

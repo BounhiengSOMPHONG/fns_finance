@@ -134,17 +134,12 @@ class AcademicIncomeAssessmentController extends Controller
             $price      = $creditPrices[$program->level]?->credit_unit_price ?? 0;
             $total      = $count * $creditUnit * $price * (1 - $nuol);
 
-            // Bachelor: 60% first / 40% teaching. Master/PhD: 40% first / 60% teaching.
-            $teachingPct = $program->level === 'bachelor' ? 0.40 : 0.60;
-
             $this->saveIncomeItem(
                 ['plan_id' => $academicIncome->id, 'section_code' => '1.1', 'degree_program_id' => $program->id],
                 [
                     'student_count'              => $count,
                     'setting_set_id'              => $settingSet?->id,
                     'total_income'               => $total,
-                    'first_payment_amount'       => round($total * (1 - $teachingPct), 2),
-                    'second_payment_amount'      => round($total * $teachingPct, 2),
                 ]
             );
         }
@@ -163,8 +158,6 @@ class AcademicIncomeAssessmentController extends Controller
                     'student_count'              => $count,
                     'setting_set_id'              => $settingSet?->id,
                     'total_income'               => $total,
-                    'first_payment_amount'       => round($total * 0.60, 2),
-                    'second_payment_amount'      => round($total * 0.40, 2),
                 ]
             );
         }
@@ -185,8 +178,6 @@ class AcademicIncomeAssessmentController extends Controller
                     'student_count'              => $count,
                     'setting_set_id'              => $settingSet?->id,
                     'total_income'               => $total,
-                    'first_payment_amount'       => round($total * 0.40, 2),
-                    'second_payment_amount'      => round($total * 0.60, 2),
                 ]
             );
         }
@@ -206,8 +197,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count'              => $count12,
                 'setting_set_id'              => $settingSet?->id,
                 'total_income'               => $total12,
-                'first_payment_amount'       => 0,
-                'second_payment_amount'      => 0,
             ]
         );
 
@@ -226,8 +215,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count'              => $count14,
                 'setting_set_id'              => $settingSet?->id,
                 'total_income'               => $total14,
-                'first_payment_amount'       => 0,
-                'second_payment_amount'      => 0,
             ]
         );
 
@@ -243,8 +230,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count'              => $count21,
                 'setting_set_id'              => $settingSet?->id,
                 'total_income'               => $count21 * $rate21,
-                'first_payment_amount'       => 0,
-                'second_payment_amount'      => 0,
             ]
         );
 
@@ -257,8 +242,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count'              => $count22,
                 'setting_set_id'              => $settingSet?->id,
                 'total_income'               => $count22 * $rate22,
-                'first_payment_amount'       => 0,
-                'second_payment_amount'      => 0,
             ]
         );
 
@@ -271,8 +254,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count'              => $count23,
                 'setting_set_id'              => $settingSet?->id,
                 'total_income'               => $count23 * $rate23,
-                'first_payment_amount'       => 0,
-                'second_payment_amount'      => 0,
             ]
         );
 
@@ -285,8 +266,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count'              => $count24,
                 'setting_set_id'              => $settingSet?->id,
                 'total_income'               => $count24 * $rate24,
-                'first_payment_amount'       => 0,
-                'second_payment_amount'      => 0,
             ]
         );
 
@@ -375,20 +354,12 @@ class AcademicIncomeAssessmentController extends Controller
         $price = $creditPrices[$program->level]?->credit_unit_price ?? 0;
         $total = $count * $creditUnit * $price * (1 - $nuol);
 
-        $teachingPct = match ($inputPrefix) {
-            's11' => $program->level === 'bachelor' ? 0.40 : 0.60,
-            's13m' => 0.60,
-            default => 0.40,
-        };
-
         return $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => $program->id],
             [
                 'student_count' => $count,
                 'setting_set_id' => $settingSet?->id,
                 'total_income' => $total,
-                'first_payment_amount' => round($total * (1 - $teachingPct), 2),
-                'second_payment_amount' => round($total * $teachingPct, 2),
             ]
         );
     }
@@ -428,8 +399,6 @@ class AcademicIncomeAssessmentController extends Controller
                 'student_count' => $count,
                 'setting_set_id' => $settingSet?->id,
                 'total_income' => $total,
-                'first_payment_amount' => 0,
-                'second_payment_amount' => 0,
             ]
         );
     }

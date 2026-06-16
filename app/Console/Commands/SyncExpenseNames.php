@@ -38,6 +38,12 @@ class SyncExpenseNames extends Command
                     ->update(['name' => $change['new'], 'updated_at' => $now]);
             }
 
+            foreach ($changes['subsection_orders'] as $change) {
+                DB::table('expense_subsections')
+                    ->where('id', $change['id'])
+                    ->update(['display_order' => $change['new'], 'updated_at' => $now]);
+            }
+
             foreach ($changes['default_rows'] as $change) {
                 DB::table('expense_subsection_default_rows')
                     ->where('id', $change['id'])
@@ -69,6 +75,7 @@ class SyncExpenseNames extends Command
         $changes = [
             'sections' => [],
             'subsections' => [],
+            'subsection_orders' => [],
             'default_rows' => [],
             'plan_details' => [],
             'plan_value_item_names' => [],
@@ -108,6 +115,32 @@ class SyncExpenseNames extends Command
                         'new' => $target,
                     ];
                 }
+            });
+
+        DB::table('expense_subsections')
+            ->whereIn('code', array_keys($names))
+            ->orderBy('section_id')
+            ->get(['id', 'section_id', 'code', 'display_order'])
+            ->groupBy('section_id')
+            ->each(function ($subsections) use (&$changes): void {
+                $subsections
+                    ->sortBy(fn ($subsection) => ExpenseStructureNames::codeSortKey($subsection->code))
+                    ->values()
+                    ->each(function ($subsection, int $index) use (&$changes): void {
+                        $target = $index + 1;
+
+                        if ((int) $subsection->display_order === $target) {
+                            return;
+                        }
+
+                        $changes['subsection_orders'][] = [
+                            'id' => $subsection->id,
+                            'context' => 'section '.$subsection->section_id,
+                            'code' => $subsection->code,
+                            'old' => (string) $subsection->display_order,
+                            'new' => $target,
+                        ];
+                    });
             });
 
         $finalDefaultRows = [];
@@ -221,6 +254,7 @@ class SyncExpenseNames extends Command
         foreach ([
             'sections' => 'Sections',
             'subsections' => 'Subsections',
+            'subsection_orders' => 'Subsection display orders',
             'default_rows' => 'Default rows',
             'plan_details' => 'Plan details',
             'plan_value_item_names' => 'Plan value item_name fields',

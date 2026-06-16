@@ -228,7 +228,7 @@ class ManagePlanController extends Controller
         }
 
         $subsectionsByCode = [];
-        foreach ($subsectionCodes->unique()->sort()->values() as $index => $code) {
+        foreach ($subsectionCodes->unique()->sortBy(fn (string $code) => ExpenseStructureNames::codeSortKey($code))->values() as $index => $code) {
             $sectionCode = implode('.', array_slice(explode('.', $code), 0, 2));
             if (! isset($sectionsByCode[$sectionCode])) {
                 continue;

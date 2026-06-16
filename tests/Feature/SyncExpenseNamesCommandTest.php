@@ -48,6 +48,7 @@ class SyncExpenseNamesCommandTest extends TestCase
             'section_id' => 1,
             'code' => '2.1.1',
             'name' => 'ລາຍການ 2.1.1',
+            'display_order' => 1,
             'updated_at' => now(),
         ]);
 
@@ -61,6 +62,35 @@ class SyncExpenseNamesCommandTest extends TestCase
             'ບໍລິຫານສັງລວມ',
             DB::table('expense_subsections')->where('id', 10)->value('name')
         );
+    }
+
+    public function test_syncs_subsection_display_order_by_numeric_code(): void
+    {
+        DB::table('expense_sections')->insert([
+            'id' => 1,
+            'planning_year_id' => 13,
+            'code' => '2.1',
+            'name' => '2.1',
+            'updated_at' => now(),
+        ]);
+
+        DB::table('expense_subsections')->insert([
+            ['id' => 10, 'section_id' => 1, 'code' => '2.1.1', 'name' => '2.1.1', 'display_order' => 1, 'updated_at' => now()],
+            ['id' => 11, 'section_id' => 1, 'code' => '2.1.10', 'name' => '2.1.10', 'display_order' => 2, 'updated_at' => now()],
+            ['id' => 12, 'section_id' => 1, 'code' => '2.1.2', 'name' => '2.1.2', 'display_order' => 3, 'updated_at' => now()],
+        ]);
+
+        $this->artisan('expense:sync-names --dry-run')
+            ->expectsOutputToContain('Subsection display orders: 2')
+            ->assertExitCode(0);
+
+        $this->assertSame(2, (int) DB::table('expense_subsections')->where('code', '2.1.10')->value('display_order'));
+
+        $this->artisan('expense:sync-names')->assertExitCode(0);
+
+        $this->assertSame(1, (int) DB::table('expense_subsections')->where('code', '2.1.1')->value('display_order'));
+        $this->assertSame(2, (int) DB::table('expense_subsections')->where('code', '2.1.2')->value('display_order'));
+        $this->assertSame(3, (int) DB::table('expense_subsections')->where('code', '2.1.10')->value('display_order'));
     }
 
     public function test_syncs_known_default_row_typo_and_matching_plan_values_only(): void
@@ -78,6 +108,7 @@ class SyncExpenseNamesCommandTest extends TestCase
             'section_id' => 1,
             'code' => '2.2.4',
             'name' => '2.2.4',
+            'display_order' => 1,
             'updated_at' => now(),
         ]);
 
@@ -173,6 +204,7 @@ class SyncExpenseNamesCommandTest extends TestCase
             $table->unsignedBigInteger('section_id');
             $table->string('code', 30);
             $table->string('name');
+            $table->unsignedInteger('display_order')->default(0);
             $table->timestamp('updated_at')->nullable();
         });
 

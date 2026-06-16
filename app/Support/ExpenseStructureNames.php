@@ -74,6 +74,13 @@ class ExpenseStructureNames
         return self::nameFor($code) ?? 'ລາຍການ '.$code;
     }
 
+    public static function codeSortKey(string $code): string
+    {
+        return collect(explode('.', $code))
+            ->map(fn (string $part) => str_pad((string) ((int) $part), 4, '0', STR_PAD_LEFT))
+            ->implode('.');
+    }
+
     public static function isPlaceholder(?string $value, ?string $code = null): bool
     {
         $value = trim((string) $value);

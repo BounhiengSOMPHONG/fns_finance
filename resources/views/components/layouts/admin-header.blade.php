@@ -1,6 +1,12 @@
 @php
     $isAdmin         = auth()->user()?->can('admin');
     $isHeadOfFinance = auth()->user()?->can('head_of_finance');
+    $reviewAssignmentCount = auth()->check()
+        ? auth()->user()->planningYearReviewAssignments()
+            ->whereHas('reviewRound.planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
+            ->count()
+        : 0;
+    $unreadNotificationCount = auth()->check() ? auth()->user()->unreadNotifications()->count() : 0;
 
     $settingsActive = request()->routeIs('head_of_finance.settings.degree-programs.*')
         || request()->routeIs('head_of_finance.settings.course-credits.*')
@@ -50,21 +56,11 @@
                     ໜ້າຫຼັກ
                 </a>
 
-                {{-- Manage plan dropdown --}}
-                <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
-                    <button type="button" class="fns-topnav-item {{ $managePlanActive ? 'active' : '' }}"
-                            @click="open = !open" :aria-expanded="open">
-                        <x-icons.book-open />
-                        Manage plan
-                        <svg class="fns-topnav-chev" :class="{ 'is-open': open }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                    </button>
-                    <div class="fns-topnav-menu" x-show="open" x-transition.opacity.duration.150ms style="display:none;">
-                        <a href="{{ route('head_of_finance.manage-plan.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.manage-plan.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Manage plan
-                        </a>
-                    </div>
-                </div>
+                <a href="{{ route('head_of_finance.manage-plan.index') }}"
+                   class="fns-topnav-item {{ $managePlanActive ? 'active' : '' }}">
+                    <x-icons.book-open />
+                    Manage plan
+                </a>
 
                 {{-- Settings dropdown --}}
                 <div class="fns-topnav-dropdown" x-data="{ open: false }" @click.away="open = false">
@@ -128,6 +124,15 @@
                     </div>
                 </div>
             @endif
+
+            @if($reviewAssignmentCount > 0)
+                <a href="{{ route('reviews.planning-years.index') }}"
+                   class="fns-topnav-item {{ request()->routeIs('reviews.planning-years.*') ? 'active' : '' }}">
+                    <x-icons.book-open />
+                    Review
+                    <span class="fns-topnav-badge">{{ $reviewAssignmentCount }}</span>
+                </a>
+            @endif
         </nav>
 
         {{-- ===== Right side: date + user + logout ===== --}}
@@ -138,6 +143,12 @@
             </span>
 
             @auth
+                @if($unreadNotificationCount > 0)
+                    <a href="{{ route('reviews.planning-years.index') }}" class="fns-topnav-pill fns-topnav-pill-link">
+                        {{ $unreadNotificationCount }} ແຈ້ງເຕືອນ
+                    </a>
+                @endif
+
                 <span class="fns-topnav-pill">
                     <x-icons.user style="width:13px;height:13px;opacity:0.7;" />
                     {{ Auth::user()->full_name ?? Auth::user()->username ?? 'Admin' }}

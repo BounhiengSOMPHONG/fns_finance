@@ -378,6 +378,14 @@ function moneyInputValue(value) {
     return numeric ? fmt.format(numeric) : '0';
 }
 
+function codeSortKey(code) {
+    return String(code || '').split('.').map(part => String(Number(part) || 0).padStart(4, '0')).join('.');
+}
+
+function sortSubsections(subsections) {
+    return [...subsections].sort((a, b) => codeSortKey(a.code).localeCompare(codeSortKey(b.code)));
+}
+
 function rowsFor(sectionId, subsectionId = null) {
     return ROWS.filter(row => Number(row.section_id) === Number(sectionId) && (subsectionId === null || Number(row.subsection_id) === Number(subsectionId)));
 }
@@ -387,7 +395,7 @@ function totalFor(sectionId, subsectionId = null) {
 }
 
 function childSubsections(section, subsectionId) {
-    const children = section.subsections.filter(subsection => Number(subsection.parent_id) === Number(subsectionId));
+    const children = sortSubsections(section.subsections.filter(subsection => Number(subsection.parent_id) === Number(subsectionId)));
     return children.flatMap(child => [child, ...childSubsections(section, child.id)]);
 }
 
@@ -397,7 +405,7 @@ function summaryRowsFor(section, subsection) {
 }
 
 function topLevelSubsections(section) {
-    return section.subsections.filter(subsection => subsection.parent_id === null);
+    return sortSubsections(section.subsections.filter(subsection => subsection.parent_id === null));
 }
 
 function summaryPeriodCount(item) {
@@ -624,17 +632,16 @@ function renderSheet() {
 
     renderOverviewSummary();
     document.getElementById('sectionTitle').textContent = `${section.code} ${section.name}`;
-    const finalSubsections = section.subsections.filter(subsection =>
+    const finalSubsections = sortSubsections(section.subsections.filter(subsection =>
         !section.subsections.some(child => Number(child.parent_id) === Number(subsection.id))
-    );
+    ));
     document.getElementById('sectionMeta').textContent = `${finalSubsections.length} ຫົວຂໍ້ຍ່ອຍ`;
     document.getElementById('sectionTotal').textContent = fmt.format(sectionSummaryValues(section).total);
     const grandTotalEl = document.getElementById('grandTotal');
     if (grandTotalEl) {
         grandTotalEl.textContent = fmt.format(SECTIONS.reduce((sum, item) => sum + sectionSummaryValues(item).total, 0));
     }
-    document.getElementById('subsectionSheets').innerHTML = section.subsections
-        .filter(subsection => subsection.parent_id === null)
+    document.getElementById('subsectionSheets').innerHTML = topLevelSubsections(section)
         .map(subsection => renderSubsectionGroup(section, subsection))
         .join('');
     bindSheetEvents();
@@ -715,7 +722,7 @@ function renderSectionSummary(section, subsections) {
 }
 
 function renderSubsectionGroup(section, subsection) {
-    const children = section.subsections.filter(child => Number(child.parent_id) === Number(subsection.id));
+    const children = sortSubsections(section.subsections.filter(child => Number(child.parent_id) === Number(subsection.id)));
     if (!children.length) {
         if (!rowsFor(section.id, subsection.id).length && !(DEFAULT_ROWS[subsection.code] || []).length) {
             return '';

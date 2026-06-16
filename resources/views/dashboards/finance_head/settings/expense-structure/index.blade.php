@@ -8,6 +8,8 @@
     $accountOptionsById = $accountOptions->keyBy('id');
     $defaultRowTotal = $defaultRowsByCode->reduce(fn ($total, $rows) => $total + $rows->count(), 0);
     $linkedDefaultRowTotal = $defaultRowsByCode->reduce(fn ($total, $rows) => $total + $rows->whereNotNull('chart_of_account_id')->count(), 0);
+    $unlinkedAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id === null)->values();
+    $reviewAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id !== null && (bool) $row->getAttribute('needs_review'))->values();
 @endphp
 
 <div class="es-page">
@@ -42,6 +44,44 @@
             </select>
         </form>
     </div>
+
+    @if($planningYear && $accountWarnings->isNotEmpty())
+        <section class="es-warning-panel">
+            <div class="es-warning-head">
+                <div>
+                    <h3>Account links to check before printing annual plan</h3>
+                    <p>{{ $unlinkedAccountWarnings->count() }} unlinked rows · {{ $reviewAccountWarnings->count() }} best-fit rows need review</p>
+                </div>
+                <div class="es-warning-actions">
+                    <button type="button" class="es-filter-btn is-active" data-account-filter="all">All</button>
+                    <button type="button" class="es-filter-btn" data-account-filter="unlinked">Unlinked</button>
+                    <button type="button" class="es-filter-btn" data-account-filter="review">Needs review</button>
+                    <button type="button" class="es-filter-btn" data-account-filter="linked">Linked</button>
+                </div>
+            </div>
+
+            <div class="es-warning-list">
+                @foreach($accountWarnings->take(18) as $warningRow)
+                    @php
+                        $suggestedAccount = $warningRow->getAttribute('suggested_account');
+                    @endphp
+                    <button type="button"
+                            class="es-warning-item"
+                            data-jump-default-row="{{ $warningRow->id }}">
+                        <span class="es-warning-code">{{ $warningRow->subsection_code }}</span>
+                        <span class="es-warning-name">{{ $warningRow->item_name }}</span>
+                        <span class="es-warning-current">{{ $warningRow->chartOfAccount?->account_code ?: 'No account' }}</span>
+                        <span class="es-warning-suggest">{{ $suggestedAccount?->account_code ? 'Suggested '.$suggestedAccount->account_code : 'Choose account' }}</span>
+                    </button>
+                @endforeach
+            </div>
+        </section>
+    @elseif($planningYear)
+        <section class="es-ready-panel">
+            <strong>Ready for annual plan</strong>
+            <span>All default rows visible in this planning year have chart account links.</span>
+        </section>
+    @endif
 
     @if($planningYear)
         <details class="es-add-panel">
@@ -272,11 +312,15 @@
                                                         $selectedAccount = $accountOptionsById->get($defaultRow->chart_of_account_id);
                                                         $selectedLabel = $selectedAccount['label'] ?? '';
                                                         $selectedReference = $selectedAccount['code'] ?? null;
+                                                        $suggestedAccount = $defaultRow->getAttribute('suggested_account');
+                                                        $needsReview = (bool) $defaultRow->getAttribute('needs_review');
+                                                        $accountState = $defaultRow->chart_of_account_id === null ? 'unlinked' : ($needsReview ? 'review' : 'linked');
                                                     @endphp
                                                     <form method="POST"
                                                           action="{{ route('head_of_finance.settings.expense-default-rows.update', $defaultRow) }}"
                                                           class="js-default-account-row es-default-row"
                                                           data-row="{{ $defaultRow->id }}"
+                                                          data-account-state="{{ $accountState }}"
                                                           data-url="{{ route('head_of_finance.settings.expense-default-rows.account.update', $defaultRow) }}">
                                                         @csrf
                                                         @method('PATCH')
@@ -289,6 +333,11 @@
                                                                 <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
                                                                     Ref: <span class="js-default-reference">{{ $selectedReference ?: '-' }}</span>
                                                                 </span>
+                                                                @if($suggestedAccount)
+                                                                    <span class="es-account-hint {{ $needsReview ? 'is-review' : '' }}">
+                                                                        Suggested: {{ $suggestedAccount->account_code }}
+                                                                    </span>
+                                                                @endif
                                                             </div>
                                                         </div>
 
@@ -309,8 +358,8 @@
                                                         </div>
 
                                                         <div class="es-default-actions">
-                                                            <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? 'is-ok' : '' }}">
-                                                                {{ $defaultRow->chart_of_account_id ? 'Linked' : 'No link' }}
+                                                            <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'is-warn' : 'is-ok') : '' }}">
+                                                                {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'Review' : 'Linked') : 'No link' }}
                                                             </span>
                                                             <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">Save</button>
                                                             <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">Clear account</button>
@@ -452,6 +501,89 @@
         font-size:.68rem;
         font-weight:900;
         text-transform:uppercase;
+    }
+    .es-warning-panel,
+    .es-ready-panel {
+        border:1px solid var(--fns-gray-200);
+        border-radius:8px;
+        background:#fff;
+        box-shadow:0 1px 8px rgba(26,39,68,.04);
+    }
+    .es-warning-panel { border-color:#f1cd73; background:#fffaf0; }
+    .es-warning-head {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:1rem;
+        padding:.85rem 1rem;
+        border-bottom:1px solid #f4ddb0;
+    }
+    .es-warning-head h3 { margin:0; color:#7a4c05; font-size:.92rem; font-weight:900; }
+    .es-warning-head p { margin:.12rem 0 0; color:#94660d; font-size:.74rem; font-weight:800; }
+    .es-warning-actions { display:flex; flex-wrap:wrap; gap:.35rem; }
+    .es-filter-btn {
+        border:1px solid #ead49f;
+        border-radius:7px;
+        background:#fff;
+        color:#7a4c05;
+        cursor:pointer;
+        font-size:.72rem;
+        font-weight:900;
+        padding:.42rem .62rem;
+    }
+    .es-filter-btn.is-active { background:#7a4c05; border-color:#7a4c05; color:#fff; }
+    .es-warning-list {
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+        gap:.45rem;
+        padding:.75rem;
+    }
+    .es-warning-item {
+        display:grid;
+        grid-template-columns:auto 1fr;
+        gap:.25rem .5rem;
+        border:1px solid #f0d89d;
+        border-radius:7px;
+        background:#fff;
+        color:#5f4209;
+        cursor:pointer;
+        padding:.55rem .65rem;
+        text-align:left;
+    }
+    .es-warning-item:hover { border-color:#d2a112; box-shadow:0 2px 10px rgba(122,76,5,.08); }
+    .es-warning-code { font-weight:900; }
+    .es-warning-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:800; }
+    .es-warning-current,
+    .es-warning-suggest { color:#8a6413; font-size:.68rem; font-weight:900; }
+    .es-ready-panel {
+        display:flex;
+        align-items:center;
+        gap:.6rem;
+        padding:.85rem 1rem;
+        color:#047857;
+        background:#f0fdf4;
+        border-color:#bbf7d0;
+        font-size:.82rem;
+    }
+    .es-ready-panel strong { font-weight:900; }
+    .es-account-hint {
+        display:inline-flex;
+        align-items:center;
+        border-radius:999px;
+        background:#e9f8ef;
+        color:#047857;
+        padding:.12rem .45rem;
+        font-weight:900;
+    }
+    .es-account-hint.is-review { background:#fff7df; color:#a16207; }
+    .es-default-row.is-filter-hidden,
+    .es-account-row.is-filter-hidden,
+    .js-autosave-row.is-filter-hidden {
+        display:none;
+    }
+    .es-default-row.is-focus-pulse {
+        border-color:#d2a112;
+        box-shadow:0 0 0 3px rgba(210,161,18,.18);
     }
     .es-add-panel,
     .es-edit-section,
@@ -715,6 +847,7 @@
 const EXPENSE_STRUCTURE_ACCOUNT_OPTIONS = @json($accountOptions->values());
 const EXPENSE_STRUCTURE_CSRF = document.querySelector('meta[name="csrf-token"]').content;
 let activeExpenseStructureSection = document.querySelector('.es-section-tab.is-active')?.dataset.sectionTarget || null;
+let activeAccountFilter = 'all';
 
 function syncExpenseStructureSectionNav() {
     const tabs = Array.from(document.querySelectorAll('.es-section-tab'));
@@ -812,6 +945,43 @@ function setDefaultAccountStatus(row, message, state = 'idle') {
     status.className = `js-default-row-status es-pill ${tone}`;
 }
 
+function applyExpenseAccountFilter(filter = activeAccountFilter) {
+    activeAccountFilter = filter;
+
+    document.querySelectorAll('.es-filter-btn').forEach(button => {
+        button.classList.toggle('is-active', button.dataset.accountFilter === activeAccountFilter);
+    });
+
+    document.querySelectorAll('.js-default-account-row').forEach(row => {
+        const state = row.dataset.accountState || 'linked';
+        row.classList.toggle('is-filter-hidden', activeAccountFilter !== 'all' && state !== activeAccountFilter);
+    });
+
+    document.querySelectorAll('.es-account-row').forEach(accountRow => {
+        const visibleRows = Array.from(accountRow.querySelectorAll('.js-default-account-row'))
+            .filter(row => !row.classList.contains('is-filter-hidden'));
+        const hide = activeAccountFilter !== 'all' && visibleRows.length === 0;
+        accountRow.classList.toggle('is-filter-hidden', hide);
+        accountRow.previousElementSibling?.classList.toggle('is-filter-hidden', hide);
+    });
+}
+
+function jumpToDefaultAccountRow(rowId) {
+    const row = document.querySelector(`.js-default-account-row[data-row="${rowId}"]`);
+    if (!row) return;
+
+    const sectionPanel = row.closest('.js-section-panel');
+    if (sectionPanel?.dataset.sectionPanel) {
+        selectExpenseStructureSection(sectionPanel.dataset.sectionPanel);
+    }
+
+    row.closest('details')?.setAttribute('open', 'open');
+    row.classList.remove('is-filter-hidden');
+    row.scrollIntoView({behavior: 'smooth', block: 'center'});
+    row.classList.add('is-focus-pulse');
+    setTimeout(() => row.classList.remove('is-focus-pulse'), 1500);
+}
+
 function updateDefaultAccountBadge(badge, linked, total) {
     if (!badge) return;
 
@@ -870,8 +1040,10 @@ async function saveDefaultAccountRow(row) {
         row.querySelector('.js-default-reference').textContent = data.row.reference || '-';
         input.value = data.row.account_label || '';
         hidden.value = data.row.chart_of_account_id || '';
+        row.dataset.accountState = data.row.chart_of_account_id ? 'linked' : 'unlinked';
         setDefaultAccountStatus(row, data.row.chart_of_account_id ? 'Linked' : 'No link', data.row.chart_of_account_id ? 'linked' : 'idle');
         refreshDefaultAccountSummary(row);
+        applyExpenseAccountFilter();
     } catch (error) {
         setDefaultAccountStatus(row, 'Not saved', 'error');
         refreshDefaultAccountSummary(row);
@@ -965,6 +1137,19 @@ function queueAutosave(input) {
 }
 
 document.querySelectorAll('.js-autosave-form, .js-autosave-row').forEach(snapshotAutosaveForm);
+
+document.addEventListener('click', (event) => {
+    const filterButton = event.target.closest('.es-filter-btn');
+    if (filterButton) {
+        applyExpenseAccountFilter(filterButton.dataset.accountFilter || 'all');
+        return;
+    }
+
+    const warningItem = event.target.closest('.es-warning-item');
+    if (warningItem) {
+        jumpToDefaultAccountRow(warningItem.dataset.jumpDefaultRow);
+    }
+});
 
 document.addEventListener('submit', (event) => {
     const form = event.target.closest('.js-autosave-form, .js-autosave-source-form');

@@ -49,16 +49,16 @@
 
                 <div class="mp-status">
                     <div>
-                        <span>ລາຍຮັບ</span>
+                        <span>ປະເມີນລາຍຮັບ</span>
                         <strong>{{ $incomePlan ? number_format((float) $incomeTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
+                    </div>
+                    <div>
+                        <span>ປະເມືນລາຍຈ່າຍ</span>
+                        <strong>{{ $expenseRows > 0 ? number_format((float) $expenseTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                     <div>
                         <span>ເງິນເດືອນ</span>
                         <strong>{{ $salaryPlan ? number_format((float) $salaryTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
-                    </div>
-                    <div>
-                        <span>ລາຍຈ່າຍ</span>
-                        <strong>{{ $expenseRows > 0 ? number_format((float) $expenseTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                 </div>
 
@@ -68,13 +68,16 @@
                             <x-icons.book-open /> ປະເມີນລາຍຮັບ
                         </a>
                     @endif
+                    <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action">
+                        <x-icons.book-open /> ປະເມືນລາຍຈ່າຍ
+                    </a>
                     @if($salaryPlan)
                         <a href="{{ route('head_of_finance.salary.manage', $salaryPlan) }}" class="mp-action">
                             <x-icons.users /> ເງິນເດືອນ
                         </a>
                     @endif
-                    <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action mp-action-strong">
-                        <x-icons.book-open /> ລາຍຈ່າຍ
+                    <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}" class="mp-action mp-action-strong">
+                        <x-icons.book-open /> ຂຶ້ນແຜນ
                     </a>
                     <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}" class="mp-action mp-action-preview">
                         <x-icons.book-open /> ຂຶ້ນແຜນ
@@ -186,8 +189,9 @@
         overflow-wrap:anywhere;
         line-height:1.25;
     }
-    .mp-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .mp-actions { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
     .mp-actions form { margin:0; }
+    .mp-actions form:last-child { margin-left:auto; }
     .mp-action {
         display:inline-flex; align-items:center; gap:.45rem; border:1px solid var(--fns-gray-200);
         background:#fff; color:var(--fns-navy); padding:.55rem .7rem; text-decoration:none;

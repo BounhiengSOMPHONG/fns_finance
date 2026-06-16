@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        \App\Console\Commands\SyncExpenseNames::class,
+        \App\Console\Commands\SyncExpenseAccountLinks::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'check.active' => CheckUserActive::class,

@@ -10,12 +10,14 @@ use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
+use App\Support\ExpenseAccountLinkCatalog;
+use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ExpenseStructureController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ExpenseAccountLinkCatalog $accountLinkCatalog)
     {
         $years = PlanningYear::orderByDesc('year')->get();
         $planningYear = $request->filled('planning_year_id')
@@ -24,6 +26,11 @@ class ExpenseStructureController extends Controller
 
         $sections = collect();
         $defaultRowsByCode = collect();
+        $accountsByCode = ChartOfAccount::with('parent')
+            ->orderBy('account_code')
+            ->get()
+            ->keyBy('account_code');
+
         if ($planningYear) {
             if (! ExpenseSection::where('planning_year_id', $planningYear->id)->exists()) {
                 $this->buildStructureFromDefaultRows($planningYear);
@@ -41,14 +48,22 @@ class ExpenseStructureController extends Controller
                 ->values();
 
             if ($subsectionCodes->isNotEmpty()) {
-                $defaultRowsByCode = ExpenseSubsectionDefaultRow::with('chartOfAccount.parent')
+                $defaultRows = ExpenseSubsectionDefaultRow::with('chartOfAccount.parent')
                     ->whereIn('subsection_code', $subsectionCodes)
                     ->orderBy('subsection_code')
                     ->orderBy('sort_order')
-                    ->get()
+                    ->get();
+
+                $defaultRowsByCode = $accountLinkCatalog
+                    ->decorateRows($defaultRows, $accountsByCode)
                     ->groupBy('subsection_code');
             }
         }
+
+        $accountWarnings = $defaultRowsByCode
+            ->flatten(1)
+            ->filter(fn (ExpenseSubsectionDefaultRow $row): bool => $row->chart_of_account_id === null || (bool) $row->getAttribute('needs_review'))
+            ->values();
 
         $patterns = ExpensePattern::where('is_active', true)
             ->orderBy('id')
@@ -72,6 +87,7 @@ class ExpenseStructureController extends Controller
             'patterns' => $patterns,
             'defaultRowsByCode' => $defaultRowsByCode,
             'accountOptions' => $accountOptions,
+            'accountWarnings' => $accountWarnings,
         ]);
     }
 
@@ -238,7 +254,7 @@ class ExpenseStructureController extends Controller
             $node = $node->parent;
         }
 
-        return $account->account_code . ' - ' . implode(' / ', $parts);
+        return $account->account_code.' - '.implode(' / ', $parts);
     }
 
     private function buildStructureFromDefaultRows(PlanningYear $planningYear): void
@@ -267,7 +283,7 @@ class ExpenseStructureController extends Controller
             $sectionsByCode[$sectionCode] = ExpenseSection::create([
                 'planning_year_id' => $planningYear->id,
                 'code' => $sectionCode,
-                'name' => 'ກຸ່ມລາຍຈ່າຍ ' . $sectionCode,
+                'name' => ExpenseStructureNames::fallbackSectionName($sectionCode),
                 'description' => null,
                 'display_order' => $index + 1,
                 'summary_period_count' => 12,
@@ -284,7 +300,7 @@ class ExpenseStructureController extends Controller
         }
 
         $subsectionsByCode = [];
-        foreach ($subsectionCodes->unique()->sort()->values() as $index => $code) {
+        foreach ($subsectionCodes->unique()->sortBy(fn (string $code) => ExpenseStructureNames::codeSortKey($code))->values() as $index => $code) {
             $sectionCode = implode('.', array_slice(explode('.', $code), 0, 2));
             if (! isset($sectionsByCode[$sectionCode])) {
                 continue;
@@ -294,7 +310,7 @@ class ExpenseStructureController extends Controller
                 'section_id' => $sectionsByCode[$sectionCode]->id,
                 'parent_id' => null,
                 'code' => $code,
-                'name' => 'ລາຍການ ' . $code,
+                'name' => ExpenseStructureNames::fallbackSubsectionName($code),
                 'description' => null,
                 'default_pattern_id' => $defaultPatternId,
                 'summary_period_count' => 12,

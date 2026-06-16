@@ -14,6 +14,7 @@ use App\Models\PlanningYearFieldSetting;
 use App\Models\SalaryPlan;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
+use App\Services\PlanYearReportBuilder;
 use App\Services\SalaryReportBuilder;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
@@ -40,7 +41,8 @@ class ManagePlanController extends Controller
         PlanningYear $planningYear,
         AcademicIncomeReportBuilder $reportBuilder,
         ExpenseReportBuilder $expenseReportBuilder,
-        SalaryReportBuilder $salaryReportBuilder
+        SalaryReportBuilder $salaryReportBuilder,
+        PlanYearReportBuilder $planYearReportBuilder
     ) {
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
@@ -49,12 +51,14 @@ class ManagePlanController extends Controller
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
         $expenseReport = $expenseReportBuilder->buildForPlanningYear($planningYear);
         $salaryReport = $salaryReportBuilder->buildForPlanningYear($planningYear);
+        $planYearReport = $planYearReportBuilder->buildForPlanningYear($planningYear);
 
         return view('dashboards.finance_head.manage-plan.preview', compact(
             'planningYear',
             'report',
             'expenseReport',
             'salaryReport',
+            'planYearReport',
         ));
     }
 

@@ -18,6 +18,9 @@
     $salaryTotals = $salaryReport['totals'];
     $salaryMonth = $salaryReport['month'] ? str_pad((string) $salaryReport['month'], 2, '0', STR_PAD_LEFT) : '01';
     $salaryFiscalYear = $salaryReport['fiscal_year'] ?? $planningYear->year;
+    $planYearRows = collect($planYearReport['rows'] ?? []);
+    $planYearTotals = $planYearReport['totals'] ?? ['total_amount' => 0, 'state_amount' => 0, 'faculty_amount' => 0];
+    $planYearWarnings = $planYearReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []];
 
     $money = fn ($amount) => number_format((float) $amount, 0);
     $blankMoney = fn ($amount) => (float) $amount === 0.0 ? '0' : number_format((float) $amount, 0);
@@ -88,6 +91,99 @@
 @endphp
 
 <div class="income-preview">
+    <section class="paper plan-year-paper">
+        <div class="official-header">
+            <div class="org-left">
+                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
+            </div>
+            <div class="nation-right">
+                <strong>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</strong>
+                <span>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນາຖາວອນ</span>
+            </div>
+        </div>
+
+        <h1 class="report-title">ແຜນງົບປະມານເນື້ອໃນລາຍຈ່າຍ ປີ {{ $planningYear->year }}</h1>
+
+        @if(! empty($planYearWarnings['unlinked_expenses']))
+            <div class="plan-year-warning">
+                <strong>ມີລາຍຈ່າຍທີ່ຍັງບໍ່ໄດ້ຜູກບັນຊີ {{ count($planYearWarnings['unlinked_expenses']) }} ລາຍການ</strong>
+                <span>ກວດແກ້ທີ່ Expense Structure & Account Links ກ່ອນພິມແຜນປີ.</span>
+            </div>
+        @endif
+
+        <table class="report-table plan-year-table">
+            <thead>
+                <tr>
+                    <th colspan="4">ສາລະບານງົບປະມານ</th>
+                    <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
+                    <th rowspan="2" style="width:132px">ລວມ</th>
+                    <th rowspan="2" style="width:132px">ງົບລັດ</th>
+                    <th rowspan="2" style="width:132px">ສ່ວນລວມວິຊາການ</th>
+                </tr>
+                <tr>
+                    <th style="width:42px">ພ</th>
+                    <th style="width:42px">ມສ</th>
+                    <th style="width:42px">ຮ່ວງ</th>
+                    <th style="width:42px">ລະ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($planYearRows as $row)
+                    @php
+                        $code = str_pad((string) $row['code'], 8, '0', STR_PAD_LEFT);
+                        $codeParts = [
+                            substr($code, 0, 2),
+                            substr($code, 2, 2),
+                            substr($code, 4, 2),
+                            substr($code, 6, 2),
+                        ];
+                        $level = min((int) $row['level'], 3);
+                    @endphp
+                    <tr class="{{ $row['level'] === 0 ? 'plan-year-root-row' : '' }}">
+                        @foreach($codeParts as $partIndex => $part)
+                            <td class="center plan-year-code-cell {{ $partIndex === $level ? 'plan-year-code-main' : '' }}">
+                                {{ $partIndex < $level ? '' : $part }}
+                            </td>
+                        @endforeach
+                        <td class="plan-year-name" style="padding-left:{{ 8 + ((int) $row['level'] * 16) }}px">{{ $row['title'] }}</td>
+                        <td class="num">{{ $money($row['total_amount']) }}</td>
+                        <td class="num">{{ $money($row['state_amount']) }}</td>
+                        <td class="num">{{ $money($row['faculty_amount']) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="center">60</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td colspan="4" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍຕາມຜັງບັນຊີ</td>
+                    </tr>
+                @endforelse
+                <tr class="total-row plan-year-grand-total">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="center">ລວມຍອດ</td>
+                    <td class="num">{{ $money($planYearTotals['total_amount']) }}</td>
+                    <td class="num">{{ $money($planYearTotals['state_amount']) }}</td>
+                    <td class="num">{{ $money($planYearTotals['faculty_amount']) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature-grid balance-signatures">
+            @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
+                <div class="signature">
+                    <span>ວັນທີ ......./......./.......</span>
+                    <div></div>
+                    <strong>{{ $signature }}</strong>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
     <section class="paper balance-paper">
         <div class="report-top">
             <div>
@@ -739,6 +835,60 @@
         box-shadow: 0 3px 14px rgba(17, 24, 39, .06);
         overflow-x: auto;
         padding: 1.2rem;
+    }
+
+    .plan-year-paper {
+        border-color: #cfd8e5;
+    }
+
+    .plan-year-table {
+        font-size: .72rem;
+        min-width: 1120px;
+    }
+
+    .plan-year-table th,
+    .plan-year-table td {
+        padding: 4px 5px;
+    }
+
+    .plan-year-root-row td {
+        background: #eef2f7;
+        font-weight: 900;
+    }
+
+    .plan-year-code-cell {
+        color: #475569;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: nowrap;
+    }
+
+    .plan-year-code-main {
+        color: #111827;
+        font-weight: 900;
+    }
+
+    .plan-year-name {
+        min-width: 330px;
+    }
+
+    .plan-year-warning {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin: 0 0 12px;
+        border: 1px solid #f6d58a;
+        border-radius: 7px;
+        background: #fff8e5;
+        color: #7a4c05;
+        padding: 9px 11px;
+        font-size: .76rem;
+        font-weight: 800;
+    }
+
+    .plan-year-warning span {
+        color: #8a6413;
+        font-weight: 700;
     }
 
     .report-top,

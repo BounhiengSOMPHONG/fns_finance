@@ -10,13 +10,14 @@ use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
+use App\Support\ExpenseAccountLinkCatalog;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ExpenseStructureController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ExpenseAccountLinkCatalog $accountLinkCatalog)
     {
         $years = PlanningYear::orderByDesc('year')->get();
         $planningYear = $request->filled('planning_year_id')
@@ -25,6 +26,11 @@ class ExpenseStructureController extends Controller
 
         $sections = collect();
         $defaultRowsByCode = collect();
+        $accountsByCode = ChartOfAccount::with('parent')
+            ->orderBy('account_code')
+            ->get()
+            ->keyBy('account_code');
+
         if ($planningYear) {
             if (! ExpenseSection::where('planning_year_id', $planningYear->id)->exists()) {
                 $this->buildStructureFromDefaultRows($planningYear);
@@ -42,14 +48,22 @@ class ExpenseStructureController extends Controller
                 ->values();
 
             if ($subsectionCodes->isNotEmpty()) {
-                $defaultRowsByCode = ExpenseSubsectionDefaultRow::with('chartOfAccount.parent')
+                $defaultRows = ExpenseSubsectionDefaultRow::with('chartOfAccount.parent')
                     ->whereIn('subsection_code', $subsectionCodes)
                     ->orderBy('subsection_code')
                     ->orderBy('sort_order')
-                    ->get()
+                    ->get();
+
+                $defaultRowsByCode = $accountLinkCatalog
+                    ->decorateRows($defaultRows, $accountsByCode)
                     ->groupBy('subsection_code');
             }
         }
+
+        $accountWarnings = $defaultRowsByCode
+            ->flatten(1)
+            ->filter(fn (ExpenseSubsectionDefaultRow $row): bool => $row->chart_of_account_id === null || (bool) $row->getAttribute('needs_review'))
+            ->values();
 
         $patterns = ExpensePattern::where('is_active', true)
             ->orderBy('id')
@@ -73,6 +87,7 @@ class ExpenseStructureController extends Controller
             'patterns' => $patterns,
             'defaultRowsByCode' => $defaultRowsByCode,
             'accountOptions' => $accountOptions,
+            'accountWarnings' => $accountWarnings,
         ]);
     }
 
@@ -239,7 +254,7 @@ class ExpenseStructureController extends Controller
             $node = $node->parent;
         }
 
-        return $account->account_code . ' - ' . implode(' / ', $parts);
+        return $account->account_code.' - '.implode(' / ', $parts);
     }
 
     private function buildStructureFromDefaultRows(PlanningYear $planningYear): void

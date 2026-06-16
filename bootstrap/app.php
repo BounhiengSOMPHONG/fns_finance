@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         \App\Console\Commands\SyncExpenseNames::class,
+        \App\Console\Commands\SyncExpenseAccountLinks::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

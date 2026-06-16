@@ -9,13 +9,11 @@ class AcademicIncomeItem extends Model
 {
     protected $fillable = [
         'plan_id', 'setting_set_id', 'section_code', 'degree_program_id', 'student_count',
-        'total_income', 'first_payment_amount', 'second_payment_amount',
+        'total_income',
     ];
 
     protected $casts = [
-        'total_income'               => 'decimal:2',
-        'first_payment_amount'       => 'decimal:2',
-        'second_payment_amount'      => 'decimal:2',
+        'total_income' => 'decimal:2',
     ];
 
     public function plan(): BelongsTo
@@ -31,6 +29,34 @@ class AcademicIncomeItem extends Model
     public function degreeProgram(): BelongsTo
     {
         return $this->belongsTo(DegreeProgram::class);
+    }
+
+    public function getFirstPaymentAmountAttribute(): float
+    {
+        return round((float) $this->total_income - $this->getTeachingFeeAmountAttribute(), 2);
+    }
+
+    public function getSecondPaymentAmountAttribute(): float
+    {
+        return $this->getTeachingFeeAmountAttribute();
+    }
+
+    public function getTeachingFeeAmountAttribute(): float
+    {
+        return round((float) $this->total_income * $this->teachingFeePercentage(), 2);
+    }
+
+    private function teachingFeePercentage(): float
+    {
+        if (! in_array($this->section_code, ['1.1', '1.3'], true)) {
+            return 0.0;
+        }
+
+        return match ($this->degreeProgram?->level) {
+            'master', 'phd' => 0.60,
+            'bachelor' => 0.40,
+            default => 0.0,
+        };
     }
 
     public function getSnapCourseCreditUnitAttribute($value = null): ?int

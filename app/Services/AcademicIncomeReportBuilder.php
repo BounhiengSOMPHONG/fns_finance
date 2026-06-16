@@ -106,7 +106,7 @@ class AcademicIncomeReportBuilder
 
         $count = (int) $rowItems->sum('student_count');
         $fnsIncome = (float) $rowItems->sum('total_income');
-        $teachingFee = (float) $rowItems->sum('second_payment_amount');
+        $teachingFee = (float) $rowItems->sum('teaching_fee_amount');
         $gross = (float) $rowItems->sum(fn (AcademicIncomeItem $item) => $this->grossIncome($item));
         $nuol = $gross - $fnsIncome;
 
@@ -255,8 +255,6 @@ class AcademicIncomeReportBuilder
             'degree_program_id' => $program?->id,
             'student_count' => 0,
             'total_income' => 0,
-            'first_payment_amount' => 0,
-            'second_payment_amount' => 0,
         ]);
 
         $item->exists = false;

@@ -103,7 +103,10 @@
             </div>
         </div>
 
-        <h1 class="report-title">ແຜນງົບປະມານເນື້ອໃນລາຍຈ່າຍ ປີ {{ $planningYear->year }}</h1>
+        <div class="plan-year-title-block">
+            <h1 class="report-title plan-year-report-title">ແຜນງົບປະມານເນື້ອໃນລາຍຈ່າຍ</h1>
+            <p>ແຜນລາຍຈ່າຍງົບປະມານປີ {{ $planningYear->year }}</p>
+        </div>
 
         @if(! empty($planYearWarnings['unlinked_expenses']))
             <div class="plan-year-warning">
@@ -113,22 +116,42 @@
         @endif
 
         <table class="report-table plan-year-table">
+            <colgroup>
+                <col class="plan-year-code-col">
+                <col class="plan-year-code-col">
+                <col class="plan-year-code-col">
+                <col class="plan-year-code-col">
+                <col class="plan-year-name-col">
+                <col class="plan-year-money-col">
+                <col class="plan-year-money-col">
+                <col class="plan-year-money-col">
+            </colgroup>
             <thead>
-                <tr>
-                    <th colspan="4">ສາລະບານງົບປະມານ</th>
+                <tr class="plan-year-head-row">
+                    <th><span>ພາກ</span><span>ສ່ວນ</span></th>
+                    <th><span>ພາກ</span><span>ຮ່ວງ</span></th>
+                    <th><span>ຮ່ວງ</span><span>ລວມ</span></th>
+                    <th><span>ລຶກ</span><span>ປົກກະຕິ</span></th>
                     <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                     <th rowspan="2" style="width:132px">ລວມ</th>
                     <th rowspan="2" style="width:132px">ງົບລັດ</th>
-                    <th rowspan="2" style="width:132px">ສ່ວນລວມວິຊາການ</th>
+                    <th rowspan="2" style="width:132px">ວິຊາການ</th>
                 </tr>
-                <tr>
-                    <th style="width:42px">ພ</th>
-                    <th style="width:42px">ມສ</th>
-                    <th style="width:42px">ຮ່ວງ</th>
-                    <th style="width:42px">ລະ</th>
+                <tr class="plan-year-code-row">
+                    <th style="width:42px"></th>
+                    <th style="width:42px"></th>
+                    <th style="width:42px"></th>
+                    <th style="width:42px"></th>
                 </tr>
             </thead>
             <tbody>
+                <tr class="plan-year-overall-row">
+                    <td colspan="4"></td>
+                    <td>ລວມຍອດ ເງິນ ພາກ ສ່ວນ (10+11+12+13+16+17) =</td>
+                    <td class="num">{{ $money($planYearTotals['total_amount']) }}</td>
+                    <td class="num">{{ $money($planYearTotals['state_amount']) }}</td>
+                    <td class="num">{{ $money($planYearTotals['faculty_amount']) }}</td>
+                </tr>
                 @forelse($planYearRows as $row)
                     @php
                         $code = str_pad((string) $row['code'], 8, '0', STR_PAD_LEFT);
@@ -182,6 +205,7 @@
                 </div>
             @endforeach
         </div>
+        <div class="plan-year-page-number">1</div>
     </section>
 
     <section class="paper balance-paper">
@@ -839,26 +863,77 @@
 
     .plan-year-paper {
         border-color: #cfd8e5;
+        position: relative;
     }
 
     .plan-year-table {
-        font-size: .72rem;
-        min-width: 1120px;
+        color: #111;
+        font-size: .7rem;
+        min-width: 1180px;
+        table-layout: fixed;
+    }
+
+    .plan-year-code-col {
+        width: 48px;
+    }
+
+    .plan-year-name-col {
+        width: auto;
+    }
+
+    .plan-year-money-col {
+        width: 132px;
     }
 
     .plan-year-table th,
     .plan-year-table td {
-        padding: 4px 5px;
+        border-color: #1f2933;
+        line-height: 1.2;
+        padding: 3px 4px;
+    }
+
+    .plan-year-table th {
+        background: #fff;
+        font-weight: 800;
+        white-space: normal;
+    }
+
+    .plan-year-head-row th {
+        height: 32px;
+        vertical-align: bottom;
+    }
+
+    .plan-year-head-row th span {
+        display: block;
+    }
+
+    .plan-year-code-row th {
+        height: 10px;
+        padding: 0;
+    }
+
+    .plan-year-overall-row td {
+        background: #fff;
+        font-weight: 900;
+    }
+
+    .plan-year-overall-row td:first-child {
+        border-right-color: transparent;
+    }
+
+    .plan-year-overall-row td:nth-child(2) {
+        text-align: center;
     }
 
     .plan-year-root-row td {
-        background: #eef2f7;
+        background: #fff;
         font-weight: 900;
     }
 
     .plan-year-code-cell {
-        color: #475569;
+        color: #111;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-weight: 700;
         white-space: nowrap;
     }
 
@@ -868,7 +943,33 @@
     }
 
     .plan-year-name {
-        min-width: 330px;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .plan-year-title-block {
+        margin: .25rem 0 .55rem;
+        text-align: center;
+    }
+
+    .plan-year-title-block p {
+        color: #111;
+        font-size: .96rem;
+        font-weight: 800;
+        line-height: 1.3;
+        margin: .05rem 0 0;
+    }
+
+    .plan-year-report-title {
+        margin: 0;
+    }
+
+    .plan-year-page-number {
+        display: none;
+        font-size: .76rem;
+        font-weight: 700;
+        margin-top: .35rem;
+        text-align: center;
     }
 
     .plan-year-warning {
@@ -1175,6 +1276,89 @@
         .report-table {
             font-size: 8.2pt;
             min-width: 0;
+        }
+
+        .plan-year-paper {
+            min-height: 185mm;
+            padding-top: 0;
+        }
+
+        .plan-year-paper .official-header {
+            font-size: 8.6pt;
+            margin-bottom: 4pt;
+        }
+
+        .plan-year-paper .nation-right {
+            min-width: 310px;
+        }
+
+        .plan-year-paper .nation-right span {
+            font-size: 7.2pt;
+        }
+
+        .plan-year-title-block {
+            margin: 2pt 0 5pt;
+        }
+
+        .plan-year-report-title,
+        .plan-year-title-block p {
+            font-size: 10pt;
+            line-height: 1.18;
+        }
+
+        .report-table.plan-year-table {
+            font-size: 6.85pt;
+            table-layout: fixed;
+        }
+
+        .plan-year-code-col {
+            width: 10mm;
+        }
+
+        .plan-year-money-col {
+            width: 31mm;
+        }
+
+        .report-table.plan-year-table th,
+        .report-table.plan-year-table td {
+            padding: 1.7pt 2.4pt;
+            white-space: normal;
+        }
+
+        .report-table.plan-year-table .num,
+        .report-table.plan-year-table .plan-year-code-cell {
+            white-space: nowrap;
+        }
+
+        .plan-year-head-row th {
+            height: 21pt;
+        }
+
+        .plan-year-code-row th {
+            height: 4pt;
+        }
+
+        .plan-year-name {
+            min-width: 0;
+        }
+
+        .plan-year-warning {
+            border-width: .5pt;
+            font-size: 7pt;
+            margin-bottom: 4pt;
+            padding: 3pt 4pt;
+        }
+
+        .plan-year-paper .balance-signatures {
+            margin-top: 10pt;
+        }
+
+        .plan-year-paper .signature div {
+            height: 24pt;
+        }
+
+        .plan-year-page-number {
+            display: block;
         }
 
         .balance-paper {

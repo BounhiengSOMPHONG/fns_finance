@@ -105,6 +105,8 @@
     ];
     $reviewerUsers = $reviewerUsers ?? collect();
     $currentRound = $planningYear->currentReviewRound;
+    $previousReviewerIds = $currentRound?->reviewers?->pluck('user_id')->map(fn ($id) => (int) $id)->all() ?? [];
+    $selectedReviewerIds = collect(old('reviewer_ids', $previousReviewerIds))->map(fn ($id) => (int) $id)->all();
     $reviewRounds = $planningYear->reviewRounds
         ->sortByDesc('round_number')
         ->values();
@@ -129,6 +131,13 @@
             <a href="{{ route('reviews.planning-years.index') }}" class="review-secondary-btn">ກັບໄປ Review</a>
         @else
             <a href="{{ route('head_of_finance.manage-plan.index') }}" class="review-secondary-btn">ກັບຄືນ</a>
+        @endif
+
+        @if($reviewContext['show_review_panel'] && $reviewRounds->isNotEmpty())
+            <button type="button" class="review-secondary-btn review-drawer-toggle" data-open-review-drawer>
+                Review
+                <span>{{ $reviewRounds->sum(fn ($round) => ($round->comments ?? collect())->count()) }}</span>
+            </button>
         @endif
 
         @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
@@ -162,7 +171,7 @@
                     <div class="reviewer-picker">
                         @forelse($reviewerUsers as $reviewerUser)
                             <label>
-                                <input type="checkbox" name="reviewer_ids[]" value="{{ $reviewerUser->id }}">
+                                <input type="checkbox" name="reviewer_ids[]" value="{{ $reviewerUser->id }}" @checked(in_array((int) $reviewerUser->id, $selectedReviewerIds, true))>
                                 <span>
                                     <strong>{{ $reviewerUser->full_name ?? $reviewerUser->username }}</strong>
                                     <small>{{ $reviewerUser->role?->role_name ?? '-' }}</small>
@@ -187,79 +196,86 @@
 @endif
 
 @if($reviewContext['show_review_panel'] && $reviewRounds->isNotEmpty())
-    <section class="review-panel">
-        @foreach($reviewRounds as $round)
-            @php
-                $isCurrentRound = $currentRound && (int) $round->id === (int) $currentRound->id;
-                $roundComments = $round->comments ?? collect();
-            @endphp
-            <div class="review-round {{ $isCurrentRound ? 'is-current' : '' }}">
-                <div class="review-panel-head">
-                    <div>
-                        <span>Review round {{ $round->round_number }}{{ $isCurrentRound ? ' · Current' : '' }}</span>
-                        <h3>{{ $isCurrentRound ? 'ຄວາມເຫັນຈາກຜູ້ກວດສອບ' : 'ປະຫວັດຄວາມເຫັນ' }}</h3>
-                    </div>
-                    <div class="review-panel-meta">
-                        <span>ຜູ້ກວດ {{ $round->reviewers->count() }} ຄົນ</span>
-                        <span>{{ optional($round->requested_at)->format('d/m/Y H:i') }}</span>
-                        @if($round->closed_at)
-                            <span>ປິດ {{ optional($round->closed_at)->format('d/m/Y H:i') }}</span>
-                        @endif
-                    </div>
+    <div class="review-drawer-backdrop" data-review-drawer hidden>
+        <aside class="review-drawer" role="dialog" aria-modal="true" aria-labelledby="reviewDrawerTitle">
+            <div class="review-drawer-head">
+                <div>
+                    <span>Review</span>
+                    <h3 id="reviewDrawerTitle">ຄວາມເຫັນຈາກຜູ້ກວດສອບ</h3>
                 </div>
+                <button type="button" class="review-drawer-close" data-close-review-drawer>&times;</button>
+            </div>
 
-                @if($round->note)
-                    <p class="review-note">{{ $round->note }}</p>
-                @endif
-
-                <div class="reviewer-list">
-                    @foreach($round->reviewers as $reviewer)
-                        <span>{{ $reviewer->user?->full_name ?? $reviewer->user?->username ?? '-' }}</span>
-                    @endforeach
-                </div>
-
-                @if($isCurrentRound && $reviewContext['can_comment'])
-                    <form method="POST" action="{{ route('reviews.planning-years.comments.store', $planningYear) }}" class="review-comment-form">
-                        @csrf
-                        <textarea name="comment" rows="3" maxlength="3000" required placeholder="ຂຽນຄວາມເຫັນຂອງທ່ານ"></textarea>
-                        <button type="submit" class="review-primary-btn">ສົ່ງຄວາມເຫັນ</button>
-                    </form>
-                @endif
-
-                <div class="review-comments">
-                    @forelse($roundComments as $comment)
-                        @php
-                            $agreementCount = $comment->agreements->count();
-                            $agreedByMe = $comment->agreements->contains('user_id', $reviewContext['current_user_id']);
-                        @endphp
-                        <article class="review-comment">
-                            <div class="review-comment-top">
-                                <div>
-                                    <strong>{{ $comment->user?->full_name ?? $comment->user?->username ?? '-' }}</strong>
-                                    <span>{{ $comment->user?->role?->role_name ?? '' }}</span>
-                                </div>
-                                <time>{{ $comment->created_at?->format('d/m/Y H:i') }}</time>
-                            </div>
-                            <p>{{ $comment->comment }}</p>
-                            <div class="review-comment-actions">
-                                <span>{{ $agreementCount }} ເຫັນດີ</span>
-                                @if($isCurrentRound && $reviewContext['can_agree'] && (int) $comment->user_id !== (int) $reviewContext['current_user_id'])
-                                    <form method="POST" action="{{ route('reviews.planning-years.comments.agreement', [$planningYear, $comment]) }}">
-                                        @csrf
-                                        <button type="submit" class="{{ $agreedByMe ? 'is-agreed' : '' }}">
-                                            {{ $agreedByMe ? 'ຍົກເລີກເຫັນດີ' : 'ເຫັນດີ' }}
-                                        </button>
-                                    </form>
+            <section class="review-panel">
+                @foreach($reviewRounds as $round)
+                    @php
+                        $isCurrentRound = $currentRound && (int) $round->id === (int) $currentRound->id;
+                        $roundComments = $round->comments ?? collect();
+                    @endphp
+                    <div class="review-round {{ $isCurrentRound ? 'is-current' : '' }}">
+                        <div class="review-panel-head">
+                            <div class="review-panel-meta">
+                                <span>ຜູ້ກວດ {{ $round->reviewers->count() }} ຄົນ</span>
+                                @if($round->closed_at)
+                                    <span>ປິດ {{ optional($round->closed_at)->format('d/m/Y H:i') }}</span>
                                 @endif
                             </div>
-                        </article>
-                    @empty
-                        <div class="review-empty">ຍັງບໍ່ມີຄວາມເຫັນ</div>
-                    @endforelse
-                </div>
-            </div>
-        @endforeach
-    </section>
+                        </div>
+
+                        @if($round->note)
+                            <p class="review-note">{{ $round->note }}</p>
+                        @endif
+
+                        <div class="reviewer-list">
+                            @foreach($round->reviewers as $reviewer)
+                                <span>{{ $reviewer->user?->full_name ?? $reviewer->user?->username ?? '-' }}</span>
+                            @endforeach
+                        </div>
+
+                        @if($isCurrentRound && $reviewContext['can_comment'])
+                            <form method="POST" action="{{ route('reviews.planning-years.comments.store', $planningYear) }}" class="review-comment-form">
+                                @csrf
+                                <textarea name="comment" rows="3" maxlength="3000" required placeholder="ຂຽນຄວາມເຫັນຂອງທ່ານ"></textarea>
+                                <button type="submit" class="review-primary-btn">ສົ່ງຄວາມເຫັນ</button>
+                            </form>
+                        @endif
+
+                        <div class="review-comments">
+                            @forelse($roundComments as $comment)
+                                @php
+                                    $agreementCount = $comment->agreements->count();
+                                    $agreedByMe = $comment->agreements->contains('user_id', $reviewContext['current_user_id']);
+                                @endphp
+                                <article class="review-comment">
+                                    <div class="review-comment-top">
+                                        <div>
+                                            <strong>{{ $comment->user?->full_name ?? $comment->user?->username ?? '-' }}</strong>
+                                            <span>{{ $comment->user?->role?->role_name ?? '' }}</span>
+                                        </div>
+                                        <time>Review round {{ $round->round_number }} · {{ $comment->created_at?->format('d/m/Y H:i') }}</time>
+                                    </div>
+                                    <p>{{ $comment->comment }}</p>
+                                    <div class="review-comment-actions">
+                                        <span>{{ $agreementCount }} ເຫັນດີ</span>
+                                        @if($isCurrentRound && $reviewContext['can_agree'] && (int) $comment->user_id !== (int) $reviewContext['current_user_id'])
+                                            <form method="POST" action="{{ route('reviews.planning-years.comments.agreement', [$planningYear, $comment]) }}">
+                                                @csrf
+                                                <button type="submit" class="{{ $agreedByMe ? 'is-agreed' : '' }}">
+                                                    {{ $agreedByMe ? 'ຍົກເລີກເຫັນດີ' : 'ເຫັນດີ' }}
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </article>
+                            @empty
+                                <div class="review-empty">ຍັງບໍ່ມີຄວາມເຫັນ</div>
+                            @endforelse
+                        </div>
+                    </div>
+                @endforeach
+            </section>
+        </aside>
+    </div>
 @endif
 
 <div class="income-preview">
@@ -1116,6 +1132,99 @@
         color: #7a5b0b;
     }
 
+    .review-drawer-toggle {
+        gap: .45rem;
+    }
+
+    .review-drawer-toggle span {
+        align-items: center;
+        background: var(--fns-gold);
+        border-radius: 999px;
+        color: var(--fns-navy-deep);
+        display: inline-flex;
+        font-size: .72rem;
+        font-weight: 900;
+        justify-content: center;
+        min-width: 1.35rem;
+        padding: .05rem .4rem;
+    }
+
+    .review-drawer-backdrop {
+        background: rgba(17, 27, 51, .42);
+        bottom: 0;
+        display: flex;
+        justify-content: flex-end;
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 0;
+        z-index: 95;
+    }
+
+    .review-drawer-backdrop[hidden] {
+        display: none;
+    }
+
+    .review-drawer {
+        background: #f8fafc;
+        border-left: 1px solid rgba(17, 27, 51, .12);
+        box-shadow: -22px 0 48px rgba(17, 27, 51, .18);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-width: 620px;
+        overflow: hidden;
+        width: min(620px, 100%);
+    }
+
+    .review-drawer-head {
+        align-items: center;
+        background: #fff;
+        border-bottom: 1px solid var(--fns-gray-200);
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem;
+    }
+
+    .review-drawer-head span {
+        color: #8b6a12;
+        font-size: .72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .review-drawer-head h3 {
+        color: var(--fns-navy);
+        font-size: 1rem;
+        font-weight: 900;
+        margin: .15rem 0 0;
+    }
+
+    .review-drawer-close {
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        color: var(--fns-gray-600);
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 1.4rem;
+        height: 38px;
+        justify-content: center;
+        line-height: 1;
+        width: 38px;
+    }
+
+    .review-drawer .review-panel {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        margin: 0;
+        overflow: auto;
+        padding: 1rem;
+    }
+
     .review-modal-backdrop {
         align-items: center;
         background: rgba(17, 27, 51, .52);
@@ -1247,9 +1356,9 @@
     }
 
     .review-panel-head {
-        align-items: start;
+        align-items: center;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         gap: 1rem;
     }
 
@@ -1261,9 +1370,20 @@
     }
 
     .review-panel-meta {
-        display: grid;
-        gap: .2rem;
+        align-items: center;
+        color: var(--fns-gray-600);
+        display: flex;
+        flex-wrap: wrap;
+        font-size: .8rem;
+        gap: .65rem;
+        justify-content: flex-end;
         text-align: right;
+    }
+
+    .review-round-line {
+        color: #8b6a12;
+        font-weight: 800;
+        white-space: nowrap;
     }
 
     .review-note {
@@ -1784,6 +1904,7 @@
         .fns-sidebar,
         .review-toolbar,
         .review-panel,
+        .review-drawer-backdrop,
         .review-modal-backdrop {
             display: none !important;
         }
@@ -1998,25 +2119,51 @@
         const modal = document.querySelector('[data-review-modal]');
         const openButton = document.querySelector('[data-open-review-modal]');
 
-        if (!modal || !openButton) {
-            return;
+        if (modal && openButton) {
+            const closeButtons = modal.querySelectorAll('[data-close-review-modal]');
+            const openModal = () => {
+                modal.hidden = false;
+            };
+            const closeModal = () => {
+                modal.hidden = true;
+            };
+
+            openButton.addEventListener('click', openModal);
+            closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
         }
 
-        const closeButtons = modal.querySelectorAll('[data-close-review-modal]');
-        const openModal = () => {
-            modal.hidden = false;
-        };
-        const closeModal = () => {
-            modal.hidden = true;
-        };
+        const drawer = document.querySelector('[data-review-drawer]');
+        const openDrawerButton = document.querySelector('[data-open-review-drawer]');
 
-        openButton.addEventListener('click', openModal);
-        closeButtons.forEach((button) => button.addEventListener('click', closeModal));
-        modal.addEventListener('click', function (event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
+        if (drawer && openDrawerButton) {
+            const closeDrawerButtons = drawer.querySelectorAll('[data-close-review-drawer]');
+            const openDrawer = () => {
+                drawer.hidden = false;
+                document.body.style.overflow = 'hidden';
+            };
+            const closeDrawer = () => {
+                drawer.hidden = true;
+                document.body.style.overflow = '';
+            };
+
+            openDrawerButton.addEventListener('click', openDrawer);
+            closeDrawerButtons.forEach((button) => button.addEventListener('click', closeDrawer));
+            drawer.addEventListener('click', function (event) {
+                if (event.target === drawer) {
+                    closeDrawer();
+                }
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !drawer.hidden) {
+                    closeDrawer();
+                }
+            });
+        }
     });
 </script>
 @endsection

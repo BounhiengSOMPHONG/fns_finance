@@ -1134,6 +1134,11 @@
 
     .review-drawer-toggle {
         gap: .45rem;
+        bottom: 1.15rem;
+        box-shadow: 0 14px 34px rgba(17, 27, 51, .2);
+        position: fixed;
+        right: 1.15rem;
+        z-index: 90;
     }
 
     .review-drawer-toggle span {
@@ -1480,6 +1485,15 @@
         font-size: .85rem;
         padding: .8rem;
         text-align: center;
+    }
+
+    @media (max-width: 640px) {
+        .review-drawer-toggle {
+            bottom: .85rem;
+            left: 1rem;
+            right: 1rem;
+            width: auto;
+        }
     }
 
     .income-preview {

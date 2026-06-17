@@ -777,12 +777,12 @@
         <div class="plan-year-page-number">6</div>
     </section>
 
-    <section class="paper paper-summary expense-paper">
-        <div class="report-top">
-            <div>
-                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
-                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
-            </div>
+    <section class="paper paper-summary expense-paper expense-summary-paper">
+        <h2 class="expense-summary-title">2. ງົບປະມານລາຍຈ່າຍບໍລິຫານ ແລະ ວິຊາການຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+
+        <div class="expense-org">
+            <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+            <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
         </div>
 
         <table class="report-table plan-table expense-summary-table">
@@ -820,7 +820,7 @@
             </tbody>
         </table>
 
-        <div class="signature-grid">
+        <div class="signature-grid expense-signatures">
             @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
                 <div class="signature">
                     <span>ວັນທີ ......./......./.......</span>
@@ -830,20 +830,20 @@
             @endforeach
         </div>
 
-        <h2 class="summary-caption">2. ແຜນງົບປະມານລາຍຈ່າຍບໍລິຫານຂອງ ຄວທ ປະຈຳ ສົກປີ {{ $planningYear->year }}</h2>
+        <div class="plan-year-page-number">1</div>
     </section>
 
     @foreach($expenseReport['sections'] as $expenseSection)
-        <section class="paper detail-paper expense-paper">
-            <div class="report-top">
-                <div>
+        <section class="paper detail-paper expense-paper expense-detail-paper">
+            <h2 class="expense-section-title">{{ $expenseSection['code'] }} ແຜນງົບປະມານ{{ $expenseSection['title'] }} ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+
+            <div class="expense-detail-header">
+                <div class="expense-org">
                     <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
                     <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
                 </div>
                 <span class="unit-label">ໜ່ວຍ: ກີບ</span>
             </div>
-
-            <h2 class="detail-title">{{ $expenseSection['code'] }} ແຜນງົບປະມານ{{ $expenseSection['title'] }} ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
 
             <table class="report-table expense-summary-table">
                 <thead>
@@ -1920,6 +1920,77 @@
         break-inside: avoid;
     }
 
+    .expense-summary-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .expense-section-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .expense-org {
+        margin-bottom: .55rem;
+    }
+
+    .expense-org strong {
+        color: #111827;
+        display: block;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+
+    .expense-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: .55rem;
+    }
+
+    .expense-detail-header .expense-org {
+        margin-bottom: 0;
+    }
+
+    .expense-signatures {
+        margin-top: 1.65rem;
+    }
+
+    .expense-signatures .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .expense-signatures .signature span {
+        order: 1;
+    }
+
+    .expense-signatures .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .expense-signatures .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
+    }
+
     .unit-label {
         align-self: flex-start;
         color: #374151;
@@ -2487,6 +2558,29 @@
         .expense-subtitle {
             font-size: 8.8pt;
             margin: 8pt 0 4pt;
+        }
+
+        .expense-summary-title,
+        .expense-section-title {
+            font-size: 11pt;
+            margin-bottom: 4pt;
+        }
+
+        .expense-org strong {
+            font-size: 8.4pt;
+        }
+
+        .expense-signatures {
+            column-gap: 16mm;
+            margin-top: 12mm;
+        }
+
+        .expense-signatures .signature {
+            padding: 0 2mm;
+        }
+
+        .expense-signatures .signature div {
+            height: 36mm;
         }
 
         .detail-paper .detail-title {

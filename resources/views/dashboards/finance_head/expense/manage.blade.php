@@ -140,6 +140,10 @@
         gap:.45rem;
         align-items:stretch;
         justify-content:end;
+        position:fixed;
+        top:5.25rem;
+        right:1.25rem;
+        z-index:900;
     }
     .expense-budget-summary > div {
         min-width:126px;
@@ -400,8 +404,14 @@
     .excel-unit { text-align:right; color:#111b33; font-weight:800; padding:.45rem .65rem; background:#f7f8fa; border-bottom:1px solid #d8dce5; }
     .excel-toast { position:fixed; right:1rem; bottom:1rem; z-index:10000; background:var(--fns-navy); color:#fff; border-radius:8px; padding:.75rem .9rem; box-shadow:0 18px 38px rgba(17,27,51,.22); font-size:.82rem; }
     @media (max-width:760px) {
-        .expense-budget-summary { width:100%; grid-template-columns:1fr; }
-        .expense-budget-summary > div { text-align:left; }
+        .expense-budget-summary {
+            width:auto;
+            grid-template-columns:minmax(132px, auto);
+            top:auto;
+            right:.75rem;
+            bottom:.75rem;
+        }
+        .expense-budget-summary > div { text-align:right; }
         .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
         .excel-section-actions { width:100%; justify-content:flex-start; margin-left:0; }
         .excel-section-total { width:100%; text-align:left; }

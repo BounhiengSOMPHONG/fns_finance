@@ -285,6 +285,33 @@
     .excel-block-title-main { display:flex; align-items:flex-start; gap:.65rem; min-width:0; }
     .excel-block-title h3 { margin:0; color:#061226; font-size:1rem; line-height:1.35; font-weight:900; }
     .excel-block-title p { margin:.3rem 0 0; color:var(--fns-gray-500); font-size:.75rem; }
+    .excel-block-total {
+        flex:0 0 auto;
+        min-width:155px;
+        border:1px solid #e3e8f1;
+        border-radius:7px;
+        background:#f8fafc;
+        padding:.45rem .65rem;
+        text-align:right;
+    }
+    .excel-block-total span {
+        display:block;
+        color:var(--fns-gray-500);
+        font-size:.68rem;
+        font-weight:900;
+        line-height:1.1;
+    }
+    .excel-block-total strong {
+        display:block;
+        margin-top:.16rem;
+        color:var(--fns-navy);
+        font-family:'Cinzel', serif;
+        font-size:1.05rem;
+        font-weight:900;
+        line-height:1.2;
+        font-variant-numeric:tabular-nums;
+        white-space:nowrap;
+    }
     .excel-collapse-btn {
         flex:0 0 auto;
         width:2rem;
@@ -333,6 +360,8 @@
         .excel-section-actions { width:100%; justify-content:flex-start; margin-left:0; }
         .excel-section-total { width:100%; text-align:left; }
         .excel-overview-head { flex-direction:column; }
+        .excel-block-title { flex-direction:column; }
+        .excel-block-total { width:100%; text-align:left; }
         .excel-section-nav { grid-template-columns:auto auto; }
         .excel-tabs { grid-column:1 / -1; order:2; }
         .excel-nav-btn { min-height:34px; }
@@ -764,6 +793,10 @@ function renderSubsection(section, subsection) {
                         <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
                     </div>
                 </div>
+                <div class="excel-block-total">
+                    <span>ລວມເງິນ</span>
+                    <strong class="excel-block-total-value">${fmt.format(subtotal)}</strong>
+                </div>
             </div>
             <div class="excel-block-body">
                 <div class="excel-unit">ໜ່ວຍ: ກີບ</div>
@@ -784,7 +817,7 @@ function renderSubsection(section, subsection) {
                         <tfoot>
                             <tr>
                                 <td colspan="${normalFields.length + 1}" class="excel-number">ລວມ</td>
-                                ${totalField ? `<td class="excel-number">${fmt.format(subtotal)}</td>` : ''}
+                                ${totalField ? `<td class="excel-number excel-block-footer-total">${fmt.format(subtotal)}</td>` : ''}
                             </tr>
                         </tfoot>
                     </table>
@@ -885,12 +918,23 @@ function updateSourceTotal(block, row) {
 
 function updateBlockTotal(block) {
     block.querySelectorAll('.excel-saved-row').forEach(row => updateSourceTotal(block, row));
+    refreshBlockSubtotal(block);
 }
 
 function updateLineTotal(row) {
     if (!row) return;
     const block = row.closest('.excel-block');
     updateSourceTotal(block, row);
+    refreshBlockSubtotal(block);
+}
+
+function refreshBlockSubtotal(block) {
+    if (!block) return;
+    const subtotal = [...block.querySelectorAll('.excel-saved-row input[name="yearly_total"]')]
+        .reduce((sum, input) => sum + numberValue(input.value), 0);
+    block.querySelector('.excel-block-total-value').textContent = fmt.format(subtotal);
+    const footerTotal = block.querySelector('.excel-block-footer-total');
+    if (footerTotal) footerTotal.textContent = fmt.format(subtotal);
 }
 
 async function updateSavedRow(row) {

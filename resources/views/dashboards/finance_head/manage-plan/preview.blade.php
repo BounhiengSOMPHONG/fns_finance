@@ -394,7 +394,7 @@
                 </div>
             @endforeach
         </div>
-        <div class="plan-year-page-number">1</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper balance-paper">
@@ -467,7 +467,7 @@
             @endforeach
         </div>
 
-        <div class="balance-page-number">2</div>
+        <div class="balance-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper paper-summary income-summary-paper">
@@ -511,7 +511,7 @@
             </tbody>
         </table>
 
-        <div class="plan-year-page-number">1</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper income-overview-paper">
@@ -636,7 +636,7 @@
             @endforeach
         </div>
 
-        <div class="plan-year-page-number">2</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -695,7 +695,7 @@
             </tbody>
         </table>
 
-        <div class="plan-year-page-number">3</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -707,7 +707,7 @@
             'pct' => $pct,
         ])
 
-        <div class="plan-year-page-number">4</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -766,7 +766,7 @@
             </tbody>
         </table>
 
-        <div class="plan-year-page-number">5</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -778,7 +778,7 @@
             'pct' => $pct,
         ])
 
-        <div class="plan-year-page-number">6</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper paper-summary expense-paper expense-summary-paper">
@@ -834,7 +834,7 @@
             @endforeach
         </div>
 
-        <div class="plan-year-page-number">1</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     @foreach($expenseReport['sections'] as $expenseSection)
@@ -939,6 +939,8 @@
                     </tbody>
                 </table>
             @endforeach
+
+            <div class="plan-year-page-number" aria-hidden="true"></div>
         </section>
     @endforeach
 
@@ -1039,7 +1041,7 @@
             @endforeach
         </div>
 
-        <div class="plan-year-page-number">1</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 </div>
 
@@ -2358,6 +2360,13 @@
         @page {
             margin: 10mm;
             size: A4 landscape;
+
+            @bottom-center {
+                color: #111;
+                content: counter(page);
+                font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
+                font-size: 8pt;
+            }
         }
 
         html,
@@ -2597,12 +2606,9 @@
             height: 36mm;
         }
 
-        .plan-year-page-number {
-            display: block;
-        }
-
+        .plan-year-page-number,
         .balance-page-number {
-            display: block;
+            display: none !important;
         }
 
         .balance-paper {

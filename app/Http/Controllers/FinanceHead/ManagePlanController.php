@@ -189,6 +189,12 @@ class ManagePlanController extends Controller
 
     public function sync(PlanningYear $planningYear)
     {
+        abort_if(
+            $planningYear->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         DB::transaction(function () use ($planningYear): void {
             $this->ensureCompanionPlans($planningYear);
             $this->ensureExpenseStructure($planningYear);
@@ -199,6 +205,12 @@ class ManagePlanController extends Controller
 
     public function destroy(PlanningYear $planningYear)
     {
+        abort_if(
+            $planningYear->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $year = $planningYear->year;
 
         DB::transaction(function () use ($planningYear): void {

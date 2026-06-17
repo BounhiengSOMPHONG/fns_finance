@@ -6,6 +6,7 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\SalaryEntry;
+use App\Models\SalaryPlan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -21,6 +22,8 @@ final class SalaryEntryController extends Controller
             'payment_type' => 'required|in:cash,transfer',
             'amount' => 'nullable|numeric|min:0',
         ]);
+        $this->ensurePlanCanBeEdited((int) $data['plan_id']);
+
         $personCount = (int) ($data['person_count'] ?? 0);
         $amount = (float) ($data['amount'] ?? 0);
 
@@ -74,6 +77,8 @@ final class SalaryEntryController extends Controller
 
     public function update(Request $request, SalaryEntry $salaryEntry): JsonResponse
     {
+        $this->ensurePlanCanBeEdited((int) $salaryEntry->plan_id);
+
         $data = $request->validate([
             'chart_of_account_id' => 'sometimes|required|integer|exists:chart_of_accounts,id',
             'person_count' => 'nullable|integer|min:0',
@@ -110,9 +115,22 @@ final class SalaryEntryController extends Controller
 
     public function destroy(SalaryEntry $salaryEntry): JsonResponse
     {
+        $this->ensurePlanCanBeEdited((int) $salaryEntry->plan_id);
+
         $salaryEntry->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    private function ensurePlanCanBeEdited(int $salaryPlanId): void
+    {
+        $salaryPlan = SalaryPlan::with('planningYear')->findOrFail($salaryPlanId);
+
+        abort_if(
+            $salaryPlan->planningYear?->canBeEdited() === false,
+            423,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
     }
 
     private function serialize(SalaryEntry $e): array

@@ -64,6 +64,12 @@ class ExpensePlanController extends Controller
     {
         $planningYear = $expensePlan;
 
+        abort_if(
+            $planningYear->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $sections = ExpenseSection::with([
             'subsections.defaultPattern',
             'subsections.children.defaultPattern',
@@ -321,6 +327,12 @@ class ExpensePlanController extends Controller
 
     public function destroy(PlanningYear $expensePlan)
     {
+        abort_if(
+            $expensePlan->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $expensePlan->delete();
 
         return redirect()->route('head_of_finance.manage-plan.index')
@@ -329,6 +341,12 @@ class ExpensePlanController extends Controller
 
     public function approve(PlanningYear $expensePlan)
     {
+        abort_if(
+            $expensePlan->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $expensePlan->update(['is_active' => true]);
 
         return back()->with('success', 'ຕັ້ງແຜນນີ້ເປັນແຜນທີ່ໃຊ້ງານແລ້ວ');
@@ -336,6 +354,12 @@ class ExpensePlanController extends Controller
 
     public function updateSectionSummarySettings(Request $request, PlanningYear $expensePlan, ExpenseSection $expenseSection)
     {
+        abort_if(
+            $expensePlan->canBeEdited() === false,
+            423,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         abort_unless((int) $expenseSection->planning_year_id === (int) $expensePlan->id, 404);
 
         $data = $request->validate([
@@ -357,6 +381,12 @@ class ExpensePlanController extends Controller
 
     public function updateSubsectionSummarySettings(Request $request, PlanningYear $expensePlan, ExpenseSubsection $expenseSubsection)
     {
+        abort_if(
+            $expensePlan->canBeEdited() === false,
+            423,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         abort_unless(
             (int) $expenseSubsection->section?->planning_year_id === (int) $expensePlan->id,
             404

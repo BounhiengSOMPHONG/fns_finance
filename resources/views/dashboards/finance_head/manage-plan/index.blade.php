@@ -31,6 +31,7 @@
                 $salaryTotal = $plan->salaryPlans->sum(fn ($salary) => $salary->entries->sum('annual_amount'));
                 $expenseTotal = $plan->expensePlans->sum(fn ($expense) => $expense->values->sum('value_number'));
                 $isCurrent = (int) $plan->year === $currentYear;
+                $canEditPlan = $plan->canBeEdited();
             @endphp
             <article class="mp-card  {{ $isCurrent ? 'is-current' : '' }}">
                 <div class="mp-card-top">
@@ -63,15 +64,17 @@
                 </div>
 
                 <div class="mp-actions">
-                    @if($incomePlan)
+                    @if($incomePlan && $canEditPlan)
                         <a href="{{ route('head_of_finance.academic-income.evaluate', $incomePlan) }}" class="mp-action">
                             <x-icons.book-open /> ປະເມີນລາຍຮັບ
                         </a>
                     @endif
-                    <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action">
-                        <x-icons.book-open /> ປະເມີນລາຍຈ່າຍ
-                    </a>
-                    @if($salaryPlan)
+                    @if($canEditPlan)
+                        <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action">
+                            <x-icons.book-open /> ປະເມີນລາຍຈ່າຍ
+                        </a>
+                    @endif
+                    @if($salaryPlan && $canEditPlan)
                         <a href="{{ route('head_of_finance.salary.manage', $salaryPlan) }}" class="mp-action">
                             <x-icons.users /> ເງິນເດືອນ
                         </a>
@@ -79,7 +82,7 @@
                     <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}" class="mp-action mp-action-strong">
                         <x-icons.book-open /> ຂຶ້ນແຜນ
                     </a>
-                    @if(!$incomePlan || !$salaryPlan)
+                    @if($canEditPlan && (!$incomePlan || !$salaryPlan))
                         <form method="POST" action="{{ route('head_of_finance.manage-plan.sync', $plan) }}">
                             @csrf
                             <button type="submit" class="mp-action mp-action-light">

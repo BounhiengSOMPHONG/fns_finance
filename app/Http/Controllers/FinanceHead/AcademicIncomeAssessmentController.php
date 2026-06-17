@@ -20,6 +20,8 @@ class AcademicIncomeAssessmentController extends Controller
 {
     public function evaluate(AcademicIncomePlan $academicIncome)
     {
+        $this->ensurePlanCanBeEdited($academicIncome);
+
         $settingSet = $this->settingSetFor($academicIncome);
 
         $programs11 = DegreeProgram::where('is_active', true)
@@ -65,6 +67,8 @@ class AcademicIncomeAssessmentController extends Controller
 
     public function saveEvaluate(Request $request, AcademicIncomePlan $academicIncome)
     {
+        $this->ensurePlanCanBeEdited($academicIncome);
+
         $request->validate([
             's11'          => 'nullable|array',
             's11.*'        => 'nullable|integer|min:0',
@@ -274,6 +278,8 @@ class AcademicIncomeAssessmentController extends Controller
 
     public function saveField(Request $request, AcademicIncomePlan $academicIncome): JsonResponse
     {
+        $this->ensurePlanCanBeEdited($academicIncome, true);
+
         $data = $request->validate([
             'type' => 'required|in:count,rate',
             'student_count' => 'required_if:type,count|integer|min:0',
@@ -362,6 +368,15 @@ class AcademicIncomeAssessmentController extends Controller
                 'total_income' => $total,
             ]
         );
+    }
+
+    private function ensurePlanCanBeEdited(AcademicIncomePlan $academicIncome, bool $json = false): void
+    {
+        if ($academicIncome->planningYear?->canBeEdited() !== false) {
+            return;
+        }
+
+        abort($json ? 423 : 403, 'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້');
     }
 
     private function persistFlatItem(AcademicIncomePlan $academicIncome, string $itemName, ?int $count = null): ?AcademicIncomeItem

@@ -77,6 +77,11 @@ class PlanningYear extends Model
         return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_MODIFYING], true);
     }
 
+    public function canBeEdited(): bool
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_MODIFYING], true);
+    }
+
     public function hasCurrentReviewer(User $user): bool
     {
         if (! $this->current_review_round_id) {

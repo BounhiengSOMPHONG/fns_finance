@@ -56,6 +56,22 @@ class PlanningYearReviewWorkflowTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_pending_review_plan_is_not_editable_until_review_is_closed(): void
+    {
+        $planningYear = PlanningYear::findOrFail(1);
+        $this->assertTrue($planningYear->canBeEdited());
+
+        $this->createPendingReview();
+        $this->assertFalse($planningYear->fresh()->canBeEdited());
+
+        PlanningYear::query()->whereKey(1)->update([
+            'status' => PlanningYear::STATUS_MODIFYING,
+            'review_closed_at' => now(),
+        ]);
+
+        $this->assertTrue($planningYear->fresh()->canBeEdited());
+    }
+
     public function test_only_selected_current_reviewer_can_comment_while_pending(): void
     {
         $this->createPendingReview();

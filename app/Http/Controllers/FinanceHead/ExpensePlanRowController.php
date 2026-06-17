@@ -29,6 +29,8 @@ class ExpensePlanRowController extends Controller
         ]);
 
         $planningYear = PlanningYear::findOrFail($data['planning_year_id']);
+        $this->ensurePlanCanBeEdited($planningYear);
+
         $section = ExpenseSection::findOrFail($data['section_id']);
         $subsection = $data['subsection_id'] ? ExpenseSubsection::findOrFail($data['subsection_id']) : null;
         $pattern = ExpensePattern::with('fields')->findOrFail($data['pattern_id']);
@@ -95,6 +97,7 @@ class ExpensePlanRowController extends Controller
     public function update(Request $request, int $expensePlanRow)
     {
         $expensePlan = ExpensePlan::with(['pattern.fields', 'values'])->findOrFail($expensePlanRow);
+        $this->ensurePlanCanBeEdited($expensePlan->planningYear);
 
         $data = $request->validate([
             'plan_detail' => 'required|string|max:255',
@@ -148,6 +151,11 @@ class ExpensePlanRowController extends Controller
 
     public function destroy(Request $request, int $expensePlanRow)
     {
+        $expensePlan = ExpensePlan::find($expensePlanRow);
+        if ($expensePlan) {
+            $this->ensurePlanCanBeEdited($expensePlan->planningYear);
+        }
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
@@ -156,6 +164,15 @@ class ExpensePlanRowController extends Controller
         }
 
         return back()->with('error', 'ຕ້ອງເພີ່ມ ຫຼື ລຶບລາຍການທີ່ໜ້າ Expense structure ເທົ່ານັ້ນ');
+    }
+
+    private function ensurePlanCanBeEdited(?PlanningYear $planningYear): void
+    {
+        abort_if(
+            $planningYear?->canBeEdited() === false,
+            423,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
     }
 
     private function preserveLockedRowValues(ExpensePlan $expensePlan, array $values): array

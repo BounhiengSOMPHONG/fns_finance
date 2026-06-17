@@ -95,6 +95,18 @@ class ExpensePlanController extends Controller
             ->orderBy('id')
             ->get();
 
+        $academicIncomeTotal = (float) $planningYear->academicIncomePlans()
+            ->with('items:id,plan_id,total_income')
+            ->get()
+            ->sum(fn ($plan) => $plan->items->sum('total_income'));
+
+        $expenseTotal = (float) $expenseRows->sum(fn (ExpensePlan $row) => $row->yearlyTotal());
+        $budgetSummary = [
+            'income_total' => $academicIncomeTotal,
+            'expense_total' => $expenseTotal,
+            'remaining_total' => $academicIncomeTotal - $expenseTotal,
+        ];
+
         $chartAccounts = ChartOfAccount::whereDoesntHave('children')
             ->orderBy('account_code')
             ->get(['id', 'account_code', 'account_name']);
@@ -130,6 +142,7 @@ class ExpensePlanController extends Controller
             'expenseRows' => $expenseRows,
             'chartAccounts' => $chartAccounts,
             'defaultRows' => $defaultRows,
+            'budgetSummary' => $budgetSummary,
         ]);
     }
 

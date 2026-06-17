@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'ລາຍຈ່າຍ ' . $planningYear->year)
-@section('page-title', 'ລາຍຈ່າຍ ' . $planningYear->year)
+@section('title', 'ປະເມີນລາຍຈ່າຍ ' . $planningYear->year)
+@section('page-title', 'ປະເມີນລາຍຈ່າຍ ' . $planningYear->year)
 
 @section('content')
 @php

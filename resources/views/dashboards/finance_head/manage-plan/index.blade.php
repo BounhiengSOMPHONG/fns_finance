@@ -53,7 +53,7 @@
                         <strong>{{ $incomePlan ? number_format((float) $incomeTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                     <div>
-                        <span>ປະເມືນລາຍຈ່າຍ</span>
+                        <span>ປະເມີນລາຍຈ່າຍ</span>
                         <strong>{{ $expenseRows > 0 ? number_format((float) $expenseTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
                     </div>
                     <div>
@@ -69,7 +69,7 @@
                         </a>
                     @endif
                     <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action">
-                        <x-icons.book-open /> ປະເມືນລາຍຈ່າຍ
+                        <x-icons.book-open /> ປະເມີນລາຍຈ່າຍ
                     </a>
                     @if($salaryPlan)
                         <a href="{{ route('head_of_finance.salary.manage', $salaryPlan) }}" class="mp-action">

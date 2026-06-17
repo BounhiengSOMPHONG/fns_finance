@@ -690,6 +690,8 @@
                 </tr>
             </tbody>
         </table>
+
+        <div class="plan-year-page-number">3</div>
     </section>
 
     <section class="paper detail-paper">
@@ -700,6 +702,8 @@
             'money' => $money,
             'pct' => $pct,
         ])
+
+        <div class="plan-year-page-number">4</div>
     </section>
 
     <section class="paper detail-paper">
@@ -757,6 +761,8 @@
                 </tr>
             </tbody>
         </table>
+
+        <div class="plan-year-page-number">5</div>
     </section>
 
     <section class="paper detail-paper">
@@ -767,6 +773,8 @@
             'money' => $money,
             'pct' => $pct,
         ])
+
+        <div class="plan-year-page-number">6</div>
     </section>
 
     <section class="paper paper-summary expense-paper">
@@ -1895,6 +1903,19 @@
         text-align: left;
     }
 
+    .detail-paper {
+        break-inside: avoid;
+    }
+
+    .detail-paper .detail-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .55rem;
+        text-align: center;
+    }
+
     .expense-paper {
         break-inside: avoid;
     }
@@ -2466,6 +2487,11 @@
         .expense-subtitle {
             font-size: 8.8pt;
             margin: 8pt 0 4pt;
+        }
+
+        .detail-paper .detail-title {
+            font-size: 10pt;
+            margin-bottom: 5pt;
         }
 
         .salary-paper {

@@ -1923,7 +1923,6 @@
     .report-table.balance-table {
         font-size: .72rem;
         min-width: 1180px;
-        table-layout: fixed;
     }
 
     .report-table.balance-table th,

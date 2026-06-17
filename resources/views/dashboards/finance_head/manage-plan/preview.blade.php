@@ -317,26 +317,23 @@
             </colgroup>
             <thead>
                 <tr class="plan-year-head-row">
-                    <th><span>ພາກ</span><span>ສ່ວນ</span></th>
-                    <th><span>ພາກ</span><span>ຮ່ວງ</span></th>
-                    <th><span>ຮ່ວງ</span><span>ລວມ</span></th>
-                    <th><span>ລຶກ</span><span>ປົກກະຕິ</span></th>
+                    <th rowspan="2"><span>ພາກ</span><span>ສ່ວນ</span></th>
+                    <th rowspan="2"><span>ພາກ</span><span>ຮ່ວມ</span></th>
+                    <th rowspan="2"><span>ຮ່ວງ</span><span>ລວມ</span></th>
+                    <th rowspan="2"><span>ລູກ</span><span>ຮ່ວງ</span></th>
                     <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
-                    <th rowspan="2" style="width:132px">ລວມ</th>
-                    <th rowspan="2" style="width:132px">ງົບລັດ</th>
-                    <th rowspan="2" style="width:132px">ວິຊາການ</th>
+                    <th colspan="3" class="plan-year-budget-head">ແຜນງົບປະມານ</th>
                 </tr>
-                <tr class="plan-year-code-row">
-                    <th style="width:42px"></th>
-                    <th style="width:42px"></th>
-                    <th style="width:42px"></th>
-                    <th style="width:42px"></th>
+                <tr class="plan-year-budget-row">
+                    <th>ລວມ</th>
+                    <th>ງົບລັດ</th>
+                    <th>ວິຊາການ</th>
                 </tr>
             </thead>
             <tbody>
                 <tr class="plan-year-overall-row">
                     <td colspan="4"></td>
-                    <td>ລວມຍອດ ເງິນ ພາກ ສ່ວນ ({{ $planYearSectionFormula ?: '...' }}) =</td>
+                    <td class="plan-year-overall-label">ລວມຍອດ ເງິນ ພາກ ສ່ວນ ({{ $planYearSectionFormula ?: '...' }}) =</td>
                     <td class="num">{{ $money($planYearTotals['total_amount']) }}</td>
                     <td class="num">{{ $money($planYearTotals['state_amount']) }}</td>
                     <td class="num">{{ $money($planYearTotals['faculty_amount']) }}</td>
@@ -1552,20 +1549,26 @@
 
     .plan-year-head-row th {
         height: 32px;
-        vertical-align: bottom;
+        vertical-align: middle;
     }
 
     .plan-year-head-row th span {
         display: block;
     }
 
-    .plan-year-code-row th {
-        height: 10px;
-        padding: 0;
+    .plan-year-budget-head {
+        font-size: .72rem;
+        height: 24px;
+        text-align: center;
+    }
+
+    .plan-year-budget-row th {
+        height: 24px;
+        text-align: center;
     }
 
     .plan-year-overall-row td {
-        background: #fff;
+        background: #ccffff;
         font-weight: 900;
     }
 
@@ -1575,7 +1578,7 @@
     }
 
     .plan-year-overall-row td:first-child {
-        border-right-color: transparent;
+        border-right-color: #1f2933;
     }
 
     .plan-year-overall-row td:nth-child(2) {

@@ -968,9 +968,9 @@
                 </tr>
                 <tr>
                     <th style="width:38px">ພ</th>
-                    <th style="width:38px">ມສ</th>
+                    <th style="width:38px">ພສ</th>
                     <th style="width:38px">ຮ່ວງ</th>
-                    <th style="width:38px">ລະ</th>
+                    <th style="width:38px">ລຮ</th>
                     <th style="width:128px">ໂອນເຂົ້າ ATM</th>
                     <th style="width:128px">ຖອນເງິນສົດ</th>
                     <th style="width:128px">ລວມ</th>
@@ -1027,7 +1027,7 @@
 
         <div class="signature-grid salary-signatures">
             @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
-                <div class="signature">
+                <div class="signature salary-signature">
                     <span>ວັນທີ ......./......./.......</span>
                     <div></div>
                     <strong>{{ $signature }}</strong>
@@ -1035,7 +1035,7 @@
             @endforeach
         </div>
 
-        <h2 class="summary-caption salary-caption">3. ແຜນງົບປະມານລາຍຈ່າຍເງິນເດືອນ ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+        <div class="plan-year-page-number">1</div>
     </section>
 </div>
 
@@ -2031,6 +2031,40 @@
         break-inside: auto;
     }
 
+    .salary-paper .official-header {
+        align-items: flex-start;
+        display: grid;
+        grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+        margin: 0 0 16px;
+        min-height: 96px;
+    }
+
+    .salary-paper .org-left {
+        grid-column: 1;
+        padding-top: 3rem;
+    }
+
+    .salary-paper .nation-right {
+        grid-column: 2;
+        justify-self: center;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .salary-paper .official-header strong {
+        color: #000;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.72;
+    }
+
+    .salary-paper .nation-right span {
+        color: #000;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+
     .salary-title {
         margin-bottom: .35rem;
     }
@@ -2088,7 +2122,31 @@
     }
 
     .salary-signatures {
-        margin-top: 1.45rem;
+        column-gap: 4rem;
+        margin-top: 2.65rem;
+    }
+
+    .salary-signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .salary-signature span {
+        order: 1;
+    }
+
+    .salary-signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .salary-signature div {
+        order: 3;
     }
 
     .salary-caption {
@@ -2283,6 +2341,12 @@
         border-bottom: 1px dotted #6b7280;
         height: 3rem;
         margin-bottom: .35rem;
+    }
+
+    .salary-signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
     }
 
     @media print {
@@ -2592,6 +2656,21 @@
             min-height: 185mm;
         }
 
+        .salary-paper .official-header {
+            font-size: 8.6pt;
+            grid-template-columns: 42mm 1fr 42mm;
+            margin-bottom: 5mm;
+            min-height: 34mm;
+        }
+
+        .salary-paper .org-left {
+            padding-top: 23mm;
+        }
+
+        .salary-paper .nation-right span {
+            font-size: 7.8pt;
+        }
+
         .salary-title {
             font-size: 10pt;
             margin: 7pt 0 3pt;
@@ -2618,11 +2697,16 @@
         }
 
         .salary-signatures {
-            margin-top: 12pt;
+            column-gap: 16mm;
+            margin-top: 12mm;
         }
 
-        .salary-signatures .signature div {
-            height: 28pt;
+        .salary-signature {
+            padding: 0 2mm;
+        }
+
+        .salary-signature div {
+            height: 36mm;
         }
 
         .salary-caption {

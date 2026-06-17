@@ -316,10 +316,10 @@
             </colgroup>
             <thead>
                 <tr class="plan-year-head-row">
-                    <th rowspan="2"><span>ພາກ</span><span>ສ່ວນ</span></th>
-                    <th rowspan="2"><span>ພາກ</span><span>ຮ່ວມ</span></th>
-                    <th rowspan="2"><span>ຮ່ວງ</span><span>ລວມ</span></th>
-                    <th rowspan="2"><span>ລູກ</span><span>ຮ່ວງ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ພາກ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ພາກ</span><span>ສ່ວນ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ຮ່ວງ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ລູກ</span><span>ຮ່ວງ</span></th>
                     <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                     <th colspan="3" class="plan-year-budget-head">ແຜນງົບປະມານ</th>
                 </tr>
@@ -1504,6 +1504,7 @@
         background: #fff;
         border: 1px solid #d8dce3;
         border-radius: 8px;
+        max-width: 100%;
         box-shadow: 0 3px 14px rgba(17, 24, 39, .06);
         overflow-x: auto;
         padding: 1.2rem;
@@ -1511,18 +1512,23 @@
 
     .plan-year-paper {
         border-color: #cfd8e5;
+        box-sizing: border-box;
+        min-width: 0;
+        padding: clamp(2.5rem, 8vw, 150px) clamp(1rem, 6vw, 112px) 34px;
         position: relative;
+        width: 100%;
     }
 
     .plan-year-table {
         color: #111;
-        font-size: .7rem;
-        min-width: 1180px;
+        font-size: .78rem;
+        min-width: 1120px;
         table-layout: fixed;
+        width: 1120px;
     }
 
     .plan-year-code-col {
-        width: 48px;
+        width: 56px;
     }
 
     .plan-year-name-col {
@@ -1530,14 +1536,14 @@
     }
 
     .plan-year-money-col {
-        width: 132px;
+        width: 150px;
     }
 
     .plan-year-table th,
     .plan-year-table td {
-        border-color: #1f2933;
+        border-color: #000;
         line-height: 1.2;
-        padding: 3px 4px;
+        padding: 4px 5px;
     }
 
     .plan-year-table th {
@@ -1547,7 +1553,7 @@
     }
 
     .plan-year-head-row th {
-        height: 32px;
+        height: 48px;
         vertical-align: middle;
     }
 
@@ -1555,14 +1561,20 @@
         display: block;
     }
 
+    .plan-year-head-row .plan-year-code-head {
+        line-height: 1.45;
+        padding-top: 8px;
+        vertical-align: top;
+    }
+
     .plan-year-budget-head {
-        font-size: .72rem;
-        height: 24px;
+        font-size: .78rem;
+        height: 28px;
         text-align: center;
     }
 
     .plan-year-budget-row th {
-        height: 24px;
+        height: 28px;
         text-align: center;
     }
 
@@ -1571,13 +1583,17 @@
         font-weight: 900;
     }
 
+    .plan-year-overall-label {
+        color: #000;
+    }
+
     .plan-year-overall-row .num {
         text-decoration: underline;
         text-underline-offset: 2px;
     }
 
     .plan-year-overall-row td:first-child {
-        border-right-color: #1f2933;
+        border-right-color: #000;
     }
 
     .plan-year-overall-row td:nth-child(2) {
@@ -1585,7 +1601,7 @@
     }
 
     .plan-year-root-row td {
-        background: #d9ffc7;
+        background: #ccffcc;
         font-weight: 900;
     }
 
@@ -1598,7 +1614,7 @@
 
     .plan-year-code-cell {
         color: #111;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family: inherit;
         font-weight: 700;
         white-space: nowrap;
     }
@@ -1622,13 +1638,13 @@
     }
 
     .plan-year-title-block {
-        margin: .25rem 0 .55rem;
+        margin: 14px 0 28px;
         text-align: center;
     }
 
     .plan-year-title-block p {
         color: #111;
-        font-size: .96rem;
+        font-size: 1.5rem;
         font-weight: 800;
         line-height: 1.3;
         margin: .05rem 0 0;
@@ -1674,6 +1690,26 @@
         margin-bottom: .8rem;
     }
 
+    .plan-year-paper .official-header {
+        align-items: flex-start;
+        display: grid;
+        grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+        margin: 0 0 20px;
+        min-height: clamp(96px, 11vw, 172px);
+    }
+
+    .plan-year-paper .org-left {
+        grid-column: 1;
+        padding-top: clamp(3rem, 6.6vw, 104px);
+    }
+
+    .plan-year-paper .nation-right {
+        grid-column: 2;
+        justify-self: center;
+        min-width: 0;
+        padding-top: 0;
+    }
+
     .report-top strong,
     .official-header strong,
     .official-header span {
@@ -1688,6 +1724,39 @@
 
     .nation-right span {
         font-size: .72rem;
+    }
+
+    .plan-year-paper .official-header strong {
+        color: #000;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.72;
+    }
+
+    .plan-year-paper .nation-right span {
+        color: #000;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+
+    @media (max-width: 1100px) {
+        .plan-year-paper .official-header {
+            grid-template-columns: minmax(0, 1fr);
+            min-height: 0;
+            row-gap: .75rem;
+        }
+
+        .plan-year-paper .org-left,
+        .plan-year-paper .nation-right {
+            grid-column: 1;
+            justify-self: stretch;
+            padding-top: 0;
+        }
+
+        .plan-year-paper .nation-right {
+            order: -1;
+        }
     }
 
     .report-title,
@@ -1960,16 +2029,23 @@
 
         .plan-year-paper {
             min-height: 185mm;
-            padding-top: 0;
+            min-width: 0;
+            padding: 31mm 18mm 0;
         }
 
         .plan-year-paper .official-header {
             font-size: 8.6pt;
-            margin-bottom: 4pt;
+            grid-template-columns: 42mm 1fr 42mm;
+            margin-bottom: 5mm;
+            min-height: 34mm;
+        }
+
+        .plan-year-paper .org-left {
+            padding-top: 23mm;
         }
 
         .plan-year-paper .nation-right {
-            min-width: 310px;
+            min-width: 76mm;
         }
 
         .plan-year-paper .nation-right span {
@@ -1977,7 +2053,7 @@
         }
 
         .plan-year-title-block {
-            margin: 2pt 0 5pt;
+            margin: 2mm 0 5mm;
         }
 
         .plan-year-report-title,
@@ -2014,8 +2090,8 @@
             height: 21pt;
         }
 
-        .plan-year-code-row th {
-            height: 4pt;
+        .plan-year-budget-row th {
+            height: 12pt;
         }
 
         .plan-year-name {

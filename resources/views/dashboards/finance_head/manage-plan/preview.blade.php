@@ -2358,7 +2358,7 @@
 
     @media print {
         @page {
-            margin: 10mm;
+            margin: 8mm;
             size: A4 landscape;
 
             @bottom-center {
@@ -2399,19 +2399,18 @@
         }
 
         .income-preview {
-            gap: 0;
+            gap: 1.25rem;
             width: 100%;
+            zoom: 0.74;
         }
 
         .paper {
             border: 0;
             border-radius: 0;
             box-shadow: none;
-            min-height: 185mm;
             overflow: visible;
             padding: 0;
             page-break-after: always;
-            width: auto;
         }
 
         .paper:last-child {
@@ -2419,191 +2418,36 @@
         }
 
         .report-table {
-            font-size: 8.2pt;
             min-width: 0;
+        }
+
+        .report-table th,
+        .report-table td {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .report-table th,
+        .grand-row td,
+        .plan-year-root-row td,
+        .total-row td,
+        .section-row td,
+        .salary-root-row td {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
 
         .plan-year-paper {
-            min-height: 185mm;
-            min-width: 0;
-            padding: 31mm 18mm 0;
+            min-height: 0;
+            padding: clamp(1.5rem, 5vw, 80px) clamp(.6rem, 3vw, 56px) 20px;
         }
 
         .plan-year-paper .official-header {
-            font-size: 8.6pt;
-            grid-template-columns: 62mm 1fr 62mm;
-            margin-bottom: 5mm;
-            min-height: 34mm;
+            min-height: 72px;
         }
 
-        .plan-year-paper .org-left {
-            grid-column: 1;
-            order: initial;
-            padding-top: 23mm;
-        }
-
-        .plan-year-paper .nation-right {
-            grid-column: 2;
-            justify-self: center;
-            min-width: 92mm;
-            order: initial;
-            text-align: center;
-        }
-
-        .plan-year-paper .org-left strong {
+        .plan-year-paper .official-header strong {
             white-space: nowrap;
-        }
-
-        .plan-year-paper .nation-right span {
-            font-size: 7.2pt;
-        }
-
-        .plan-year-title-block {
-            margin: 2mm 0 5mm;
-        }
-
-        .plan-year-report-title,
-        .plan-year-title-block p {
-            font-size: 10pt;
-            line-height: 1.18;
-        }
-
-        .income-summary-paper {
-            min-height: 185mm;
-        }
-
-        .income-summary-paper .plan-year-report-title {
-            font-size: 11pt;
-            margin-bottom: 4pt;
-        }
-
-        .income-summary-org strong {
-            font-size: 8.4pt;
-        }
-
-        .income-summary-table {
-            font-size: 8.2pt;
-            min-width: 0;
-        }
-
-        .income-summary-num-col {
-            width: 22pt;
-        }
-
-        .income-summary-money-col {
-            width: 82pt;
-        }
-
-        .income-summary-bal-col {
-            width: 52pt;
-        }
-
-        .income-summary-note-col {
-            width: 64pt;
-        }
-
-        .income-overview-paper {
-            min-height: 185mm;
-        }
-
-        .income-overview-paper .official-header {
-            font-size: 8.6pt;
-            grid-template-columns: 62mm 1fr 62mm;
-            margin-bottom: 5mm;
-            min-height: 34mm;
-        }
-
-        .income-overview-paper .org-left {
-            grid-column: 1;
-            order: initial;
-            padding-top: 23mm;
-        }
-
-        .income-overview-paper .nation-right {
-            grid-column: 2;
-            justify-self: center;
-            order: initial;
-            text-align: center;
-        }
-
-        .income-overview-paper .org-left strong {
-            white-space: nowrap;
-        }
-
-        .income-overview-paper .nation-right span {
-            font-size: 7.8pt;
-        }
-
-        .income-overview-paper .signature-grid {
-            column-gap: 16mm;
-            margin-top: 12mm;
-        }
-
-        .income-overview-paper .signature {
-            padding: 0 2mm;
-        }
-
-        .income-overview-paper .signature div {
-            height: 36mm;
-        }
-
-        .report-table.plan-year-table {
-            font-size: 6.85pt;
-            table-layout: fixed;
-        }
-
-        .plan-year-code-col {
-            width: 10mm;
-        }
-
-        .plan-year-money-col {
-            width: 31mm;
-        }
-
-        .report-table.plan-year-table th,
-        .report-table.plan-year-table td {
-            padding: 1.7pt 2.4pt;
-            white-space: normal;
-        }
-
-        .report-table.plan-year-table .num,
-        .report-table.plan-year-table .plan-year-code-cell {
-            white-space: nowrap;
-        }
-
-        .plan-year-head-row th {
-            height: 21pt;
-        }
-
-        .plan-year-budget-row th {
-            height: 12pt;
-        }
-
-        .plan-year-name {
-            min-width: 0;
-        }
-
-        .plan-year-warning {
-            border-width: .5pt;
-            font-size: 7pt;
-            margin-bottom: 4pt;
-            padding: 3pt 4pt;
-        }
-
-        .plan-year-paper .balance-signatures {
-            column-gap: 16mm;
-            margin-top: 12mm;
-            min-width: 0;
-            width: 100%;
-        }
-
-        .plan-year-paper .signature {
-            padding: 0 2mm;
-        }
-
-        .plan-year-paper .signature div {
-            border-bottom: 0;
-            height: 36mm;
         }
 
         .plan-year-page-number,
@@ -2611,181 +2455,30 @@
             display: none !important;
         }
 
-        .balance-paper {
-            min-height: 185mm;
-        }
-
-        .balance-title {
-            font-size: 12pt;
-            margin-bottom: 3pt;
-        }
-
-        .balance-org strong {
-            font-size: 8.4pt;
-        }
-
-        .balance-num-col {
-            width: 24pt;
-        }
-
-        .balance-money-col {
-            width: 52pt;
-        }
-
-        .report-table.balance-table {
-            font-size: 7.2pt;
-            table-layout: fixed;
-        }
-
-        .report-table.balance-table th,
-        .report-table.balance-table td {
-            padding: 2.4pt 3pt;
-            white-space: normal;
-        }
-
-        .report-table.balance-table .num {
-            white-space: nowrap;
-        }
-
-        .balance-signatures {
-            margin-top: 14pt;
-        }
-
-        .balance-paper .balance-signatures {
-            column-gap: 16mm;
-            margin-top: 12mm;
+        .plan-year-paper .balance-signatures {
             min-width: 0;
             width: 100%;
         }
 
-        .balance-paper .signature {
-            padding: 0 2mm;
+        .plan-year-name {
+            min-width: 0;
         }
 
-        .balance-paper .signature div {
-            height: 36mm;
-        }
-
-        .expense-subtitle {
-            font-size: 8.8pt;
-            margin: 8pt 0 4pt;
-        }
-
-        .expense-summary-title,
-        .expense-section-title {
-            font-size: 11pt;
-            margin-bottom: 4pt;
-        }
-
-        .expense-org strong {
-            font-size: 8.4pt;
-        }
-
-        .expense-signatures {
-            column-gap: 16mm;
-            margin-top: 12mm;
-        }
-
-        .expense-signatures .signature {
-            padding: 0 2mm;
-        }
-
-        .expense-signatures .signature div {
-            height: 36mm;
-        }
-
-        .detail-paper .detail-title {
-            font-size: 10pt;
-            margin-bottom: 5pt;
-        }
-
+        .detail-paper,
+        .income-overview-paper,
+        .income-summary-paper,
+        .expense-paper,
+        .balance-paper,
         .salary-paper {
-            min-height: 185mm;
+            min-height: 0;
         }
 
-        .salary-paper .official-header {
-            font-size: 8.6pt;
-            grid-template-columns: 62mm 1fr 62mm;
-            margin-bottom: 5mm;
-            min-height: 34mm;
-        }
-
-        .salary-paper .org-left {
-            grid-column: 1;
-            order: initial;
-            padding-top: 23mm;
-        }
-
-        .salary-paper .nation-right {
-            grid-column: 2;
-            justify-self: center;
-            order: initial;
-            text-align: center;
-        }
-
-        .salary-paper .org-left strong {
-            white-space: nowrap;
-        }
-
-        .salary-paper .nation-right span {
-            font-size: 7.8pt;
-        }
-
-        .salary-title {
-            font-size: 10pt;
-            margin: 7pt 0 3pt;
-        }
-
-        .salary-meta {
-            font-size: 7.6pt;
-            margin-bottom: 5pt;
-        }
-
-        .salary-table {
-            font-size: 6.9pt;
-            table-layout: fixed;
-        }
-
-        .salary-table th,
-        .salary-table td {
-            padding: 2.1pt 2.7pt;
-            white-space: normal;
-        }
-
-        .salary-table .num {
-            white-space: nowrap;
-        }
-
-        .salary-signatures {
-            column-gap: 16mm;
-            margin-top: 12mm;
-        }
-
-        .salary-signature {
-            padding: 0 2mm;
-        }
-
-        .salary-signature div {
-            height: 36mm;
-        }
-
-        .salary-caption {
-            font-size: 9pt;
-            margin-top: 8pt;
-        }
-
-        .report-table th,
-        .report-table td {
-            padding: 3.2pt 4pt;
-        }
-
-        .report-table th,
-        .grand-row td,
-        .plan-year-root-row td,
-        .total-row td,
-        .section-row td {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
+        .salary-signatures,
+        .expense-signatures,
+        .balance-signatures,
+        .plan-year-paper .balance-signatures,
+        .balance-paper .balance-signatures {
+            column-gap: 1.5rem;
         }
     }
 </style>

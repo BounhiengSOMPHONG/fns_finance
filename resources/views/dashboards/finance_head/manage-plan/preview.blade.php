@@ -466,23 +466,23 @@
         <div class="balance-page-number">2</div>
     </section>
 
-    <section class="paper paper-summary">
-        <div class="report-top">
-            <div>
-                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
-                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
-            </div>
+    <section class="paper paper-summary income-summary-paper">
+        <h2 class="plan-year-report-title">1. ແຜນງົບປະມານລາຍຮັບວິຊາການຂອງ ຄວທ ສົກ {{ $planningYear->year }}</h2>
+
+        <div class="income-summary-org">
+            <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+            <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
         </div>
 
-        <table class="report-table plan-table">
+        <table class="report-table plan-table income-summary-table">
             <thead>
                 <tr>
-                    <th style="width:44px">ລ/ດ</th>
+                    <th class="income-summary-num-col">ລ/ດ</th>
                     <th>ລາຍການ</th>
-                    <th style="width:150px">ຈຳນວນເງິນຕາມແຜນ</th>
-                    <th style="width:150px">ຈຳນວນເງິນຮັບຕົວຈິງ</th>
-                    <th style="width:120px">ດຸນດ່ຽງ</th>
-                    <th style="width:120px">ໝາຍເຫດ</th>
+                    <th class="income-summary-money-col">ຈຳນວນເງິນຕາມແຜນ</th>
+                    <th class="income-summary-money-col">ຈຳນວນເງິນຮັບຕົວຈິງ</th>
+                    <th class="income-summary-bal-col">ດຸນດ່ຽງ</th>
+                    <th class="income-summary-note-col">ໝາຍເຫດ</th>
                 </tr>
             </thead>
             <tbody>
@@ -507,7 +507,7 @@
             </tbody>
         </table>
 
-        <h2 class="summary-caption">1. ແຜນງົບປະມານລາຍຮັບວິຊາການຂອງ ຄວທ ສົກ {{ $planningYear->year }}</h2>
+        <div class="plan-year-page-number">1</div>
     </section>
 
     <section class="paper">
@@ -1654,6 +1654,52 @@
         margin: 0;
     }
 
+    .income-summary-paper {
+        break-inside: avoid;
+    }
+
+    .income-summary-paper .plan-year-report-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .income-summary-org {
+        margin-bottom: .55rem;
+    }
+
+    .income-summary-org strong {
+        color: #111827;
+        display: block;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+
+    .income-summary-table {
+        font-size: .78rem;
+        min-width: 1180px;
+    }
+
+    .income-summary-num-col {
+        width: 40px;
+    }
+
+    .income-summary-money-col {
+        width: 150px;
+    }
+
+    .income-summary-bal-col {
+        width: 100px;
+    }
+
+    .income-summary-note-col {
+        width: 120px;
+    }
+
     .plan-year-page-number {
         display: none;
         font-size: .76rem;
@@ -2157,6 +2203,40 @@
         .plan-year-title-block p {
             font-size: 10pt;
             line-height: 1.18;
+        }
+
+        .income-summary-paper {
+            min-height: 185mm;
+        }
+
+        .income-summary-paper .plan-year-report-title {
+            font-size: 11pt;
+            margin-bottom: 4pt;
+        }
+
+        .income-summary-org strong {
+            font-size: 8.4pt;
+        }
+
+        .income-summary-table {
+            font-size: 8.2pt;
+            min-width: 0;
+        }
+
+        .income-summary-num-col {
+            width: 22pt;
+        }
+
+        .income-summary-money-col {
+            width: 82pt;
+        }
+
+        .income-summary-bal-col {
+            width: 52pt;
+        }
+
+        .income-summary-note-col {
+            width: 64pt;
         }
 
         .report-table.plan-year-table {

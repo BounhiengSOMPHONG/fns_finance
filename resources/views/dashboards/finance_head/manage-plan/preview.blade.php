@@ -1917,6 +1917,39 @@
         margin-top: 1.55rem;
     }
 
+    .plan-year-paper .balance-signatures {
+        column-gap: 4rem;
+        margin-top: 2.65rem;
+        min-width: 1220px;
+        width: 1220px;
+    }
+
+    .plan-year-paper .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .plan-year-paper .signature span {
+        order: 1;
+    }
+
+    .plan-year-paper .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .plan-year-paper .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
+    }
+
     .balance-caption {
         text-align: right;
     }
@@ -2106,11 +2139,19 @@
         }
 
         .plan-year-paper .balance-signatures {
-            margin-top: 10pt;
+            column-gap: 16mm;
+            margin-top: 12mm;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .plan-year-paper .signature {
+            padding: 0 2mm;
         }
 
         .plan-year-paper .signature div {
-            height: 24pt;
+            border-bottom: 0;
+            height: 36mm;
         }
 
         .plan-year-page-number {

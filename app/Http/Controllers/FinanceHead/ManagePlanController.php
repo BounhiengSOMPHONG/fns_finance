@@ -187,6 +187,22 @@ class ManagePlanController extends Controller
         return back()->with('success', 'ປິດຮອບຂໍຄວາມເຫັນ ແລະ ເຂົ້າສະຖານະກຳລັງແກ້ໄຂແລ້ວ');
     }
 
+    public function savePlan(PlanningYear $planningYear)
+    {
+        if (! $planningYear->canBeEdited()) {
+            return back()->with('error', 'ແຜນນີ້ຖືກບັນທຶກ ຫຼື ຢູ່ໃນສະຖານະກວດສອບແລ້ວ');
+        }
+
+        $planningYear->update([
+            'status' => PlanningYear::STATUS_SAVED,
+            'current_review_round_id' => null,
+            'review_requested_at' => null,
+            'review_closed_at' => null,
+        ]);
+
+        return back()->with('success', 'ບັນທຶກແຜນປີ '.$planningYear->year.' ສຳເລັດ');
+    }
+
     public function sync(PlanningYear $planningYear)
     {
         abort_if(

@@ -14,6 +14,8 @@ class PlanningYear extends Model
 
     public const STATUS_MODIFYING = 'MODIFYING';
 
+    public const STATUS_SAVED = 'SAVED';
+
     protected $fillable = [
         'year',
         'name',

@@ -30,6 +30,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('manage-plan/{planningYear}/previewview', fn (\App\Models\PlanningYear $planningYear) => redirect()->route('head_of_finance.manage-plan.preview', $planningYear))->name('manage-plan.previewview');
         Route::delete('manage-plan/{planningYear}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'destroy'])->name('manage-plan.destroy');
         Route::post('manage-plan/{planningYear}/sync', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'sync'])->name('manage-plan.sync');
+        Route::post('manage-plan/{planningYear}/save', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'savePlan'])->name('manage-plan.save');
         Route::post('manage-plan/{planningYear}/request-review', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'requestReview'])->name('manage-plan.request-review');
         Route::post('manage-plan/{planningYear}/close-review', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'closeReview'])->name('manage-plan.close-review');
 

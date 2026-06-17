@@ -32,6 +32,13 @@
                 $expenseTotal = $plan->expensePlans->sum(fn ($expense) => $expense->values->sum('value_number'));
                 $isCurrent = (int) $plan->year === $currentYear;
                 $canEditPlan = $plan->canBeEdited();
+                $isSavedPlan = $plan->status === \App\Models\PlanningYear::STATUS_SAVED;
+                $statusLabels = [
+                    'DRAFT' => 'Draft',
+                    'PENDING_REVIEW' => 'Pending review',
+                    'MODIFYING' => 'Modifying',
+                    'SAVED' => 'Saved',
+                ];
             @endphp
             <article class="mp-card  {{ $isCurrent ? 'is-current' : '' }}">
                 <div class="mp-card-top">
@@ -45,6 +52,8 @@
                     </div>
                     @if($isCurrent)
                         <span class="mp-pill">ປະຈຸບັນ</span>
+                    @else
+                        <span class="mp-pill mp-pill-muted">{{ $statusLabels[$plan->status ?? 'DRAFT'] ?? ($plan->status ?? 'Draft') }}</span>
                     @endif
                 </div>
 
@@ -68,20 +77,40 @@
                         <a href="{{ route('head_of_finance.academic-income.evaluate', $incomePlan) }}" class="mp-action">
                             <x-icons.book-open /> ປະເມີນລາຍຮັບ
                         </a>
+                    @elseif($incomePlan && ! $isSavedPlan)
+                        <span class="mp-action mp-action-disabled" aria-disabled="true">
+                            <x-icons.book-open /> ປະເມີນລາຍຮັບ
+                        </span>
                     @endif
                     @if($canEditPlan)
                         <a href="{{ route('head_of_finance.expense.manage', $plan) }}" class="mp-action">
                             <x-icons.book-open /> ປະເມີນລາຍຈ່າຍ
                         </a>
+                    @elseif(! $isSavedPlan)
+                        <span class="mp-action mp-action-disabled" aria-disabled="true">
+                            <x-icons.book-open /> ປະເມີນລາຍຈ່າຍ
+                        </span>
                     @endif
                     @if($salaryPlan && $canEditPlan)
                         <a href="{{ route('head_of_finance.salary.manage', $salaryPlan) }}" class="mp-action">
                             <x-icons.users /> ເງິນເດືອນ
                         </a>
+                    @elseif($salaryPlan && ! $isSavedPlan)
+                        <span class="mp-action mp-action-disabled" aria-disabled="true">
+                            <x-icons.users /> ເງິນເດືອນ
+                        </span>
                     @endif
                     <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}" class="mp-action mp-action-strong">
                         <x-icons.book-open /> ຂຶ້ນແຜນ
                     </a>
+                    @if($isSavedPlan)
+                        <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}#period-1-2" class="mp-action mp-action-period">
+                            ງວດ 1-2
+                        </a>
+                        <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}#period-3-4" class="mp-action mp-action-period">
+                            ງວດ 3-4
+                        </a>
+                    @endif
                     @if($canEditPlan && (!$incomePlan || !$salaryPlan))
                         <form method="POST" action="{{ route('head_of_finance.manage-plan.sync', $plan) }}">
                             @csrf
@@ -177,6 +206,7 @@
     .mp-card-title h3 { margin:0; color:var(--fns-navy); font-size:1rem; }
     .mp-card-title p { margin:.25rem 0 0; color:var(--fns-gray-500); font-size:.8rem; }
     .mp-pill { align-self:start; border-radius:999px; background:rgba(201,153,26,.16); color:#8a6410; padding:.25rem .5rem; font-size:.7rem; font-weight:900; }
+    .mp-pill-muted { background:#eef2f7; color:#64748b; }
     .mp-status { display:grid; grid-template-columns:repeat(3, 1fr); gap:.55rem; margin:1rem 0; }
     .mp-status div { border:1px solid var(--fns-gray-200); border-radius:8px; padding:.55rem; }
     .mp-status span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:900; }
@@ -198,8 +228,11 @@
     }
     .mp-action svg { width:15px; height:15px; }
     .mp-action-strong { background:var(--fns-navy); border-color:var(--fns-navy); color:#fff; }
+    .mp-action-period { background:#f7faf6; border-color:#cfe0d0; color:var(--fns-green); }
     .mp-action-preview { background:#fff7df; border-color:#f4d37a; color:#72500b; }
     .mp-action-light { background:#fbfbfc; }
+    .mp-action-disabled { background:#f1f5f9; border-color:#e2e8f0; color:#94a3b8; cursor:not-allowed; opacity:.82; }
+    .mp-action-disabled svg { opacity:.55; }
     .mp-action-danger { border-color:#fecaca; background:#fff5f5; color:#b91c1c; }
     .mp-action-danger:hover { border-color:#f87171; background:#fee2e2; color:#991b1b; }
     .mp-empty { grid-column:1 / -1; text-align:center; background:#fff; border:1px dashed var(--fns-gray-200); border-radius:8px; padding:2rem; color:var(--fns-gray-500); }

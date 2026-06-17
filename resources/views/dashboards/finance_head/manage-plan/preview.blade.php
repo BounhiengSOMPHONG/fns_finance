@@ -114,6 +114,7 @@
         'DRAFT' => 'Draft',
         'PENDING_REVIEW' => 'Pending review',
         'MODIFYING' => 'Modifying',
+        'SAVED' => 'Saved',
     ];
 @endphp
 
@@ -143,6 +144,15 @@
         <button type="button" class="review-primary-btn" data-print-plan>
             ພິມ
         </button>
+
+        @if($reviewContext['can_manage_review'] && $planningYear->canBeEdited())
+            <form method="POST" action="{{ route('head_of_finance.manage-plan.save', $planningYear) }}">
+                @csrf
+                <button type="submit" class="review-save-btn" onclick="return confirm('ບັນທຶກແຜນ ແລະ ປິດການແກ້ໄຂລາຍຮັບ, ລາຍຈ່າຍ, ເງິນເດືອນ?')">
+                    ບັນທຶກແຜນ
+                </button>
+            </form>
+        @endif
 
         @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
             <button type="button" class="review-primary-btn" data-open-review-modal>
@@ -284,7 +294,7 @@
 @endif
 
 <div class="income-preview">
-    <section class="paper plan-year-paper">
+    <section class="paper plan-year-paper" id="period-1-2">
         <div class="official-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -944,7 +954,7 @@
         </section>
     @endforeach
 
-    <section class="paper salary-paper">
+    <section class="paper salary-paper" id="period-3-4">
         <div class="official-header salary-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -1111,8 +1121,14 @@
         color: var(--fns-green);
     }
 
+    .review-status-saved {
+        background: rgba(22, 101, 52, .12);
+        color: #166534;
+    }
+
     .review-primary-btn,
     .review-secondary-btn,
+    .review-save-btn,
     .review-warning-btn {
         align-items: center;
         border-radius: 8px;
@@ -1143,6 +1159,12 @@
         background: rgba(201, 153, 26, .16);
         border: 1px solid rgba(201, 153, 26, .35);
         color: #7a5b0b;
+    }
+
+    .review-save-btn {
+        background: var(--fns-green);
+        border: 1px solid var(--fns-green);
+        color: #fff;
     }
 
     .review-drawer-toggle {

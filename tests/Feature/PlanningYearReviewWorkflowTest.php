@@ -72,6 +72,18 @@ class PlanningYearReviewWorkflowTest extends TestCase
         $this->assertTrue($planningYear->fresh()->canBeEdited());
     }
 
+    public function test_finance_head_can_save_plan_and_lock_editing(): void
+    {
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.save', 1))
+            ->assertRedirect();
+
+        $planningYear = PlanningYear::findOrFail(1);
+
+        $this->assertSame(PlanningYear::STATUS_SAVED, $planningYear->status);
+        $this->assertFalse($planningYear->canBeEdited());
+    }
+
     public function test_only_selected_current_reviewer_can_comment_while_pending(): void
     {
         $this->createPendingReview();

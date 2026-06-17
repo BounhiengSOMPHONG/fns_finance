@@ -14,7 +14,6 @@ use App\Models\PlanningYearFieldSetting;
 use App\Models\PlanningYearReviewRound;
 use App\Models\SalaryPlan;
 use App\Models\User;
-use App\Notifications\PlanningYearReviewRequested;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
 use App\Services\PlanYearReportBuilder;
@@ -150,7 +149,7 @@ class ManagePlanController extends Controller
             foreach ($reviewers as $reviewer) {
                 $reviewRound->reviewers()->create([
                     'user_id' => $reviewer->id,
-                    'notified_at' => now(),
+                    'notified_at' => null,
                 ]);
             }
 
@@ -163,10 +162,6 @@ class ManagePlanController extends Controller
 
             return $reviewRound->load('planningYear');
         });
-
-        foreach ($reviewers as $reviewer) {
-            $reviewer->notify(new PlanningYearReviewRequested($reviewRound));
-        }
 
         return back()->with('success', 'ສົ່ງຂໍຄວາມເຫັນໃຫ້ຜູ້ກວດສອບສຳເລັດ');
     }

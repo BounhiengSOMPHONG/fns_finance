@@ -6,8 +6,6 @@
             ->whereHas('reviewRound.planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
             ->count()
         : 0;
-    $unreadNotificationCount = auth()->check() ? auth()->user()->unreadNotifications()->count() : 0;
-
     $settingsActive = request()->routeIs('head_of_finance.settings.degree-programs.*')
         || request()->routeIs('head_of_finance.settings.course-credits.*')
         || request()->routeIs('head_of_finance.settings.credit-unit-price.*')
@@ -143,12 +141,6 @@
             </span>
 
             @auth
-                @if($unreadNotificationCount > 0)
-                    <a href="{{ route('reviews.planning-years.index') }}" class="fns-topnav-pill fns-topnav-pill-link">
-                        {{ $unreadNotificationCount }} ແຈ້ງເຕືອນ
-                    </a>
-                @endif
-
                 <span class="fns-topnav-pill">
                     <x-icons.user style="width:13px;height:13px;opacity:0.7;" />
                     {{ Auth::user()->full_name ?? Auth::user()->username ?? 'Admin' }}

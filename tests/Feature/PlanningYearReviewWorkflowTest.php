@@ -6,7 +6,6 @@ use App\Models\PlanningYear;
 use App\Models\PlanningYearReviewComment;
 use App\Models\Role;
 use App\Models\User;
-use App\Notifications\PlanningYearReviewRequested;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
@@ -28,7 +27,7 @@ class PlanningYearReviewWorkflowTest extends TestCase
         $this->seedUsers();
     }
 
-    public function test_finance_head_can_request_review_and_notifies_selected_users(): void
+    public function test_finance_head_can_request_review_without_sending_notifications(): void
     {
         Notification::fake();
 
@@ -51,9 +50,10 @@ class PlanningYearReviewWorkflowTest extends TestCase
         ]);
         $this->assertDatabaseHas('planning_year_reviewers', [
             'user_id' => $this->reviewer->id,
+            'notified_at' => null,
         ]);
 
-        Notification::assertSentTo($this->reviewer, PlanningYearReviewRequested::class);
+        Notification::assertNothingSent();
     }
 
     public function test_only_selected_current_reviewer_can_comment_while_pending(): void

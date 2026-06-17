@@ -140,6 +140,10 @@
             </button>
         @endif
 
+        <button type="button" class="review-primary-btn" data-print-plan>
+            ພິມ
+        </button>
+
         @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
             <button type="button" class="review-primary-btn" data-open-review-modal>
                 ສົ່ງຂໍຄວາມເຫັນ
@@ -1508,6 +1512,7 @@
         flex-direction: column;
         gap: 1.25rem;
         color: #111827;
+        font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
     }
 
     .paper {
@@ -2355,26 +2360,38 @@
             size: A4 landscape;
         }
 
+        html,
         body {
             background: #fff !important;
+            font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif !important;
+            margin: 0 !important;
         }
 
         .fns-topnav,
         .fns-sidebar,
+        .fns-alert,
+        .fns-page-title,
         .review-toolbar,
         .review-panel,
         .review-drawer-backdrop,
-        .review-modal-backdrop {
+        .review-modal-backdrop,
+        [data-print-plan] {
             display: none !important;
         }
 
+        .fns-main,
         .fns-content {
             margin: 0 !important;
             padding: 0 !important;
         }
 
+        .fns-main > div:has(.fns-page-title) {
+            display: none !important;
+        }
+
         .income-preview {
             gap: 0;
+            width: 100%;
         }
 
         .paper {
@@ -2385,6 +2402,7 @@
             overflow: visible;
             padding: 0;
             page-break-after: always;
+            width: auto;
         }
 
         .paper:last-child {
@@ -2404,17 +2422,27 @@
 
         .plan-year-paper .official-header {
             font-size: 8.6pt;
-            grid-template-columns: 42mm 1fr 42mm;
+            grid-template-columns: 62mm 1fr 62mm;
             margin-bottom: 5mm;
             min-height: 34mm;
         }
 
         .plan-year-paper .org-left {
+            grid-column: 1;
+            order: initial;
             padding-top: 23mm;
         }
 
         .plan-year-paper .nation-right {
-            min-width: 76mm;
+            grid-column: 2;
+            justify-self: center;
+            min-width: 92mm;
+            order: initial;
+            text-align: center;
+        }
+
+        .plan-year-paper .org-left strong {
+            white-space: nowrap;
         }
 
         .plan-year-paper .nation-right span {
@@ -2471,13 +2499,26 @@
 
         .income-overview-paper .official-header {
             font-size: 8.6pt;
-            grid-template-columns: 42mm 1fr 42mm;
+            grid-template-columns: 62mm 1fr 62mm;
             margin-bottom: 5mm;
             min-height: 34mm;
         }
 
         .income-overview-paper .org-left {
+            grid-column: 1;
+            order: initial;
             padding-top: 23mm;
+        }
+
+        .income-overview-paper .nation-right {
+            grid-column: 2;
+            justify-self: center;
+            order: initial;
+            text-align: center;
+        }
+
+        .income-overview-paper .org-left strong {
+            white-space: nowrap;
         }
 
         .income-overview-paper .nation-right span {
@@ -2658,13 +2699,26 @@
 
         .salary-paper .official-header {
             font-size: 8.6pt;
-            grid-template-columns: 42mm 1fr 42mm;
+            grid-template-columns: 62mm 1fr 62mm;
             margin-bottom: 5mm;
             min-height: 34mm;
         }
 
         .salary-paper .org-left {
+            grid-column: 1;
+            order: initial;
             padding-top: 23mm;
+        }
+
+        .salary-paper .nation-right {
+            grid-column: 2;
+            justify-self: center;
+            order: initial;
+            text-align: center;
+        }
+
+        .salary-paper .org-left strong {
+            white-space: nowrap;
         }
 
         .salary-paper .nation-right span {
@@ -2731,6 +2785,14 @@
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const printButton = document.querySelector('[data-print-plan]');
+
+        if (printButton) {
+            printButton.addEventListener('click', function () {
+                window.print();
+            });
+        }
+
         const modal = document.querySelector('[data-review-modal]');
         const openButton = document.querySelector('[data-open-review-modal]');
 

@@ -4,6 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-display: swap;
+    font-family: 'Noto Sans Lao';
+    font-style: normal;
+    font-weight: 300 600;
+    src: url('../fonts/NotoSansLao-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-display: swap;
+    font-family: 'Noto Sans Lao';
+    font-style: normal;
+    font-weight: 700 900;
+    src: url('../fonts/NotoSansLao-Bold.ttf') format('truetype');
+}
+
 /* ── FNS Design System ─────────────────────────────────── */
 :root {
     /* Brand palette from FNS logo */

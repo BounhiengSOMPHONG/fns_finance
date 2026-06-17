@@ -1946,6 +1946,37 @@
         margin-top: 1.65rem;
     }
 
+    .balance-paper .balance-signatures {
+        column-gap: 4rem;
+        margin-top: 2.65rem;
+    }
+
+    .balance-paper .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .balance-paper .signature span {
+        order: 1;
+    }
+
+    .balance-paper .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .balance-paper .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
+    }
+
     .plan-year-paper .balance-signatures {
         column-gap: 4rem;
         margin-top: 2.65rem;
@@ -2235,8 +2266,19 @@
             margin-top: 14pt;
         }
 
-        .balance-signatures .signature div {
-            height: 28pt;
+        .balance-paper .balance-signatures {
+            column-gap: 16mm;
+            margin-top: 12mm;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .balance-paper .signature {
+            padding: 0 2mm;
+        }
+
+        .balance-paper .signature div {
+            height: 36mm;
         }
 
         .expense-subtitle {

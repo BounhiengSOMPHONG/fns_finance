@@ -394,30 +394,30 @@
     </section>
 
     <section class="paper balance-paper">
-        <div class="report-top">
-            <div>
-                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
-                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
-            </div>
+        <h2 class="balance-title">ແຜນງົບປະມານດຸນດ່ຽງລາຍຮັບ ແລະ ລາຍຈ່າຍວິຊາການ ຂອງ ຄວທ ປະຈຳ ສົກຮຽນ {{ $planningYear->year }}</h2>
+
+        <div class="balance-org">
+            <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+            <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
         </div>
 
         <table class="report-table balance-table">
             <thead>
                 <tr>
-                    <th rowspan="2" style="width:40px">ລ/ດ</th>
+                    <th rowspan="2" class="balance-num-col">ລ/ດ</th>
                     <th colspan="3">ລາຍຮັບ</th>
                     <th colspan="3">ລາຍຈ່າຍ</th>
                     <th colspan="2">ດຸນດ່ຽງ</th>
                 </tr>
                 <tr>
                     <th>ລາຍການລາຍຮັບຈາກພາກສ່ວນຕ່າງໆ</th>
-                    <th style="width:112px">ງົບປະມານ/ປີ</th>
-                    <th style="width:112px">ງົບປະມານ/ເດືອນ</th>
+                    <th class="balance-money-col">ງົບປະມານ/ປີ</th>
+                    <th class="balance-money-col">ງົບປະມານ/ເດືອນ</th>
                     <th>ເນື້ອໃນລາຍຈ່າຍ</th>
-                    <th style="width:112px">ລາຍຈ່າຍ/ປີ</th>
-                    <th style="width:112px">ລາຍຈ່າຍ/ເດືອນ</th>
-                    <th style="width:112px">ດຸນດ່ຽງຕໍ່ປີ</th>
-                    <th style="width:112px">ດຸນດ່ຽງ/ເດືອນ</th>
+                    <th class="balance-money-col">ລາຍຈ່າຍ/ປີ</th>
+                    <th class="balance-money-col">ລາຍຈ່າຍ/ເດືອນ</th>
+                    <th class="balance-money-col">ດຸນດ່ຽງຕໍ່ປີ</th>
+                    <th class="balance-money-col">ດຸນດ່ຽງ/ເດືອນ</th>
                 </tr>
             </thead>
             <tbody>
@@ -463,7 +463,7 @@
             @endforeach
         </div>
 
-        <h2 class="summary-caption balance-caption">ແຜນງົບປະມານດຸນດ່ຽງລາຍຮັບ ແລະ ລາຍຈ່າຍວິຊາການ ຂອງ ຄວທ ປະຈຳ ສົກຮຽນ {{ $planningYear->year }}</h2>
+        <div class="balance-page-number">2</div>
     </section>
 
     <section class="paper paper-summary">
@@ -1891,14 +1891,44 @@
         break-inside: avoid;
     }
 
+    .balance-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .balance-org {
+        margin-bottom: .55rem;
+    }
+
+    .balance-org strong {
+        color: #111827;
+        display: block;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+
+    .balance-num-col {
+        width: 30px;
+    }
+
+    .balance-money-col {
+        width: 96px;
+    }
+
     .report-table.balance-table {
         font-size: .72rem;
         min-width: 1180px;
+        table-layout: fixed;
     }
 
     .report-table.balance-table th,
     .report-table.balance-table td {
-        padding: .34rem .42rem;
+        padding: .3rem .36rem;
     }
 
     .report-table.balance-table th {
@@ -1914,7 +1944,7 @@
     }
 
     .balance-signatures {
-        margin-top: 1.55rem;
+        margin-top: 1.65rem;
     }
 
     .plan-year-paper .balance-signatures {
@@ -1950,8 +1980,12 @@
         order: 3;
     }
 
-    .balance-caption {
-        text-align: right;
+    .balance-page-number {
+        display: none;
+        font-size: .76rem;
+        font-weight: 700;
+        margin-top: .35rem;
+        text-align: center;
     }
 
     .report-table th,
@@ -2158,8 +2192,29 @@
             display: block;
         }
 
+        .balance-page-number {
+            display: block;
+        }
+
         .balance-paper {
             min-height: 185mm;
+        }
+
+        .balance-title {
+            font-size: 12pt;
+            margin-bottom: 3pt;
+        }
+
+        .balance-org strong {
+            font-size: 8.4pt;
+        }
+
+        .balance-num-col {
+            width: 24pt;
+        }
+
+        .balance-money-col {
+            width: 52pt;
         }
 
         .report-table.balance-table {
@@ -2183,11 +2238,6 @@
 
         .balance-signatures .signature div {
             height: 28pt;
-        }
-
-        .balance-caption {
-            font-size: 9pt;
-            margin-top: 8pt;
         }
 
         .expense-subtitle {

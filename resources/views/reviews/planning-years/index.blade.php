@@ -10,12 +10,14 @@
             $round = $assignment->reviewRound;
             $plan = $round?->planningYear;
             $isCurrent = $plan && (int) $plan->current_review_round_id === (int) $round->id;
+            $isPending = $plan?->status === 'PENDING_REVIEW' && $isCurrent;
+            $isModifying = $plan?->status === 'MODIFYING';
         @endphp
         @if($plan)
             <a href="{{ route('reviews.planning-years.show', $plan) }}" class="review-inbox-card">
                 <div>
-                    <span class="review-inbox-status {{ $plan->status === 'PENDING_REVIEW' && $isCurrent ? 'pending' : 'closed' }}">
-                        {{ $plan->status === 'PENDING_REVIEW' && $isCurrent ? 'ລໍຖ້າຄວາມເຫັນ' : 'ປິດຮອບແລ້ວ' }}
+                    <span class="review-inbox-status {{ $isPending ? 'pending' : ($isModifying ? 'modifying' : 'closed') }}">
+                        {{ $isPending ? 'ລໍຖ້າຄວາມເຫັນ' : ($isModifying ? 'ກຳລັງແກ້ໄຂ' : 'ປິດຮອບແລ້ວ') }}
                     </span>
                     <h2>ແຜນປີ {{ $plan->year }}</h2>
                     <p>{{ $plan->name }}</p>
@@ -99,6 +101,11 @@
     .review-inbox-status.closed {
         background: #eef2f7;
         color: #475569;
+    }
+
+    .review-inbox-status.modifying {
+        background: rgba(14, 165, 233, .12);
+        color: #0369a1;
     }
 
     .review-inbox-meta {

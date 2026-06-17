@@ -18,12 +18,18 @@ class PlanningYearReviewController extends Controller
 {
     public function index()
     {
+        $latestAssignmentIds = PlanningYearReviewer::query()
+            ->selectRaw('MAX(planning_year_reviewers.id)')
+            ->join('planning_year_review_rounds', 'planning_year_reviewers.planning_year_review_round_id', '=', 'planning_year_review_rounds.id')
+            ->where('planning_year_reviewers.user_id', Auth::id())
+            ->groupBy('planning_year_review_rounds.planning_year_id');
+
         $assignments = PlanningYearReviewer::with([
             'reviewRound.planningYear.currentReviewRound',
             'reviewRound.requester',
             'user',
         ])
-            ->where('user_id', Auth::id())
+            ->whereIn('id', $latestAssignmentIds)
             ->whereHas('reviewRound.planningYear')
             ->latest('id')
             ->paginate(12);

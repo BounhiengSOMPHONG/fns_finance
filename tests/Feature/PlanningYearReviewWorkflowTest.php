@@ -179,6 +179,71 @@ class PlanningYearReviewWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_review_inbox_shows_latest_round_once_per_plan(): void
+    {
+        $this->withoutVite();
+
+        $firstRoundId = $this->createPendingReview();
+        DB::table('planning_year_review_rounds')->where('id', $firstRoundId)->update([
+            'closed_by' => $this->financeHead->id,
+            'closed_at' => now(),
+        ]);
+
+        $secondRoundId = DB::table('planning_year_review_rounds')->insertGetId([
+            'planning_year_id' => 1,
+            'requested_by' => $this->financeHead->id,
+            'round_number' => 2,
+            'requested_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('planning_year_reviewers')->insert([
+            'planning_year_review_round_id' => $secondRoundId,
+            'user_id' => $this->reviewer->id,
+            'notified_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('planning_years')->where('id', 1)->update([
+            'status' => PlanningYear::STATUS_PENDING_REVIEW,
+            'current_review_round_id' => $secondRoundId,
+            'review_requested_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->reviewer)
+            ->get(route('reviews.planning-years.index'))
+            ->assertOk()
+            ->assertSee('Round 2')
+            ->assertDontSee('Round 1');
+
+        $assignments = $response->viewData('assignments');
+        $this->assertSame(1, $assignments->count());
+        $this->assertSame(2, (int) $assignments->first()->reviewRound->round_number);
+    }
+
+    public function test_review_inbox_labels_modifying_plan_as_being_edited(): void
+    {
+        $this->withoutVite();
+        $roundId = $this->createPendingReview();
+
+        DB::table('planning_year_review_rounds')->where('id', $roundId)->update([
+            'closed_by' => $this->financeHead->id,
+            'closed_at' => now(),
+        ]);
+        DB::table('planning_years')->where('id', 1)->update([
+            'status' => PlanningYear::STATUS_MODIFYING,
+            'review_closed_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->reviewer)
+            ->get(route('reviews.planning-years.index'))
+            ->assertOk()
+            ->assertSee('ກຳລັງແກ້ໄຂ')
+            ->assertDontSee('ປິດຮອບແລ້ວ');
+    }
+
     private function createPendingReview(array $reviewerIds = []): int
     {
         $reviewerIds = $reviewerIds ?: [$this->reviewer->id];

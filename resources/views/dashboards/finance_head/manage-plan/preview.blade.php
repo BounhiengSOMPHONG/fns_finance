@@ -510,7 +510,7 @@
         <div class="plan-year-page-number">1</div>
     </section>
 
-    <section class="paper">
+    <section class="paper income-overview-paper">
         <div class="official-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -631,6 +631,8 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="plan-year-page-number">2</div>
     </section>
 
     <section class="paper detail-paper">
@@ -1700,6 +1702,74 @@
         width: 120px;
     }
 
+    .income-overview-paper {
+        break-inside: avoid;
+    }
+
+    .income-overview-paper .official-header {
+        align-items: flex-start;
+        display: grid;
+        grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+        margin: 0 0 16px;
+        min-height: 96px;
+    }
+
+    .income-overview-paper .org-left {
+        grid-column: 1;
+        padding-top: 3rem;
+    }
+
+    .income-overview-paper .nation-right {
+        grid-column: 2;
+        justify-self: center;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .income-overview-paper .official-header strong {
+        color: #000;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.72;
+    }
+
+    .income-overview-paper .nation-right span {
+        color: #000;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+
+    .income-overview-paper .signature-grid {
+        margin-top: 1.65rem;
+    }
+
+    .income-overview-paper .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .income-overview-paper .signature span {
+        order: 1;
+    }
+
+    .income-overview-paper .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .income-overview-paper .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
+    }
+
     .plan-year-page-number {
         display: none;
         font-size: .76rem;
@@ -2237,6 +2307,38 @@
 
         .income-summary-note-col {
             width: 64pt;
+        }
+
+        .income-overview-paper {
+            min-height: 185mm;
+        }
+
+        .income-overview-paper .official-header {
+            font-size: 8.6pt;
+            grid-template-columns: 42mm 1fr 42mm;
+            margin-bottom: 5mm;
+            min-height: 34mm;
+        }
+
+        .income-overview-paper .org-left {
+            padding-top: 23mm;
+        }
+
+        .income-overview-paper .nation-right span {
+            font-size: 7.8pt;
+        }
+
+        .income-overview-paper .signature-grid {
+            column-gap: 16mm;
+            margin-top: 12mm;
+        }
+
+        .income-overview-paper .signature {
+            padding: 0 2mm;
+        }
+
+        .income-overview-paper .signature div {
+            height: 36mm;
         }
 
         .report-table.plan-year-table {

@@ -2417,6 +2417,10 @@
             page-break-after: auto;
         }
 
+        thead {
+            display: table-row-group;
+        }
+
         .report-table {
             min-width: 0;
         }

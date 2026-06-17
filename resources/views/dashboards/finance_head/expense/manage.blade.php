@@ -245,7 +245,8 @@
     .excel-tab.active .excel-tab-name small { color:#3b3218; }
     .excel-sheet { background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; overflow:hidden; box-shadow:0 2px 12px rgba(26,39,68,.05); }
     .excel-section-head {
-        display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;
+        display:none !important;
+        justify-content:space-between; align-items:flex-start; gap:1rem;
         padding:1rem 1.15rem; border-bottom:1px solid var(--fns-gray-200); background:#fbfbfc;
     }
     .excel-section-head h2 { margin:0; color:var(--fns-navy); font-size:1.15rem; }

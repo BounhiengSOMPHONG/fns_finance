@@ -293,7 +293,6 @@
         </div>
 
         <div class="plan-year-title-block">
-            <h1 class="report-title plan-year-report-title">ແຜນງົບປະມານເນື້ອໃນລາຍຈ່າຍ</h1>
             <p>ແຜນລາຍຈ່າຍງົບປະມານປີ {{ $planningYear->year }}</p>
         </div>
 

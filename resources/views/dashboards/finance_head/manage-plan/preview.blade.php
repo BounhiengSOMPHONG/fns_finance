@@ -1553,7 +1553,7 @@
         border-color: #cfd8e5;
         box-sizing: border-box;
         min-width: 0;
-        padding: clamp(2.5rem, 8vw, 150px) clamp(1rem, 6vw, 112px) 34px;
+        padding: clamp(2.5rem, 8vw, 150px) 1.2rem 34px;
         position: relative;
         width: 100%;
     }
@@ -2275,8 +2275,8 @@
     .plan-year-paper .balance-signatures {
         column-gap: 4rem;
         margin-top: 2.65rem;
-        min-width: 1220px;
-        width: 1220px;
+        min-width: 1120px;
+        width: 1120px;
     }
 
     .plan-year-paper .signature {
@@ -2465,7 +2465,7 @@
 
         .plan-year-paper {
             min-height: 0;
-            padding: clamp(1.5rem, 5vw, 80px) clamp(.6rem, 3vw, 56px) 20px;
+            padding: clamp(1.5rem, 5vw, 80px) 0 20px;
         }
 
         .plan-year-paper .official-header {

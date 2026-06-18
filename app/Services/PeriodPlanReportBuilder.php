@@ -45,6 +45,7 @@ class PeriodPlanReportBuilder
                 'period_3_amount' => (float) $totalRows->sum('period_3_amount'),
                 'period_4_amount' => (float) $totalRows->sum('period_4_amount'),
                 'period_3_4_total_amount' => (float) $totalRows->sum('period_3_4_total_amount'),
+                'actual_full_year_amount' => (float) $totalRows->sum('actual_full_year_amount'),
             ],
             'warnings' => $yearlyReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []],
         ];
@@ -120,7 +121,8 @@ class PeriodPlanReportBuilder
         $period3Amount = $hasSecondHalfOverride ? (float) $override->period_3_amount : $defaultPeriodAmount;
         $period4Amount = $hasSecondHalfOverride ? (float) $override->period_4_amount : $defaultPeriodAmount;
         $period34TotalAmount = $period3Amount + $period4Amount;
-        $reductionPercent = $this->reductionPercent($yearlyAmount, $period34TotalAmount);
+        $actualFullYearAmount = $firstHalfAmount + $period34TotalAmount;
+        $reductionPercent = $this->reductionPercent($yearlyAmount, $actualFullYearAmount);
 
         return [
             'account_code' => $accountCode,
@@ -141,6 +143,7 @@ class PeriodPlanReportBuilder
             'period_3_amount' => $period3Amount,
             'period_4_amount' => $period4Amount,
             'period_3_4_total_amount' => $period34TotalAmount,
+            'actual_full_year_amount' => $actualFullYearAmount,
             'reduction_percent' => $reductionPercent,
             'has_override' => (bool) $override,
         ];
@@ -186,6 +189,7 @@ class PeriodPlanReportBuilder
             $period3Amount = (float) $children->sum('period_3_amount');
             $period4Amount = (float) $children->sum('period_4_amount');
             $period34TotalAmount = $period3Amount + $period4Amount;
+            $actualFullYearAmount = $firstHalfAmount + $period34TotalAmount;
 
             $row['period_1_amount'] = $period1Amount;
             $row['period_2_amount'] = $period2Amount;
@@ -199,7 +203,8 @@ class PeriodPlanReportBuilder
             $row['period_3_amount'] = $period3Amount;
             $row['period_4_amount'] = $period4Amount;
             $row['period_3_4_total_amount'] = $period34TotalAmount;
-            $row['reduction_percent'] = $this->reductionPercent((float) $row['yearly_amount'], $period34TotalAmount);
+            $row['actual_full_year_amount'] = $actualFullYearAmount;
+            $row['reduction_percent'] = $this->reductionPercent((float) $row['yearly_amount'], $actualFullYearAmount);
             $row['has_override'] = false;
 
             return $row;

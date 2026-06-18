@@ -261,6 +261,7 @@ class ManagePlanController extends Controller
             - $requestedDecreaseAmount
             + $requestedIncreaseAmount;
         $period34TotalAmount = $period3Amount + $period4Amount;
+        $actualFullYearAmount = ((float) $row['first_half_amount']) + $period34TotalAmount;
 
         $override = PeriodPlanOverride::query()->firstOrNew([
             'planning_year_id' => $planningYear->id,
@@ -295,8 +296,9 @@ class ManagePlanController extends Controller
                 'period_3_amount' => $period3Amount,
                 'period_4_amount' => $period4Amount,
                 'period_3_4_total_amount' => $period34TotalAmount,
-                'reduction_percent' => $period34TotalAmount > 0
-                    ? (((float) $row['yearly_amount']) / $period34TotalAmount) * 100
+                'actual_full_year_amount' => $actualFullYearAmount,
+                'reduction_percent' => $actualFullYearAmount > 0
+                    ? (((float) $row['yearly_amount']) / $actualFullYearAmount) * 100
                     : 0.0,
                 'has_override' => true,
             ],

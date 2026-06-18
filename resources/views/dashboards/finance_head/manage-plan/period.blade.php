@@ -20,6 +20,7 @@
         'period_3_amount' => 0,
         'period_4_amount' => 0,
         'period_3_4_total_amount' => 0,
+        'actual_full_year_amount' => 0,
     ];
     $periodWarnings = $periodReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []];
     $canEditPeriod = (bool) ($canEditPeriod ?? false);
@@ -196,8 +197,8 @@
                                 <td class="num" data-total-adjusted-second-half>{{ $money($periodTotals['adjusted_second_half_amount']) }}</td>
                                 <td class="num" data-total-period-3>{{ $money($periodTotals['period_3_amount']) }}</td>
                                 <td class="num" data-total-period-4>{{ $money($periodTotals['period_4_amount']) }}</td>
-                                <td class="num" data-total-period-3-4>{{ $money($periodTotals['period_3_4_total_amount']) }}</td>
-                                <td class="num" data-total-reduction-percent>{{ number_format((float) ($periodTotals['period_3_4_total_amount'] > 0 ? ($periodTotals['yearly_amount'] / $periodTotals['period_3_4_total_amount']) * 100 : 0), 2) }}%</td>
+                                <td class="num" data-total-actual-full-year>{{ $money($periodTotals['actual_full_year_amount']) }}</td>
+                                <td class="num" data-total-reduction-percent>{{ number_format((float) ($periodTotals['actual_full_year_amount'] > 0 ? ($periodTotals['yearly_amount'] / $periodTotals['actual_full_year_amount']) * 100 : 0), 2) }}%</td>
                             @else
                                 <td class="num" data-total-period-1>{{ $money($periodTotals['period_1_amount']) }}</td>
                                 <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
@@ -329,7 +330,7 @@
                                             <span class="period-readonly-amount" data-period-display="period_4_amount">{{ $money($row['period_4_amount']) }}</span>
                                         @endif
                                     </td>
-                                    <td class="num" data-period-3-4-total>{{ $money($row['period_3_4_total_amount']) }}</td>
+                                    <td class="num" data-actual-full-year>{{ $money($row['actual_full_year_amount']) }}</td>
                                     <td class="num" data-reduction-percent>{{ number_format((float) $row['reduction_percent'], 2) }}%</td>
                                 @else
                                     <td>
@@ -1003,6 +1004,7 @@
             }).format(Number.isFinite(value) ? value : 0);
             const formatInputMoney = (value) => formatMoney(value);
             const formatPercent = (value) => `${(Number.isFinite(value) ? value : 0).toFixed(2)}%`;
+            const actualFullYearAmount = (firstHalf, secondHalfPlan) => firstHalf + secondHalfPlan;
             const reductionPercent = (yearly, actualFullYear) => actualFullYear > 0 ? (yearly / actualFullYear) * 100 : 0;
             const parseAmount = (value) => {
                 let normalized = String(value).trim();
@@ -1100,7 +1102,8 @@
                     const p3 = children.reduce((sum, child) => sum + rowAmount(child, 'period_3_amount'), 0);
                     const p4 = children.reduce((sum, child) => sum + rowAmount(child, 'period_4_amount'), 0);
                     const p34 = p3 + p4;
-                    const reduction = reductionPercent(yearly, p34);
+                    const actualFullYear = actualFullYearAmount(first, p34);
+                    const reduction = reductionPercent(yearly, actualFullYear);
 
                     setRowAmount(row, 'period_1_amount', p1);
                     setRowAmount(row, 'period_2_amount', p2);
@@ -1114,7 +1117,7 @@
                     setCellText(row, '[data-first-half]', first);
                     setCellText(row, '[data-second-half]', second);
                     setCellText(row, '[data-adjusted-second-half]', adjusted);
-                    setCellText(row, '[data-period-3-4-total]', p34);
+                    setCellText(row, '[data-actual-full-year]', actualFullYear);
                     setCellText(row, '[data-reduction-percent]', reduction, formatPercent);
                 });
             };
@@ -1151,8 +1154,9 @@
                     sum.p3 += p3;
                     sum.p4 += p4;
                     sum.p34 += p3 + p4;
+                    sum.actualFullYear += actualFullYearAmount(first, p3 + p4);
                     return sum;
-                }, { yearly: 0, p1: 0, p2: 0, first: 0, second: 0, averageIncrease: 0, averageDecrease: 0, decrease: 0, increase: 0, adjusted: 0, p3: 0, p4: 0, p34: 0 });
+                }, { yearly: 0, p1: 0, p2: 0, first: 0, second: 0, averageIncrease: 0, averageDecrease: 0, decrease: 0, increase: 0, adjusted: 0, p3: 0, p4: 0, p34: 0, actualFullYear: 0 });
 
                 setTotalText('[data-total-yearly]', totals.yearly);
                 setTotalText('[data-total-period-1]', totals.p1);
@@ -1166,8 +1170,8 @@
                 setTotalText('[data-total-adjusted-second-half]', totals.adjusted);
                 setTotalText('[data-total-period-3]', totals.p3);
                 setTotalText('[data-total-period-4]', totals.p4);
-                setTotalText('[data-total-period-3-4]', totals.p34);
-                setTotalText('[data-total-reduction-percent]', reductionPercent(totals.yearly, totals.p34), formatPercent);
+                setTotalText('[data-total-actual-full-year]', totals.actualFullYear);
+                setTotalText('[data-total-reduction-percent]', reductionPercent(totals.yearly, totals.actualFullYear), formatPercent);
 
                 updatePeriodBalanceState(totals);
 
@@ -1201,7 +1205,8 @@
                 }
 
                 const p34 = p3 + p4;
-                const reduction = reductionPercent(yearly, p34);
+                const actualFullYear = actualFullYearAmount(first, p34);
+                const reduction = reductionPercent(yearly, actualFullYear);
 
                 setRowAmount(row, 'period_1_amount', p1);
                 setRowAmount(row, 'period_2_amount', p2);
@@ -1215,7 +1220,7 @@
                 setCellText(row, '[data-first-half]', first);
                 setCellText(row, '[data-second-half]', second);
                 setCellText(row, '[data-adjusted-second-half]', adjusted);
-                setCellText(row, '[data-period-3-4-total]', p34);
+                setCellText(row, '[data-actual-full-year]', actualFullYear);
                 setCellText(row, '[data-reduction-percent]', reduction, formatPercent);
 
                 const invalidFirstHalf = p1 < 0 || p2 < 0 || first > yearly;
@@ -1273,7 +1278,7 @@
                     setCellText(row, '[data-first-half]', data.row.first_half_amount);
                     setCellText(row, '[data-second-half]', data.row.second_half_amount);
                     setCellText(row, '[data-adjusted-second-half]', data.row.adjusted_second_half_amount);
-                    setCellText(row, '[data-period-3-4-total]', data.row.period_3_4_total_amount);
+                    setCellText(row, '[data-actual-full-year]', data.row.actual_full_year_amount);
                     setCellText(row, '[data-reduction-percent]', data.row.reduction_percent, formatPercent);
                     row.classList.remove('period-invalid');
                     updateTotals();

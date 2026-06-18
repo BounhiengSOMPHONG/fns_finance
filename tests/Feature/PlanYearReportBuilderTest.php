@@ -152,6 +152,36 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertTrue($row['has_override']);
     }
 
+    public function test_period_three_four_defaults_to_quarter_amounts_when_only_period_one_two_was_saved(): void
+    {
+        $this->seedAccounts();
+        DB::table('planning_years')->insert(['id' => 1, 'year' => 2027, 'name' => 'Planning 2027']);
+        DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
+        DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
+        DB::table('expense_plans')->insert([
+            ['id' => 1, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Academic row'],
+        ]);
+        DB::table('expense_plan_values')->insert([
+            ['expense_plan_id' => 1, 'field_key' => 'reference', 'value_text' => '62100201'],
+            ['expense_plan_id' => 1, 'field_key' => 'yearly_total', 'value_number' => 100],
+        ]);
+        DB::table('period_plan_overrides')->insert([
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 7,
+            'period_1_amount' => 10,
+            'period_2_amount' => 35,
+        ]);
+
+        $report = app(PeriodPlanReportBuilder::class)->buildForPlanningYear(PlanningYear::findOrFail(1));
+        $row = collect($report['rows'])->firstWhere('account_code', '62100201');
+
+        $this->assertSame(55.0, $row['second_half_amount']);
+        $this->assertSame(55.0, $row['adjusted_second_half_amount']);
+        $this->assertSame(25.0, $row['period_3_amount']);
+        $this->assertSame(25.0, $row['period_4_amount']);
+        $this->assertSame(50.0, $row['period_3_4_total_amount']);
+    }
+
     private function seedAccounts(): void
     {
         DB::table('chart_of_accounts')->insert([

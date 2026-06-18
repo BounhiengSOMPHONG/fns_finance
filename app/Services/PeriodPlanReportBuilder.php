@@ -98,8 +98,15 @@ class PeriodPlanReportBuilder
         $requestedDecreaseAmount = $override ? (float) $override->requested_decrease_amount : 0.0;
         $requestedIncreaseAmount = $override ? (float) $override->requested_increase_amount : 0.0;
         $adjustedSecondHalfAmount = $secondHalfAmount - $requestedDecreaseAmount + $requestedIncreaseAmount;
-        $period3Amount = $override ? (float) $override->period_3_amount : ($adjustedSecondHalfAmount / 2);
-        $period4Amount = $override ? (float) $override->period_4_amount : ($adjustedSecondHalfAmount - $period3Amount);
+        $hasSecondHalfOverride = $override
+            && (
+                abs((float) $override->requested_decrease_amount) > 0.01
+                || abs((float) $override->requested_increase_amount) > 0.01
+                || abs((float) $override->period_3_amount) > 0.01
+                || abs((float) $override->period_4_amount) > 0.01
+            );
+        $period3Amount = $hasSecondHalfOverride ? (float) $override->period_3_amount : $defaultPeriodAmount;
+        $period4Amount = $hasSecondHalfOverride ? (float) $override->period_4_amount : $defaultPeriodAmount;
         $period34TotalAmount = $period3Amount + $period4Amount;
         $reductionPercent = $secondHalfAmount > 0
             ? ($requestedDecreaseAmount / $secondHalfAmount) * 100

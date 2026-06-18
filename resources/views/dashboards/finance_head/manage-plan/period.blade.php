@@ -15,8 +15,9 @@
     ];
     $periodWarnings = $periodReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []];
     $canEditPeriod = (bool) ($canEditPeriod ?? false);
-    $money = fn ($amount) => number_format((float) $amount, 0);
+    $money = fn ($amount) => number_format((float) $amount, 0, '.', '.');
     $inputValue = fn ($amount) => rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.');
+    $inputMoney = fn ($amount) => number_format((float) $amount, 0, '.', '.');
     $saveUrlTemplate = route('head_of_finance.manage-plan.period-1-2.override', [
         'planningYear' => $planningYear,
         'accountCode' => '__ACCOUNT__',
@@ -177,11 +178,10 @@
                                     @if($isEditableRow)
                                         <input
                                             class="period-money-input"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            inputmode="decimal"
-                                            value="{{ $inputValue($row['period_1_amount']) }}"
+                                            type="text"
+                                            inputmode="numeric"
+                                            pattern="[0-9.]*"
+                                            value="{{ $inputMoney($row['period_1_amount']) }}"
                                             data-period-input="period_1_amount"
                                         >
                                     @else
@@ -192,11 +192,10 @@
                                     @if($isEditableRow)
                                         <input
                                             class="period-money-input"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            inputmode="decimal"
-                                            value="{{ $inputValue($row['period_2_amount']) }}"
+                                            type="text"
+                                            inputmode="numeric"
+                                            pattern="[0-9.]*"
+                                            value="{{ $inputMoney($row['period_2_amount']) }}"
                                             data-period-input="period_2_amount"
                                         >
                                     @else
@@ -814,13 +813,26 @@
             const canEdit = @json($canEditPeriod);
             const csrfToken = @json(csrf_token());
             const rows = Array.from(document.querySelectorAll('[data-period-row]'));
-            const formatMoney = (value) => new Intl.NumberFormat('en-US', {
+            const formatMoney = (value) => new Intl.NumberFormat('de-DE', {
                 maximumFractionDigits: 0,
                 minimumFractionDigits: 0,
             }).format(Number.isFinite(value) ? value : 0);
+            const formatInputMoney = (value) => formatMoney(value);
             const parseAmount = (value) => {
-                const parsed = Number.parseFloat(String(value).replace(/,/g, ''));
+                let normalized = String(value).trim();
+
+                if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(normalized)) {
+                    normalized = normalized.replace(/\./g, '').replace(',', '.');
+                } else {
+                    normalized = normalized.replace(/,/g, '');
+                }
+
+                const parsed = Number.parseFloat(normalized);
                 return Number.isFinite(parsed) ? parsed : 0;
+            };
+            const normalizeMoneyInput = (input) => {
+                const digits = input.value.replace(/\D/g, '');
+                input.value = digits ? formatInputMoney(Number.parseInt(digits, 10)) : '';
             };
             const isGroup = (row) => row.dataset.isGroup === '1';
             const rowAmount = (row, key) => {
@@ -829,6 +841,11 @@
             };
             const setRowAmount = (row, key, value) => {
                 row.dataset[key === 'period_1_amount' ? 'period1Amount' : 'period2Amount'] = String(value);
+                const input = row.querySelector(`[data-period-input="${key}"]`);
+                if (input && document.activeElement !== input) {
+                    input.value = formatInputMoney(value);
+                }
+
                 const display = row.querySelector(`[data-period-display="${key}"]`);
                 if (display) {
                     display.textContent = formatMoney(value);
@@ -960,8 +977,11 @@
 
                 let saveTimer = null;
                 row.querySelectorAll('[data-period-input]').forEach((input) => {
+                    normalizeMoneyInput(input);
+
                     input.addEventListener('input', () => {
                         window.clearTimeout(saveTimer);
+                        normalizeMoneyInput(input);
                         const payload = recalculate(row);
                         if (! payload) {
                             return;

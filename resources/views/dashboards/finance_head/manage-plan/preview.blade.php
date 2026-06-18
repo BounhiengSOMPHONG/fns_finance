@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Preview plan ' . $planningYear->year)
-@section('page-title', 'Preview plan')
+@section('title', 'Planning ' . $planningYear->year)
+@section('page-title', 'Planning')
 
 @section('content')
 @php

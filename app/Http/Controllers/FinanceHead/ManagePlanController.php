@@ -87,6 +87,24 @@ class ManagePlanController extends Controller
         ));
     }
 
+    public function periodOneTwo(PlanningYear $planningYear)
+    {
+        return view('dashboards.finance_head.manage-plan.period', [
+            'planningYear' => $planningYear,
+            'periodKey' => 'period-1-2',
+            'periodTitle' => 'ງວດ 1-2',
+        ]);
+    }
+
+    public function periodThreeFour(PlanningYear $planningYear)
+    {
+        return view('dashboards.finance_head.manage-plan.period', [
+            'planningYear' => $planningYear,
+            'periodKey' => 'period-3-4',
+            'periodTitle' => 'ງວດ 3-4',
+        ]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

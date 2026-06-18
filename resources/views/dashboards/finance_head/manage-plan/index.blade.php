@@ -104,10 +104,10 @@
                         <x-icons.book-open /> ຂຶ້ນແຜນ
                     </a>
                     @if($isSavedPlan)
-                        <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}#period-1-2" class="mp-action mp-action-period">
+                        <a href="{{ route('head_of_finance.manage-plan.period-1-2', $plan) }}" class="mp-action mp-action-period">
                             ງວດ 1-2
                         </a>
-                        <a href="{{ route('head_of_finance.manage-plan.preview', $plan) }}#period-3-4" class="mp-action mp-action-period">
+                        <a href="{{ route('head_of_finance.manage-plan.period-3-4', $plan) }}" class="mp-action mp-action-period">
                             ງວດ 3-4
                         </a>
                     @endif

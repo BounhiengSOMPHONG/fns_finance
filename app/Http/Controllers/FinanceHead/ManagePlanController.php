@@ -185,7 +185,7 @@ class ManagePlanController extends Controller
         return back()->with('success', 'ບັນທຶກງວດ 1-2 ສຳເລັດ ສາມາດເຂົ້າງວດ 3-4 ໄດ້ແລ້ວ');
     }
 
-    public function periodThreeFour(PlanningYear $planningYear)
+    public function periodThreeFour(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
     {
         if (! $planningYear->canOpenPeriodThreeFour()) {
             return redirect()
@@ -193,11 +193,121 @@ class ManagePlanController extends Controller
                 ->with('error', 'ກະລຸນາບັນທຶກງວດ 1-2 ກ່ອນ ຈຶ່ງຈະເຂົ້າງວດ 3-4 ໄດ້');
         }
 
+        if ($planningYear->canEditPeriodThreeFour()) {
+            $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
+        }
+
+        $periodReport = $periodPlanReportBuilder->buildForPlanningYear($planningYear);
+
         return view('dashboards.finance_head.manage-plan.period', [
             'planningYear' => $planningYear,
             'periodKey' => 'period-3-4',
             'periodTitle' => 'ງວດ 3-4',
+            'periodReport' => $periodReport,
+            'canEditPeriod' => $planningYear->canEditPeriodThreeFour(),
         ]);
+    }
+
+    public function updatePeriodThreeFourOverride(
+        Request $request,
+        PlanningYear $planningYear,
+        string $accountCode,
+        PeriodPlanReportBuilder $periodPlanReportBuilder
+    ) {
+        abort_if(
+            $planningYear->canEditPeriodThreeFour() === false,
+            423,
+            'ຕ້ອງບັນທຶກງວດ 1-2 ກ່ອນ ແລະ ງວດ 3-4 ຕ້ອງຍັງບໍ່ຖືກບັນທຶກ'
+        );
+
+        $data = $request->validate([
+            'requested_decrease_amount' => ['required', 'numeric', 'min:0'],
+            'requested_increase_amount' => ['required', 'numeric', 'min:0'],
+            'period_3_amount' => ['required', 'numeric', 'min:0'],
+            'period_4_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $row = $periodPlanReportBuilder->findEditableRow($planningYear, $accountCode);
+        abort_if(! $row, 404, 'ບໍ່ພົບບັນຊີວິຊາການສຳລັບແຜນນີ້');
+
+        $secondHalfAmount = (float) $row['second_half_amount'];
+        $requestedDecreaseAmount = (float) $data['requested_decrease_amount'];
+        $requestedIncreaseAmount = (float) $data['requested_increase_amount'];
+        $period3Amount = (float) $data['period_3_amount'];
+        $period4Amount = (float) $data['period_4_amount'];
+
+        if ($requestedDecreaseAmount > $secondHalfAmount) {
+            return response()->json([
+                'message' => 'ແຜນຂໍຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີ',
+                'errors' => [
+                    'requested_decrease_amount' => ['ແຜນຂໍຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີ'],
+                ],
+            ], 422);
+        }
+
+        $adjustedSecondHalfAmount = $secondHalfAmount - $requestedDecreaseAmount + $requestedIncreaseAmount;
+        $period34TotalAmount = $period3Amount + $period4Amount;
+
+        if (abs($period34TotalAmount - $adjustedSecondHalfAmount) > 0.01) {
+            return response()->json([
+                'message' => 'ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 06 ເດືອນທ້າຍປີ',
+                'errors' => [
+                    'period_3_amount' => ['ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 06 ເດືອນທ້າຍປີ'],
+                    'period_4_amount' => ['ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 06 ເດືອນທ້າຍປີ'],
+                ],
+            ], 422);
+        }
+
+        $override = PeriodPlanOverride::query()->firstOrNew([
+            'planning_year_id' => $planningYear->id,
+            'chart_of_account_id' => (int) $row['chart_of_account_id'],
+        ]);
+
+        if (! $override->exists) {
+            $override->period_1_amount = (float) $row['period_1_amount'];
+            $override->period_2_amount = (float) $row['period_2_amount'];
+            $override->created_by = Auth::id();
+        }
+
+        $override->requested_decrease_amount = $requestedDecreaseAmount;
+        $override->requested_increase_amount = $requestedIncreaseAmount;
+        $override->period_3_amount = $period3Amount;
+        $override->period_4_amount = $period4Amount;
+        $override->updated_by = Auth::id();
+        $override->save();
+
+        return response()->json([
+            'success' => true,
+            'row' => [
+                'account_code' => $accountCode,
+                'second_half_amount' => $secondHalfAmount,
+                'requested_decrease_amount' => $requestedDecreaseAmount,
+                'requested_increase_amount' => $requestedIncreaseAmount,
+                'adjusted_second_half_amount' => $adjustedSecondHalfAmount,
+                'period_3_amount' => $period3Amount,
+                'period_4_amount' => $period4Amount,
+                'period_3_4_total_amount' => $period34TotalAmount,
+                'reduction_percent' => $secondHalfAmount > 0
+                    ? ($requestedDecreaseAmount / $secondHalfAmount) * 100
+                    : 0.0,
+                'has_override' => true,
+            ],
+        ]);
+    }
+
+    public function savePeriodThreeFour(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
+    {
+        if (! $planningYear->canEditPeriodThreeFour()) {
+            return back()->with('error', 'ຕ້ອງບັນທຶກງວດ 1-2 ກ່ອນ ຈຶ່ງຈະບັນທຶກງວດ 3-4 ໄດ້');
+        }
+
+        $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
+
+        $planningYear->update([
+            'period_3_4_saved_at' => now(),
+        ]);
+
+        return back()->with('success', 'ບັນທຶກງວດ 3-4 ສຳເລັດ');
     }
 
     public function store(Request $request)

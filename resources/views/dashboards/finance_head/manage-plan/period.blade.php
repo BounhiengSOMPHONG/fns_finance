@@ -12,16 +12,31 @@
         'period_2_amount' => 0,
         'first_half_amount' => 0,
         'second_half_amount' => 0,
+        'requested_decrease_amount' => 0,
+        'requested_increase_amount' => 0,
+        'adjusted_second_half_amount' => 0,
+        'period_3_amount' => 0,
+        'period_4_amount' => 0,
+        'period_3_4_total_amount' => 0,
     ];
     $periodWarnings = $periodReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []];
     $canEditPeriod = (bool) ($canEditPeriod ?? false);
     $money = fn ($amount) => number_format((float) $amount, 0, '.', '.');
     $inputValue = fn ($amount) => rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.');
     $inputMoney = fn ($amount) => number_format((float) $amount, 0, '.', '.');
-    $saveUrlTemplate = route('head_of_finance.manage-plan.period-1-2.override', [
-        'planningYear' => $planningYear,
-        'accountCode' => '__ACCOUNT__',
-    ]);
+    $saveUrlTemplate = $periodKey === 'period-3-4'
+        ? route('head_of_finance.manage-plan.period-3-4.override', [
+            'planningYear' => $planningYear,
+            'accountCode' => '__ACCOUNT__',
+        ])
+        : route('head_of_finance.manage-plan.period-1-2.override', [
+            'planningYear' => $planningYear,
+            'accountCode' => '__ACCOUNT__',
+        ]);
+    $savePeriodRoute = $periodKey === 'period-3-4'
+        ? route('head_of_finance.manage-plan.period-3-4.save', $planningYear)
+        : route('head_of_finance.manage-plan.period-1-2.save', $planningYear);
+    $isPeriodThreeFour = $periodKey === 'period-3-4';
 @endphp
 
 <div class="period-page">
@@ -32,13 +47,13 @@
             <p>{{ $planningYear->name }}</p>
         </div>
         <div class="period-actions">
-            @if($periodKey === 'period-1-2')
+            @if(in_array($periodKey, ['period-1-2', 'period-3-4'], true))
                 <button type="button" class="period-btn period-btn-primary" data-print-period>ພິມ</button>
                 @if($canEditPeriod)
-                    <form method="POST" action="{{ route('head_of_finance.manage-plan.period-1-2.save', $planningYear) }}" data-save-period-form>
+                    <form method="POST" action="{{ $savePeriodRoute }}" data-save-period-form>
                         @csrf
                         <button type="submit" class="period-btn period-btn-success" data-save-period-button>
-                            ບັນທຶກງວດ 1-2
+                            ບັນທຶກ{{ $periodTitle }}
                         </button>
                     </form>
                 @endif
@@ -47,15 +62,14 @@
         </div>
     </div>
 
-    @if($periodKey !== 'period-1-2')
-        <section class="period-placeholder" id="{{ $periodKey }}">
-            <h3>{{ $periodTitle }}</h3>
-            <p>ໜ້ານີ້ຖືກແຍກອອກຈາກໜ້າ Preview ແລ້ວ. ລໍຖ້າກຳນົດວ່າຈະໃຫ້ໜ້ານີ້ເຮັດຫຍັງ.</p>
-        </section>
-    @else
-        @if($planningYear->hasSavedPeriodOneTwo())
+    @if(in_array($periodKey, ['period-1-2', 'period-3-4'], true))
+        @if($periodKey === 'period-1-2' && $planningYear->hasSavedPeriodOneTwo())
             <div class="period-lock-note">
                 ງວດ 1-2 ຖືກບັນທຶກແລ້ວ ຈຶ່ງບໍ່ສາມາດແກ້ໄຂຍອດໄດ້.
+            </div>
+        @elseif($periodKey === 'period-3-4' && $planningYear->hasSavedPeriodThreeFour())
+            <div class="period-lock-note">
+                ງວດ 3-4 ຖືກບັນທຶກແລ້ວ ຈຶ່ງບໍ່ສາມາດແກ້ໄຂຍອດໄດ້.
             </div>
         @elseif(! $canEditPeriod)
             <div class="period-lock-note">
@@ -101,7 +115,7 @@
             </div>
 
             <div class="period-title-block">
-                <p>ແຜນລາຍຈ່າຍງວດ 1-2 ງົບປະມານວິຊາການ ປີ {{ $planningYear->year }}</p>
+                <p>ແຜນລາຍຈ່າຍ{{ $periodTitle }} ງົບປະມານວິຊາການ ປີ {{ $planningYear->year }}</p>
             </div>
 
             <div class="period-table-wrap">
@@ -117,6 +131,15 @@
                         <col class="period-input-col">
                         <col class="period-money-col">
                         <col class="period-money-col">
+                        @if($isPeriodThreeFour)
+                            <col class="period-input-col">
+                            <col class="period-input-col">
+                            <col class="period-money-col">
+                            <col class="period-input-col">
+                            <col class="period-input-col">
+                            <col class="period-money-col">
+                            <col class="period-percent-col">
+                        @endif
                     </colgroup>
                     <thead>
                         <tr class="period-head-row">
@@ -126,13 +149,28 @@
                             <th rowspan="2" class="period-code-head"><span>ລູກ</span><span>ຮ່ວງ</span></th>
                             <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                             <th rowspan="2">ແຜນການ<br>ປີ {{ $planningYear->year }}</th>
-                            <th colspan="3">ແຜນ 06 ເດືອນຕົ້ນປີ {{ $planningYear->year }}</th>
-                            <th rowspan="2">ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
+                            @if($isPeriodThreeFour)
+                                <th rowspan="2">ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
+                                <th colspan="2" class="period-adjust-head">ແຜນດັດແກ້ສະເລ່ຍ</th>
+                                <th rowspan="2">ແຜນດັດແກ້ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
+                                <th rowspan="2">ແຜນງວດ 3</th>
+                                <th rowspan="2">ແຜນງວດ 4</th>
+                                <th rowspan="2">ແຜນປະຕິບັດ<br>ຫຼັງປັບ {{ $planningYear->year }}</th>
+                                <th rowspan="2">ຫຼຸດ%</th>
+                            @else
+                                <th colspan="3">ແຜນ 06 ເດືອນຕົ້ນປີ {{ $planningYear->year }}</th>
+                                <th rowspan="2">ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
+                            @endif
                         </tr>
                         <tr class="period-subhead-row">
-                            <th>ແຜນງວດ1</th>
-                            <th>ແຜນງວດ2</th>
-                            <th>ແຜນ 06 ເດືອນ</th>
+                            @if($isPeriodThreeFour)
+                                <th class="period-adjust-head">ແຜນຂໍຫຼຸດ</th>
+                                <th class="period-adjust-head">ແຜນຂໍເພີ່ມ</th>
+                            @else
+                                <th>ແຜນງວດ1</th>
+                                <th>ແຜນງວດ2</th>
+                                <th>ແຜນ 06 ເດືອນ</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -140,10 +178,21 @@
                             <td colspan="4"></td>
                             <td class="period-total-label">ລວມຍອດເງິນພາກສ່ວນ</td>
                             <td class="num" data-total-yearly>{{ $money($periodTotals['yearly_amount']) }}</td>
-                            <td class="num" data-total-period-1>{{ $money($periodTotals['period_1_amount']) }}</td>
-                            <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
-                            <td class="num" data-total-first-half>{{ $money($periodTotals['first_half_amount']) }}</td>
-                            <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
+                            @if($isPeriodThreeFour)
+                                <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
+                                <td class="num" data-total-requested-decrease>{{ $money($periodTotals['requested_decrease_amount']) }}</td>
+                                <td class="num" data-total-requested-increase>{{ $money($periodTotals['requested_increase_amount']) }}</td>
+                                <td class="num" data-total-adjusted-second-half>{{ $money($periodTotals['adjusted_second_half_amount']) }}</td>
+                                <td class="num" data-total-period-3>{{ $money($periodTotals['period_3_amount']) }}</td>
+                                <td class="num" data-total-period-4>{{ $money($periodTotals['period_4_amount']) }}</td>
+                                <td class="num" data-total-period-3-4>{{ $money($periodTotals['period_3_4_total_amount']) }}</td>
+                                <td class="num" data-total-reduction-percent>{{ number_format((float) ($periodTotals['second_half_amount'] > 0 ? ($periodTotals['requested_decrease_amount'] / $periodTotals['second_half_amount']) * 100 : 0), 2) }}%</td>
+                            @else
+                                <td class="num" data-total-period-1>{{ $money($periodTotals['period_1_amount']) }}</td>
+                                <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
+                                <td class="num" data-total-first-half>{{ $money($periodTotals['first_half_amount']) }}</td>
+                                <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
+                            @endif
                         </tr>
                         @forelse($periodRows as $row)
                             @php
@@ -166,6 +215,12 @@
                                 data-yearly-amount="{{ $inputValue($row['yearly_amount']) }}"
                                 data-period-1-amount="{{ $inputValue($row['period_1_amount']) }}"
                                 data-period-2-amount="{{ $inputValue($row['period_2_amount']) }}"
+                                data-second-half-amount="{{ $inputValue($row['second_half_amount']) }}"
+                                data-requested-decrease-amount="{{ $inputValue($row['requested_decrease_amount']) }}"
+                                data-requested-increase-amount="{{ $inputValue($row['requested_increase_amount']) }}"
+                                data-adjusted-second-half-amount="{{ $inputValue($row['adjusted_second_half_amount']) }}"
+                                data-period-3-amount="{{ $inputValue($row['period_3_amount']) }}"
+                                data-period-4-amount="{{ $inputValue($row['period_4_amount']) }}"
                                 data-save-url="{{ str_replace('__ACCOUNT__', rawurlencode((string) $row['account_code']), $saveUrlTemplate) }}">
                                 @foreach($codeParts as $partIndex => $part)
                                     <td class="center period-code-cell {{ $partIndex === $level ? 'period-code-main' : '' }}">
@@ -174,41 +229,104 @@
                                 @endforeach
                                 <td class="period-row-title">{{ $row['title'] }}</td>
                                 <td class="num" data-yearly-display>{{ $money($row['yearly_amount']) }}</td>
-                                <td>
-                                    @if($isEditableRow)
-                                        <input
-                                            class="period-money-input"
-                                            type="text"
-                                            inputmode="numeric"
-                                            pattern="[0-9.]*"
-                                            value="{{ $inputMoney($row['period_1_amount']) }}"
-                                            data-period-input="period_1_amount"
-                                        >
-                                    @else
-                                        <span class="period-readonly-amount" data-period-display="period_1_amount">{{ $money($row['period_1_amount']) }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($isEditableRow)
-                                        <input
-                                            class="period-money-input"
-                                            type="text"
-                                            inputmode="numeric"
-                                            pattern="[0-9.]*"
-                                            value="{{ $inputMoney($row['period_2_amount']) }}"
-                                            data-period-input="period_2_amount"
-                                        >
-                                    @else
-                                        <span class="period-readonly-amount" data-period-display="period_2_amount">{{ $money($row['period_2_amount']) }}</span>
-                                    @endif
-                                </td>
-                                <td class="num" data-first-half>{{ $money($row['first_half_amount']) }}</td>
-                                <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
+                                @if($isPeriodThreeFour)
+                                    <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['requested_decrease_amount']) }}"
+                                                data-period-input="requested_decrease_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="requested_decrease_amount">{{ $money($row['requested_decrease_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['requested_increase_amount']) }}"
+                                                data-period-input="requested_increase_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="requested_increase_amount">{{ $money($row['requested_increase_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="num" data-adjusted-second-half>{{ $money($row['adjusted_second_half_amount']) }}</td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['period_3_amount']) }}"
+                                                data-period-input="period_3_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="period_3_amount">{{ $money($row['period_3_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['period_4_amount']) }}"
+                                                data-period-input="period_4_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="period_4_amount">{{ $money($row['period_4_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="num" data-period-3-4-total>{{ $money($row['period_3_4_total_amount']) }}</td>
+                                    <td class="num" data-reduction-percent>{{ number_format((float) $row['reduction_percent'], 2) }}%</td>
+                                @else
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['period_1_amount']) }}"
+                                                data-period-input="period_1_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="period_1_amount">{{ $money($row['period_1_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['period_2_amount']) }}"
+                                                data-period-input="period_2_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="period_2_amount">{{ $money($row['period_2_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="num" data-first-half>{{ $money($row['first_half_amount']) }}</td>
+                                    <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
                                 <td class="center">62</td>
-                                <td colspan="9" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
+                                <td colspan="{{ $isPeriodThreeFour ? 12 : 9 }}" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -398,7 +516,7 @@
         border-collapse: collapse;
         color: #000;
         font-size: .78rem;
-        min-width: 1180px;
+        min-width: {{ $isPeriodThreeFour ? '1720px' : '1180px' }};
         table-layout: fixed;
         width: 100%;
     }
@@ -416,6 +534,10 @@
         width: 142px;
     }
 
+    .period-percent-col {
+        width: 86px;
+    }
+
     .period-report-table th,
     .period-report-table td {
         border: 2px solid #000;
@@ -430,6 +552,10 @@
         font-weight: 800;
         text-align: center;
         white-space: normal;
+    }
+
+    .period-adjust-head {
+        color: #e60000 !important;
     }
 
     .period-head-row th {
@@ -804,20 +930,30 @@
     }
 </style>
 
-@if($periodKey === 'period-1-2')
+@if(in_array($periodKey, ['period-1-2', 'period-3-4'], true))
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const printButton = document.querySelector('[data-print-period]');
             const saveForm = document.querySelector('[data-save-period-form]');
             const saveButton = document.querySelector('[data-save-period-button]');
+            const periodKey = @json($periodKey);
             const canEdit = @json($canEditPeriod);
             const csrfToken = @json(csrf_token());
             const rows = Array.from(document.querySelectorAll('[data-period-row]'));
+            const amountDatasetKeys = {
+                period_1_amount: 'period1Amount',
+                period_2_amount: 'period2Amount',
+                requested_decrease_amount: 'requestedDecreaseAmount',
+                requested_increase_amount: 'requestedIncreaseAmount',
+                period_3_amount: 'period3Amount',
+                period_4_amount: 'period4Amount',
+            };
             const formatMoney = (value) => new Intl.NumberFormat('de-DE', {
                 maximumFractionDigits: 0,
                 minimumFractionDigits: 0,
             }).format(Number.isFinite(value) ? value : 0);
             const formatInputMoney = (value) => formatMoney(value);
+            const formatPercent = (value) => `${(Number.isFinite(value) ? value : 0).toFixed(2)}%`;
             const parseAmount = (value) => {
                 let normalized = String(value).trim();
 
@@ -837,10 +973,10 @@
             const isGroup = (row) => row.dataset.isGroup === '1';
             const rowAmount = (row, key) => {
                 const input = row.querySelector(`[data-period-input="${key}"]`);
-                return input ? parseAmount(input.value) : parseAmount(row.dataset[key === 'period_1_amount' ? 'period1Amount' : 'period2Amount']);
+                return input ? parseAmount(input.value) : parseAmount(row.dataset[amountDatasetKeys[key]]);
             };
             const setRowAmount = (row, key, value) => {
-                row.dataset[key === 'period_1_amount' ? 'period1Amount' : 'period2Amount'] = String(value);
+                row.dataset[amountDatasetKeys[key]] = String(value);
                 const input = row.querySelector(`[data-period-input="${key}"]`);
                 if (input && document.activeElement !== input) {
                     input.value = formatInputMoney(value);
@@ -849,6 +985,18 @@
                 const display = row.querySelector(`[data-period-display="${key}"]`);
                 if (display) {
                     display.textContent = formatMoney(value);
+                }
+            };
+            const setCellText = (row, selector, value, formatter = formatMoney) => {
+                const cell = row.querySelector(selector);
+                if (cell) {
+                    cell.textContent = formatter(value);
+                }
+            };
+            const setTotalText = (selector, value, formatter = formatMoney) => {
+                const cell = document.querySelector(selector);
+                if (cell) {
+                    cell.textContent = formatter(value);
                 }
             };
             const prefixLength = (row) => Math.min((Number.parseInt(row.dataset.level || '0', 10) + 1) * 2, row.dataset.accountCode.length);
@@ -870,11 +1018,27 @@
                     const p1 = children.reduce((sum, child) => sum + rowAmount(child, 'period_1_amount'), 0);
                     const p2 = children.reduce((sum, child) => sum + rowAmount(child, 'period_2_amount'), 0);
                     const first = p1 + p2;
+                    const second = yearly - first;
+                    const decrease = children.reduce((sum, child) => sum + rowAmount(child, 'requested_decrease_amount'), 0);
+                    const increase = children.reduce((sum, child) => sum + rowAmount(child, 'requested_increase_amount'), 0);
+                    const adjusted = second - decrease + increase;
+                    const p3 = children.reduce((sum, child) => sum + rowAmount(child, 'period_3_amount'), 0);
+                    const p4 = children.reduce((sum, child) => sum + rowAmount(child, 'period_4_amount'), 0);
+                    const p34 = p3 + p4;
+                    const reductionPercent = second > 0 ? (decrease / second) * 100 : 0;
 
                     setRowAmount(row, 'period_1_amount', p1);
                     setRowAmount(row, 'period_2_amount', p2);
-                    row.querySelector('[data-first-half]').textContent = formatMoney(first);
-                    row.querySelector('[data-second-half]').textContent = formatMoney(yearly - first);
+                    setRowAmount(row, 'requested_decrease_amount', decrease);
+                    setRowAmount(row, 'requested_increase_amount', increase);
+                    setRowAmount(row, 'period_3_amount', p3);
+                    setRowAmount(row, 'period_4_amount', p4);
+                    row.dataset.adjustedSecondHalfAmount = String(adjusted);
+                    setCellText(row, '[data-first-half]', first);
+                    setCellText(row, '[data-second-half]', second);
+                    setCellText(row, '[data-adjusted-second-half]', adjusted);
+                    setCellText(row, '[data-period-3-4-total]', p34);
+                    setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
                 });
             };
             const updateTotals = () => {
@@ -889,19 +1053,38 @@
                     const p1 = rowAmount(row, 'period_1_amount');
                     const p2 = rowAmount(row, 'period_2_amount');
                     const first = p1 + p2;
+                    const second = yearly - first;
+                    const decrease = rowAmount(row, 'requested_decrease_amount');
+                    const increase = rowAmount(row, 'requested_increase_amount');
+                    const adjusted = second - decrease + increase;
+                    const p3 = rowAmount(row, 'period_3_amount');
+                    const p4 = rowAmount(row, 'period_4_amount');
                     sum.yearly += yearly;
                     sum.p1 += p1;
                     sum.p2 += p2;
                     sum.first += first;
-                    sum.second += yearly - first;
+                    sum.second += second;
+                    sum.decrease += decrease;
+                    sum.increase += increase;
+                    sum.adjusted += adjusted;
+                    sum.p3 += p3;
+                    sum.p4 += p4;
+                    sum.p34 += p3 + p4;
                     return sum;
-                }, { yearly: 0, p1: 0, p2: 0, first: 0, second: 0 });
+                }, { yearly: 0, p1: 0, p2: 0, first: 0, second: 0, decrease: 0, increase: 0, adjusted: 0, p3: 0, p4: 0, p34: 0 });
 
-                document.querySelector('[data-total-yearly]').textContent = formatMoney(totals.yearly);
-                document.querySelector('[data-total-period-1]').textContent = formatMoney(totals.p1);
-                document.querySelector('[data-total-period-2]').textContent = formatMoney(totals.p2);
-                document.querySelector('[data-total-first-half]').textContent = formatMoney(totals.first);
-                document.querySelector('[data-total-second-half]').textContent = formatMoney(totals.second);
+                setTotalText('[data-total-yearly]', totals.yearly);
+                setTotalText('[data-total-period-1]', totals.p1);
+                setTotalText('[data-total-period-2]', totals.p2);
+                setTotalText('[data-total-first-half]', totals.first);
+                setTotalText('[data-total-second-half]', totals.second);
+                setTotalText('[data-total-requested-decrease]', totals.decrease);
+                setTotalText('[data-total-requested-increase]', totals.increase);
+                setTotalText('[data-total-adjusted-second-half]', totals.adjusted);
+                setTotalText('[data-total-period-3]', totals.p3);
+                setTotalText('[data-total-period-4]', totals.p4);
+                setTotalText('[data-total-period-3-4]', totals.p34);
+                setTotalText('[data-total-reduction-percent]', totals.second > 0 ? (totals.decrease / totals.second) * 100 : 0, formatPercent);
             };
             const recalculate = (row) => {
                 if (isGroup(row)) {
@@ -914,19 +1097,46 @@
                 const p2 = rowAmount(row, 'period_2_amount');
                 const first = p1 + p2;
                 const second = yearly - first;
+                const decrease = rowAmount(row, 'requested_decrease_amount');
+                const increase = rowAmount(row, 'requested_increase_amount');
+                const adjusted = second - decrease + increase;
+                const p3 = rowAmount(row, 'period_3_amount');
+                const p4 = rowAmount(row, 'period_4_amount');
+                const p34 = p3 + p4;
+                const reductionPercent = second > 0 ? (decrease / second) * 100 : 0;
 
                 setRowAmount(row, 'period_1_amount', p1);
                 setRowAmount(row, 'period_2_amount', p2);
-                row.querySelector('[data-first-half]').textContent = formatMoney(first);
-                row.querySelector('[data-second-half]').textContent = formatMoney(second);
-                row.classList.toggle('period-invalid', p1 < 0 || p2 < 0 || first > yearly);
+                setRowAmount(row, 'requested_decrease_amount', decrease);
+                setRowAmount(row, 'requested_increase_amount', increase);
+                setRowAmount(row, 'period_3_amount', p3);
+                setRowAmount(row, 'period_4_amount', p4);
+                row.dataset.adjustedSecondHalfAmount = String(adjusted);
+                setCellText(row, '[data-first-half]', first);
+                setCellText(row, '[data-second-half]', second);
+                setCellText(row, '[data-adjusted-second-half]', adjusted);
+                setCellText(row, '[data-period-3-4-total]', p34);
+                setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
+
+                const invalidFirstHalf = p1 < 0 || p2 < 0 || first > yearly;
+                const invalidSecondHalf = decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || decrease > second || Math.abs(p34 - adjusted) > 0.01;
+                row.classList.toggle('period-invalid', periodKey === 'period-3-4' ? invalidSecondHalf : invalidFirstHalf);
                 updateTotals();
 
-                if (p1 < 0 || p2 < 0) {
-                    return null;
+                if (periodKey === 'period-3-4') {
+                    if (invalidSecondHalf) {
+                        return null;
+                    }
+
+                    return {
+                        requested_decrease_amount: decrease,
+                        requested_increase_amount: increase,
+                        period_3_amount: p3,
+                        period_4_amount: p4,
+                    };
                 }
 
-                if (first > yearly) {
+                if (invalidFirstHalf) {
                     return null;
                 }
 
@@ -957,8 +1167,11 @@
                         throw new Error(data.message || 'Save failed');
                     }
 
-                    row.querySelector('[data-first-half]').textContent = formatMoney(data.row.first_half_amount);
-                    row.querySelector('[data-second-half]').textContent = formatMoney(data.row.second_half_amount);
+                    setCellText(row, '[data-first-half]', data.row.first_half_amount);
+                    setCellText(row, '[data-second-half]', data.row.second_half_amount);
+                    setCellText(row, '[data-adjusted-second-half]', data.row.adjusted_second_half_amount);
+                    setCellText(row, '[data-period-3-4-total]', data.row.period_3_4_total_amount);
+                    setCellText(row, '[data-reduction-percent]', data.row.reduction_percent, formatPercent);
                     row.classList.remove('period-invalid');
                     updateTotals();
                     return true;
@@ -1019,7 +1232,7 @@
 
                     if (saveButton) {
                         saveButton.disabled = false;
-                        saveButton.textContent = 'ບັນທຶກງວດ 1-2';
+                        saveButton.textContent = @json('ບັນທຶກ' . $periodTitle);
                     }
                 });
             }

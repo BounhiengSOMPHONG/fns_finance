@@ -26,6 +26,7 @@ class PlanningYear extends Model
         'review_requested_at',
         'review_closed_at',
         'period_1_2_saved_at',
+        'period_3_4_saved_at',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class PlanningYear extends Model
         'review_requested_at' => 'datetime',
         'review_closed_at' => 'datetime',
         'period_1_2_saved_at' => 'datetime',
+        'period_3_4_saved_at' => 'datetime',
     ];
 
     public function sections(): HasMany
@@ -109,6 +111,16 @@ class PlanningYear extends Model
     public function canOpenPeriodThreeFour(): bool
     {
         return $this->canEditPeriods() && $this->hasSavedPeriodOneTwo();
+    }
+
+    public function hasSavedPeriodThreeFour(): bool
+    {
+        return $this->period_3_4_saved_at !== null;
+    }
+
+    public function canEditPeriodThreeFour(): bool
+    {
+        return $this->canOpenPeriodThreeFour() && ! $this->hasSavedPeriodThreeFour();
     }
 
     public function hasCurrentReviewer(User $user): bool

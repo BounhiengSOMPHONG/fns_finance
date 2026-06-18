@@ -32,6 +32,8 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::post('manage-plan/{planningYear}/period-1-2/save', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'savePeriodOneTwo'])->name('manage-plan.period-1-2.save');
         Route::patch('manage-plan/{planningYear}/period-1-2/overrides/{accountCode}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'updatePeriodOneTwoOverride'])->name('manage-plan.period-1-2.override');
         Route::get('manage-plan/{planningYear}/period-3-4', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'periodThreeFour'])->name('manage-plan.period-3-4');
+        Route::post('manage-plan/{planningYear}/period-3-4/save', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'savePeriodThreeFour'])->name('manage-plan.period-3-4.save');
+        Route::patch('manage-plan/{planningYear}/period-3-4/overrides/{accountCode}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'updatePeriodThreeFourOverride'])->name('manage-plan.period-3-4.override');
         Route::delete('manage-plan/{planningYear}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'destroy'])->name('manage-plan.destroy');
         Route::post('manage-plan/{planningYear}/sync', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'sync'])->name('manage-plan.sync');
         Route::post('manage-plan/{planningYear}/save', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'savePlan'])->name('manage-plan.save');

@@ -12,6 +12,10 @@ class PeriodPlanOverride extends Model
         'chart_of_account_id',
         'period_1_amount',
         'period_2_amount',
+        'requested_decrease_amount',
+        'requested_increase_amount',
+        'period_3_amount',
+        'period_4_amount',
         'created_by',
         'updated_by',
     ];
@@ -21,6 +25,10 @@ class PeriodPlanOverride extends Model
         'chart_of_account_id' => 'integer',
         'period_1_amount' => 'float',
         'period_2_amount' => 'float',
+        'requested_decrease_amount' => 'float',
+        'requested_increase_amount' => 'float',
+        'period_3_amount' => 'float',
+        'period_4_amount' => 'float',
         'created_by' => 'integer',
         'updated_by' => 'integer',
     ];

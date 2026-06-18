@@ -166,6 +166,58 @@ class PeriodPlanOverrideTest extends TestCase
         $this->assertDatabaseCount('period_plan_overrides', 0);
     }
 
+    public function test_period_three_four_requires_saved_period_one_two(): void
+    {
+        $this->withoutVite();
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.manage-plan.period-3-4', 1))
+            ->assertRedirect(route('head_of_finance.manage-plan.index'));
+    }
+
+    public function test_finance_head_can_save_period_one_two_and_open_period_three_four(): void
+    {
+        $this->withoutVite();
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.period-1-2.save', 1))
+            ->assertRedirect();
+
+        $this->assertNotNull(PlanningYear::findOrFail(1)->period_1_2_saved_at);
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.manage-plan.period-3-4', 1))
+            ->assertOk()
+            ->assertSee('ງວດ 3-4');
+    }
+
+    public function test_saved_period_one_two_page_is_read_only_and_rejects_more_edits(): void
+    {
+        $this->withoutVite();
+        PlanningYear::query()->whereKey(1)->update([
+            'status' => PlanningYear::STATUS_SAVED,
+            'period_1_2_saved_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.manage-plan.period-1-2', 1))
+            ->assertOk()
+            ->assertSee('ງວດ 1-2 ຖືກບັນທຶກແລ້ວ')
+            ->assertDontSee('data-period-input="period_1_amount"', false)
+            ->assertDontSee('ບັນທຶກອີກຄັ້ງ');
+
+        $this->assertSame(0, preg_match_all('/<input[^>]+data-period-input=/', $response->getContent()));
+
+        $this->actingAs($this->financeHead)
+            ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '62100201']), [
+                'period_1_amount' => 20,
+                'period_2_amount' => 20,
+            ])
+            ->assertStatus(423);
+    }
+
     private function seedUserAndPlan(): void
     {
         $financeRole = Role::create(['id' => 1, 'role_name' => 'head_of_finance']);
@@ -266,6 +318,7 @@ class PeriodPlanOverrideTest extends TestCase
             $table->unsignedBigInteger('current_review_round_id')->nullable();
             $table->timestamp('review_requested_at')->nullable();
             $table->timestamp('review_closed_at')->nullable();
+            $table->timestamp('period_1_2_saved_at')->nullable();
             $table->timestamps();
         });
 

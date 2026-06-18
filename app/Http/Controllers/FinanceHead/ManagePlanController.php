@@ -102,7 +102,7 @@ class ManagePlanController extends Controller
             'periodKey' => 'period-1-2',
             'periodTitle' => 'ງວດ 1-2',
             'periodReport' => $periodReport,
-            'canEditPeriod' => $planningYear->canEditPeriods(),
+            'canEditPeriod' => $planningYear->canEditPeriodOneTwo(),
         ]);
     }
 
@@ -113,9 +113,9 @@ class ManagePlanController extends Controller
         PeriodPlanReportBuilder $periodPlanReportBuilder
     ) {
         abort_if(
-            $planningYear->canEditPeriods() === false,
+            $planningYear->canEditPeriodOneTwo() === false,
             423,
-            'ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະປ້ອນຍອດງວດໄດ້'
+            'ຕ້ອງບັນທຶກແຜນກ່ອນ ແລະ ງວດ 1-2 ຕ້ອງຍັງບໍ່ຖືກບັນທຶກ'
         );
 
         $data = $request->validate([
@@ -170,8 +170,29 @@ class ManagePlanController extends Controller
         ]);
     }
 
+    public function savePeriodOneTwo(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
+    {
+        if (! $planningYear->canEditPeriodOneTwo()) {
+            return back()->with('error', 'ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະບັນທຶກງວດ 1-2 ໄດ້');
+        }
+
+        $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
+
+        $planningYear->update([
+            'period_1_2_saved_at' => now(),
+        ]);
+
+        return back()->with('success', 'ບັນທຶກງວດ 1-2 ສຳເລັດ ສາມາດເຂົ້າງວດ 3-4 ໄດ້ແລ້ວ');
+    }
+
     public function periodThreeFour(PlanningYear $planningYear)
     {
+        if (! $planningYear->canOpenPeriodThreeFour()) {
+            return redirect()
+                ->route('head_of_finance.manage-plan.index')
+                ->with('error', 'ກະລຸນາບັນທຶກງວດ 1-2 ກ່ອນ ຈຶ່ງຈະເຂົ້າງວດ 3-4 ໄດ້');
+        }
+
         return view('dashboards.finance_head.manage-plan.period', [
             'planningYear' => $planningYear,
             'periodKey' => 'period-3-4',

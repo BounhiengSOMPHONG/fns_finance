@@ -33,6 +33,7 @@
                 $isCurrent = (int) $plan->year === $currentYear;
                 $canEditPlan = $plan->canBeEdited();
                 $isSavedPlan = $plan->status === \App\Models\PlanningYear::STATUS_SAVED;
+                $canOpenPeriodThreeFour = $plan->canOpenPeriodThreeFour();
                 $statusLabels = [
                     'DRAFT' => 'Draft',
                     'PENDING_REVIEW' => 'Pending review',
@@ -107,9 +108,15 @@
                         <a href="{{ route('head_of_finance.manage-plan.period-1-2', $plan) }}" class="mp-action mp-action-period">
                             ງວດ 1-2
                         </a>
-                        <a href="{{ route('head_of_finance.manage-plan.period-3-4', $plan) }}" class="mp-action mp-action-period">
-                            ງວດ 3-4
-                        </a>
+                        @if($canOpenPeriodThreeFour)
+                            <a href="{{ route('head_of_finance.manage-plan.period-3-4', $plan) }}" class="mp-action mp-action-period">
+                                ງວດ 3-4
+                            </a>
+                        @else
+                            <span class="mp-action mp-action-disabled" aria-disabled="true" title="ກະລຸນາບັນທຶກງວດ 1-2 ກ່ອນ">
+                                ງວດ 3-4
+                            </span>
+                        @endif
                     @endif
                     @if($canEditPlan && (!$incomePlan || !$salaryPlan))
                         <form method="POST" action="{{ route('head_of_finance.manage-plan.sync', $plan) }}">

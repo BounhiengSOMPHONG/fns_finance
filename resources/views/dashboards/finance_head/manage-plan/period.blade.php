@@ -33,6 +33,14 @@
         <div class="period-actions">
             @if($periodKey === 'period-1-2')
                 <button type="button" class="period-btn period-btn-primary" data-print-period>ພິມ</button>
+                @if($canEditPeriod)
+                    <form method="POST" action="{{ route('head_of_finance.manage-plan.period-1-2.save', $planningYear) }}" data-save-period-form>
+                        @csrf
+                        <button type="submit" class="period-btn period-btn-success" data-save-period-button>
+                            ບັນທຶກງວດ 1-2
+                        </button>
+                    </form>
+                @endif
             @endif
             <a href="{{ route('head_of_finance.manage-plan.index') }}" class="period-btn period-btn-secondary">ກັບຄືນ</a>
         </div>
@@ -44,7 +52,11 @@
             <p>ໜ້ານີ້ຖືກແຍກອອກຈາກໜ້າ Preview ແລ້ວ. ລໍຖ້າກຳນົດວ່າຈະໃຫ້ໜ້ານີ້ເຮັດຫຍັງ.</p>
         </section>
     @else
-        @if(! $canEditPeriod)
+        @if($planningYear->hasSavedPeriodOneTwo())
+            <div class="period-lock-note">
+                ງວດ 1-2 ຖືກບັນທຶກແລ້ວ ຈຶ່ງບໍ່ສາມາດແກ້ໄຂຍອດໄດ້.
+            </div>
+        @elseif(! $canEditPeriod)
             <div class="period-lock-note">
                 ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະປ້ອນຍອດງວດໄດ້. ຖ້າແຜນຢູ່ໃນສະຖານະກວດສອບ ຈະສາມາດເບິ່ງຍອດໄດ້ເທົ່ານັ້ນ.
             </div>
@@ -272,6 +284,11 @@
 
     .period-btn-primary {
         background: #0f172a;
+        color: #fff;
+    }
+
+    .period-btn-success {
+        background: #0f766e;
         color: #fff;
     }
 
@@ -792,6 +809,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const printButton = document.querySelector('[data-print-period]');
+            const saveForm = document.querySelector('[data-save-period-form]');
+            const saveButton = document.querySelector('[data-save-period-button]');
             const canEdit = @json($canEditPeriod);
             const csrfToken = @json(csrf_token());
             const rows = Array.from(document.querySelectorAll('[data-period-row]'));
@@ -902,7 +921,7 @@
             const saveRow = async (row) => {
                 const payload = recalculate(row);
                 if (! payload) {
-                    return;
+                    return false;
                 }
 
                 try {
@@ -925,8 +944,10 @@
                     row.querySelector('[data-second-half]').textContent = formatMoney(data.row.second_half_amount);
                     row.classList.remove('period-invalid');
                     updateTotals();
+                    return true;
                 } catch (error) {
                     row.classList.add('period-invalid');
+                    return false;
                 }
             };
 
@@ -953,6 +974,34 @@
 
             if (printButton) {
                 printButton.addEventListener('click', () => window.print());
+            }
+
+            if (saveForm) {
+                saveForm.addEventListener('submit', async (event) => {
+                    if (! canEdit || saveForm.dataset.readyToSubmit === '1') {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    if (saveButton) {
+                        saveButton.disabled = true;
+                        saveButton.textContent = 'ກຳລັງບັນທຶກ...';
+                    }
+
+                    const editableRows = rows.filter((row) => ! isGroup(row) && row.querySelector('[data-period-input]'));
+                    const results = await Promise.all(editableRows.map((row) => saveRow(row)));
+
+                    if (results.every(Boolean)) {
+                        saveForm.dataset.readyToSubmit = '1';
+                        saveForm.submit();
+                        return;
+                    }
+
+                    if (saveButton) {
+                        saveButton.disabled = false;
+                        saveButton.textContent = 'ບັນທຶກງວດ 1-2';
+                    }
+                });
             }
         });
     </script>

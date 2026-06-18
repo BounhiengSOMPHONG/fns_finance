@@ -120,9 +120,7 @@ class PeriodPlanReportBuilder
         $period3Amount = $hasSecondHalfOverride ? (float) $override->period_3_amount : $defaultPeriodAmount;
         $period4Amount = $hasSecondHalfOverride ? (float) $override->period_4_amount : $defaultPeriodAmount;
         $period34TotalAmount = $period3Amount + $period4Amount;
-        $reductionPercent = $secondHalfAmount > 0
-            ? ($requestedDecreaseAmount / $secondHalfAmount) * 100
-            : 0.0;
+        $reductionPercent = $this->reductionPercent($yearlyAmount, $period34TotalAmount);
 
         return [
             'account_code' => $accountCode,
@@ -201,9 +199,7 @@ class PeriodPlanReportBuilder
             $row['period_3_amount'] = $period3Amount;
             $row['period_4_amount'] = $period4Amount;
             $row['period_3_4_total_amount'] = $period34TotalAmount;
-            $row['reduction_percent'] = $secondHalfAmount > 0
-                ? ($requestedDecreaseAmount / $secondHalfAmount) * 100
-                : 0.0;
+            $row['reduction_percent'] = $this->reductionPercent((float) $row['yearly_amount'], $period34TotalAmount);
             $row['has_override'] = false;
 
             return $row;
@@ -216,5 +212,12 @@ class PeriodPlanReportBuilder
 
         return $parentCode !== $childCode
             && str_starts_with($childCode, substr($parentCode, 0, $prefixLength));
+    }
+
+    private function reductionPercent(float $yearlyAmount, float $actualFullYearAmount): float
+    {
+        return $actualFullYearAmount > 0
+            ? ($yearlyAmount / $actualFullYearAmount) * 100
+            : 0.0;
     }
 }

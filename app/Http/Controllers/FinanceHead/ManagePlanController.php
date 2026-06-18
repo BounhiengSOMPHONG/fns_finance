@@ -295,8 +295,8 @@ class ManagePlanController extends Controller
                 'period_3_amount' => $period3Amount,
                 'period_4_amount' => $period4Amount,
                 'period_3_4_total_amount' => $period34TotalAmount,
-                'reduction_percent' => $secondHalfAmount > 0
-                    ? ($requestedDecreaseAmount / $secondHalfAmount) * 100
+                'reduction_percent' => $period34TotalAmount > 0
+                    ? (((float) $row['yearly_amount']) / $period34TotalAmount) * 100
                     : 0.0,
                 'has_override' => true,
             ],

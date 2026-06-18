@@ -197,7 +197,7 @@
                                 <td class="num" data-total-period-3>{{ $money($periodTotals['period_3_amount']) }}</td>
                                 <td class="num" data-total-period-4>{{ $money($periodTotals['period_4_amount']) }}</td>
                                 <td class="num" data-total-period-3-4>{{ $money($periodTotals['period_3_4_total_amount']) }}</td>
-                                <td class="num" data-total-reduction-percent>{{ number_format((float) ($periodTotals['second_half_amount'] > 0 ? ($periodTotals['requested_decrease_amount'] / $periodTotals['second_half_amount']) * 100 : 0), 2) }}%</td>
+                                <td class="num" data-total-reduction-percent>{{ number_format((float) ($periodTotals['period_3_4_total_amount'] > 0 ? ($periodTotals['yearly_amount'] / $periodTotals['period_3_4_total_amount']) * 100 : 0), 2) }}%</td>
                             @else
                                 <td class="num" data-total-period-1>{{ $money($periodTotals['period_1_amount']) }}</td>
                                 <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
@@ -1003,6 +1003,7 @@
             }).format(Number.isFinite(value) ? value : 0);
             const formatInputMoney = (value) => formatMoney(value);
             const formatPercent = (value) => `${(Number.isFinite(value) ? value : 0).toFixed(2)}%`;
+            const reductionPercent = (yearly, actualFullYear) => actualFullYear > 0 ? (yearly / actualFullYear) * 100 : 0;
             const parseAmount = (value) => {
                 let normalized = String(value).trim();
 
@@ -1099,7 +1100,7 @@
                     const p3 = children.reduce((sum, child) => sum + rowAmount(child, 'period_3_amount'), 0);
                     const p4 = children.reduce((sum, child) => sum + rowAmount(child, 'period_4_amount'), 0);
                     const p34 = p3 + p4;
-                    const reductionPercent = second > 0 ? (decrease / second) * 100 : 0;
+                    const reduction = reductionPercent(yearly, p34);
 
                     setRowAmount(row, 'period_1_amount', p1);
                     setRowAmount(row, 'period_2_amount', p2);
@@ -1114,7 +1115,7 @@
                     setCellText(row, '[data-second-half]', second);
                     setCellText(row, '[data-adjusted-second-half]', adjusted);
                     setCellText(row, '[data-period-3-4-total]', p34);
-                    setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
+                    setCellText(row, '[data-reduction-percent]', reduction, formatPercent);
                 });
             };
             const updateTotals = () => {
@@ -1166,7 +1167,7 @@
                 setTotalText('[data-total-period-3]', totals.p3);
                 setTotalText('[data-total-period-4]', totals.p4);
                 setTotalText('[data-total-period-3-4]', totals.p34);
-                setTotalText('[data-total-reduction-percent]', totals.second > 0 ? (totals.decrease / totals.second) * 100 : 0, formatPercent);
+                setTotalText('[data-total-reduction-percent]', reductionPercent(totals.yearly, totals.p34), formatPercent);
 
                 updatePeriodBalanceState(totals);
 
@@ -1200,7 +1201,7 @@
                 }
 
                 const p34 = p3 + p4;
-                const reductionPercent = second > 0 ? (decrease / second) * 100 : 0;
+                const reduction = reductionPercent(yearly, p34);
 
                 setRowAmount(row, 'period_1_amount', p1);
                 setRowAmount(row, 'period_2_amount', p2);
@@ -1215,7 +1216,7 @@
                 setCellText(row, '[data-second-half]', second);
                 setCellText(row, '[data-adjusted-second-half]', adjusted);
                 setCellText(row, '[data-period-3-4-total]', p34);
-                setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
+                setCellText(row, '[data-reduction-percent]', reduction, formatPercent);
 
                 const invalidFirstHalf = p1 < 0 || p2 < 0 || first > yearly;
                 const invalidSecondHalfAmounts = averageIncrease < 0 || averageDecrease < 0 || decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || adjusted < 0;

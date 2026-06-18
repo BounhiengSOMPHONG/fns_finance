@@ -251,7 +251,8 @@ class PeriodPlanOverrideTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('row.adjusted_second_half_amount', 50)
-            ->assertJsonPath('row.period_3_4_total_amount', 50);
+            ->assertJsonPath('row.period_3_4_total_amount', 50)
+            ->assertJsonPath('row.reduction_percent', 200);
 
         $this->assertDatabaseHas('period_plan_overrides', [
             'planning_year_id' => 1,

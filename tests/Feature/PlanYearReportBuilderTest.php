@@ -107,6 +107,7 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertSame(25.0, $rows->get('62100201')['period_3_amount']);
         $this->assertSame(25.0, $rows->get('62100201')['period_4_amount']);
         $this->assertSame(50.0, $rows->get('62100201')['adjusted_second_half_amount']);
+        $this->assertSame(200.0, $rows->get('62100201')['reduction_percent']);
         $this->assertSame(50.0, $rows->get('62000000')['adjusted_second_half_amount']);
         $this->assertSame(100.0, $report['totals']['yearly_amount']);
         $this->assertSame(25.0, $report['totals']['period_1_amount']);
@@ -186,6 +187,7 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertSame(25.0, $row['period_3_amount']);
         $this->assertSame(25.0, $row['period_4_amount']);
         $this->assertSame(50.0, $row['period_3_4_total_amount']);
+        $this->assertSame(200.0, $row['reduction_percent']);
     }
 
     private function seedAccounts(): void

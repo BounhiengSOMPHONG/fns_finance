@@ -59,6 +59,11 @@ class PlanningYear extends Model
         return $this->hasMany(PlanningYearReviewRound::class);
     }
 
+    public function periodPlanOverrides(): HasMany
+    {
+        return $this->hasMany(PeriodPlanOverride::class);
+    }
+
     public function currentReviewRound(): BelongsTo
     {
         return $this->belongsTo(PlanningYearReviewRound::class, 'current_review_round_id');

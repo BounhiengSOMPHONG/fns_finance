@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class PeriodPlanOverride extends Model
+{
+    protected $fillable = [
+        'planning_year_id',
+        'account_code',
+        'period_1_amount',
+        'period_2_amount',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'planning_year_id' => 'integer',
+        'period_1_amount' => 'float',
+        'period_2_amount' => 'float',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+    ];
+
+    public function planningYear(): BelongsTo
+    {
+        return $this->belongsTo(PlanningYear::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+}

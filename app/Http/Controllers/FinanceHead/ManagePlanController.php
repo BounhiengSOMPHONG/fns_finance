@@ -9,6 +9,7 @@ use App\Models\ExpensePattern;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
+use App\Models\PeriodPlanOverride;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearFieldSetting;
 use App\Models\PlanningYearReviewRound;
@@ -16,6 +17,7 @@ use App\Models\SalaryPlan;
 use App\Models\User;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
+use App\Services\PeriodPlanReportBuilder;
 use App\Services\PlanYearReportBuilder;
 use App\Services\SalaryReportBuilder;
 use App\Support\ExpenseStructureNames;
@@ -87,12 +89,80 @@ class ManagePlanController extends Controller
         ));
     }
 
-    public function periodOneTwo(PlanningYear $planningYear)
+    public function periodOneTwo(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
     {
+        $periodReport = $periodPlanReportBuilder->buildForPlanningYear($planningYear);
+
         return view('dashboards.finance_head.manage-plan.period', [
             'planningYear' => $planningYear,
             'periodKey' => 'period-1-2',
             'periodTitle' => 'ງວດ 1-2',
+            'periodReport' => $periodReport,
+            'canEditPeriod' => $planningYear->canBeEdited(),
+        ]);
+    }
+
+    public function updatePeriodOneTwoOverride(
+        Request $request,
+        PlanningYear $planningYear,
+        string $accountCode,
+        PeriodPlanReportBuilder $periodPlanReportBuilder
+    ) {
+        abort_if(
+            $planningYear->canBeEdited() === false,
+            423,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
+        $data = $request->validate([
+            'period_1_amount' => ['required', 'numeric', 'min:0'],
+            'period_2_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $row = $periodPlanReportBuilder->findEditableRow($planningYear, $accountCode);
+        abort_if(! $row, 404, 'ບໍ່ພົບບັນຊີວິຊາການສຳລັບແຜນນີ້');
+
+        $period1Amount = (float) $data['period_1_amount'];
+        $period2Amount = (float) $data['period_2_amount'];
+        $yearlyAmount = (float) $row['yearly_amount'];
+
+        if (($period1Amount + $period2Amount) > $yearlyAmount) {
+            return response()->json([
+                'message' => 'ຍອດງວດ 1 ແລະ ງວດ 2 ຕ້ອງບໍ່ເກີນງົບປີ',
+                'errors' => [
+                    'period_1_amount' => ['ຍອດງວດ 1 ແລະ ງວດ 2 ຕ້ອງບໍ່ເກີນງົບປີ'],
+                    'period_2_amount' => ['ຍອດງວດ 1 ແລະ ງວດ 2 ຕ້ອງບໍ່ເກີນງົບປີ'],
+                ],
+            ], 422);
+        }
+
+        $override = PeriodPlanOverride::query()->firstOrNew([
+            'planning_year_id' => $planningYear->id,
+            'account_code' => $accountCode,
+        ]);
+
+        if (! $override->exists) {
+            $override->created_by = Auth::id();
+        }
+
+        $override->period_1_amount = $period1Amount;
+        $override->period_2_amount = $period2Amount;
+        $override->updated_by = Auth::id();
+        $override->save();
+
+        $firstHalfAmount = $period1Amount + $period2Amount;
+
+        return response()->json([
+            'success' => true,
+            'row' => [
+                'account_code' => $accountCode,
+                'yearly_amount' => $yearlyAmount,
+                'period_1_amount' => $period1Amount,
+                'period_2_amount' => $period2Amount,
+                'first_half_amount' => $firstHalfAmount,
+                'second_half_amount' => $yearlyAmount - $firstHalfAmount,
+                'has_override' => true,
+            ],
         ]);
     }
 

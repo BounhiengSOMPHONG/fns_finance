@@ -305,7 +305,7 @@ class PeriodPlanOverrideTest extends TestCase
             ->assertJsonValidationErrors(['requested_decrease_amount']);
     }
 
-    public function test_period_three_four_rejects_unbalanced_period_three_and_four(): void
+    public function test_period_three_four_autosaves_unbalanced_row_but_final_save_rejects_it(): void
     {
         PlanningYear::query()->whereKey(1)->update([
             'status' => PlanningYear::STATUS_SAVED,
@@ -321,8 +321,13 @@ class PeriodPlanOverrideTest extends TestCase
                 'period_3_amount' => 20,
                 'period_4_amount' => 20,
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['period_3_amount', 'period_4_amount']);
+            ->assertOk();
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.period-3-4.save', 1))
+            ->assertSessionHas('error');
+
+        $this->assertNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
     }
 
     public function test_finance_head_can_save_period_three_four_and_lock_editing(): void

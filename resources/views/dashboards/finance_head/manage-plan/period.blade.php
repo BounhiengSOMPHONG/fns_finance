@@ -1138,7 +1138,7 @@
                 setTotalText('[data-total-period-3-4]', totals.p34);
                 setTotalText('[data-total-reduction-percent]', totals.second > 0 ? (totals.decrease / totals.second) * 100 : 0, formatPercent);
             };
-            const recalculate = (row) => {
+            const recalculate = (row, changedKey = null) => {
                 if (isGroup(row)) {
                     updateTotals();
                     return null;
@@ -1154,8 +1154,17 @@
                 const decrease = rowAmount(row, 'requested_decrease_amount');
                 const increase = rowAmount(row, 'requested_increase_amount');
                 const adjusted = second - averageDecrease + averageIncrease - decrease + increase;
-                const p3 = rowAmount(row, 'period_3_amount');
-                const p4 = rowAmount(row, 'period_4_amount');
+                let p3 = rowAmount(row, 'period_3_amount');
+                let p4 = rowAmount(row, 'period_4_amount');
+
+                if (periodKey === 'period-3-4' && changedKey !== 'period_4_amount') {
+                    if (p3 > adjusted) {
+                        p3 = Math.max(adjusted, 0);
+                    }
+
+                    p4 = Math.max(adjusted - p3, 0);
+                }
+
                 const p34 = p3 + p4;
                 const reductionPercent = second > 0 ? (decrease / second) * 100 : 0;
 
@@ -1175,12 +1184,13 @@
                 setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
 
                 const invalidFirstHalf = p1 < 0 || p2 < 0 || first > yearly;
-                const invalidSecondHalf = averageIncrease < 0 || averageDecrease < 0 || decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || adjusted < 0 || Math.abs(p34 - adjusted) > 0.01;
-                row.classList.toggle('period-invalid', periodKey === 'period-3-4' ? invalidSecondHalf : invalidFirstHalf);
+                const invalidSecondHalfAmounts = averageIncrease < 0 || averageDecrease < 0 || decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || adjusted < 0;
+                const unbalancedSecondHalf = Math.abs(p34 - adjusted) > 0.01;
+                row.classList.toggle('period-invalid', periodKey === 'period-3-4' ? (invalidSecondHalfAmounts || unbalancedSecondHalf) : invalidFirstHalf);
                 updateTotals();
 
                 if (periodKey === 'period-3-4') {
-                    if (invalidSecondHalf) {
+                    if (invalidSecondHalfAmounts) {
                         return null;
                     }
 
@@ -1253,7 +1263,7 @@
                     input.addEventListener('input', () => {
                         window.clearTimeout(saveTimer);
                         normalizeMoneyInput(input);
-                        const payload = recalculate(row);
+                        const payload = recalculate(row, input.dataset.periodInput);
                         if (! payload) {
                             return;
                         }

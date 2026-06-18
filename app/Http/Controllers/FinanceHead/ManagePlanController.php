@@ -257,16 +257,6 @@ class ManagePlanController extends Controller
             + $requestedIncreaseAmount;
         $period34TotalAmount = $period3Amount + $period4Amount;
 
-        if (abs($period34TotalAmount - $adjustedSecondHalfAmount) > 0.01) {
-            return response()->json([
-                'message' => 'ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 06 ເດືອນທ້າຍປີ',
-                'errors' => [
-                    'period_3_amount' => ['ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 06 ເດືອນທ້າຍປີ'],
-                    'period_4_amount' => ['ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 06 ເດືອນທ້າຍປີ'],
-                ],
-            ], 422);
-        }
-
         $override = PeriodPlanOverride::query()->firstOrNew([
             'planning_year_id' => $planningYear->id,
             'chart_of_account_id' => (int) $row['chart_of_account_id'],
@@ -324,6 +314,14 @@ class ManagePlanController extends Controller
 
         if (abs(((float) ($totals['requested_increase_amount'] ?? 0)) - ((float) ($totals['requested_decrease_amount'] ?? 0))) > 0.01) {
             return back()->with('error', 'ຍອດແຜນຂໍເພີ່ມ ແລະ ຍອດແຜນຂໍຫຼຸດຕ້ອງເທົ່າກັນ');
+        }
+
+        $unbalancedRow = collect($periodReport['rows'] ?? [])
+            ->first(fn (array $row): bool => ! $row['is_group']
+                && abs(((float) $row['period_3_4_total_amount']) - ((float) $row['adjusted_second_half_amount'])) > 0.01);
+
+        if ($unbalancedRow) {
+            return back()->with('error', 'ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຂອງແຕ່ລະລາຍການຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ');
         }
 
         $planningYear->update([

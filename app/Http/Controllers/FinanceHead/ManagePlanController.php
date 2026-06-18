@@ -98,7 +98,7 @@ class ManagePlanController extends Controller
             'periodKey' => 'period-1-2',
             'periodTitle' => 'ງວດ 1-2',
             'periodReport' => $periodReport,
-            'canEditPeriod' => $planningYear->canBeEdited(),
+            'canEditPeriod' => $planningYear->canEditPeriods(),
         ]);
     }
 
@@ -109,9 +109,9 @@ class ManagePlanController extends Controller
         PeriodPlanReportBuilder $periodPlanReportBuilder
     ) {
         abort_if(
-            $planningYear->canBeEdited() === false,
+            $planningYear->canEditPeriods() === false,
             423,
-            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+            'ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະປ້ອນຍອດງວດໄດ້'
         );
 
         $data = $request->validate([

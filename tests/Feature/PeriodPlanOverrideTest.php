@@ -24,6 +24,8 @@ class PeriodPlanOverrideTest extends TestCase
 
     public function test_finance_head_can_save_period_override(): void
     {
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '62100201']), [
                 'period_1_amount' => 20,
@@ -46,6 +48,7 @@ class PeriodPlanOverrideTest extends TestCase
     public function test_period_one_two_page_renders_editable_academic_rows(): void
     {
         $this->withoutVite();
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
 
         $this->actingAs($this->financeHead)
             ->get(route('head_of_finance.manage-plan.period-1-2', 1))
@@ -57,6 +60,8 @@ class PeriodPlanOverrideTest extends TestCase
 
     public function test_period_override_rejects_negative_amounts(): void
     {
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '62100201']), [
                 'period_1_amount' => -1,
@@ -70,6 +75,8 @@ class PeriodPlanOverrideTest extends TestCase
 
     public function test_period_override_rejects_sum_above_yearly_amount(): void
     {
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '62100201']), [
                 'period_1_amount' => 70,
@@ -83,6 +90,8 @@ class PeriodPlanOverrideTest extends TestCase
 
     public function test_period_override_rejects_account_codes_below_academic_section(): void
     {
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '61000000']), [
                 'period_1_amount' => 10,
@@ -93,10 +102,8 @@ class PeriodPlanOverrideTest extends TestCase
         $this->assertDatabaseCount('period_plan_overrides', 0);
     }
 
-    public function test_period_override_rejects_locked_planning_year(): void
+    public function test_period_override_requires_saved_planning_year(): void
     {
-        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
-
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '62100201']), [
                 'period_1_amount' => 20,

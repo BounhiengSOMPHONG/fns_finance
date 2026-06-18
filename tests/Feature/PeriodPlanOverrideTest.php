@@ -50,12 +50,14 @@ class PeriodPlanOverrideTest extends TestCase
         $this->withoutVite();
         PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
 
-        $this->actingAs($this->financeHead)
+        $response = $this->actingAs($this->financeHead)
             ->get(route('head_of_finance.manage-plan.period-1-2', 1))
             ->assertOk()
             ->assertSee('62100201')
             ->assertSee('data-period-input="period_1_amount"', false)
             ->assertDontSee('61000000');
+
+        $this->assertSame(2, preg_match_all('/<input[^>]+data-period-input=/', $response->getContent()));
     }
 
     public function test_period_override_rejects_negative_amounts(): void
@@ -96,6 +98,20 @@ class PeriodPlanOverrideTest extends TestCase
             ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '61000000']), [
                 'period_1_amount' => 10,
                 'period_2_amount' => 10,
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseCount('period_plan_overrides', 0);
+    }
+
+    public function test_period_override_rejects_group_account_codes(): void
+    {
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+
+        $this->actingAs($this->financeHead)
+            ->patchJson(route('head_of_finance.manage-plan.period-1-2.override', [1, '62100000']), [
+                'period_1_amount' => 20,
+                'period_2_amount' => 20,
             ])
             ->assertNotFound();
 

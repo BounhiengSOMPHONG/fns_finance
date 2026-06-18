@@ -24,6 +24,7 @@ class PeriodPlanReportBuilder
         $rows = collect($yearlyReport['rows'] ?? [])
             ->filter(fn (array $row): bool => $this->isAcademicAccount((string) ($row['code'] ?? '')))
             ->map(fn (array $row): array => $this->periodRow($row, $overrides))
+            ->pipe(fn (Collection $rows): Collection => $this->rollUpGroupRows($rows))
             ->values();
         $totalRows = $rows->where('level', 0);
 
@@ -43,7 +44,7 @@ class PeriodPlanReportBuilder
     public function findEditableRow(PlanningYear $planningYear, string $accountCode): ?array
     {
         return $this->buildForPlanningYear($planningYear)['rows']
-            ->firstWhere('account_code', $accountCode);
+            ->first(fn (array $row): bool => $row['account_code'] === $accountCode && ! $row['is_group']);
     }
 
     private function periodRow(array $row, Collection $overrides): array
@@ -77,5 +78,42 @@ class PeriodPlanReportBuilder
         }
 
         return (int) $matches[0] >= 62;
+    }
+
+    private function rollUpGroupRows(Collection $rows): Collection
+    {
+        return $rows->map(function (array $row) use ($rows): array {
+            if (! $row['is_group']) {
+                return $row;
+            }
+
+            $children = $rows->filter(fn (array $child): bool => ! $child['is_group']
+                && (int) $child['level'] > (int) $row['level']
+                && $this->isDescendantCode((string) $row['account_code'], (string) $child['account_code'], (int) $row['level']));
+
+            if ($children->isEmpty()) {
+                return $row;
+            }
+
+            $period1Amount = (float) $children->sum('period_1_amount');
+            $period2Amount = (float) $children->sum('period_2_amount');
+            $firstHalfAmount = $period1Amount + $period2Amount;
+
+            $row['period_1_amount'] = $period1Amount;
+            $row['period_2_amount'] = $period2Amount;
+            $row['first_half_amount'] = $firstHalfAmount;
+            $row['second_half_amount'] = (float) $row['yearly_amount'] - $firstHalfAmount;
+            $row['has_override'] = false;
+
+            return $row;
+        });
+    }
+
+    private function isDescendantCode(string $parentCode, string $childCode, int $parentLevel): bool
+    {
+        $prefixLength = min(($parentLevel + 1) * 2, strlen($parentCode));
+
+        return $parentCode !== $childCode
+            && str_starts_with($childCode, substr($parentCode, 0, $prefixLength));
     }
 }

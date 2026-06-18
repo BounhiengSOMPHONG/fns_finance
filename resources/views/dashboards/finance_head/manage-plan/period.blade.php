@@ -115,12 +115,16 @@
                                 ];
                                 $level = min((int) $row['level'], 3);
                                 $rowClass = ((int) $row['level'] === 0 ? ' period-root-row' : '') . (! empty($row['is_group']) ? ' period-group-row' : '');
+                                $isEditableRow = $canEditPeriod && empty($row['is_group']);
                             @endphp
                             <tr class="period-data-row{{ $rowClass }}"
                                 data-period-row
                                 data-account-code="{{ $row['account_code'] }}"
                                 data-level="{{ (int) $row['level'] }}"
+                                data-is-group="{{ ! empty($row['is_group']) ? '1' : '0' }}"
                                 data-yearly-amount="{{ $inputValue($row['yearly_amount']) }}"
+                                data-period-1-amount="{{ $inputValue($row['period_1_amount']) }}"
+                                data-period-2-amount="{{ $inputValue($row['period_2_amount']) }}"
                                 data-save-url="{{ str_replace('__ACCOUNT__', rawurlencode((string) $row['account_code']), $saveUrlTemplate) }}">
                                 @foreach($codeParts as $partIndex => $part)
                                     <td class="center period-code-cell {{ $partIndex === $level ? 'period-code-main' : '' }}">
@@ -130,32 +134,38 @@
                                 <td class="period-row-title">{{ $row['title'] }}</td>
                                 <td class="num" data-yearly-display>{{ $money($row['yearly_amount']) }}</td>
                                 <td>
-                                    <input
-                                        class="period-money-input"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        inputmode="decimal"
-                                        value="{{ $inputValue($row['period_1_amount']) }}"
-                                        data-period-input="period_1_amount"
-                                        @disabled(! $canEditPeriod)
-                                    >
+                                    @if($isEditableRow)
+                                        <input
+                                            class="period-money-input"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            inputmode="decimal"
+                                            value="{{ $inputValue($row['period_1_amount']) }}"
+                                            data-period-input="period_1_amount"
+                                        >
+                                    @else
+                                        <span class="period-readonly-amount" data-period-display="period_1_amount">{{ $money($row['period_1_amount']) }}</span>
+                                    @endif
                                 </td>
                                 <td>
-                                    <input
-                                        class="period-money-input"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        inputmode="decimal"
-                                        value="{{ $inputValue($row['period_2_amount']) }}"
-                                        data-period-input="period_2_amount"
-                                        @disabled(! $canEditPeriod)
-                                    >
+                                    @if($isEditableRow)
+                                        <input
+                                            class="period-money-input"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            inputmode="decimal"
+                                            value="{{ $inputValue($row['period_2_amount']) }}"
+                                            data-period-input="period_2_amount"
+                                        >
+                                    @else
+                                        <span class="period-readonly-amount" data-period-display="period_2_amount">{{ $money($row['period_2_amount']) }}</span>
+                                    @endif
                                 </td>
                                 <td class="num" data-first-half>{{ $money($row['first_half_amount']) }}</td>
                                 <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
-                                <td class="period-row-status" data-period-status>{{ $row['has_override'] ? 'saved' : 'default' }}</td>
+                                <td class="period-row-status" data-period-status>{{ ! empty($row['is_group']) ? 'total' : ($row['has_override'] ? 'saved' : 'default') }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -403,6 +413,12 @@
         color: #64748b;
     }
 
+    .period-readonly-amount {
+        display: block;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+    }
+
     .period-data-row.period-invalid {
         background: #fff1f2;
     }
@@ -469,20 +485,60 @@
                 const parsed = Number.parseFloat(String(value).replace(/,/g, ''));
                 return Number.isFinite(parsed) ? parsed : 0;
             };
+            const isGroup = (row) => row.dataset.isGroup === '1';
+            const rowAmount = (row, key) => {
+                const input = row.querySelector(`[data-period-input="${key}"]`);
+                return input ? parseAmount(input.value) : parseAmount(row.dataset[key === 'period_1_amount' ? 'period1Amount' : 'period2Amount']);
+            };
+            const setRowAmount = (row, key, value) => {
+                row.dataset[key === 'period_1_amount' ? 'period1Amount' : 'period2Amount'] = String(value);
+                const display = row.querySelector(`[data-period-display="${key}"]`);
+                if (display) {
+                    display.textContent = formatMoney(value);
+                }
+            };
+            const prefixLength = (row) => Math.min((Number.parseInt(row.dataset.level || '0', 10) + 1) * 2, row.dataset.accountCode.length);
+            const isChildOf = (parent, child) => {
+                if (parent === child || Number.parseInt(child.dataset.level || '0', 10) <= Number.parseInt(parent.dataset.level || '0', 10)) {
+                    return false;
+                }
+
+                return child.dataset.accountCode.startsWith(parent.dataset.accountCode.slice(0, prefixLength(parent)));
+            };
             const setStatus = (row, message, className = '') => {
                 const status = row.querySelector('[data-period-status]');
                 status.className = `period-row-status ${className}`.trim();
                 status.textContent = message;
             };
+            const updateGroupRows = () => {
+                rows.filter(isGroup).forEach((row) => {
+                    const children = rows.filter((child) => ! isGroup(child) && isChildOf(row, child));
+                    if (children.length === 0) {
+                        return;
+                    }
+
+                    const yearly = parseAmount(row.dataset.yearlyAmount);
+                    const p1 = children.reduce((sum, child) => sum + rowAmount(child, 'period_1_amount'), 0);
+                    const p2 = children.reduce((sum, child) => sum + rowAmount(child, 'period_2_amount'), 0);
+                    const first = p1 + p2;
+
+                    setRowAmount(row, 'period_1_amount', p1);
+                    setRowAmount(row, 'period_2_amount', p2);
+                    row.querySelector('[data-first-half]').textContent = formatMoney(first);
+                    row.querySelector('[data-second-half]').textContent = formatMoney(yearly - first);
+                });
+            };
             const updateTotals = () => {
+                updateGroupRows();
+
                 const totals = rows.reduce((sum, row) => {
                     if (Number.parseInt(row.dataset.level || '0', 10) !== 0) {
                         return sum;
                     }
 
                     const yearly = parseAmount(row.dataset.yearlyAmount);
-                    const p1 = parseAmount(row.querySelector('[data-period-input="period_1_amount"]').value);
-                    const p2 = parseAmount(row.querySelector('[data-period-input="period_2_amount"]').value);
+                    const p1 = rowAmount(row, 'period_1_amount');
+                    const p2 = rowAmount(row, 'period_2_amount');
                     const first = p1 + p2;
                     sum.yearly += yearly;
                     sum.p1 += p1;
@@ -499,12 +555,19 @@
                 document.querySelector('[data-total-second-half]').textContent = formatMoney(totals.second);
             };
             const recalculate = (row) => {
+                if (isGroup(row)) {
+                    updateTotals();
+                    return null;
+                }
+
                 const yearly = parseAmount(row.dataset.yearlyAmount);
-                const p1 = parseAmount(row.querySelector('[data-period-input="period_1_amount"]').value);
-                const p2 = parseAmount(row.querySelector('[data-period-input="period_2_amount"]').value);
+                const p1 = rowAmount(row, 'period_1_amount');
+                const p2 = rowAmount(row, 'period_2_amount');
                 const first = p1 + p2;
                 const second = yearly - first;
 
+                setRowAmount(row, 'period_1_amount', p1);
+                setRowAmount(row, 'period_2_amount', p2);
                 row.querySelector('[data-first-half]').textContent = formatMoney(first);
                 row.querySelector('[data-second-half]').textContent = formatMoney(second);
                 row.classList.toggle('period-invalid', p1 < 0 || p2 < 0 || first > yearly);
@@ -561,7 +624,7 @@
             rows.forEach((row) => {
                 recalculate(row);
 
-                if (! canEdit) {
+                if (! canEdit || isGroup(row)) {
                     return;
                 }
 

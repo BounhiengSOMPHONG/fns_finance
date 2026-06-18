@@ -58,6 +58,24 @@
         @endif
 
         <section class="period-paper" id="{{ $periodKey }}">
+            <div class="period-print-header">
+                <img src="{{ asset('storage/Emblem_of_Laos.png') }}" alt="Lao emblem">
+                <strong>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</strong>
+                <span>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນາຖາວອນ</span>
+                <small>-----xxxxx-----</small>
+            </div>
+
+            <div class="period-print-meta">
+                <div>
+                    <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+                    <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
+                </div>
+                <div>
+                    <span>ເລກທີ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/ຄວທ</span>
+                    <span>ນະຄອນຫຼວງວຽງຈັນ ວັນທີ {{ now()->format('d/m/Y') }}</span>
+                </div>
+            </div>
+
             <div class="period-official-header">
                 <div>
                     <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -184,6 +202,11 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="period-print-signatures">
+                <div>ຫົວໜ້າຄະນະບໍລິຫານ</div>
+                <div>ພະແນກການເງິນ</div>
             </div>
         </section>
     @endif
@@ -324,6 +347,12 @@
     .period-official-header span {
         color: #111827;
         font-size: .86rem;
+    }
+
+    .period-print-header,
+    .period-print-meta,
+    .period-print-signatures {
+        display: none;
     }
 
     @media screen {
@@ -564,56 +593,84 @@
             border-radius: 0;
             box-shadow: none;
             overflow: visible;
-            padding: clamp(1.5rem, 5vw, 80px) 0 20px;
+            padding: 0 0 20px;
         }
 
-        .period-official-header {
-            align-items: flex-start;
-            display: grid;
-            grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
-            margin: 0 0 20px;
-            min-height: 96px;
-        }
-
-        .period-official-header div:first-child {
-            grid-column: 1;
-            padding-top: 3rem;
-        }
-
-        .period-official-header div:last-child {
-            grid-column: 2;
-            justify-self: center;
-            min-width: 360px;
-            padding-top: 0;
+        .period-print-header {
+            align-items: center;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.45;
+            margin: 0 0 2rem;
             text-align: center;
         }
 
-        .period-official-header strong {
-            color: #000;
-            display: block;
-            font-size: 1.05rem;
-            font-weight: 800;
-            line-height: 1.72;
-            white-space: nowrap;
+        .period-print-header img {
+            height: 72px;
+            margin: 0 0 .25rem;
+            object-fit: contain;
+            width: 72px;
         }
 
-        .period-official-header span {
-            color: #000;
-            display: block;
-            font-size: .86rem;
+        .period-print-header strong {
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .period-print-header span {
+            font-size: .9rem;
             font-weight: 700;
-            line-height: 1.55;
+            text-decoration: underline;
+            text-decoration-color: #d9a300;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 6px;
+        }
+
+        .period-print-header small {
+            font-size: .72rem;
+            margin-top: .35rem;
+        }
+
+        .period-print-meta {
+            align-items: start;
+            color: #000;
+            display: grid;
+            font-size: .88rem;
+            font-weight: 700;
+            grid-template-columns: minmax(220px, 1fr) minmax(260px, 1fr);
+            line-height: 1.75;
+            margin: 0 0 1.35rem;
+        }
+
+        .period-print-meta div {
+            display: grid;
+            gap: .1rem;
+        }
+
+        .period-print-meta div:last-child {
+            justify-self: end;
+            text-align: left;
+        }
+
+        .period-print-meta strong,
+        .period-print-meta span {
+            display: block;
+        }
+
+        .period-official-header {
+            display: none;
         }
 
         .period-title-block {
-            margin: 14px 0 28px;
+            margin: 0 0 1rem;
         }
 
         .period-title-block p {
             color: #111;
-            font-size: 1.5rem;
-            font-weight: 800;
-            line-height: 1.3;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.45;
         }
 
         .period-table-wrap {
@@ -716,6 +773,20 @@
         .period-money-input::-webkit-outer-spin-button {
             appearance: none;
             margin: 0;
+        }
+
+        .period-print-signatures {
+            color: #000;
+            display: grid;
+            font-size: .9rem;
+            font-weight: 700;
+            grid-template-columns: 1fr 1fr;
+            margin-top: 2.25rem;
+            min-height: 96px;
+        }
+
+        .period-print-signatures div:last-child {
+            text-align: center;
         }
     }
 </style>

@@ -9,7 +9,7 @@ class PeriodPlanOverride extends Model
 {
     protected $fillable = [
         'planning_year_id',
-        'account_code',
+        'chart_of_account_id',
         'period_1_amount',
         'period_2_amount',
         'created_by',
@@ -18,6 +18,7 @@ class PeriodPlanOverride extends Model
 
     protected $casts = [
         'planning_year_id' => 'integer',
+        'chart_of_account_id' => 'integer',
         'period_1_amount' => 'float',
         'period_2_amount' => 'float',
         'created_by' => 'integer',
@@ -27,6 +28,11 @@ class PeriodPlanOverride extends Model
     public function planningYear(): BelongsTo
     {
         return $this->belongsTo(PlanningYear::class);
+    }
+
+    public function chartOfAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChartOfAccount::class);
     }
 
     public function creator(): BelongsTo

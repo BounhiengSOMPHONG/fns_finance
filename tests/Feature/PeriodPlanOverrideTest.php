@@ -37,7 +37,7 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->assertDatabaseHas('period_plan_overrides', [
             'planning_year_id' => 1,
-            'account_code' => '62100201',
+            'chart_of_account_id' => 4,
             'period_1_amount' => 20,
             'period_2_amount' => 30,
             'created_by' => $this->financeHead->id,
@@ -329,13 +329,13 @@ class PeriodPlanOverrideTest extends TestCase
         Schema::create('period_plan_overrides', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('planning_year_id');
-            $table->string('account_code', 30);
+            $table->unsignedInteger('chart_of_account_id');
             $table->decimal('period_1_amount', 18, 2)->default(0);
             $table->decimal('period_2_amount', 18, 2)->default(0);
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
             $table->timestamps();
-            $table->unique(['planning_year_id', 'account_code']);
+            $table->unique(['planning_year_id', 'chart_of_account_id']);
         });
 
         Schema::create('expense_plan_values', function ($table): void {

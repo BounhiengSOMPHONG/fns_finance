@@ -122,7 +122,7 @@ class PlanYearReportBuilderTest extends TestCase
         ]);
         DB::table('period_plan_overrides')->insert([
             'planning_year_id' => 1,
-            'account_code' => '62100201',
+            'chart_of_account_id' => 7,
             'period_1_amount' => 10,
             'period_2_amount' => 35,
         ]);
@@ -183,13 +183,13 @@ class PlanYearReportBuilderTest extends TestCase
         Schema::create('period_plan_overrides', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('planning_year_id');
-            $table->string('account_code', 30);
+            $table->unsignedInteger('chart_of_account_id');
             $table->decimal('period_1_amount', 18, 2)->default(0);
             $table->decimal('period_2_amount', 18, 2)->default(0);
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
             $table->timestamps();
-            $table->unique(['planning_year_id', 'account_code']);
+            $table->unique(['planning_year_id', 'chart_of_account_id']);
         });
 
         Schema::create('salary_plans', function ($table): void {

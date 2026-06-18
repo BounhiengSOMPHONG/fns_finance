@@ -138,7 +138,7 @@ class ManagePlanController extends Controller
 
         $override = PeriodPlanOverride::query()->firstOrNew([
             'planning_year_id' => $planningYear->id,
-            'account_code' => $accountCode,
+            'chart_of_account_id' => (int) $row['chart_of_account_id'],
         ]);
 
         if (! $override->exists) {

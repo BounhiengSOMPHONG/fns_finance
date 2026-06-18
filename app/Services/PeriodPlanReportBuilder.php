@@ -19,7 +19,7 @@ class PeriodPlanReportBuilder
         $overrides = PeriodPlanOverride::query()
             ->where('planning_year_id', $planningYear->id)
             ->get()
-            ->keyBy('account_code');
+            ->keyBy('chart_of_account_id');
 
         $rows = collect($yearlyReport['rows'] ?? [])
             ->filter(fn (array $row): bool => $this->isAcademicAccount((string) ($row['code'] ?? '')))
@@ -50,15 +50,17 @@ class PeriodPlanReportBuilder
     private function periodRow(array $row, Collection $overrides): array
     {
         $accountCode = (string) ($row['code'] ?? '');
+        $accountId = (int) ($row['id'] ?? 0);
         $yearlyAmount = (float) ($row['faculty_amount'] ?? 0);
         $defaultPeriodAmount = $yearlyAmount / 4;
-        $override = $overrides->get($accountCode);
+        $override = $overrides->get($accountId);
         $period1Amount = $override ? (float) $override->period_1_amount : $defaultPeriodAmount;
         $period2Amount = $override ? (float) $override->period_2_amount : $defaultPeriodAmount;
         $firstHalfAmount = $period1Amount + $period2Amount;
 
         return [
             'account_code' => $accountCode,
+            'chart_of_account_id' => $accountId,
             'title' => (string) ($row['title'] ?? ''),
             'level' => (int) ($row['level'] ?? 0),
             'is_group' => (bool) ($row['is_group'] ?? false),

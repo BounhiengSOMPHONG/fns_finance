@@ -331,6 +331,38 @@
         .period-title-block {
             display: none;
         }
+
+        .period-report-table th {
+            background: #fff;
+        }
+
+        .period-root-row td {
+            background: #ccffcc;
+            font-weight: 900;
+        }
+
+        .period-total-row td {
+            background: #ccffff;
+            font-weight: 900;
+        }
+
+        .period-code-main {
+            background: transparent;
+            color: #111827;
+            font-style: italic;
+            font-weight: 900;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .period-root-row .num,
+        .period-group-row .num,
+        .period-total-row .num,
+        .period-root-row .period-readonly-amount,
+        .period-group-row .period-readonly-amount {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
     }
 
     .period-title-block {

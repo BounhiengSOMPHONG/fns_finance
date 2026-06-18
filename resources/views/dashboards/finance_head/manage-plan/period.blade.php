@@ -31,6 +31,9 @@
             <p>{{ $planningYear->name }}</p>
         </div>
         <div class="period-actions">
+            @if($periodKey === 'period-1-2')
+                <button type="button" class="period-btn period-btn-primary" data-print-period>ພິມ</button>
+            @endif
             <a href="{{ route('head_of_finance.manage-plan.index') }}" class="period-btn period-btn-secondary">ກັບຄືນ</a>
         </div>
     </div>
@@ -233,10 +236,20 @@
     }
 
     .period-btn {
+        border: 0;
         border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
         font-weight: 700;
+        line-height: 1.2;
         padding: .55rem .85rem;
         text-decoration: none;
+    }
+
+    .period-btn-primary {
+        background: #0f172a;
+        color: #fff;
     }
 
     .period-btn-secondary {
@@ -449,11 +462,217 @@
             text-align: left;
         }
     }
+
+    @media print {
+        @page {
+            margin: 8mm;
+            size: A4 landscape;
+
+            @bottom-center {
+                color: #111;
+                content: counter(page);
+                font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
+                font-size: 8pt;
+            }
+        }
+
+        html,
+        body {
+            background: #fff !important;
+            font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif !important;
+            margin: 0 !important;
+        }
+
+        .fns-topnav,
+        .fns-alert,
+        .fns-page-title,
+        .period-toolbar,
+        .period-lock-note,
+        .period-warning {
+            display: none !important;
+        }
+
+        .fns-main,
+        .fns-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .fns-main > div:has(.fns-page-title) {
+            display: none !important;
+        }
+
+        .period-page {
+            display: block;
+            width: 100%;
+            zoom: .76;
+        }
+
+        .period-paper {
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
+            padding: clamp(1.5rem, 5vw, 80px) 0 20px;
+        }
+
+        .period-official-header {
+            align-items: flex-start;
+            display: grid;
+            grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+            margin: 0 0 20px;
+            min-height: 96px;
+        }
+
+        .period-official-header div:first-child {
+            grid-column: 1;
+            padding-top: 3rem;
+        }
+
+        .period-official-header div:last-child {
+            grid-column: 2;
+            justify-self: center;
+            min-width: 360px;
+            padding-top: 0;
+            text-align: center;
+        }
+
+        .period-official-header strong {
+            color: #000;
+            display: block;
+            font-size: 1.05rem;
+            font-weight: 800;
+            line-height: 1.72;
+            white-space: nowrap;
+        }
+
+        .period-official-header span {
+            color: #000;
+            display: block;
+            font-size: .86rem;
+            font-weight: 700;
+            line-height: 1.55;
+        }
+
+        .period-title-block {
+            margin: 14px 0 28px;
+        }
+
+        .period-title-block p {
+            color: #111;
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .period-table-wrap {
+            overflow: visible;
+        }
+
+        .period-report-table {
+            color: #111;
+            font-size: 8.6pt;
+            min-width: 0;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .period-code-col {
+            width: 36px;
+        }
+
+        .period-title-col {
+            width: 275px;
+        }
+
+        .period-money-col,
+        .period-input-col {
+            width: 116px;
+        }
+
+        .period-report-table th,
+        .period-report-table td {
+            border-color: #000;
+            line-height: 1.2;
+            padding: .22rem .28rem;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .period-report-table th {
+            background: #fff;
+            color: #111;
+            font-weight: 800;
+            white-space: normal;
+        }
+
+        .period-root-row td {
+            background: #ccffcc;
+            font-weight: 900;
+        }
+
+        .period-total-row td {
+            background: #ccffff;
+            font-weight: 900;
+        }
+
+        .period-code-cell {
+            color: #111;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .period-code-main {
+            background: transparent;
+            color: #111827;
+            font-style: italic;
+            font-weight: 900;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .period-row-title {
+            line-height: 1.2;
+            padding-left: 4px !important;
+        }
+
+        .period-root-row .num,
+        .period-group-row .num,
+        .period-total-row .num,
+        .period-root-row .period-readonly-amount,
+        .period-group-row .period-readonly-amount {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .period-report-table th,
+        .period-code-main,
+        .period-total-row td {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .period-money-input {
+            appearance: textfield;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            color: #111827;
+            padding: 0;
+        }
+
+        .period-money-input::-webkit-inner-spin-button,
+        .period-money-input::-webkit-outer-spin-button {
+            appearance: none;
+            margin: 0;
+        }
+    }
 </style>
 
 @if($periodKey === 'period-1-2')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const printButton = document.querySelector('[data-print-period]');
             const canEdit = @json($canEditPeriod);
             const csrfToken = @json(csrf_token());
             const rows = Array.from(document.querySelectorAll('[data-period-row]'));
@@ -612,6 +831,10 @@
                     });
                 });
             });
+
+            if (printButton) {
+                printButton.addEventListener('click', () => window.print());
+            }
         });
     </script>
 @endif

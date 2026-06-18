@@ -207,6 +207,10 @@ class PeriodPlanOverrideTest extends TestCase
             ->assertSee('ແຜນຂໍຫຼຸດ')
             ->assertSee('ແຜນຂໍເພີ່ມ')
             ->assertSee('ແຜນງວດ 3')
+            ->assertSee('colspan="2" class="period-adjust-head">ແຜນດັດແກ້ສະເລ່ຍ', false)
+            ->assertSee('<th class="period-adjust-head">ເພີ່ມ</th>', false)
+            ->assertSee('<th class="period-adjust-head">ຫຼຸດ</th>', false)
+            ->assertSee('ແຜນປະຕິບັດ<br>ໝົດປີ 2027', false)
             ->assertSee('data-period-input="requested_decrease_amount"', false)
             ->assertSee('data-period-input="period_4_amount"', false);
 

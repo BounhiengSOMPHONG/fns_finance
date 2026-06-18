@@ -127,11 +127,10 @@
                         <col class="period-code-col">
                         <col class="period-title-col">
                         <col class="period-money-col">
-                        <col class="period-input-col">
-                        <col class="period-input-col">
-                        <col class="period-money-col">
-                        <col class="period-money-col">
                         @if($isPeriodThreeFour)
+                            <col class="period-money-col">
+                            <col class="period-money-col">
+                            <col class="period-money-col">
                             <col class="period-input-col">
                             <col class="period-input-col">
                             <col class="period-money-col">
@@ -139,23 +138,30 @@
                             <col class="period-input-col">
                             <col class="period-money-col">
                             <col class="period-percent-col">
+                        @else
+                            <col class="period-input-col">
+                            <col class="period-input-col">
+                            <col class="period-money-col">
+                            <col class="period-money-col">
                         @endif
                     </colgroup>
                     <thead>
                         <tr class="period-head-row">
                             <th rowspan="2" class="period-code-head"><span>ພາກ</span></th>
-                            <th rowspan="2" class="period-code-head"><span>ພາກ</span><span>ສ່ວນ</span></th>
+                            <th rowspan="2" class="period-code-head"><span>{{ $isPeriodThreeFour ? 'ພາກສ່ວນ' : 'ພາກ' }}</span>@if(! $isPeriodThreeFour)<span>ສ່ວນ</span>@endif</th>
                             <th rowspan="2" class="period-code-head"><span>ຮ່ວງ</span></th>
-                            <th rowspan="2" class="period-code-head"><span>ລູກ</span><span>ຮ່ວງ</span></th>
+                            <th rowspan="2" class="period-code-head"><span>{{ $isPeriodThreeFour ? 'ລູກຮ່ວງ' : 'ລູກ' }}</span>@if(! $isPeriodThreeFour)<span>ຮ່ວງ</span>@endif</th>
                             <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                             <th rowspan="2">ແຜນການ<br>ປີ {{ $planningYear->year }}</th>
                             @if($isPeriodThreeFour)
                                 <th rowspan="2">ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
                                 <th colspan="2" class="period-adjust-head">ແຜນດັດແກ້ສະເລ່ຍ</th>
-                                <th rowspan="2">ແຜນດັດແກ້ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
+                                <th rowspan="2" class="period-adjust-head">ແຜນຂໍຫຼຸດ</th>
+                                <th rowspan="2" class="period-adjust-head">ແຜນຂໍເພີ່ມ</th>
+                                <th rowspan="2">ແຜນດັດແກ້ 6 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
                                 <th rowspan="2">ແຜນງວດ 3</th>
                                 <th rowspan="2">ແຜນງວດ 4</th>
-                                <th rowspan="2">ແຜນປະຕິບັດ<br>ຫຼັງປັບ {{ $planningYear->year }}</th>
+                                <th rowspan="2">ແຜນປະຕິບັດ<br>ໝົດປີ {{ $planningYear->year }}</th>
                                 <th rowspan="2">ຫຼຸດ%</th>
                             @else
                                 <th colspan="3">ແຜນ 06 ເດືອນຕົ້ນປີ {{ $planningYear->year }}</th>
@@ -164,8 +170,8 @@
                         </tr>
                         <tr class="period-subhead-row">
                             @if($isPeriodThreeFour)
-                                <th class="period-adjust-head">ແຜນຂໍຫຼຸດ</th>
-                                <th class="period-adjust-head">ແຜນຂໍເພີ່ມ</th>
+                                <th class="period-adjust-head">ເພີ່ມ</th>
+                                <th class="period-adjust-head">ຫຼຸດ</th>
                             @else
                                 <th>ແຜນງວດ1</th>
                                 <th>ແຜນງວດ2</th>
@@ -180,6 +186,8 @@
                             <td class="num" data-total-yearly>{{ $money($periodTotals['yearly_amount']) }}</td>
                             @if($isPeriodThreeFour)
                                 <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
+                                <td class="num" data-total-average-increase>{{ $money($periodTotals['requested_increase_amount']) }}</td>
+                                <td class="num" data-total-average-decrease>{{ $money($periodTotals['requested_decrease_amount']) }}</td>
                                 <td class="num" data-total-requested-decrease>{{ $money($periodTotals['requested_decrease_amount']) }}</td>
                                 <td class="num" data-total-requested-increase>{{ $money($periodTotals['requested_increase_amount']) }}</td>
                                 <td class="num" data-total-adjusted-second-half>{{ $money($periodTotals['adjusted_second_half_amount']) }}</td>
@@ -231,6 +239,8 @@
                                 <td class="num" data-yearly-display>{{ $money($row['yearly_amount']) }}</td>
                                 @if($isPeriodThreeFour)
                                     <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
+                                    <td class="num" data-average-increase>{{ $money($row['requested_increase_amount']) }}</td>
+                                    <td class="num" data-average-decrease>{{ $money($row['requested_decrease_amount']) }}</td>
                                     <td>
                                         @if($isEditableRow)
                                             <input
@@ -326,7 +336,7 @@
                         @empty
                             <tr>
                                 <td class="center">62</td>
-                                <td colspan="{{ $isPeriodThreeFour ? 12 : 9 }}" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
+                                <td colspan="{{ $isPeriodThreeFour ? 15 : 9 }}" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1036,6 +1046,8 @@
                     row.dataset.adjustedSecondHalfAmount = String(adjusted);
                     setCellText(row, '[data-first-half]', first);
                     setCellText(row, '[data-second-half]', second);
+                    setCellText(row, '[data-average-increase]', increase);
+                    setCellText(row, '[data-average-decrease]', decrease);
                     setCellText(row, '[data-adjusted-second-half]', adjusted);
                     setCellText(row, '[data-period-3-4-total]', p34);
                     setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
@@ -1078,6 +1090,8 @@
                 setTotalText('[data-total-period-2]', totals.p2);
                 setTotalText('[data-total-first-half]', totals.first);
                 setTotalText('[data-total-second-half]', totals.second);
+                setTotalText('[data-total-average-increase]', totals.increase);
+                setTotalText('[data-total-average-decrease]', totals.decrease);
                 setTotalText('[data-total-requested-decrease]', totals.decrease);
                 setTotalText('[data-total-requested-increase]', totals.increase);
                 setTotalText('[data-total-adjusted-second-half]', totals.adjusted);
@@ -1114,6 +1128,8 @@
                 row.dataset.adjustedSecondHalfAmount = String(adjusted);
                 setCellText(row, '[data-first-half]', first);
                 setCellText(row, '[data-second-half]', second);
+                setCellText(row, '[data-average-increase]', increase);
+                setCellText(row, '[data-average-decrease]', decrease);
                 setCellText(row, '[data-adjusted-second-half]', adjusted);
                 setCellText(row, '[data-period-3-4-total]', p34);
                 setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);

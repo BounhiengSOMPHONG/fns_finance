@@ -783,9 +783,6 @@
             grid-template-columns: 1fr 1fr;
             margin-top: 2.25rem;
             min-height: 96px;
-        }
-
-        .period-print-signatures div:last-child {
             text-align: center;
         }
     }

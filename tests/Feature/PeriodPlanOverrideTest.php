@@ -58,6 +58,42 @@ class PeriodPlanOverrideTest extends TestCase
             ->assertDontSee('61000000');
 
         $this->assertSame(2, preg_match_all('/<input[^>]+data-period-input=/', $response->getContent()));
+        $this->assertDatabaseHas('period_plan_overrides', [
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 25,
+            'period_2_amount' => 25,
+            'created_by' => $this->financeHead->id,
+            'updated_by' => $this->financeHead->id,
+        ]);
+    }
+
+    public function test_period_one_two_page_does_not_replace_saved_period_amounts(): void
+    {
+        $this->withoutVite();
+        PlanningYear::query()->whereKey(1)->update(['status' => PlanningYear::STATUS_SAVED]);
+        DB::table('period_plan_overrides')->insert([
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 10,
+            'period_2_amount' => 35,
+            'created_by' => $this->financeHead->id,
+            'updated_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.manage-plan.period-1-2', 1))
+            ->assertOk();
+
+        $this->assertDatabaseCount('period_plan_overrides', 1);
+        $this->assertDatabaseHas('period_plan_overrides', [
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 10,
+            'period_2_amount' => 35,
+        ]);
     }
 
     public function test_period_override_rejects_negative_amounts(): void

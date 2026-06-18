@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PeriodPlanOverride;
 use App\Models\PlanningYear;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class PeriodPlanReportBuilder
 {
@@ -39,6 +40,32 @@ class PeriodPlanReportBuilder
             ],
             'warnings' => $yearlyReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []],
         ];
+    }
+
+    public function ensureDefaultOverrides(PlanningYear $planningYear, ?int $userId = null): int
+    {
+        $now = now();
+        $rows = collect($this->buildForPlanningYear($planningYear)['rows'] ?? [])
+            ->filter(fn (array $row): bool => ! $row['is_group']
+                && ! $row['has_override']
+                && (int) $row['chart_of_account_id'] > 0)
+            ->map(fn (array $row): array => [
+                'planning_year_id' => $planningYear->id,
+                'chart_of_account_id' => (int) $row['chart_of_account_id'],
+                'period_1_amount' => (float) $row['period_1_amount'],
+                'period_2_amount' => (float) $row['period_2_amount'],
+                'created_by' => $userId,
+                'updated_by' => $userId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])
+            ->values();
+
+        if ($rows->isEmpty()) {
+            return 0;
+        }
+
+        return DB::table('period_plan_overrides')->insertOrIgnore($rows->all());
     }
 
     public function findEditableRow(PlanningYear $planningYear, string $accountCode): ?array

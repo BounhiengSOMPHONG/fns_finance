@@ -91,6 +91,10 @@ class ManagePlanController extends Controller
 
     public function periodOneTwo(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
     {
+        if ($planningYear->canEditPeriods()) {
+            $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
+        }
+
         $periodReport = $periodPlanReportBuilder->buildForPlanningYear($planningYear);
 
         return view('dashboards.finance_head.manage-plan.period', [

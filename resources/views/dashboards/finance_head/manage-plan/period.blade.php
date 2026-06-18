@@ -83,7 +83,6 @@
                         <col class="period-input-col">
                         <col class="period-money-col">
                         <col class="period-money-col">
-                        <col class="period-status-col">
                     </colgroup>
                     <thead>
                         <tr>
@@ -96,7 +95,6 @@
                             <th colspan="2">ປັບຍອດງວດ</th>
                             <th rowspan="2">ລວມງວດ 1-2</th>
                             <th rowspan="2">ຍອດຄົງເຫຼືອ</th>
-                            <th rowspan="2">ສະຖານະ</th>
                         </tr>
                         <tr>
                             <th>ງວດ 1</th>
@@ -165,12 +163,11 @@
                                 </td>
                                 <td class="num" data-first-half>{{ $money($row['first_half_amount']) }}</td>
                                 <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
-                                <td class="period-row-status" data-period-status>{{ ! empty($row['is_group']) ? 'total' : ($row['has_override'] ? 'saved' : 'default') }}</td>
                             </tr>
                         @empty
                             <tr>
                                 <td class="center">62</td>
-                                <td colspan="10" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
+                                <td colspan="9" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
                             </tr>
                         @endforelse
                         <tr class="period-total-row" data-period-total-row>
@@ -181,7 +178,6 @@
                             <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
                             <td class="num" data-total-first-half>{{ $money($periodTotals['first_half_amount']) }}</td>
                             <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
-                            <td></td>
                         </tr>
                     </tbody>
                 </table>
@@ -354,10 +350,6 @@
         width: 132px;
     }
 
-    .period-status-col {
-        width: 104px;
-    }
-
     .period-report-table th,
     .period-report-table td {
         border: 1px solid #111827;
@@ -419,28 +411,16 @@
         text-align: right;
     }
 
-    .period-data-row.period-invalid {
+    .period-data-row.period-invalid td {
         background: #fff1f2;
-    }
-
-    .period-row-status {
-        color: #64748b;
-        font-size: .72rem;
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    .period-row-status.is-saving {
-        color: #0369a1;
-    }
-
-    .period-row-status.is-saved {
-        color: #047857;
-    }
-
-    .period-row-status.is-error {
         color: #b91c1c;
-        white-space: normal;
+    }
+
+    .period-data-row.period-invalid .period-money-input {
+        background: #fef2f2;
+        border-color: #dc2626;
+        color: #b91c1c;
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, .12);
     }
 
     .period-total-row td {
@@ -504,11 +484,6 @@
                 }
 
                 return child.dataset.accountCode.startsWith(parent.dataset.accountCode.slice(0, prefixLength(parent)));
-            };
-            const setStatus = (row, message, className = '') => {
-                const status = row.querySelector('[data-period-status]');
-                status.className = `period-row-status ${className}`.trim();
-                status.textContent = message;
             };
             const updateGroupRows = () => {
                 rows.filter(isGroup).forEach((row) => {
@@ -574,12 +549,10 @@
                 updateTotals();
 
                 if (p1 < 0 || p2 < 0) {
-                    setStatus(row, '>= 0', 'is-error');
                     return null;
                 }
 
                 if (first > yearly) {
-                    setStatus(row, 'ເກີນງົບປີ', 'is-error');
                     return null;
                 }
 
@@ -593,8 +566,6 @@
                 if (! payload) {
                     return;
                 }
-
-                setStatus(row, 'saving', 'is-saving');
 
                 try {
                     const response = await fetch(row.dataset.saveUrl, {
@@ -614,10 +585,10 @@
 
                     row.querySelector('[data-first-half]').textContent = formatMoney(data.row.first_half_amount);
                     row.querySelector('[data-second-half]').textContent = formatMoney(data.row.second_half_amount);
-                    setStatus(row, 'saved', 'is-saved');
+                    row.classList.remove('period-invalid');
                     updateTotals();
                 } catch (error) {
-                    setStatus(row, error.message || 'error', 'is-error');
+                    row.classList.add('period-invalid');
                 }
             };
 
@@ -637,7 +608,6 @@
                             return;
                         }
 
-                        setStatus(row, 'changed');
                         saveTimer = window.setTimeout(() => saveRow(row), 650);
                     });
                 });

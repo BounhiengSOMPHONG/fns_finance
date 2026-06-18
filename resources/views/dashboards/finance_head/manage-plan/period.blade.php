@@ -326,6 +326,13 @@
         font-size: .86rem;
     }
 
+    @media screen {
+        .period-official-header,
+        .period-title-block {
+            display: none;
+        }
+    }
+
     .period-title-block {
         margin: 0 auto 1rem;
         text-align: center;

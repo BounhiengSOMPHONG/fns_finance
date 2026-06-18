@@ -170,10 +170,15 @@ class ManagePlanController extends Controller
         ]);
     }
 
-    public function savePeriodOneTwo(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
+    public function savePeriodOneTwo(Request $request, PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
     {
         if (! $planningYear->canEditPeriodOneTwo()) {
             return back()->with('error', 'ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະບັນທຶກງວດ 1-2 ໄດ້');
+        }
+
+        $error = $this->persistPeriodOneTwoRows($request, $planningYear, $periodPlanReportBuilder);
+        if ($error) {
+            return back()->with('error', $error);
         }
 
         $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
@@ -298,10 +303,15 @@ class ManagePlanController extends Controller
         ]);
     }
 
-    public function savePeriodThreeFour(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
+    public function savePeriodThreeFour(Request $request, PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)
     {
         if (! $planningYear->canEditPeriodThreeFour()) {
             return back()->with('error', 'ຕ້ອງບັນທຶກງວດ 1-2 ກ່ອນ ຈຶ່ງຈະບັນທຶກງວດ 3-4 ໄດ້');
+        }
+
+        $error = $this->persistPeriodThreeFourRows($request, $planningYear, $periodPlanReportBuilder);
+        if ($error) {
+            return back()->with('error', $error);
         }
 
         $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
@@ -329,6 +339,137 @@ class ManagePlanController extends Controller
         ]);
 
         return back()->with('success', 'ບັນທຶກງວດ 3-4 ສຳເລັດ');
+    }
+
+    private function persistPeriodOneTwoRows(
+        Request $request,
+        PlanningYear $planningYear,
+        PeriodPlanReportBuilder $periodPlanReportBuilder
+    ): ?string {
+        $rows = $this->periodRowsPayload($request);
+        if ($rows === null) {
+            return 'ຮູບແບບຂໍ້ມູນງວດ 1-2 ບໍ່ຖືກຕ້ອງ ກະລຸນາລອງບັນທຶກໃໝ່';
+        }
+
+        foreach ($rows as $payload) {
+            $accountCode = (string) ($payload['account_code'] ?? '');
+            $row = $periodPlanReportBuilder->findEditableRow($planningYear, $accountCode);
+            if (! $row) {
+                return 'ບໍ່ພົບບັນຊີວິຊາການບາງແຖວ ກະລຸນາໂຫຼດໜ້າໃໝ່';
+            }
+
+            $period1Amount = $this->payloadAmount($payload, 'period_1_amount');
+            $period2Amount = $this->payloadAmount($payload, 'period_2_amount');
+            if ($period1Amount === null || $period2Amount === null) {
+                return 'ຍອດງວດ 1-2 ຕ້ອງເປັນຕົວເລກ';
+            }
+
+            $yearlyAmount = (float) $row['yearly_amount'];
+            if (($period1Amount + $period2Amount) > $yearlyAmount) {
+                return 'ຍອດງວດ 1 ແລະ ງວດ 2 ຕ້ອງບໍ່ເກີນງົບປີ';
+            }
+
+            $override = PeriodPlanOverride::query()->firstOrNew([
+                'planning_year_id' => $planningYear->id,
+                'chart_of_account_id' => (int) $row['chart_of_account_id'],
+            ]);
+
+            if (! $override->exists) {
+                $override->created_by = Auth::id();
+            }
+
+            $override->period_1_amount = $period1Amount;
+            $override->period_2_amount = $period2Amount;
+            $override->updated_by = Auth::id();
+            $override->save();
+        }
+
+        return null;
+    }
+
+    private function persistPeriodThreeFourRows(
+        Request $request,
+        PlanningYear $planningYear,
+        PeriodPlanReportBuilder $periodPlanReportBuilder
+    ): ?string {
+        $rows = $this->periodRowsPayload($request);
+        if ($rows === null) {
+            return 'ຮູບແບບຂໍ້ມູນງວດ 3-4 ບໍ່ຖືກຕ້ອງ ກະລຸນາລອງບັນທຶກໃໝ່';
+        }
+
+        foreach ($rows as $payload) {
+            $accountCode = (string) ($payload['account_code'] ?? '');
+            $row = $periodPlanReportBuilder->findEditableRow($planningYear, $accountCode);
+            if (! $row) {
+                return 'ບໍ່ພົບບັນຊີວິຊາການບາງແຖວ ກະລຸນາໂຫຼດໜ້າໃໝ່';
+            }
+
+            $averageIncreaseAmount = $this->payloadAmount($payload, 'average_increase_amount');
+            $averageDecreaseAmount = $this->payloadAmount($payload, 'average_decrease_amount');
+            $requestedDecreaseAmount = $this->payloadAmount($payload, 'requested_decrease_amount');
+            $requestedIncreaseAmount = $this->payloadAmount($payload, 'requested_increase_amount');
+            $period3Amount = $this->payloadAmount($payload, 'period_3_amount');
+            $period4Amount = $this->payloadAmount($payload, 'period_4_amount');
+
+            if (in_array(null, [
+                $averageIncreaseAmount,
+                $averageDecreaseAmount,
+                $requestedDecreaseAmount,
+                $requestedIncreaseAmount,
+                $period3Amount,
+                $period4Amount,
+            ], true)) {
+                return 'ຍອດງວດ 3-4 ຕ້ອງເປັນຕົວເລກ';
+            }
+
+            $secondHalfAmount = (float) $row['second_half_amount'];
+            if (($averageDecreaseAmount + $requestedDecreaseAmount) > ($secondHalfAmount + $averageIncreaseAmount + $requestedIncreaseAmount)) {
+                return 'ຍອດຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີຫຼັງລວມຍອດເພີ່ມ';
+            }
+
+            $override = PeriodPlanOverride::query()->firstOrNew([
+                'planning_year_id' => $planningYear->id,
+                'chart_of_account_id' => (int) $row['chart_of_account_id'],
+            ]);
+
+            if (! $override->exists) {
+                $override->period_1_amount = (float) $row['period_1_amount'];
+                $override->period_2_amount = (float) $row['period_2_amount'];
+                $override->created_by = Auth::id();
+            }
+
+            $override->average_increase_amount = $averageIncreaseAmount;
+            $override->average_decrease_amount = $averageDecreaseAmount;
+            $override->requested_decrease_amount = $requestedDecreaseAmount;
+            $override->requested_increase_amount = $requestedIncreaseAmount;
+            $override->period_3_amount = $period3Amount;
+            $override->period_4_amount = $period4Amount;
+            $override->updated_by = Auth::id();
+            $override->save();
+        }
+
+        return null;
+    }
+
+    private function periodRowsPayload(Request $request): ?array
+    {
+        $payload = $request->input('period_rows');
+        if ($payload === null || $payload === '') {
+            return [];
+        }
+
+        $rows = json_decode((string) $payload, true);
+
+        return is_array($rows) ? $rows : null;
+    }
+
+    private function payloadAmount(array $payload, string $key): ?float
+    {
+        if (! array_key_exists($key, $payload) || ! is_numeric($payload[$key]) || (float) $payload[$key] < 0) {
+            return null;
+        }
+
+        return (float) $payload[$key];
     }
 
     public function store(Request $request)

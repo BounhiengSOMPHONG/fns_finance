@@ -54,6 +54,7 @@
                 @if($canEditPeriod)
                     <form method="POST" action="{{ $savePeriodRoute }}" data-save-period-form>
                         @csrf
+                        <input type="hidden" name="period_rows" value="[]" data-period-rows-payload>
                         <button type="submit" class="period-btn period-btn-success" data-save-period-button>
                             ບັນທຶກ{{ $periodTitle }}
                         </button>
@@ -223,16 +224,16 @@
                                 data-level="{{ (int) $row['level'] }}"
                                 data-is-group="{{ ! empty($row['is_group']) ? '1' : '0' }}"
                                 data-yearly-amount="{{ $inputValue($row['yearly_amount']) }}"
-                                data-period-1-amount="{{ $inputValue($row['period_1_amount']) }}"
-                                data-period-2-amount="{{ $inputValue($row['period_2_amount']) }}"
+                                data-period-one-amount="{{ $inputValue($row['period_1_amount']) }}"
+                                data-period-two-amount="{{ $inputValue($row['period_2_amount']) }}"
                                 data-second-half-amount="{{ $inputValue($row['second_half_amount']) }}"
                                 data-average-increase-amount="{{ $inputValue($row['average_increase_amount']) }}"
                                 data-average-decrease-amount="{{ $inputValue($row['average_decrease_amount']) }}"
                                 data-requested-decrease-amount="{{ $inputValue($row['requested_decrease_amount']) }}"
                                 data-requested-increase-amount="{{ $inputValue($row['requested_increase_amount']) }}"
                                 data-adjusted-second-half-amount="{{ $inputValue($row['adjusted_second_half_amount']) }}"
-                                data-period-3-amount="{{ $inputValue($row['period_3_amount']) }}"
-                                data-period-4-amount="{{ $inputValue($row['period_4_amount']) }}"
+                                data-period-three-amount="{{ $inputValue($row['period_3_amount']) }}"
+                                data-period-four-amount="{{ $inputValue($row['period_4_amount']) }}"
                                 data-save-url="{{ str_replace('__ACCOUNT__', rawurlencode((string) $row['account_code']), $saveUrlTemplate) }}">
                                 @foreach($codeParts as $partIndex => $part)
                                     <td class="center period-code-cell {{ $partIndex === $level ? 'period-code-main' : '' }}">
@@ -976,19 +977,20 @@
             const printButton = document.querySelector('[data-print-period]');
             const saveForm = document.querySelector('[data-save-period-form]');
             const saveButton = document.querySelector('[data-save-period-button]');
+            const periodRowsPayload = document.querySelector('[data-period-rows-payload]');
             const periodKey = @json($periodKey);
             const canEdit = @json($canEditPeriod);
             const csrfToken = @json(csrf_token());
             const rows = Array.from(document.querySelectorAll('[data-period-row]'));
             const amountDatasetKeys = {
-                period_1_amount: 'period1Amount',
-                period_2_amount: 'period2Amount',
+                period_1_amount: 'periodOneAmount',
+                period_2_amount: 'periodTwoAmount',
                 average_increase_amount: 'averageIncreaseAmount',
                 average_decrease_amount: 'averageDecreaseAmount',
                 requested_decrease_amount: 'requestedDecreaseAmount',
                 requested_increase_amount: 'requestedIncreaseAmount',
-                period_3_amount: 'period3Amount',
-                period_4_amount: 'period4Amount',
+                period_3_amount: 'periodThreeAmount',
+                period_4_amount: 'periodFourAmount',
             };
             const formatMoney = (value) => new Intl.NumberFormat('de-DE', {
                 maximumFractionDigits: 0,
@@ -1248,6 +1250,16 @@
                     return false;
                 }
             };
+            const collectRowPayloads = (editableRows) => editableRows
+                .map((row) => {
+                    const payload = recalculate(row);
+
+                    return payload ? {
+                        account_code: row.dataset.accountCode,
+                        ...payload,
+                    } : null;
+                })
+                .filter(Boolean);
 
             rows.forEach((row) => {
                 recalculate(row);
@@ -1290,18 +1302,22 @@
                     }
 
                     const editableRows = rows.filter((row) => ! isGroup(row) && row.querySelector('[data-period-input]'));
-                    const results = await Promise.all(editableRows.map((row) => saveRow(row)));
+                    const rowPayloads = collectRowPayloads(editableRows);
+                    if (rowPayloads.length !== editableRows.length) {
+                        if (saveButton) {
+                            saveButton.disabled = false;
+                            saveButton.textContent = @json('ບັນທຶກ' . $periodTitle);
+                        }
 
-                    if (results.every(Boolean)) {
-                        saveForm.dataset.readyToSubmit = '1';
-                        saveForm.submit();
                         return;
                     }
 
-                    if (saveButton) {
-                        saveButton.disabled = false;
-                        saveButton.textContent = @json('ບັນທຶກ' . $periodTitle);
+                    if (periodRowsPayload) {
+                        periodRowsPayload.value = JSON.stringify(rowPayloads);
                     }
+
+                    saveForm.dataset.readyToSubmit = '1';
+                    saveForm.submit();
                 });
             }
         });

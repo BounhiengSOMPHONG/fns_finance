@@ -683,6 +683,11 @@
         font-weight: 900;
     }
 
+    .period-total-row td.period-total-invalid {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
     .period-total-label {
         font-weight: 900;
         text-align: center;
@@ -1043,6 +1048,31 @@
                     cell.textContent = formatter(value);
                 }
             };
+            const setTotalInvalid = (selector, isInvalid) => {
+                const cell = document.querySelector(selector);
+                if (cell) {
+                    cell.classList.toggle('period-total-invalid', isInvalid);
+                }
+            };
+            const updatePeriodBalanceState = (totals) => {
+                if (periodKey !== 'period-3-4') {
+                    return true;
+                }
+
+                const averageBalanced = Math.abs(totals.averageIncrease - totals.averageDecrease) <= 0.01;
+                const requestedBalanced = Math.abs(totals.increase - totals.decrease) <= 0.01;
+
+                setTotalInvalid('[data-total-average-increase]', ! averageBalanced);
+                setTotalInvalid('[data-total-average-decrease]', ! averageBalanced);
+                setTotalInvalid('[data-total-requested-increase]', ! requestedBalanced);
+                setTotalInvalid('[data-total-requested-decrease]', ! requestedBalanced);
+
+                if (saveButton && canEdit) {
+                    saveButton.disabled = ! averageBalanced || ! requestedBalanced;
+                }
+
+                return averageBalanced && requestedBalanced;
+            };
             const prefixLength = (row) => Math.min((Number.parseInt(row.dataset.level || '0', 10) + 1) * 2, row.dataset.accountCode.length);
             const isChildOf = (parent, child) => {
                 if (parent === child || Number.parseInt(child.dataset.level || '0', 10) <= Number.parseInt(parent.dataset.level || '0', 10)) {
@@ -1139,6 +1169,10 @@
                 setTotalText('[data-total-period-4]', totals.p4);
                 setTotalText('[data-total-period-3-4]', totals.p34);
                 setTotalText('[data-total-reduction-percent]', totals.second > 0 ? (totals.decrease / totals.second) * 100 : 0, formatPercent);
+
+                updatePeriodBalanceState(totals);
+
+                return totals;
             };
             const recalculate = (row, changedKey = null) => {
                 if (isGroup(row)) {
@@ -1296,6 +1330,11 @@
                     }
 
                     event.preventDefault();
+                    const totals = updateTotals();
+                    if (periodKey === 'period-3-4' && ! updatePeriodBalanceState(totals)) {
+                        return;
+                    }
+
                     if (saveButton) {
                         saveButton.disabled = true;
                         saveButton.textContent = 'ກຳລັງບັນທຶກ...';

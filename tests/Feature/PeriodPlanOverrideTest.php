@@ -367,6 +367,73 @@ class PeriodPlanOverrideTest extends TestCase
             ->assertStatus(423);
     }
 
+    public function test_period_three_four_final_save_accepts_balanced_average_transfer_between_rows(): void
+    {
+        PlanningYear::query()->whereKey(1)->update([
+            'status' => PlanningYear::STATUS_SAVED,
+            'period_1_2_saved_at' => now(),
+        ]);
+        DB::table('chart_of_accounts')->insert([
+            'id' => 5,
+            'account_code' => '62100202',
+            'account_name' => 'Printing',
+            'parent_id' => 3,
+        ]);
+        DB::table('expense_plans')->insert([
+            'id' => 3,
+            'planning_year_id' => 1,
+            'section_id' => 1,
+            'subsection_id' => 1,
+            'plan_detail' => 'Second academic row',
+        ]);
+        DB::table('expense_plan_values')->insert([
+            ['expense_plan_id' => 3, 'field_key' => 'reference', 'value_text' => '62100202'],
+            ['expense_plan_id' => 3, 'field_key' => 'yearly_total', 'value_number' => 100],
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.period-3-4.save', 1), [
+                'period_rows' => json_encode([
+                    [
+                        'account_code' => '62100201',
+                        'average_increase_amount' => 0,
+                        'average_decrease_amount' => 10,
+                        'requested_decrease_amount' => 0,
+                        'requested_increase_amount' => 0,
+                        'period_3_amount' => 20,
+                        'period_4_amount' => 20,
+                    ],
+                    [
+                        'account_code' => '62100202',
+                        'average_increase_amount' => 10,
+                        'average_decrease_amount' => 0,
+                        'requested_decrease_amount' => 0,
+                        'requested_increase_amount' => 0,
+                        'period_3_amount' => 30,
+                        'period_4_amount' => 30,
+                    ],
+                ]),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertNotNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
+        $this->assertDatabaseHas('period_plan_overrides', [
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'average_decrease_amount' => 10,
+            'period_3_amount' => 20,
+            'period_4_amount' => 20,
+        ]);
+        $this->assertDatabaseHas('period_plan_overrides', [
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 5,
+            'average_increase_amount' => 10,
+            'period_3_amount' => 30,
+            'period_4_amount' => 30,
+        ]);
+    }
+
     public function test_saved_period_three_four_page_is_read_only_and_rejects_more_edits(): void
     {
         $this->withoutVite();

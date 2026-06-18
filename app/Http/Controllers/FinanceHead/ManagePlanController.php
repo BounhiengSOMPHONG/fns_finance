@@ -221,6 +221,8 @@ class ManagePlanController extends Controller
         );
 
         $data = $request->validate([
+            'average_increase_amount' => ['required', 'numeric', 'min:0'],
+            'average_decrease_amount' => ['required', 'numeric', 'min:0'],
             'requested_decrease_amount' => ['required', 'numeric', 'min:0'],
             'requested_increase_amount' => ['required', 'numeric', 'min:0'],
             'period_3_amount' => ['required', 'numeric', 'min:0'],
@@ -231,21 +233,28 @@ class ManagePlanController extends Controller
         abort_if(! $row, 404, 'ບໍ່ພົບບັນຊີວິຊາການສຳລັບແຜນນີ້');
 
         $secondHalfAmount = (float) $row['second_half_amount'];
+        $averageIncreaseAmount = (float) $data['average_increase_amount'];
+        $averageDecreaseAmount = (float) $data['average_decrease_amount'];
         $requestedDecreaseAmount = (float) $data['requested_decrease_amount'];
         $requestedIncreaseAmount = (float) $data['requested_increase_amount'];
         $period3Amount = (float) $data['period_3_amount'];
         $period4Amount = (float) $data['period_4_amount'];
 
-        if ($requestedDecreaseAmount > $secondHalfAmount) {
+        if (($averageDecreaseAmount + $requestedDecreaseAmount) > ($secondHalfAmount + $averageIncreaseAmount + $requestedIncreaseAmount)) {
             return response()->json([
-                'message' => 'ແຜນຂໍຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີ',
+                'message' => 'ຍອດຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີຫຼັງລວມຍອດເພີ່ມ',
                 'errors' => [
-                    'requested_decrease_amount' => ['ແຜນຂໍຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີ'],
+                    'average_decrease_amount' => ['ຍອດຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີຫຼັງລວມຍອດເພີ່ມ'],
+                    'requested_decrease_amount' => ['ຍອດຫຼຸດຕ້ອງບໍ່ເກີນແຜນ 06 ເດືອນທ້າຍປີຫຼັງລວມຍອດເພີ່ມ'],
                 ],
             ], 422);
         }
 
-        $adjustedSecondHalfAmount = $secondHalfAmount - $requestedDecreaseAmount + $requestedIncreaseAmount;
+        $adjustedSecondHalfAmount = $secondHalfAmount
+            - $averageDecreaseAmount
+            + $averageIncreaseAmount
+            - $requestedDecreaseAmount
+            + $requestedIncreaseAmount;
         $period34TotalAmount = $period3Amount + $period4Amount;
 
         if (abs($period34TotalAmount - $adjustedSecondHalfAmount) > 0.01) {
@@ -269,6 +278,8 @@ class ManagePlanController extends Controller
             $override->created_by = Auth::id();
         }
 
+        $override->average_increase_amount = $averageIncreaseAmount;
+        $override->average_decrease_amount = $averageDecreaseAmount;
         $override->requested_decrease_amount = $requestedDecreaseAmount;
         $override->requested_increase_amount = $requestedIncreaseAmount;
         $override->period_3_amount = $period3Amount;
@@ -281,6 +292,8 @@ class ManagePlanController extends Controller
             'row' => [
                 'account_code' => $accountCode,
                 'second_half_amount' => $secondHalfAmount,
+                'average_increase_amount' => $averageIncreaseAmount,
+                'average_decrease_amount' => $averageDecreaseAmount,
                 'requested_decrease_amount' => $requestedDecreaseAmount,
                 'requested_increase_amount' => $requestedIncreaseAmount,
                 'adjusted_second_half_amount' => $adjustedSecondHalfAmount,
@@ -302,6 +315,16 @@ class ManagePlanController extends Controller
         }
 
         $periodPlanReportBuilder->ensureDefaultOverrides($planningYear, Auth::id());
+        $periodReport = $periodPlanReportBuilder->buildForPlanningYear($planningYear);
+        $totals = $periodReport['totals'] ?? [];
+
+        if (abs(((float) ($totals['average_increase_amount'] ?? 0)) - ((float) ($totals['average_decrease_amount'] ?? 0))) > 0.01) {
+            return back()->with('error', 'ຍອດເພີ່ມ ແລະ ຍອດຫຼຸດ ໃນແຜນດັດແກ້ສະເລ່ຍຕ້ອງເທົ່າກັນ');
+        }
+
+        if (abs(((float) ($totals['requested_increase_amount'] ?? 0)) - ((float) ($totals['requested_decrease_amount'] ?? 0))) > 0.01) {
+            return back()->with('error', 'ຍອດແຜນຂໍເພີ່ມ ແລະ ຍອດແຜນຂໍຫຼຸດຕ້ອງເທົ່າກັນ');
+        }
 
         $planningYear->update([
             'period_3_4_saved_at' => now(),

@@ -102,6 +102,8 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertSame(25.0, $rows->get('62100201')['period_2_amount']);
         $this->assertSame(50.0, $rows->get('62100201')['first_half_amount']);
         $this->assertSame(50.0, $rows->get('62100201')['second_half_amount']);
+        $this->assertSame(0.0, $rows->get('62100201')['average_increase_amount']);
+        $this->assertSame(0.0, $rows->get('62100201')['average_decrease_amount']);
         $this->assertSame(25.0, $rows->get('62100201')['period_3_amount']);
         $this->assertSame(25.0, $rows->get('62100201')['period_4_amount']);
         $this->assertSame(50.0, $rows->get('62100201')['adjusted_second_half_amount']);
@@ -131,10 +133,12 @@ class PlanYearReportBuilderTest extends TestCase
             'chart_of_account_id' => 7,
             'period_1_amount' => 10,
             'period_2_amount' => 35,
+            'average_increase_amount' => 3,
+            'average_decrease_amount' => 8,
             'requested_decrease_amount' => 5,
             'requested_increase_amount' => 15,
-            'period_3_amount' => 30,
-            'period_4_amount' => 35,
+            'period_3_amount' => 28,
+            'period_4_amount' => 32,
         ]);
 
         $report = app(PeriodPlanReportBuilder::class)->buildForPlanningYear(PlanningYear::findOrFail(1));
@@ -144,11 +148,13 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertSame(35.0, $row['period_2_amount']);
         $this->assertSame(45.0, $row['first_half_amount']);
         $this->assertSame(55.0, $row['second_half_amount']);
+        $this->assertSame(3.0, $row['average_increase_amount']);
+        $this->assertSame(8.0, $row['average_decrease_amount']);
         $this->assertSame(5.0, $row['requested_decrease_amount']);
         $this->assertSame(15.0, $row['requested_increase_amount']);
-        $this->assertSame(65.0, $row['adjusted_second_half_amount']);
-        $this->assertSame(30.0, $row['period_3_amount']);
-        $this->assertSame(35.0, $row['period_4_amount']);
+        $this->assertSame(60.0, $row['adjusted_second_half_amount']);
+        $this->assertSame(28.0, $row['period_3_amount']);
+        $this->assertSame(32.0, $row['period_4_amount']);
         $this->assertTrue($row['has_override']);
     }
 
@@ -231,6 +237,8 @@ class PlanYearReportBuilderTest extends TestCase
             $table->unsignedInteger('chart_of_account_id');
             $table->decimal('period_1_amount', 18, 2)->default(0);
             $table->decimal('period_2_amount', 18, 2)->default(0);
+            $table->decimal('average_increase_amount', 18, 2)->default(0);
+            $table->decimal('average_decrease_amount', 18, 2)->default(0);
             $table->decimal('requested_decrease_amount', 18, 2)->default(0);
             $table->decimal('requested_increase_amount', 18, 2)->default(0);
             $table->decimal('period_3_amount', 18, 2)->default(0);

@@ -12,6 +12,8 @@
         'period_2_amount' => 0,
         'first_half_amount' => 0,
         'second_half_amount' => 0,
+        'average_increase_amount' => 0,
+        'average_decrease_amount' => 0,
         'requested_decrease_amount' => 0,
         'requested_increase_amount' => 0,
         'adjusted_second_half_amount' => 0,
@@ -183,11 +185,11 @@
                         <tr class="period-total-row" data-period-total-row>
                             <td colspan="4"></td>
                             <td class="period-total-label">ລວມຍອດເງິນພາກສ່ວນ</td>
-                            <td class="num" data-total-yearly>{{ $money($periodTotals['yearly_amount']) }}</td>
+                                <td class="num" data-total-yearly>{{ $money($periodTotals['yearly_amount']) }}</td>
                             @if($isPeriodThreeFour)
                                 <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
-                                <td class="num" data-total-average-increase>{{ $money($periodTotals['requested_increase_amount']) }}</td>
-                                <td class="num" data-total-average-decrease>{{ $money($periodTotals['requested_decrease_amount']) }}</td>
+                                <td class="num" data-total-average-increase>{{ $money($periodTotals['average_increase_amount']) }}</td>
+                                <td class="num" data-total-average-decrease>{{ $money($periodTotals['average_decrease_amount']) }}</td>
                                 <td class="num" data-total-requested-decrease>{{ $money($periodTotals['requested_decrease_amount']) }}</td>
                                 <td class="num" data-total-requested-increase>{{ $money($periodTotals['requested_increase_amount']) }}</td>
                                 <td class="num" data-total-adjusted-second-half>{{ $money($periodTotals['adjusted_second_half_amount']) }}</td>
@@ -224,6 +226,8 @@
                                 data-period-1-amount="{{ $inputValue($row['period_1_amount']) }}"
                                 data-period-2-amount="{{ $inputValue($row['period_2_amount']) }}"
                                 data-second-half-amount="{{ $inputValue($row['second_half_amount']) }}"
+                                data-average-increase-amount="{{ $inputValue($row['average_increase_amount']) }}"
+                                data-average-decrease-amount="{{ $inputValue($row['average_decrease_amount']) }}"
                                 data-requested-decrease-amount="{{ $inputValue($row['requested_decrease_amount']) }}"
                                 data-requested-increase-amount="{{ $inputValue($row['requested_increase_amount']) }}"
                                 data-adjusted-second-half-amount="{{ $inputValue($row['adjusted_second_half_amount']) }}"
@@ -239,8 +243,34 @@
                                 <td class="num" data-yearly-display>{{ $money($row['yearly_amount']) }}</td>
                                 @if($isPeriodThreeFour)
                                     <td class="num" data-second-half>{{ $money($row['second_half_amount']) }}</td>
-                                    <td class="num" data-average-increase>{{ $money($row['requested_increase_amount']) }}</td>
-                                    <td class="num" data-average-decrease>{{ $money($row['requested_decrease_amount']) }}</td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['average_increase_amount']) }}"
+                                                data-period-input="average_increase_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="average_increase_amount">{{ $money($row['average_increase_amount']) }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($isEditableRow)
+                                            <input
+                                                class="period-money-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9.]*"
+                                                value="{{ $inputMoney($row['average_decrease_amount']) }}"
+                                                data-period-input="average_decrease_amount"
+                                            >
+                                        @else
+                                            <span class="period-readonly-amount" data-period-display="average_decrease_amount">{{ $money($row['average_decrease_amount']) }}</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if($isEditableRow)
                                             <input
@@ -953,6 +983,8 @@
             const amountDatasetKeys = {
                 period_1_amount: 'period1Amount',
                 period_2_amount: 'period2Amount',
+                average_increase_amount: 'averageIncreaseAmount',
+                average_decrease_amount: 'averageDecreaseAmount',
                 requested_decrease_amount: 'requestedDecreaseAmount',
                 requested_increase_amount: 'requestedIncreaseAmount',
                 period_3_amount: 'period3Amount',
@@ -1029,9 +1061,11 @@
                     const p2 = children.reduce((sum, child) => sum + rowAmount(child, 'period_2_amount'), 0);
                     const first = p1 + p2;
                     const second = yearly - first;
+                    const averageIncrease = children.reduce((sum, child) => sum + rowAmount(child, 'average_increase_amount'), 0);
+                    const averageDecrease = children.reduce((sum, child) => sum + rowAmount(child, 'average_decrease_amount'), 0);
                     const decrease = children.reduce((sum, child) => sum + rowAmount(child, 'requested_decrease_amount'), 0);
                     const increase = children.reduce((sum, child) => sum + rowAmount(child, 'requested_increase_amount'), 0);
-                    const adjusted = second - decrease + increase;
+                    const adjusted = second - averageDecrease + averageIncrease - decrease + increase;
                     const p3 = children.reduce((sum, child) => sum + rowAmount(child, 'period_3_amount'), 0);
                     const p4 = children.reduce((sum, child) => sum + rowAmount(child, 'period_4_amount'), 0);
                     const p34 = p3 + p4;
@@ -1039,6 +1073,8 @@
 
                     setRowAmount(row, 'period_1_amount', p1);
                     setRowAmount(row, 'period_2_amount', p2);
+                    setRowAmount(row, 'average_increase_amount', averageIncrease);
+                    setRowAmount(row, 'average_decrease_amount', averageDecrease);
                     setRowAmount(row, 'requested_decrease_amount', decrease);
                     setRowAmount(row, 'requested_increase_amount', increase);
                     setRowAmount(row, 'period_3_amount', p3);
@@ -1046,8 +1082,6 @@
                     row.dataset.adjustedSecondHalfAmount = String(adjusted);
                     setCellText(row, '[data-first-half]', first);
                     setCellText(row, '[data-second-half]', second);
-                    setCellText(row, '[data-average-increase]', increase);
-                    setCellText(row, '[data-average-decrease]', decrease);
                     setCellText(row, '[data-adjusted-second-half]', adjusted);
                     setCellText(row, '[data-period-3-4-total]', p34);
                     setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
@@ -1066,9 +1100,11 @@
                     const p2 = rowAmount(row, 'period_2_amount');
                     const first = p1 + p2;
                     const second = yearly - first;
+                    const averageIncrease = rowAmount(row, 'average_increase_amount');
+                    const averageDecrease = rowAmount(row, 'average_decrease_amount');
                     const decrease = rowAmount(row, 'requested_decrease_amount');
                     const increase = rowAmount(row, 'requested_increase_amount');
-                    const adjusted = second - decrease + increase;
+                    const adjusted = second - averageDecrease + averageIncrease - decrease + increase;
                     const p3 = rowAmount(row, 'period_3_amount');
                     const p4 = rowAmount(row, 'period_4_amount');
                     sum.yearly += yearly;
@@ -1076,6 +1112,8 @@
                     sum.p2 += p2;
                     sum.first += first;
                     sum.second += second;
+                    sum.averageIncrease += averageIncrease;
+                    sum.averageDecrease += averageDecrease;
                     sum.decrease += decrease;
                     sum.increase += increase;
                     sum.adjusted += adjusted;
@@ -1083,15 +1121,15 @@
                     sum.p4 += p4;
                     sum.p34 += p3 + p4;
                     return sum;
-                }, { yearly: 0, p1: 0, p2: 0, first: 0, second: 0, decrease: 0, increase: 0, adjusted: 0, p3: 0, p4: 0, p34: 0 });
+                }, { yearly: 0, p1: 0, p2: 0, first: 0, second: 0, averageIncrease: 0, averageDecrease: 0, decrease: 0, increase: 0, adjusted: 0, p3: 0, p4: 0, p34: 0 });
 
                 setTotalText('[data-total-yearly]', totals.yearly);
                 setTotalText('[data-total-period-1]', totals.p1);
                 setTotalText('[data-total-period-2]', totals.p2);
                 setTotalText('[data-total-first-half]', totals.first);
                 setTotalText('[data-total-second-half]', totals.second);
-                setTotalText('[data-total-average-increase]', totals.increase);
-                setTotalText('[data-total-average-decrease]', totals.decrease);
+                setTotalText('[data-total-average-increase]', totals.averageIncrease);
+                setTotalText('[data-total-average-decrease]', totals.averageDecrease);
                 setTotalText('[data-total-requested-decrease]', totals.decrease);
                 setTotalText('[data-total-requested-increase]', totals.increase);
                 setTotalText('[data-total-adjusted-second-half]', totals.adjusted);
@@ -1111,9 +1149,11 @@
                 const p2 = rowAmount(row, 'period_2_amount');
                 const first = p1 + p2;
                 const second = yearly - first;
+                const averageIncrease = rowAmount(row, 'average_increase_amount');
+                const averageDecrease = rowAmount(row, 'average_decrease_amount');
                 const decrease = rowAmount(row, 'requested_decrease_amount');
                 const increase = rowAmount(row, 'requested_increase_amount');
-                const adjusted = second - decrease + increase;
+                const adjusted = second - averageDecrease + averageIncrease - decrease + increase;
                 const p3 = rowAmount(row, 'period_3_amount');
                 const p4 = rowAmount(row, 'period_4_amount');
                 const p34 = p3 + p4;
@@ -1121,6 +1161,8 @@
 
                 setRowAmount(row, 'period_1_amount', p1);
                 setRowAmount(row, 'period_2_amount', p2);
+                setRowAmount(row, 'average_increase_amount', averageIncrease);
+                setRowAmount(row, 'average_decrease_amount', averageDecrease);
                 setRowAmount(row, 'requested_decrease_amount', decrease);
                 setRowAmount(row, 'requested_increase_amount', increase);
                 setRowAmount(row, 'period_3_amount', p3);
@@ -1128,14 +1170,12 @@
                 row.dataset.adjustedSecondHalfAmount = String(adjusted);
                 setCellText(row, '[data-first-half]', first);
                 setCellText(row, '[data-second-half]', second);
-                setCellText(row, '[data-average-increase]', increase);
-                setCellText(row, '[data-average-decrease]', decrease);
                 setCellText(row, '[data-adjusted-second-half]', adjusted);
                 setCellText(row, '[data-period-3-4-total]', p34);
                 setCellText(row, '[data-reduction-percent]', reductionPercent, formatPercent);
 
                 const invalidFirstHalf = p1 < 0 || p2 < 0 || first > yearly;
-                const invalidSecondHalf = decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || decrease > second || Math.abs(p34 - adjusted) > 0.01;
+                const invalidSecondHalf = averageIncrease < 0 || averageDecrease < 0 || decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || adjusted < 0 || Math.abs(p34 - adjusted) > 0.01;
                 row.classList.toggle('period-invalid', periodKey === 'period-3-4' ? invalidSecondHalf : invalidFirstHalf);
                 updateTotals();
 
@@ -1145,6 +1185,8 @@
                     }
 
                     return {
+                        average_increase_amount: averageIncrease,
+                        average_decrease_amount: averageDecrease,
                         requested_decrease_amount: decrease,
                         requested_increase_amount: increase,
                         period_3_amount: p3,

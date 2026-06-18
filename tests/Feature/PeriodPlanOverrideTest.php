@@ -211,10 +211,12 @@ class PeriodPlanOverrideTest extends TestCase
             ->assertSee('<th class="period-adjust-head">ເພີ່ມ</th>', false)
             ->assertSee('<th class="period-adjust-head">ຫຼຸດ</th>', false)
             ->assertSee('ແຜນປະຕິບັດ<br>ໝົດປີ 2027', false)
+            ->assertSee('data-period-input="average_increase_amount"', false)
+            ->assertSee('data-period-input="average_decrease_amount"', false)
             ->assertSee('data-period-input="requested_decrease_amount"', false)
             ->assertSee('data-period-input="period_4_amount"', false);
 
-        $this->assertSame(4, preg_match_all('/<input[^>]+data-period-input=/', $response->getContent()));
+        $this->assertSame(6, preg_match_all('/<input[^>]+data-period-input=/', $response->getContent()));
     }
 
     public function test_finance_head_can_save_period_three_four_override(): void
@@ -228,6 +230,8 @@ class PeriodPlanOverrideTest extends TestCase
             'chart_of_account_id' => 4,
             'period_1_amount' => 20,
             'period_2_amount' => 30,
+            'average_increase_amount' => 0,
+            'average_decrease_amount' => 0,
             'period_3_amount' => 25,
             'period_4_amount' => 25,
             'created_by' => $this->financeHead->id,
@@ -238,22 +242,26 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-3-4.override', [1, '62100201']), [
+                'average_increase_amount' => 5,
+                'average_decrease_amount' => 15,
                 'requested_decrease_amount' => 10,
                 'requested_increase_amount' => 20,
-                'period_3_amount' => 30,
-                'period_4_amount' => 30,
+                'period_3_amount' => 25,
+                'period_4_amount' => 25,
             ])
             ->assertOk()
-            ->assertJsonPath('row.adjusted_second_half_amount', 60)
-            ->assertJsonPath('row.period_3_4_total_amount', 60);
+            ->assertJsonPath('row.adjusted_second_half_amount', 50)
+            ->assertJsonPath('row.period_3_4_total_amount', 50);
 
         $this->assertDatabaseHas('period_plan_overrides', [
             'planning_year_id' => 1,
             'chart_of_account_id' => 4,
+            'average_increase_amount' => 5,
+            'average_decrease_amount' => 15,
             'requested_decrease_amount' => 10,
             'requested_increase_amount' => 20,
-            'period_3_amount' => 30,
-            'period_4_amount' => 30,
+            'period_3_amount' => 25,
+            'period_4_amount' => 25,
         ]);
     }
 
@@ -266,6 +274,8 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-3-4.override', [1, '62100201']), [
+                'average_increase_amount' => 0,
+                'average_decrease_amount' => 0,
                 'requested_decrease_amount' => -1,
                 'requested_increase_amount' => 0,
                 'period_3_amount' => 25,
@@ -284,6 +294,8 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-3-4.override', [1, '62100201']), [
+                'average_increase_amount' => 0,
+                'average_decrease_amount' => 0,
                 'requested_decrease_amount' => 60,
                 'requested_increase_amount' => 0,
                 'period_3_amount' => 0,
@@ -302,6 +314,8 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-3-4.override', [1, '62100201']), [
+                'average_increase_amount' => 0,
+                'average_decrease_amount' => 0,
                 'requested_decrease_amount' => 10,
                 'requested_increase_amount' => 20,
                 'period_3_amount' => 20,
@@ -317,6 +331,18 @@ class PeriodPlanOverrideTest extends TestCase
             'status' => PlanningYear::STATUS_SAVED,
             'period_1_2_saved_at' => now(),
         ]);
+        DB::table('period_plan_overrides')->insert([
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 25,
+            'period_2_amount' => 25,
+            'period_3_amount' => 25,
+            'period_4_amount' => 25,
+            'created_by' => $this->financeHead->id,
+            'updated_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $this->actingAs($this->financeHead)
             ->post(route('head_of_finance.manage-plan.period-3-4.save', 1))
@@ -326,6 +352,8 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-3-4.override', [1, '62100201']), [
+                'average_increase_amount' => 0,
+                'average_decrease_amount' => 0,
                 'requested_decrease_amount' => 0,
                 'requested_increase_amount' => 0,
                 'period_3_amount' => 25,
@@ -353,12 +381,70 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->patchJson(route('head_of_finance.manage-plan.period-3-4.override', [1, '62100201']), [
+                'average_increase_amount' => 0,
+                'average_decrease_amount' => 0,
                 'requested_decrease_amount' => 0,
                 'requested_increase_amount' => 0,
                 'period_3_amount' => 25,
                 'period_4_amount' => 25,
             ])
             ->assertStatus(423);
+    }
+
+    public function test_period_three_four_final_save_requires_balanced_average_adjustment(): void
+    {
+        PlanningYear::query()->whereKey(1)->update([
+            'status' => PlanningYear::STATUS_SAVED,
+            'period_1_2_saved_at' => now(),
+        ]);
+        DB::table('period_plan_overrides')->insert([
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 25,
+            'period_2_amount' => 25,
+            'average_increase_amount' => 0,
+            'average_decrease_amount' => 10,
+            'period_3_amount' => 20,
+            'period_4_amount' => 20,
+            'created_by' => $this->financeHead->id,
+            'updated_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.period-3-4.save', 1))
+            ->assertSessionHas('error');
+
+        $this->assertNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
+    }
+
+    public function test_period_three_four_final_save_requires_balanced_requested_adjustment(): void
+    {
+        PlanningYear::query()->whereKey(1)->update([
+            'status' => PlanningYear::STATUS_SAVED,
+            'period_1_2_saved_at' => now(),
+        ]);
+        DB::table('period_plan_overrides')->insert([
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 25,
+            'period_2_amount' => 25,
+            'requested_decrease_amount' => 10,
+            'requested_increase_amount' => 0,
+            'period_3_amount' => 20,
+            'period_4_amount' => 20,
+            'created_by' => $this->financeHead->id,
+            'updated_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.period-3-4.save', 1))
+            ->assertSessionHas('error');
+
+        $this->assertNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
     }
 
     public function test_saved_period_one_two_page_is_read_only_and_rejects_more_edits(): void
@@ -590,6 +676,8 @@ class PeriodPlanOverrideTest extends TestCase
             $table->unsignedInteger('chart_of_account_id');
             $table->decimal('period_1_amount', 18, 2)->default(0);
             $table->decimal('period_2_amount', 18, 2)->default(0);
+            $table->decimal('average_increase_amount', 18, 2)->default(0);
+            $table->decimal('average_decrease_amount', 18, 2)->default(0);
             $table->decimal('requested_decrease_amount', 18, 2)->default(0);
             $table->decimal('requested_increase_amount', 18, 2)->default(0);
             $table->decimal('period_3_amount', 18, 2)->default(0);

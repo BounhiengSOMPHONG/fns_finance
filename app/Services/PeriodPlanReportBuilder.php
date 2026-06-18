@@ -37,6 +37,8 @@ class PeriodPlanReportBuilder
                 'period_2_amount' => (float) $totalRows->sum('period_2_amount'),
                 'first_half_amount' => (float) $totalRows->sum('first_half_amount'),
                 'second_half_amount' => (float) $totalRows->sum('second_half_amount'),
+                'average_increase_amount' => (float) $totalRows->sum('average_increase_amount'),
+                'average_decrease_amount' => (float) $totalRows->sum('average_decrease_amount'),
                 'requested_decrease_amount' => (float) $totalRows->sum('requested_decrease_amount'),
                 'requested_increase_amount' => (float) $totalRows->sum('requested_increase_amount'),
                 'adjusted_second_half_amount' => (float) $totalRows->sum('adjusted_second_half_amount'),
@@ -60,6 +62,8 @@ class PeriodPlanReportBuilder
                 'chart_of_account_id' => (int) $row['chart_of_account_id'],
                 'period_1_amount' => (float) $row['period_1_amount'],
                 'period_2_amount' => (float) $row['period_2_amount'],
+                'average_increase_amount' => (float) $row['average_increase_amount'],
+                'average_decrease_amount' => (float) $row['average_decrease_amount'],
                 'requested_decrease_amount' => (float) $row['requested_decrease_amount'],
                 'requested_increase_amount' => (float) $row['requested_increase_amount'],
                 'period_3_amount' => (float) $row['period_3_amount'],
@@ -95,12 +99,20 @@ class PeriodPlanReportBuilder
         $period2Amount = $override ? (float) $override->period_2_amount : $defaultPeriodAmount;
         $firstHalfAmount = $period1Amount + $period2Amount;
         $secondHalfAmount = $yearlyAmount - $firstHalfAmount;
+        $averageIncreaseAmount = $override ? (float) $override->average_increase_amount : 0.0;
+        $averageDecreaseAmount = $override ? (float) $override->average_decrease_amount : 0.0;
         $requestedDecreaseAmount = $override ? (float) $override->requested_decrease_amount : 0.0;
         $requestedIncreaseAmount = $override ? (float) $override->requested_increase_amount : 0.0;
-        $adjustedSecondHalfAmount = $secondHalfAmount - $requestedDecreaseAmount + $requestedIncreaseAmount;
+        $adjustedSecondHalfAmount = $secondHalfAmount
+            - $averageDecreaseAmount
+            + $averageIncreaseAmount
+            - $requestedDecreaseAmount
+            + $requestedIncreaseAmount;
         $hasSecondHalfOverride = $override
             && (
-                abs((float) $override->requested_decrease_amount) > 0.01
+                abs((float) $override->average_increase_amount) > 0.01
+                || abs((float) $override->average_decrease_amount) > 0.01
+                || abs((float) $override->requested_decrease_amount) > 0.01
                 || abs((float) $override->requested_increase_amount) > 0.01
                 || abs((float) $override->period_3_amount) > 0.01
                 || abs((float) $override->period_4_amount) > 0.01
@@ -123,6 +135,8 @@ class PeriodPlanReportBuilder
             'period_2_amount' => $period2Amount,
             'first_half_amount' => $firstHalfAmount,
             'second_half_amount' => $secondHalfAmount,
+            'average_increase_amount' => $averageIncreaseAmount,
+            'average_decrease_amount' => $averageDecreaseAmount,
             'requested_decrease_amount' => $requestedDecreaseAmount,
             'requested_increase_amount' => $requestedIncreaseAmount,
             'adjusted_second_half_amount' => $adjustedSecondHalfAmount,
@@ -162,9 +176,15 @@ class PeriodPlanReportBuilder
             $period2Amount = (float) $children->sum('period_2_amount');
             $firstHalfAmount = $period1Amount + $period2Amount;
             $secondHalfAmount = (float) $row['yearly_amount'] - $firstHalfAmount;
+            $averageIncreaseAmount = (float) $children->sum('average_increase_amount');
+            $averageDecreaseAmount = (float) $children->sum('average_decrease_amount');
             $requestedDecreaseAmount = (float) $children->sum('requested_decrease_amount');
             $requestedIncreaseAmount = (float) $children->sum('requested_increase_amount');
-            $adjustedSecondHalfAmount = $secondHalfAmount - $requestedDecreaseAmount + $requestedIncreaseAmount;
+            $adjustedSecondHalfAmount = $secondHalfAmount
+                - $averageDecreaseAmount
+                + $averageIncreaseAmount
+                - $requestedDecreaseAmount
+                + $requestedIncreaseAmount;
             $period3Amount = (float) $children->sum('period_3_amount');
             $period4Amount = (float) $children->sum('period_4_amount');
             $period34TotalAmount = $period3Amount + $period4Amount;
@@ -173,6 +193,8 @@ class PeriodPlanReportBuilder
             $row['period_2_amount'] = $period2Amount;
             $row['first_half_amount'] = $firstHalfAmount;
             $row['second_half_amount'] = $secondHalfAmount;
+            $row['average_increase_amount'] = $averageIncreaseAmount;
+            $row['average_decrease_amount'] = $averageDecreaseAmount;
             $row['requested_decrease_amount'] = $requestedDecreaseAmount;
             $row['requested_increase_amount'] = $requestedIncreaseAmount;
             $row['adjusted_second_half_amount'] = $adjustedSecondHalfAmount;

@@ -491,7 +491,7 @@ class PeriodPlanOverrideTest extends TestCase
         $this->assertNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
     }
 
-    public function test_period_three_four_final_save_requires_balanced_requested_adjustment(): void
+    public function test_period_three_four_final_save_accepts_requested_decrease_as_real_budget_reduction(): void
     {
         PlanningYear::query()->whereKey(1)->update([
             'status' => PlanningYear::STATUS_SAVED,
@@ -514,9 +514,39 @@ class PeriodPlanOverrideTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->post(route('head_of_finance.manage-plan.period-3-4.save', 1))
-            ->assertSessionHas('error');
+            ->assertRedirect()
+            ->assertSessionHas('success');
 
-        $this->assertNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
+        $this->assertNotNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
+    }
+
+    public function test_period_three_four_final_save_accepts_requested_increase_as_real_budget_increase(): void
+    {
+        PlanningYear::query()->whereKey(1)->update([
+            'status' => PlanningYear::STATUS_SAVED,
+            'period_1_2_saved_at' => now(),
+        ]);
+        DB::table('period_plan_overrides')->insert([
+            'planning_year_id' => 1,
+            'chart_of_account_id' => 4,
+            'period_1_amount' => 25,
+            'period_2_amount' => 25,
+            'requested_decrease_amount' => 0,
+            'requested_increase_amount' => 20,
+            'period_3_amount' => 35,
+            'period_4_amount' => 35,
+            'created_by' => $this->financeHead->id,
+            'updated_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.period-3-4.save', 1))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertNotNull(PlanningYear::findOrFail(1)->period_3_4_saved_at);
     }
 
     public function test_saved_period_one_two_page_is_read_only_and_rejects_more_edits(): void

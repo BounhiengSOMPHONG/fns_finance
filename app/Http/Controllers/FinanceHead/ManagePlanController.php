@@ -322,10 +322,6 @@ class ManagePlanController extends Controller
             return back()->with('error', 'ຍອດເພີ່ມ ແລະ ຍອດຫຼຸດ ໃນແຜນດັດແກ້ສະເລ່ຍຕ້ອງເທົ່າກັນ');
         }
 
-        if (abs(((float) ($totals['requested_increase_amount'] ?? 0)) - ((float) ($totals['requested_decrease_amount'] ?? 0))) > 0.01) {
-            return back()->with('error', 'ຍອດແຜນຂໍເພີ່ມ ແລະ ຍອດແຜນຂໍຫຼຸດຕ້ອງເທົ່າກັນ');
-        }
-
         $unbalancedRow = collect($periodReport['rows'] ?? [])
             ->first(fn (array $row): bool => ! $row['is_group']
                 && abs(((float) $row['period_3_4_total_amount']) - ((float) $row['adjusted_second_half_amount'])) > 0.01);

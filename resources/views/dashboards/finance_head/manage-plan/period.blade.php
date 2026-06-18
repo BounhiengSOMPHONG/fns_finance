@@ -596,7 +596,7 @@
     }
 
     .period-adjust-head {
-        color: #e60000 !important;
+        color: #000 !important;
     }
 
     .period-head-row th {
@@ -1060,18 +1060,16 @@
                 }
 
                 const averageBalanced = Math.abs(totals.averageIncrease - totals.averageDecrease) <= 0.01;
-                const requestedBalanced = Math.abs(totals.increase - totals.decrease) <= 0.01;
-
                 setTotalInvalid('[data-total-average-increase]', ! averageBalanced);
                 setTotalInvalid('[data-total-average-decrease]', ! averageBalanced);
-                setTotalInvalid('[data-total-requested-increase]', ! requestedBalanced);
-                setTotalInvalid('[data-total-requested-decrease]', ! requestedBalanced);
+                setTotalInvalid('[data-total-requested-increase]', false);
+                setTotalInvalid('[data-total-requested-decrease]', false);
 
                 if (saveButton && canEdit) {
-                    saveButton.disabled = ! averageBalanced || ! requestedBalanced;
+                    saveButton.disabled = ! averageBalanced;
                 }
 
-                return averageBalanced && requestedBalanced;
+                return averageBalanced;
             };
             const prefixLength = (row) => Math.min((Number.parseInt(row.dataset.level || '0', 10) + 1) * 2, row.dataset.accountCode.length);
             const isChildOf = (parent, child) => {

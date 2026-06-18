@@ -88,23 +88,32 @@
                         <col class="period-money-col">
                     </colgroup>
                     <thead>
-                        <tr>
-                            <th rowspan="2">ພາກ</th>
-                            <th rowspan="2">ພາກ<br>ສ່ວນ</th>
-                            <th rowspan="2">ຮ່ວງ</th>
-                            <th rowspan="2">ລູກ<br>ຮ່ວງ</th>
+                        <tr class="period-head-row">
+                            <th rowspan="2" class="period-code-head"><span>ພາກ</span></th>
+                            <th rowspan="2" class="period-code-head"><span>ພາກ</span><span>ສ່ວນ</span></th>
+                            <th rowspan="2" class="period-code-head"><span>ຮ່ວງ</span></th>
+                            <th rowspan="2" class="period-code-head"><span>ລູກ</span><span>ຮ່ວງ</span></th>
                             <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
-                            <th rowspan="2">ງົບປີ</th>
-                            <th colspan="2">ປັບຍອດງວດ</th>
-                            <th rowspan="2">ລວມງວດ 1-2</th>
-                            <th rowspan="2">ຍອດຄົງເຫຼືອ</th>
+                            <th rowspan="2">ແຜນການ<br>ປີ {{ $planningYear->year }}</th>
+                            <th colspan="3">ແຜນ 06 ເດືອນຕົ້ນປີ {{ $planningYear->year }}</th>
+                            <th rowspan="2">ແຜນ 06 ເດືອນ<br>ທ້າຍປີ {{ $planningYear->year }}</th>
                         </tr>
-                        <tr>
-                            <th>ງວດ 1</th>
-                            <th>ງວດ 2</th>
+                        <tr class="period-subhead-row">
+                            <th>ແຜນງວດ1</th>
+                            <th>ແຜນງວດ2</th>
+                            <th>ແຜນ 06 ເດືອນ</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <tr class="period-total-row" data-period-total-row>
+                            <td colspan="4"></td>
+                            <td class="period-total-label">ລວມຍອດເງິນພາກສ່ວນ</td>
+                            <td class="num" data-total-yearly>{{ $money($periodTotals['yearly_amount']) }}</td>
+                            <td class="num" data-total-period-1>{{ $money($periodTotals['period_1_amount']) }}</td>
+                            <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
+                            <td class="num" data-total-first-half>{{ $money($periodTotals['first_half_amount']) }}</td>
+                            <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
+                        </tr>
                         @forelse($periodRows as $row)
                             @php
                                 $code = str_pad((string) $row['account_code'], 8, '0', STR_PAD_LEFT);
@@ -173,15 +182,6 @@
                                 <td colspan="9" class="center">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍວິຊາການຕາມຜັງບັນຊີ</td>
                             </tr>
                         @endforelse
-                        <tr class="period-total-row" data-period-total-row>
-                            <td colspan="4"></td>
-                            <td class="center">ລວມຍອດ</td>
-                            <td class="num" data-total-yearly>{{ $money($periodTotals['yearly_amount']) }}</td>
-                            <td class="num" data-total-period-1>{{ $money($periodTotals['period_1_amount']) }}</td>
-                            <td class="num" data-total-period-2>{{ $money($periodTotals['period_2_amount']) }}</td>
-                            <td class="num" data-total-first-half>{{ $money($periodTotals['first_half_amount']) }}</td>
-                            <td class="num" data-total-second-half>{{ $money($periodTotals['second_half_amount']) }}</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -331,38 +331,6 @@
         .period-title-block {
             display: none;
         }
-
-        .period-report-table th {
-            background: #fff;
-        }
-
-        .period-root-row td {
-            background: #ccffcc;
-            font-weight: 900;
-        }
-
-        .period-total-row td {
-            background: #ccffff;
-            font-weight: 900;
-        }
-
-        .period-code-main {
-            background: transparent;
-            color: #111827;
-            font-style: italic;
-            font-weight: 900;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-        }
-
-        .period-root-row .num,
-        .period-group-row .num,
-        .period-total-row .num,
-        .period-root-row .period-readonly-amount,
-        .period-group-row .period-readonly-amount {
-            text-decoration: underline;
-            text-underline-offset: 2px;
-        }
     }
 
     .period-title-block {
@@ -383,36 +351,52 @@
 
     .period-report-table {
         border-collapse: collapse;
-        color: #111827;
+        color: #000;
         font-size: .78rem;
         min-width: 1180px;
+        table-layout: fixed;
         width: 100%;
     }
 
     .period-code-col {
-        width: 44px;
+        width: 45px;
     }
 
     .period-title-col {
-        width: 290px;
+        width: 340px;
     }
 
     .period-money-col,
     .period-input-col {
-        width: 132px;
+        width: 142px;
     }
 
     .period-report-table th,
     .period-report-table td {
-        border: 1px solid #111827;
-        padding: .35rem .4rem;
+        border: 2px solid #000;
+        line-height: 1.25;
+        padding: .35rem .42rem;
         vertical-align: middle;
     }
 
     .period-report-table th {
-        background: #f8fafc;
+        background: #fff;
+        color: #000;
         font-weight: 800;
         text-align: center;
+        white-space: normal;
+    }
+
+    .period-head-row th {
+        height: 52px;
+    }
+
+    .period-subhead-row th {
+        height: 38px;
+    }
+
+    .period-code-head span {
+        display: block;
     }
 
     .period-root-row td,
@@ -422,16 +406,23 @@
     }
 
     .period-code-cell {
-        color: #1f2937;
+        color: #000;
         font-weight: 700;
+        white-space: nowrap;
     }
 
     .period-code-main {
-        background: #f9fafb;
+        background: transparent;
+        color: #000;
+        font-style: italic;
+        font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 
     .period-row-title {
-        line-height: 1.35;
+        line-height: 1.25;
+        text-align: left;
     }
 
     .period-money-input {
@@ -476,7 +467,28 @@
     }
 
     .period-total-row td {
-        background: #f8fafc;
+        background: #ccffff;
+        font-weight: 900;
+    }
+
+    .period-total-label {
+        font-weight: 900;
+        text-align: center;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .period-root-row td {
+        background: #ccffcc;
+    }
+
+    .period-root-row .num,
+    .period-group-row .num,
+    .period-total-row .num,
+    .period-root-row .period-readonly-amount,
+    .period-group-row .period-readonly-amount {
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 
     .center {

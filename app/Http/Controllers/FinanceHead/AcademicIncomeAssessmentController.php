@@ -93,9 +93,10 @@ class AcademicIncomeAssessmentController extends Controller
             }
         }
 
-        $nuolBachelor = $this->nuolFor('bachelor', 0.17);
-        $nuolMaster   = $this->nuolFor('master', 0.10);
-        $nuolPhd      = $this->nuolFor('phd', 0.10);
+        $nuolSettings = $this->nuolSettingsFor();
+        $nuolBachelor = (float) ($nuolSettings->get('bachelor')?->percentage ?? 0.17);
+        $nuolMaster   = (float) ($nuolSettings->get('master')?->percentage ?? 0.10);
+        $nuolPhd      = (float) ($nuolSettings->get('phd')?->percentage ?? 0.10);
         $nuolByLevel  = ['bachelor' => $nuolBachelor, 'master' => $nuolMaster, 'phd' => $nuolPhd];
 
         $programs11 = DegreeProgram::where('is_active', true)
@@ -141,6 +142,10 @@ class AcademicIncomeAssessmentController extends Controller
                     'snap_course_credit_unit'     => $creditUnit,
                     'snap_registration_fee_rate'  => null,
                     'snap_nuol_pct'               => $nuol,
+                    'credit_unit_price_setting_id' => $creditPrices->get($program->level)?->id,
+                    'income_rate_setting_id'       => null,
+                    'registration_fee_setting_id'  => null,
+                    'nuol_pct_setting_id'          => $nuolSettings->get($program->level)?->id,
                     'total_income'               => $total,
                 ]
             );
@@ -162,6 +167,10 @@ class AcademicIncomeAssessmentController extends Controller
                     'snap_course_credit_unit'     => $creditUnit,
                     'snap_registration_fee_rate'  => null,
                     'snap_nuol_pct'               => $nuolBachelor,
+                    'credit_unit_price_setting_id' => $creditPrices->get('bachelor')?->id,
+                    'income_rate_setting_id'       => null,
+                    'registration_fee_setting_id'  => null,
+                    'nuol_pct_setting_id'          => $nuolSettings->get('bachelor')?->id,
                     'total_income'               => $total,
                 ]
             );
@@ -184,6 +193,10 @@ class AcademicIncomeAssessmentController extends Controller
                     'snap_course_credit_unit'     => $creditUnit,
                     'snap_registration_fee_rate'  => null,
                     'snap_nuol_pct'               => $nuol,
+                    'credit_unit_price_setting_id' => $creditPrices->get($program->level)?->id,
+                    'income_rate_setting_id'       => null,
+                    'registration_fee_setting_id'  => null,
+                    'nuol_pct_setting_id'          => $nuolSettings->get($program->level)?->id,
                     'total_income'               => $total,
                 ]
             );
@@ -206,6 +219,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit'     => null,
                 'snap_registration_fee_rate'  => $feeRate2_4,
                 'snap_nuol_pct'               => $weightedNuol24,
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id'       => null,
+                'registration_fee_setting_id'  => $feeYear2_4?->id,
+                'nuol_pct_setting_id'          => null,
                 'total_income'               => $total12,
             ]
         );
@@ -227,6 +244,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit'     => null,
                 'snap_registration_fee_rate'  => $feeRate1,
                 'snap_nuol_pct'               => $weightedNuol1,
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id'       => null,
+                'registration_fee_setting_id'  => $feeYear1?->id,
+                'nuol_pct_setting_id'          => null,
                 'total_income'               => $total14,
             ]
         );
@@ -245,6 +266,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit'     => null,
                 'snap_registration_fee_rate'  => null,
                 'snap_nuol_pct'               => 0,
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id'       => $incomeRates->get('item3_rate')?->id,
+                'registration_fee_setting_id'  => null,
+                'nuol_pct_setting_id'          => null,
                 'total_income'               => $count21 * $rate21,
             ]
         );
@@ -260,6 +285,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit'     => null,
                 'snap_registration_fee_rate'  => $rate22,
                 'snap_nuol_pct'               => 0,
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id'       => $incomeRates->get('item4_rate')?->id,
+                'registration_fee_setting_id'  => null,
+                'nuol_pct_setting_id'          => null,
                 'total_income'               => $count22 * $rate22,
             ]
         );
@@ -275,6 +304,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit'     => null,
                 'snap_registration_fee_rate'  => $rate23,
                 'snap_nuol_pct'               => 0,
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id'       => $incomeRates->get('item5_rate')?->id,
+                'registration_fee_setting_id'  => null,
+                'nuol_pct_setting_id'          => null,
                 'total_income'               => $count23 * $rate23,
             ]
         );
@@ -290,6 +323,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit'     => null,
                 'snap_registration_fee_rate'  => null,
                 'snap_nuol_pct'               => 0,
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id'       => $incomeRates->get('item6_rate')?->id,
+                'registration_fee_setting_id'  => null,
+                'nuol_pct_setting_id'          => null,
                 'total_income'               => $count24 * $rate24,
             ]
         );
@@ -365,10 +402,11 @@ class AcademicIncomeAssessmentController extends Controller
             ->findOrFail($programId);
 
         $creditPrices = $this->creditPricesFor();
+        $nuolSettings = $this->nuolSettingsFor();
         $nuolByLevel = [
-            'bachelor' => $this->nuolFor('bachelor', 0.17),
-            'master' => $this->nuolFor('master', 0.10),
-            'phd' => $this->nuolFor('phd', 0.10),
+            'bachelor' => (float) ($nuolSettings->get('bachelor')?->percentage ?? 0.17),
+            'master' => (float) ($nuolSettings->get('master')?->percentage ?? 0.10),
+            'phd' => (float) ($nuolSettings->get('phd')?->percentage ?? 0.10),
         ];
 
         $section = $inputPrefix === 's11' ? '1.1' : '1.3';
@@ -385,6 +423,10 @@ class AcademicIncomeAssessmentController extends Controller
                 'snap_course_credit_unit' => $creditUnit,
                 'snap_registration_fee_rate' => null,
                 'snap_nuol_pct' => $nuol,
+                'credit_unit_price_setting_id' => $creditPrices->get($program->level)?->id,
+                'income_rate_setting_id' => null,
+                'registration_fee_setting_id' => null,
+                'nuol_pct_setting_id' => $nuolSettings->get($program->level)?->id,
                 'total_income' => $total,
             ]
         );
@@ -413,30 +455,46 @@ class AcademicIncomeAssessmentController extends Controller
         $incomeRates = $this->incomeRatesFor();
 
         return match ($itemName) {
-            'students_1_2' => $this->updateFlatItem($academicIncome, '1.2', $count ?? $existing('1.2'), null, $feeYear2_4?->total_rate ?? 0, $this->weightedNuol($feeYear2_4)),
-            'students_1_4' => $this->updateFlatItem($academicIncome, '1.4', $count ?? $existing('1.4'), null, $feeYear1?->total_rate ?? 0, $this->weightedNuol($feeYear1)),
-            'students_2_1' => $this->updateFlatItem($academicIncome, '2.1', $count ?? $existing('2.1'), (float) ($incomeRates->get('item3_rate')?->rate ?? 0), null, 0),
-            'students_2_2' => $this->updateFlatItem($academicIncome, '2.2', $count ?? $existing('2.2'), null, (float) ($incomeRates->get('item4_rate')?->rate ?? 0), 0),
-            'students_2_3' => $this->updateFlatItem($academicIncome, '2.3', $count ?? $existing('2.3'), null, (float) ($incomeRates->get('item5_rate')?->rate ?? 0), 0),
-            'students_2_4' => $this->updateFlatItem($academicIncome, '2.4', $count ?? $existing('2.4'), (float) ($incomeRates->get('item6_rate')?->rate ?? 0), null, 0),
+            'students_1_2' => $this->updateFlatItem($academicIncome, '1.2', $count ?? $existing('1.2'), null, $feeYear2_4?->total_rate ?? 0, $this->weightedNuol($feeYear2_4), [
+                'registration_fee_setting_id' => $feeYear2_4?->id,
+            ]),
+            'students_1_4' => $this->updateFlatItem($academicIncome, '1.4', $count ?? $existing('1.4'), null, $feeYear1?->total_rate ?? 0, $this->weightedNuol($feeYear1), [
+                'registration_fee_setting_id' => $feeYear1?->id,
+            ]),
+            'students_2_1' => $this->updateFlatItem($academicIncome, '2.1', $count ?? $existing('2.1'), (float) ($incomeRates->get('item3_rate')?->rate ?? 0), null, 0, [
+                'income_rate_setting_id' => $incomeRates->get('item3_rate')?->id,
+            ]),
+            'students_2_2' => $this->updateFlatItem($academicIncome, '2.2', $count ?? $existing('2.2'), null, (float) ($incomeRates->get('item4_rate')?->rate ?? 0), 0, [
+                'income_rate_setting_id' => $incomeRates->get('item4_rate')?->id,
+            ]),
+            'students_2_3' => $this->updateFlatItem($academicIncome, '2.3', $count ?? $existing('2.3'), null, (float) ($incomeRates->get('item5_rate')?->rate ?? 0), 0, [
+                'income_rate_setting_id' => $incomeRates->get('item5_rate')?->id,
+            ]),
+            'students_2_4' => $this->updateFlatItem($academicIncome, '2.4', $count ?? $existing('2.4'), (float) ($incomeRates->get('item6_rate')?->rate ?? 0), null, 0, [
+                'income_rate_setting_id' => $incomeRates->get('item6_rate')?->id,
+            ]),
         };
     }
 
-    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol): ?AcademicIncomeItem
+    private function updateFlatItem(AcademicIncomePlan $academicIncome, string $section, int $count, ?float $creditPrice, ?float $registrationRate, float $nuol, array $settingReferences = []): ?AcademicIncomeItem
     {
         $baseRate = $registrationRate ?? $creditPrice ?? 0;
         $total = $count * $baseRate * (1 - $nuol);
 
         return $this->saveIncomeItem(
             ['plan_id' => $academicIncome->id, 'section_code' => $section, 'degree_program_id' => null],
-            [
+            array_merge([
                 'student_count' => $count,
                 'snap_credit_unit_price' => $creditPrice,
                 'snap_course_credit_unit' => null,
                 'snap_registration_fee_rate' => $registrationRate,
                 'snap_nuol_pct' => $nuol,
                 'total_income' => $total,
-            ]
+                'credit_unit_price_setting_id' => null,
+                'income_rate_setting_id' => null,
+                'registration_fee_setting_id' => null,
+                'nuol_pct_setting_id' => null,
+            ], $settingReferences)
         );
     }
 
@@ -487,9 +545,9 @@ class AcademicIncomeAssessmentController extends Controller
         return IncomeRateSetting::all()->keyBy('key');
     }
 
-    private function nuolFor(string $level, float $default): float
+    private function nuolSettingsFor(): \Illuminate\Support\Collection
     {
-        return (float) (NuolPctSetting::where('level', $level)->orderByDesc('start_year')->first()?->percentage ?? $default);
+        return NuolPctSetting::orderByDesc('start_year')->get()->groupBy('level')->map(fn ($items) => $items->first());
     }
 
     private function courseCreditUnitFor(DegreeProgram $program, bool $year1): float

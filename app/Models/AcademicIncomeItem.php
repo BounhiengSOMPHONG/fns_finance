@@ -9,6 +9,8 @@ class AcademicIncomeItem extends Model
 {
     protected $fillable = [
         'plan_id', 'section_code', 'degree_program_id', 'student_count',
+        'credit_unit_price_setting_id', 'income_rate_setting_id',
+        'registration_fee_setting_id', 'nuol_pct_setting_id',
         'snap_credit_unit_price', 'snap_course_credit_unit', 'snap_registration_fee_rate',
         'snap_nuol_pct', 'total_income',
     ];
@@ -29,6 +31,26 @@ class AcademicIncomeItem extends Model
     public function degreeProgram(): BelongsTo
     {
         return $this->belongsTo(DegreeProgram::class);
+    }
+
+    public function creditUnitPriceSetting(): BelongsTo
+    {
+        return $this->belongsTo(CreditUnitPriceSetting::class);
+    }
+
+    public function incomeRateSetting(): BelongsTo
+    {
+        return $this->belongsTo(IncomeRateSetting::class);
+    }
+
+    public function registrationFeeSetting(): BelongsTo
+    {
+        return $this->belongsTo(RegistrationFeeSetting::class);
+    }
+
+    public function nuolPctSetting(): BelongsTo
+    {
+        return $this->belongsTo(NuolPctSetting::class);
     }
 
     public function getFirstPaymentAmountAttribute(): float

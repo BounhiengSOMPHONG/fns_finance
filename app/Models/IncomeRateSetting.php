@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IncomeRateSetting extends Model
 {
@@ -11,6 +12,11 @@ class IncomeRateSetting extends Model
     protected $casts = [
         'rate' => 'decimal:2',
     ];
+
+    public function academicIncomeItems(): HasMany
+    {
+        return $this->hasMany(AcademicIncomeItem::class);
+    }
 
     /**
      * Get the rate for a given key, falling back to a default.

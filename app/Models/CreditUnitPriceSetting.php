@@ -3,12 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CreditUnitPriceSetting extends Model
 {
     protected $fillable = ['level', 'credit_unit_price', 'gov_doc_id', 'start_year'];
 
     protected $casts = ['credit_unit_price' => 'decimal:2'];
+
+    public function academicIncomeItems(): HasMany
+    {
+        return $this->hasMany(AcademicIncomeItem::class);
+    }
 
     public static function levelLabel(string $level): string
     {

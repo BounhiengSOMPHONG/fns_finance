@@ -13,22 +13,18 @@
 
 @section('content')
 @php
-    $fieldSettingsById = $fieldSettings;
-
-    $patternsPayload = $patterns->mapWithKeys(function ($pattern) use ($fieldSettingsById) {
-        $fields = $pattern->fields->map(function ($field) use ($fieldSettingsById) {
-            $setting = $fieldSettingsById->get($field->id);
-
+    $patternsPayload = $patterns->mapWithKeys(function ($pattern) {
+        $fields = $pattern->fields->map(function ($field) {
             return [
-                'id' => $field->id,
+                'id' => $field->field_key,
                 'key' => $field->field_key,
-                'label' => $setting?->label ?? $field->default_label,
+                'label' => $field->default_label,
                 'type' => $field->data_type,
-                'order' => $setting?->display_order ?? $field->display_order,
-                'required' => (bool) ($setting?->is_required ?? $field->is_required),
+                'order' => $field->display_order,
+                'required' => (bool) $field->is_required,
                 'calculated' => (bool) $field->is_calculated,
-                'active' => (bool) ($setting?->is_active ?? true),
-                'default_value' => $setting?->default_value ?? $field->default_value,
+                'active' => true,
+                'default_value' => $field->default_value,
             ];
         })->filter(fn ($field) => $field['active'])
           ->sortBy('order')
@@ -40,6 +36,7 @@
             'name' => $pattern->name,
             'description' => $pattern->description,
             'fields' => $fields,
+            'formula' => $pattern->formula_schema,
         ]];
     });
 
@@ -76,11 +73,13 @@
         'pattern_key' => $row->pattern?->key,
         'code' => $row->subsection?->code ?? $row->section?->code,
         'label' => $row->subsection?->name ?? $row->section?->name,
-        'plan_detail' => $row->plan_detail,
+        'plan_detail' => $row->item_name ?: $row->plan_detail,
         'detail' => $row->detail,
         'total' => $row->yearlyTotal(),
-        'values' => $row->values->mapWithKeys(fn ($value) => [
-            $value->field_key => $value->typedValue()
+        'values' => array_merge($row->calculation_values ?? [], [
+            'item_name' => $row->item_name ?: $row->plan_detail,
+            'reference' => $row->chartOfAccount?->account_code,
+            'note' => $row->detail,
         ]),
     ])->values();
 
@@ -650,23 +649,10 @@ function calculateFormula(formula, values) {
     }, 0);
 }
 
-function calculatedTotalForPattern(patternKey, values = {}) {
-    const number = key => numberValue(values[key]);
-
-    switch (patternKey) {
-        case 'monthly':
-            return number('amount_per_month') * number('month_count');
-        case 'unit_quantity':
-            return number('unit_price') * number('quantity');
-        case 'unit_quantity_frequency':
-            return number('unit_price') * number('quantity') * number('times_per_year');
-        case 'frequency_based':
-            return number('unit_price') * number('quantity') * number('frequency_count');
-        case 'event_based':
-            return number('unit_price') * number('event_count') * number('people_count');
-        default:
-            return 0;
-    }
+function calculatedTotalForPattern(pattern, values = {}) {
+    const fields = pattern?.formula?.fields || [];
+    if (!fields.length) return numberValue(values.yearly_total);
+    return fields.reduce((total, field) => total * numberValue(values[field]), 1);
 }
 
 function rowTotal(row) {
@@ -676,8 +662,9 @@ function rowTotal(row) {
         return calculateFormula(rule.formula, row.values || {});
     }
 
+    const pattern = PATTERNS[row.pattern_id];
     const storedTotal = numberValue(row.values?.yearly_total ?? row.total);
-    return storedTotal > 0 ? storedTotal : calculatedTotalForPattern(row.pattern_key, row.values || {});
+    return storedTotal > 0 ? storedTotal : calculatedTotalForPattern(pattern, row.values || {});
 }
 
 function currentExpenseTotal() {
@@ -989,7 +976,7 @@ function updateSourceTotal(block, row) {
     const pattern = PATTERNS[patternId];
     const total = rule
         ? calculateFormula(rule.formula, values)
-        : calculatedTotalForPattern(pattern?.key, values);
+        : calculatedTotalForPattern(pattern, values);
     const totalInput = row.querySelector('input[name="yearly_total"]');
     if (totalInput) totalInput.value = moneyInputValue(total);
 }

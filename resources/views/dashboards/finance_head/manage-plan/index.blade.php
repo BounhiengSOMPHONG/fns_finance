@@ -29,7 +29,7 @@
                 $expenseRows = $plan->expense_plans_count;
                 $incomeTotal = $plan->academicIncomePlans->sum(fn ($income) => $income->items->sum('total_income'));
                 $salaryTotal = $plan->salaryPlans->sum(fn ($salary) => $salary->entries->sum('annual_amount'));
-                $expenseTotal = $plan->expensePlans->sum(fn ($expense) => $expense->values->sum('value_number'));
+                $expenseTotal = $plan->expensePlans->sum(fn ($expense) => $expense->yearlyTotal());
                 $isCurrent = (int) $plan->year === $currentYear;
                 $canEditPlan = $plan->canBeEdited();
                 $isSavedPlan = $plan->status === \App\Models\PlanningYear::STATUS_SAVED;

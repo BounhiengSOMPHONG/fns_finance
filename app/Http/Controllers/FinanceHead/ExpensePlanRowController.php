@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
-use App\Models\ExpensePlanValue;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
@@ -21,6 +21,7 @@ class ExpensePlanRowController extends Controller
             'planning_year_id' => 'required|exists:planning_years,id',
             'section_id' => 'required|exists:expense_sections,id',
             'subsection_id' => 'nullable|exists:expense_subsections,id',
+            'catalog_item_id' => 'nullable|exists:expense_catalog_items,id',
             'pattern_id' => 'required|exists:expense_patterns,id',
             'plan_detail' => 'required|string|max:255',
             'detail' => 'nullable|string|max:1000',
@@ -32,34 +33,32 @@ class ExpensePlanRowController extends Controller
 
         $section = ExpenseSection::findOrFail($data['section_id']);
         $subsection = $data['subsection_id'] ? ExpenseSubsection::findOrFail($data['subsection_id']) : null;
-        $pattern = ExpensePattern::with('fields')->findOrFail($data['pattern_id']);
+        $catalogItem = isset($data['catalog_item_id']) ? ExpenseCatalogItem::with(['chartOfAccount', 'pattern'])->find($data['catalog_item_id']) : null;
+        $pattern = $catalogItem?->pattern ?: ExpensePattern::findOrFail($data['pattern_id']);
 
         $values = $data['values'];
-        $values['yearly_total'] = $this->calculatePatternTotal($pattern->key, $values);
+        $calculationValues = $this->calculationValues($pattern, $values);
 
-        $expensePlan = DB::transaction(function () use ($data, $planningYear, $section, $subsection, $pattern, $values) {
+        $expensePlan = DB::transaction(function () use ($data, $planningYear, $section, $subsection, $catalogItem, $pattern, $calculationValues) {
             $expensePlan = ExpensePlan::create([
                 'planning_year_id' => $planningYear->id,
                 'section_id' => $section->id,
                 'subsection_id' => $subsection?->id,
+                'catalog_item_id' => $catalogItem?->id,
+                'chart_of_account_id' => $catalogItem?->chart_of_account_id,
                 'pattern_id' => $pattern->id,
                 'version' => (string) $planningYear->year,
                 'plan_type' => $pattern->key,
-                'plan_detail' => $data['plan_detail'],
+                'item_name' => $catalogItem?->item_name ?: $data['plan_detail'],
+                'plan_detail' => $catalogItem?->item_name ?: $data['plan_detail'],
                 'detail' => $data['detail'] ?? null,
+                'calculation_values' => $calculationValues,
+                'pattern_snapshot' => $pattern->snapshot(),
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
 
-            foreach ($pattern->fields as $field) {
-                if (!array_key_exists($field->field_key, $values)) {
-                    continue;
-                }
-
-                $this->storeValue($expensePlan, $field->field_key, $field->data_type, $values[$field->field_key]);
-            }
-
-            return $expensePlan->load(['values', 'section', 'subsection', 'pattern']);
+            return $expensePlan->load(['section', 'subsection', 'pattern', 'chartOfAccount']);
         });
 
         if ($request->expectsJson()) {
@@ -75,7 +74,7 @@ class ExpensePlanRowController extends Controller
 
     public function update(Request $request, int $expensePlanRow)
     {
-        $expensePlan = ExpensePlan::with(['pattern.fields', 'values'])->findOrFail($expensePlanRow);
+        $expensePlan = ExpensePlan::with(['pattern', 'chartOfAccount'])->findOrFail($expensePlanRow);
         $this->ensurePlanCanBeEdited($expensePlan->planningYear);
 
         $data = $request->validate([
@@ -84,27 +83,28 @@ class ExpensePlanRowController extends Controller
             'values' => 'required|array',
         ]);
 
-        $values = $this->preserveLockedRowValues($expensePlan, $data['values']);
-        $values['yearly_total'] = $this->calculatePatternTotal($expensePlan->pattern?->key, $values);
+        $pattern = $expensePlan->pattern ?? new ExpensePattern();
+        $values = $data['values'];
+        $calculationValues = $this->calculationValues($pattern, $values, $expensePlan->pattern_snapshot);
 
-        DB::transaction(function () use ($expensePlan, $data, $values) {
-            $expensePlan->update([
-                'plan_detail' => $expensePlan->plan_detail,
+        DB::transaction(function () use ($expensePlan, $data, $calculationValues) {
+            $payload = [
                 'detail' => $data['detail'] ?? null,
+                'calculation_values' => $calculationValues,
                 'updated_by' => Auth::id(),
-            ]);
+            ];
 
-            $expensePlan->values()->delete();
-            foreach ($expensePlan->pattern->fields as $field) {
-                if (array_key_exists($field->field_key, $values)) {
-                    $this->storeValue($expensePlan, $field->field_key, $field->data_type, $values[$field->field_key]);
-                }
+            if (! $expensePlan->catalog_item_id) {
+                $payload['item_name'] = $data['plan_detail'];
+                $payload['plan_detail'] = $data['plan_detail'];
             }
+
+            $expensePlan->update($payload);
         });
 
         return response()->json([
             'success' => true,
-            'entry' => $this->serializePlan($expensePlan->fresh(['values', 'section', 'subsection', 'pattern'])),
+            'entry' => $this->serializePlan($expensePlan->fresh(['section', 'subsection', 'pattern', 'chartOfAccount'])),
         ]);
     }
 
@@ -134,58 +134,15 @@ class ExpensePlanRowController extends Controller
         );
     }
 
-    private function preserveLockedRowValues(ExpensePlan $expensePlan, array $values): array
+    private function calculationValues(ExpensePattern $pattern, array $values, ?array $snapshot = null): array
     {
-        $currentValues = $expensePlan->values->mapWithKeys(function (ExpensePlanValue $value) {
-            return [$value->field_key => $value->typedValue()];
-        });
+        $calculationValues = collect($values)
+            ->reject(fn ($value, string $key): bool => in_array($key, ['item_name', 'reference', 'note'], true))
+            ->filter(fn ($value): bool => $value !== null && $value !== '')
+            ->all();
+        $calculationValues['yearly_total'] = $pattern->calculateTotal($calculationValues, $snapshot);
 
-        foreach (['item_name', 'reference'] as $fieldKey) {
-            if ($currentValues->has($fieldKey)) {
-                $values[$fieldKey] = $currentValues->get($fieldKey);
-            }
-        }
-
-        return $values;
-    }
-
-    private function storeValue(ExpensePlan $expensePlan, string $fieldKey, string $dataType, mixed $value): void
-    {
-        $payload = [
-            'expense_plan_id' => $expensePlan->id,
-            'field_key' => $fieldKey,
-            'value' => null,
-        ];
-
-        if ($dataType === 'number') {
-            $payload['value'] = is_numeric($value) ? $value : 0;
-        } elseif ($dataType === 'date') {
-            $payload['value'] = $value ?: null;
-        } elseif ($dataType === 'boolean') {
-            $payload['value'] = (bool) $value ? '1' : '0';
-        } else {
-            $payload['value'] = $value;
-        }
-
-        if ($payload['value'] === null || $payload['value'] === '') {
-            return;
-        }
-
-        ExpensePlanValue::create($payload);
-    }
-
-    private function calculatePatternTotal(?string $patternKey, array $values): float
-    {
-        $number = fn (string $key): float => (float) ($values[$key] ?? 0);
-
-        return match ($patternKey) {
-            'monthly' => $number('amount_per_month') * $number('month_count'),
-            'unit_quantity' => $number('unit_price') * $number('quantity'),
-            'unit_quantity_frequency' => $number('unit_price') * $number('quantity') * $number('times_per_year'),
-            'frequency_based' => $number('unit_price') * $number('quantity') * $number('frequency_count'),
-            'event_based' => $number('unit_price') * $number('event_count') * $number('people_count'),
-            default => (float) ($values['yearly_total'] ?? 0),
-        };
+        return $calculationValues;
     }
 
     private function serializePlan(ExpensePlan $expensePlan): array
@@ -196,12 +153,14 @@ class ExpensePlanRowController extends Controller
             'subsection_id' => $expensePlan->subsection_id,
             'pattern_id' => $expensePlan->pattern_id,
             'pattern_key' => $expensePlan->pattern?->key,
-            'plan_detail' => $expensePlan->plan_detail,
+            'plan_detail' => $expensePlan->item_name ?: $expensePlan->plan_detail,
             'detail' => $expensePlan->detail,
             'total' => $expensePlan->yearlyTotal(),
-            'values' => $expensePlan->values->mapWithKeys(function (ExpensePlanValue $value) {
-                return [$value->field_key => $value->typedValue()];
-            }),
+            'values' => array_merge($expensePlan->calculation_values ?? [], [
+                'item_name' => $expensePlan->item_name ?: $expensePlan->plan_detail,
+                'reference' => $expensePlan->chartOfAccount?->account_code,
+                'note' => $expensePlan->detail,
+            ]),
         ];
     }
 }

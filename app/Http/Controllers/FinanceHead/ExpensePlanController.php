@@ -4,11 +4,11 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
+use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
-use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
@@ -77,8 +77,7 @@ class ExpensePlanController extends Controller
             ->orderBy('display_order')
             ->get();
 
-        $patterns = ExpensePattern::with('fields')
-            ->where('is_active', true)
+        $patterns = ExpensePattern::where('is_active', true)
             ->orderBy('id')
             ->get();
 
@@ -86,9 +85,9 @@ class ExpensePlanController extends Controller
 
         $rules = collect();
 
-        $this->ensureDefaultExpenseRows($planningYear, $sections, $patterns);
+        $this->ensureCatalogExpenseRows($planningYear, $sections, $patterns);
 
-        $expenseRows = ExpensePlan::with(['values', 'section', 'subsection', 'pattern'])
+        $expenseRows = ExpensePlan::with(['section', 'subsection', 'pattern', 'chartOfAccount'])
             ->where('planning_year_id', $planningYear->id)
             ->orderBy('section_id')
             ->orderBy('subsection_id')
@@ -115,16 +114,16 @@ class ExpensePlanController extends Controller
             ->flatMap(fn ($section) => $section->subsections->pluck('code'))
             ->unique()
             ->values();
-        $defaultRows = ExpenseSubsectionDefaultRow::with('chartOfAccount')
-            ->whereIn('subsection_code', $subsectionCodes)
+        $defaultRows = ExpenseCatalogItem::with(['chartOfAccount', 'subsection'])
+            ->whereHas('subsection', fn ($query) => $query->whereIn('code', $subsectionCodes))
             ->where('is_active', true)
-            ->orderBy('subsection_code')
+            ->orderBy('subsection_id')
             ->orderBy('sort_order')
             ->get()
-            ->groupBy('subsection_code')
+            ->groupBy(fn (ExpenseCatalogItem $item) => $item->subsection?->code)
             ->map(fn ($rows) => $rows->map(function ($row) {
                 $values = $row->default_values ?? [];
-                unset($values['note'], $values['reference']);
+                unset($values['note'], $values['reference'], $values['item_name']);
 
                 return [
                     'item_name' => $row->item_name,
@@ -146,95 +145,76 @@ class ExpensePlanController extends Controller
         ]);
     }
 
-    private function ensureDefaultExpenseRows(PlanningYear $planningYear, $sections, $patterns): void
+    private function ensureCatalogExpenseRows(PlanningYear $planningYear, $sections, $patterns): void
     {
         $subsections = $sections->flatMap(fn ($section) => $section->subsections);
-        $subsectionCodes = $subsections->pluck('code')->unique()->values();
-        $defaultsByCode = ExpenseSubsectionDefaultRow::with('chartOfAccount')
-            ->whereIn('subsection_code', $subsectionCodes)
+        $catalogItemsBySubsection = ExpenseCatalogItem::with(['chartOfAccount', 'pattern'])
+            ->whereIn('subsection_id', $subsections->pluck('id')->filter()->values())
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->get()
-            ->groupBy('subsection_code');
+            ->groupBy('subsection_id');
 
-        if ($defaultsByCode->isEmpty()) {
+        if ($catalogItemsBySubsection->isEmpty()) {
             return;
         }
 
         $patternsById = $patterns->keyBy('id');
 
-        DB::transaction(function () use ($planningYear, $subsections, $defaultsByCode, $patternsById): void {
+        DB::transaction(function () use ($planningYear, $subsections, $catalogItemsBySubsection, $patternsById): void {
             $existingKeys = ExpensePlan::where('planning_year_id', $planningYear->id)
                 ->whereIn('subsection_id', $subsections->pluck('id')->filter()->values())
-                ->get(['subsection_id', 'plan_detail'])
+                ->get(['subsection_id', 'item_name', 'plan_detail'])
                 ->mapWithKeys(fn (ExpensePlan $row) => [
-                    $row->subsection_id . '|' . trim((string) $row->plan_detail) => true,
+                    $row->subsection_id . '|' . trim((string) ($row->item_name ?: $row->plan_detail)) => true,
                 ]);
 
             $planRows = [];
-            $valueRowsByKey = [];
             $userId = Auth::id();
             $now = now();
 
             foreach ($subsections as $subsection) {
-                $defaultRows = $defaultsByCode->get($subsection->code);
-                if (!$defaultRows || !$subsection->default_pattern_id) {
+                $catalogItems = $catalogItemsBySubsection->get($subsection->id);
+                if (!$catalogItems) {
                     continue;
                 }
 
-                $pattern = $patternsById->get($subsection->default_pattern_id);
-                if (!$pattern) {
-                    continue;
-                }
+                foreach ($catalogItems as $catalogItem) {
+                    $pattern = $catalogItem->pattern ?: $patternsById->get($catalogItem->pattern_id ?: $subsection->default_pattern_id);
+                    if (!$pattern) {
+                        continue;
+                    }
 
-                foreach ($defaultRows as $defaultRow) {
-                    $itemName = trim((string) $defaultRow->item_name);
+                    $itemName = trim((string) $catalogItem->item_name);
                     $rowKey = $subsection->id . '|' . $itemName;
 
                     if ($existingKeys->has($rowKey)) {
                         continue;
                     }
 
-                    $defaultValues = $defaultRow->default_values ?? [];
-                    unset($defaultValues['note'], $defaultValues['reference']);
-
-                    $values = array_merge($defaultValues, [
-                        'item_name' => $defaultRow->item_name,
-                        'reference' => $defaultRow->chartOfAccount?->account_code,
-                    ]);
+                    $values = $catalogItem->default_values ?? [];
+                    unset($values['item_name'], $values['reference'], $values['note']);
+                    $values['yearly_total'] = $pattern->calculateTotal($values);
 
                     $planRows[] = [
                         'planning_year_id' => $planningYear->id,
                         'section_id' => $subsection->section_id,
                         'subsection_id' => $subsection->id,
+                        'catalog_item_id' => $catalogItem->id,
+                        'chart_of_account_id' => $catalogItem->chart_of_account_id,
                         'pattern_id' => $pattern->id,
                         'version' => (string) $planningYear->year,
                         'plan_type' => $pattern->key,
-                        'plan_detail' => $defaultRow->item_name,
+                        'item_name' => $catalogItem->item_name,
+                        'plan_detail' => $catalogItem->item_name,
                         'detail' => null,
+                        'calculation_values' => json_encode($values, JSON_UNESCAPED_UNICODE),
+                        'pattern_snapshot' => json_encode($pattern->snapshot(), JSON_UNESCAPED_UNICODE),
                         'created_by' => $userId,
                         'updated_by' => $userId,
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
-
-                    $fieldValues = [];
-                    foreach ($pattern->fields as $field) {
-                        if (array_key_exists($field->field_key, $values)) {
-                            $payload = $this->makeExpensePlanValuePayload(
-                                $field->field_key,
-                                $field->data_type,
-                                $values[$field->field_key],
-                                $now
-                            );
-
-                            if ($payload) {
-                                $fieldValues[] = $payload;
-                            }
-                        }
-                    }
-
-                    $valueRowsByKey[$rowKey] = $fieldValues;
                     $existingKeys->put($rowKey, true);
                 }
             }
@@ -246,52 +226,7 @@ class ExpensePlanController extends Controller
             foreach (array_chunk($planRows, 200) as $chunk) {
                 ExpensePlan::insert($chunk);
             }
-
-            $insertedPlans = ExpensePlan::where('planning_year_id', $planningYear->id)
-                ->whereIn('subsection_id', collect($planRows)->pluck('subsection_id')->unique()->values())
-                ->whereIn('plan_detail', collect($planRows)->pluck('plan_detail')->unique()->values())
-                ->get(['id', 'subsection_id', 'plan_detail']);
-
-            $valueRows = [];
-            foreach ($insertedPlans as $expensePlan) {
-                $rowKey = $expensePlan->subsection_id . '|' . trim((string) $expensePlan->plan_detail);
-                foreach ($valueRowsByKey[$rowKey] ?? [] as $payload) {
-                    $payload['expense_plan_id'] = $expensePlan->id;
-                    $valueRows[] = $payload;
-                }
-            }
-
-            foreach (array_chunk($valueRows, 500) as $chunk) {
-                DB::table('expense_plan_values')->insert($chunk);
-            }
         });
-    }
-
-    private function makeExpensePlanValuePayload(string $fieldKey, string $dataType, mixed $value, $now): ?array
-    {
-        $payload = [
-            'expense_plan_id' => null,
-            'field_key' => $fieldKey,
-            'value' => null,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ];
-
-        if ($dataType === 'number') {
-            $payload['value'] = is_numeric($value) ? $value : 0;
-        } elseif ($dataType === 'date') {
-            $payload['value'] = $value ?: null;
-        } elseif ($dataType === 'boolean') {
-            $payload['value'] = (bool) $value ? '1' : '0';
-        } else {
-            $payload['value'] = $value;
-        }
-
-        if ($payload['value'] === null || $payload['value'] === '') {
-            return null;
-        }
-
-        return $payload;
     }
 
     public function destroy(PlanningYear $expensePlan)
@@ -383,7 +318,7 @@ class ExpensePlanController extends Controller
         $sectionIdMap = [];
         $subsectionIdMap = [];
 
-        $sourceSections = ExpenseSection::with('subsections')
+        $sourceSections = ExpenseSection::with('subsections.catalogItems')
             ->where('planning_year_id', $sourceYear->id)
             ->orderBy('display_order')
             ->get();
@@ -423,6 +358,27 @@ class ExpensePlanController extends Controller
                 if ($sourceSubsection->parent_id && isset($subsectionIdMap[$sourceSubsection->id], $subsectionIdMap[$sourceSubsection->parent_id])) {
                     ExpenseSubsection::whereKey($subsectionIdMap[$sourceSubsection->id])
                         ->update(['parent_id' => $subsectionIdMap[$sourceSubsection->parent_id]]);
+                }
+            }
+        }
+
+        foreach ($sourceSections as $sourceSection) {
+            foreach ($sourceSection->subsections as $sourceSubsection) {
+                $targetSubsectionId = $subsectionIdMap[$sourceSubsection->id] ?? null;
+                if (! $targetSubsectionId) {
+                    continue;
+                }
+
+                foreach ($sourceSubsection->catalogItems as $catalogItem) {
+                    ExpenseCatalogItem::create([
+                        'subsection_id' => $targetSubsectionId,
+                        'item_name' => $catalogItem->item_name,
+                        'chart_of_account_id' => $catalogItem->chart_of_account_id,
+                        'pattern_id' => $catalogItem->pattern_id,
+                        'default_values' => $catalogItem->default_values,
+                        'sort_order' => $catalogItem->sort_order,
+                        'is_active' => $catalogItem->is_active,
+                    ]);
                 }
             }
         }

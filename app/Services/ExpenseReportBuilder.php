@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ExpensePatternField;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
@@ -16,15 +15,15 @@ class ExpenseReportBuilder
     public function buildForPlanningYear(PlanningYear $planningYear): array
     {
         $sections = ExpenseSection::with([
-            'subsections.defaultPattern.fields',
-            'subsections.children.defaultPattern.fields',
+            'subsections.defaultPattern',
+            'subsections.children.defaultPattern',
         ])
             ->where('planning_year_id', $planningYear->id)
             ->get()
             ->sortBy(fn (ExpenseSection $section) => $this->codeSortKey($section->code))
             ->values();
 
-        $plans = ExpensePlan::with(['pattern.fields', 'values', 'section', 'subsection.defaultPattern.fields'])
+        $plans = ExpensePlan::with(['pattern', 'section', 'subsection.defaultPattern', 'chartOfAccount'])
             ->where('planning_year_id', $planningYear->id)
             ->get()
             ->sortBy(fn (ExpensePlan $plan) => sprintf(
@@ -109,8 +108,8 @@ class ExpenseReportBuilder
             ->sortBy(fn (ExpensePlan $plan) => sprintf('%s|%08d', $this->codeSortKey($plan->subsection?->code ?? ''), $plan->id))
             ->values();
 
-        $pattern = $plans->first()?->pattern ?? $subsection->defaultPattern;
-        $columns = $this->columnsFor($pattern?->fields ?? collect());
+        $plan = $plans->first();
+        $columns = $this->columnsFor($plan?->pattern_snapshot['fields_schema'] ?? $plan?->pattern?->fields_schema ?? $subsection->defaultPattern?->fields_schema ?? []);
         $rows = $plans
             ->map(fn (ExpensePlan $plan, int $index) => $this->buildRow($plan, $columns, $index + 1))
             ->values();
@@ -132,8 +131,8 @@ class ExpenseReportBuilder
 
         return [
             'number' => $number,
-            'item_name' => $this->textValue($values, 'item_name') ?: $plan->plan_detail,
-            'reference' => $this->textValue($values, 'reference'),
+            'item_name' => $plan->item_name ?: $plan->plan_detail,
+            'reference' => $plan->chartOfAccount?->account_code,
             'note' => $this->textValue($values, 'note') ?: $plan->detail,
             'total' => $total,
             'values' => collect($columns)
@@ -142,14 +141,15 @@ class ExpenseReportBuilder
         ];
     }
 
-    private function columnsFor(Collection $fields): array
+    private function columnsFor(array $fields): array
     {
-        return $fields
-            ->reject(fn (ExpensePatternField $field) => in_array($field->field_key, ['item_name', 'reference', 'note', 'yearly_total'], true))
-            ->map(fn (ExpensePatternField $field) => [
-                'key' => $field->field_key,
-                'label' => $this->fieldLabel($field->field_key, $field->default_label),
-                'type' => $field->data_type,
+        return collect($fields)
+            ->reject(fn (array $field) => in_array($field['field_key'] ?? '', ['item_name', 'reference', 'note', 'yearly_total'], true))
+            ->sortBy(fn (array $field): int => (int) ($field['display_order'] ?? 0))
+            ->map(fn (array $field) => [
+                'key' => $field['field_key'],
+                'label' => $this->fieldLabel($field['field_key'], $field['default_label'] ?? null),
+                'type' => $field['data_type'] ?? 'text',
             ])
             ->values()
             ->all();
@@ -175,14 +175,11 @@ class ExpenseReportBuilder
 
     private function valuesByKey(ExpensePlan $plan): array
     {
-        return $plan->values
-            ->mapWithKeys(fn ($value) => [$value->field_key => $this->valueFromRecord($value)])
-            ->all();
-    }
-
-    private function valueFromRecord($value): mixed
-    {
-        return $value->typedValue();
+        return array_merge($plan->calculation_values ?? [], [
+            'item_name' => $plan->item_name ?: $plan->plan_detail,
+            'reference' => $plan->chartOfAccount?->account_code,
+            'note' => $plan->detail,
+        ]);
     }
 
     private function value(array $values, string $key): mixed
@@ -199,27 +196,7 @@ class ExpenseReportBuilder
 
     private function yearlyTotal(ExpensePlan $plan, ?array $values = null): float
     {
-        $total = (float) ($plan->value('yearly_total')?->value_number ?? 0);
-
-        if ($total > 0) {
-            return $total;
-        }
-
-        return $this->calculatedTotal($plan, $values ?? $this->valuesByKey($plan));
-    }
-
-    private function calculatedTotal(ExpensePlan $plan, array $values): float
-    {
-        $number = fn (string $key): float => (float) ($values[$key] ?? 0);
-
-        return match ($plan->pattern?->key) {
-            'monthly' => $number('amount_per_month') * $number('month_count'),
-            'unit_quantity' => $number('unit_price') * $number('quantity'),
-            'unit_quantity_frequency' => $number('unit_price') * $number('quantity') * $number('times_per_year'),
-            'frequency_based' => $number('unit_price') * $number('quantity') * $number('frequency_count'),
-            'event_based' => $number('unit_price') * $number('event_count') * $number('people_count'),
-            default => 0.0,
-        };
+        return $plan->yearlyTotal();
     }
 
     private function firstNote(Collection $plans): ?string

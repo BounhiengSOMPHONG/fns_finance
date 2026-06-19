@@ -3,10 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\ChartOfAccount;
+use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePlan;
-use App\Models\ExpensePlanValue;
-use App\Models\ExpenseSubsection;
-use App\Models\ExpenseSubsectionDefaultRow;
 use App\Support\ExpenseAccountLinkCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -15,14 +13,16 @@ class SyncExpenseAccountLinks extends Command
 {
     protected $signature = 'expense:sync-account-links {--dry-run : Preview changes without writing to the database}';
 
-    protected $description = 'Fill safe best-fit chart account links for expense default rows and sync plan references.';
+    protected $description = 'Fill safe best-fit chart account links for expense catalog items and sync plan accounts.';
 
     public function handle(ExpenseAccountLinkCatalog $catalog): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $accountsByCode = ChartOfAccount::orderBy('account_code')->get()->keyBy('account_code');
-        $rows = ExpenseSubsectionDefaultRow::with('chartOfAccount')
-            ->orderBy('subsection_code')
+        $rows = ExpenseCatalogItem::with(['chartOfAccount', 'subsection'])
+            ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_catalog_items.subsection_id')
+            ->select('expense_catalog_items.*')
+            ->orderBy('expense_subsections.code')
             ->orderBy('sort_order')
             ->get();
 
@@ -50,7 +50,7 @@ class SyncExpenseAccountLinks extends Command
             $row = $change['row'];
             $this->line(sprintf(
                 '%s #%d %s: %s -> %s%s',
-                $row->subsection_code,
+                $row->subsection_code ?: '-',
                 $row->sort_order,
                 $row->item_name,
                 $change['old_code'] ?: '-',
@@ -65,9 +65,9 @@ class SyncExpenseAccountLinks extends Command
 
         DB::transaction(function () use ($changes): void {
             foreach ($changes as $change) {
-                /** @var ExpenseSubsectionDefaultRow $row */
+                /** @var ExpenseCatalogItem $row */
                 $row = $change['row'];
-                DB::table('expense_subsection_default_rows')
+                DB::table('expense_catalog_items')
                     ->where('id', $row->id)
                     ->update([
                         'chart_of_account_id' => $change['new_account']->id,
@@ -86,22 +86,21 @@ class SyncExpenseAccountLinks extends Command
         return self::SUCCESS;
     }
 
-    private function syncPlanRowsFromDefaultRow(ExpenseSubsectionDefaultRow $defaultRow): void
+    private function syncPlanRowsFromDefaultRow(ExpenseCatalogItem $defaultRow): void
     {
-        $subsectionIds = ExpenseSubsection::where('code', $defaultRow->subsection_code)->pluck('id');
-        if ($subsectionIds->isEmpty()) {
-            return;
-        }
-
-        ExpensePlan::whereIn('subsection_id', $subsectionIds)
-            ->where('plan_detail', $defaultRow->item_name)
+        ExpensePlan::where('catalog_item_id', $defaultRow->id)
+            ->orWhere(function ($query) use ($defaultRow): void {
+                $query->where('subsection_id', $defaultRow->subsection_id)
+                    ->where(function ($nested) use ($defaultRow): void {
+                        $nested->where('item_name', $defaultRow->item_name)
+                            ->orWhere('plan_detail', $defaultRow->item_name);
+                    });
+            })
             ->get()
             ->each(function (ExpensePlan $plan) use ($defaultRow): void {
-                ExpensePlanValue::updateOrCreate([
-                    'expense_plan_id' => $plan->id,
-                    'field_key' => 'reference',
-                ], [
-                    'value' => $defaultRow->chartOfAccount?->account_code,
+                $plan->update([
+                    'catalog_item_id' => $defaultRow->id,
+                    'chart_of_account_id' => $defaultRow->chart_of_account_id,
                 ]);
             });
     }

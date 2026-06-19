@@ -4,11 +4,11 @@ namespace App\Http\Controllers\FinanceHead\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
+use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
-use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use App\Support\ExpenseAccountLinkCatalog;
 use App\Support\ExpenseStructureNames;
@@ -48,9 +48,11 @@ class ExpenseStructureController extends Controller
                 ->values();
 
             if ($subsectionCodes->isNotEmpty()) {
-                $defaultRows = ExpenseSubsectionDefaultRow::with('chartOfAccount.parent')
-                    ->whereIn('subsection_code', $subsectionCodes)
-                    ->orderBy('subsection_code')
+                $defaultRows = ExpenseCatalogItem::with(['chartOfAccount.parent', 'subsection'])
+                    ->whereHas('subsection', fn ($query) => $query->whereIn('code', $subsectionCodes))
+                    ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_catalog_items.subsection_id')
+                    ->select('expense_catalog_items.*')
+                    ->orderBy('expense_subsections.code')
                     ->orderBy('sort_order')
                     ->get();
 
@@ -62,7 +64,7 @@ class ExpenseStructureController extends Controller
 
         $accountWarnings = $defaultRowsByCode
             ->flatten(1)
-            ->filter(fn (ExpenseSubsectionDefaultRow $row): bool => $row->chart_of_account_id === null || (bool) $row->getAttribute('needs_review'))
+            ->filter(fn (ExpenseCatalogItem $row): bool => $row->chart_of_account_id === null || (bool) $row->getAttribute('needs_review'))
             ->values();
 
         $patterns = ExpensePattern::where('is_active', true)
@@ -259,11 +261,12 @@ class ExpenseStructureController extends Controller
 
     private function buildStructureFromDefaultRows(PlanningYear $planningYear): void
     {
-        $codes = ExpenseSubsectionDefaultRow::query()
-            ->select('subsection_code')
+        $codes = ExpenseCatalogItem::query()
+            ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_catalog_items.subsection_id')
+            ->select('expense_subsections.code')
             ->distinct()
-            ->orderBy('subsection_code')
-            ->pluck('subsection_code')
+            ->orderBy('expense_subsections.code')
+            ->pluck('expense_subsections.code')
             ->filter()
             ->values();
 

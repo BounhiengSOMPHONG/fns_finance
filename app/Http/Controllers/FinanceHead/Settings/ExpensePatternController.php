@@ -4,9 +4,7 @@ namespace App\Http\Controllers\FinanceHead\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExpensePattern;
-use App\Models\ExpensePatternField;
 use App\Models\ExpensePlan;
-use App\Models\ExpensePlanValue;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,10 +12,7 @@ class ExpensePatternController extends Controller
 {
     public function index()
     {
-        $patterns = ExpensePattern::with([
-            'fields',
-            'leafDefaultSubsections.section',
-        ])
+        $patterns = ExpensePattern::with('leafDefaultSubsections.section')
             ->withCount('leafDefaultSubsections')
             ->orderBy('id')
             ->get();
@@ -38,6 +33,8 @@ class ExpensePatternController extends Controller
             'key' => $data['key'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
+            'fields_schema' => [],
+            'formula_schema' => ['operation' => 'multiply', 'fields' => []],
             'is_active' => $request->boolean('is_active'),
         ]);
 
@@ -69,17 +66,22 @@ class ExpensePatternController extends Controller
                 'string',
                 'max:50',
                 'regex:/^[a-z0-9_]+$/',
-                Rule::unique('expense_pattern_fields', 'field_key')->where('pattern_id', $expensePattern->id),
             ],
             'default_label' => ['required', 'string', 'max:255'],
             'data_type' => ['required', Rule::in(['text', 'number', 'date', 'boolean'])],
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
             'is_required' => ['nullable', 'boolean'],
             'is_calculated' => ['nullable', 'boolean'],
+            'include_in_formula' => ['nullable', 'boolean'],
             'default_value' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $expensePattern->fields()->create([
+        $fields = collect($expensePattern->fields_schema ?? []);
+        if ($fields->contains(fn (array $field): bool => ($field['field_key'] ?? null) === $data['field_key'])) {
+            return back()->withErrors(['field_key' => 'This field key already exists in the pattern.']);
+        }
+
+        $fields->push([
             'field_key' => $data['field_key'],
             'default_label' => $data['default_label'],
             'data_type' => $data['data_type'],
@@ -89,10 +91,21 @@ class ExpensePatternController extends Controller
             'default_value' => $data['default_value'] ?? null,
         ]);
 
+        $expensePattern->fields_schema = $fields
+            ->sortBy(fn (array $field): int => (int) ($field['display_order'] ?? 0))
+            ->values()
+            ->all();
+        $expensePattern->formula_schema = $this->formulaSchemaAfterToggle(
+            $expensePattern,
+            $data['field_key'],
+            $request->boolean('include_in_formula')
+        );
+        $expensePattern->save();
+
         return back()->with('success', 'Pattern field added.');
     }
 
-    public function updateField(Request $request, ExpensePatternField $expensePatternField)
+    public function updateField(Request $request, ExpensePattern $expensePattern, string $fieldKey)
     {
         $data = $request->validate([
             'default_label' => ['required', 'string', 'max:255'],
@@ -100,34 +113,86 @@ class ExpensePatternController extends Controller
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
             'is_required' => ['nullable', 'boolean'],
             'is_calculated' => ['nullable', 'boolean'],
+            'include_in_formula' => ['nullable', 'boolean'],
             'default_value' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $expensePatternField->update([
-            'default_label' => $data['default_label'],
-            'data_type' => $data['data_type'],
-            'display_order' => $data['display_order'],
-            'is_required' => $request->boolean('is_required'),
-            'is_calculated' => $request->boolean('is_calculated'),
-            'default_value' => $data['default_value'] ?? null,
-        ]);
+        $found = false;
+        $fields = collect($expensePattern->fields_schema ?? [])
+            ->map(function (array $field) use ($fieldKey, $data, $request, &$found): array {
+                if (($field['field_key'] ?? null) !== $fieldKey) {
+                    return $field;
+                }
+
+                $found = true;
+
+                return array_merge($field, [
+                    'default_label' => $data['default_label'],
+                    'data_type' => $data['data_type'],
+                    'display_order' => $data['display_order'],
+                    'is_required' => $request->boolean('is_required'),
+                    'is_calculated' => $request->boolean('is_calculated'),
+                    'default_value' => $data['default_value'] ?? null,
+                ]);
+            });
+
+        abort_if(! $found, 404);
+
+        $expensePattern->fields_schema = $fields
+            ->sortBy(fn (array $field): int => (int) ($field['display_order'] ?? 0))
+            ->values()
+            ->all();
+        $expensePattern->formula_schema = $this->formulaSchemaAfterToggle(
+            $expensePattern,
+            $fieldKey,
+            $request->boolean('include_in_formula')
+        );
+        $expensePattern->save();
 
         return back()->with('success', 'Pattern field updated.');
     }
 
-    public function destroyField(ExpensePatternField $expensePatternField)
+    public function destroyField(ExpensePattern $expensePattern, string $fieldKey)
     {
-        $planIds = ExpensePlan::where('pattern_id', $expensePatternField->pattern_id)->pluck('id');
-        $hasPlanValues = $planIds->isNotEmpty() && ExpensePlanValue::whereIn('expense_plan_id', $planIds)
-            ->where('field_key', $expensePatternField->field_key)
+        $hasPlanValues = ExpensePlan::where('pattern_id', $expensePattern->id)
+            ->where(function ($query) use ($fieldKey): void {
+                $query->whereNotNull("calculation_values->{$fieldKey}")
+                    ->orWhereNotNull('pattern_snapshot');
+            })
             ->exists();
 
         if ($hasPlanValues) {
             return back()->with('error', 'Cannot delete this field because it is already used by plan data.');
         }
 
-        $expensePatternField->delete();
+        $expensePattern->fields_schema = collect($expensePattern->fields_schema ?? [])
+            ->reject(fn (array $field): bool => ($field['field_key'] ?? null) === $fieldKey)
+            ->values()
+            ->all();
+        $formula = $expensePattern->formula_schema ?? ['operation' => 'multiply', 'fields' => []];
+        $formula['fields'] = collect($formula['fields'] ?? [])
+            ->reject(fn (string $key): bool => $key === $fieldKey)
+            ->values()
+            ->all();
+        $expensePattern->formula_schema = $formula;
+        $expensePattern->save();
 
         return back()->with('success', 'Pattern field deleted.');
+    }
+
+    private function formulaSchemaAfterToggle(ExpensePattern $expensePattern, string $fieldKey, bool $include): array
+    {
+        $formula = $expensePattern->formula_schema ?? ['operation' => 'multiply', 'fields' => []];
+        $fields = collect($formula['fields'] ?? [])
+            ->filter(fn ($key): bool => is_string($key) && $key !== '' && $key !== $fieldKey);
+
+        if ($include) {
+            $fields->push($fieldKey);
+        }
+
+        return [
+            'operation' => 'multiply',
+            'fields' => $fields->values()->all(),
+        ];
     }
 }

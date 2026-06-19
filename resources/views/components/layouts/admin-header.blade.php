@@ -12,8 +12,8 @@
         || request()->routeIs('head_of_finance.settings.nuol-pct.*')
         || request()->routeIs('head_of_finance.settings.registration-fee.*')
         || request()->routeIs('head_of_finance.settings.expense-patterns.*')
-        || request()->routeIs('head_of_finance.settings.expense-pattern-fields.*')
         || request()->routeIs('head_of_finance.settings.expense-default-rows.*')
+        || request()->routeIs('head_of_finance.settings.expense-setup.*')
         || request()->routeIs('head_of_finance.settings.expense-structure.*');
 
     $systemActive = request()->routeIs('admin.users.*')
@@ -77,13 +77,9 @@
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
                             <x-icons.book-open /> ລາຄາ & ໜ່ວຍກິດ & ມຊ%
                         </a>
-                        <a href="{{ route('head_of_finance.settings.expense-patterns.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-patterns.*') || request()->routeIs('head_of_finance.settings.expense-pattern-fields.*') ? 'active' : '' }}">
-                            <x-icons.settings /> Expense patterns
-                        </a>
-                        <a href="{{ route('head_of_finance.settings.expense-structure.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-structure.*') || request()->routeIs('head_of_finance.settings.expense-default-rows.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Expense structure & accounts
+                        <a href="{{ route('head_of_finance.settings.expense-setup.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-setup.*') || request()->routeIs('head_of_finance.settings.expense-structure.*') || request()->routeIs('head_of_finance.settings.expense-default-rows.*') || request()->routeIs('head_of_finance.settings.expense-patterns.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> Expense Setup
                         </a>
                         <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">

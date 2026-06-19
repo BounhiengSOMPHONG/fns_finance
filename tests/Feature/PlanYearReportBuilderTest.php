@@ -18,7 +18,7 @@ class PlanYearReportBuilderTest extends TestCase
         $this->createTables();
     }
 
-    public function test_expense_uses_default_row_account_before_reference_and_rolls_up_without_double_counting(): void
+    public function test_expense_uses_plan_account_and_rolls_up_without_double_counting(): void
     {
         $this->seedAccounts();
         DB::table('planning_years')->insert(['id' => 1, 'year' => 2027, 'name' => 'Planning 2027']);
@@ -36,25 +36,10 @@ class PlanYearReportBuilderTest extends TestCase
 
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
-        DB::table('expense_subsection_default_rows')->insert([
-            'id' => 1,
-            'subsection_code' => '2.1.1',
-            'item_name' => 'Paper',
-            'chart_of_account_id' => 7,
-            'sort_order' => 1,
-        ]);
         DB::table('expense_plans')->insert([
-            ['id' => 1, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Paper'],
-            ['id' => 2, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Fallback row'],
-            ['id' => 3, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Unlinked row'],
-        ]);
-        DB::table('expense_plan_values')->insert([
-            ['expense_plan_id' => 1, 'field_key' => 'item_name', 'value_text' => 'Paper'],
-            ['expense_plan_id' => 1, 'field_key' => 'reference', 'value_text' => '60100100'],
-            ['expense_plan_id' => 1, 'field_key' => 'yearly_total', 'value_number' => 100],
-            ['expense_plan_id' => 2, 'field_key' => 'reference', 'value_text' => '62100201'],
-            ['expense_plan_id' => 2, 'field_key' => 'yearly_total', 'value_number' => 50],
-            ['expense_plan_id' => 3, 'field_key' => 'yearly_total', 'value_number' => 25],
+            $this->expensePlanRow(1, 'Paper', 7, 100),
+            $this->expensePlanRow(2, 'Fallback row', 7, 50),
+            $this->expensePlanRow(3, 'Unlinked row', null, 25),
         ]);
 
         $report = app(PlanYearReportBuilder::class)->buildForPlanningYear(PlanningYear::findOrFail(1));
@@ -68,7 +53,7 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertSame(0.0, $rows->get('60100100')['faculty_amount']);
         $this->assertSame(150.0, $rows->get('62100201')['faculty_amount']);
         $this->assertSame(1350.0, $report['totals']['total_amount']);
-        $this->assertCount(1, $report['warnings']['reference_fallbacks']);
+        $this->assertCount(0, $report['warnings']['reference_fallbacks']);
         $this->assertCount(1, $report['warnings']['unlinked_expenses']);
     }
 
@@ -82,14 +67,8 @@ class PlanYearReportBuilderTest extends TestCase
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
         DB::table('expense_plans')->insert([
-            ['id' => 1, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Academic row'],
-            ['id' => 2, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Blocked row'],
-        ]);
-        DB::table('expense_plan_values')->insert([
-            ['expense_plan_id' => 1, 'field_key' => 'reference', 'value_text' => '62100201'],
-            ['expense_plan_id' => 1, 'field_key' => 'yearly_total', 'value_number' => 100],
-            ['expense_plan_id' => 2, 'field_key' => 'reference', 'value_text' => '61000000'],
-            ['expense_plan_id' => 2, 'field_key' => 'yearly_total', 'value_number' => 80],
+            $this->expensePlanRow(1, 'Academic row', 7, 100),
+            $this->expensePlanRow(2, 'Blocked row', 8, 80),
         ]);
 
         $report = app(PeriodPlanReportBuilder::class)->buildForPlanningYear(PlanningYear::findOrFail(1));
@@ -124,11 +103,7 @@ class PlanYearReportBuilderTest extends TestCase
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
         DB::table('expense_plans')->insert([
-            ['id' => 1, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Academic row'],
-        ]);
-        DB::table('expense_plan_values')->insert([
-            ['expense_plan_id' => 1, 'field_key' => 'reference', 'value_text' => '62100201'],
-            ['expense_plan_id' => 1, 'field_key' => 'yearly_total', 'value_number' => 100],
+            $this->expensePlanRow(1, 'Academic row', 7, 100),
         ]);
         DB::table('period_plan_overrides')->insert([
             'planning_year_id' => 1,
@@ -167,11 +142,7 @@ class PlanYearReportBuilderTest extends TestCase
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
         DB::table('expense_plans')->insert([
-            ['id' => 1, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'plan_detail' => 'Academic row'],
-        ]);
-        DB::table('expense_plan_values')->insert([
-            ['expense_plan_id' => 1, 'field_key' => 'reference', 'value_text' => '62100201'],
-            ['expense_plan_id' => 1, 'field_key' => 'yearly_total', 'value_number' => 100],
+            $this->expensePlanRow(1, 'Academic row', 7, 100),
         ]);
         DB::table('period_plan_overrides')->insert([
             'planning_year_id' => 1,
@@ -205,13 +176,29 @@ class PlanYearReportBuilderTest extends TestCase
         ]);
     }
 
+    private function expensePlanRow(int $id, string $itemName, ?int $chartOfAccountId, float $yearlyTotal): array
+    {
+        return [
+            'id' => $id,
+            'planning_year_id' => 1,
+            'section_id' => 1,
+            'subsection_id' => 1,
+            'catalog_item_id' => null,
+            'chart_of_account_id' => $chartOfAccountId,
+            'pattern_id' => null,
+            'item_name' => $itemName,
+            'plan_detail' => $itemName,
+            'calculation_values' => json_encode(['yearly_total' => $yearlyTotal]),
+            'pattern_snapshot' => json_encode(['formula_schema' => ['operation' => 'multiply', 'fields' => []]]),
+        ];
+    }
+
     private function createTables(): void
     {
         foreach ([
-            'expense_plan_values',
             'period_plan_overrides',
             'expense_plans',
-            'expense_subsection_default_rows',
+            'expense_catalog_items',
             'expense_subsections',
             'expense_sections',
             'salary_entries',
@@ -286,11 +273,12 @@ class PlanYearReportBuilderTest extends TestCase
             $table->string('name');
         });
 
-        Schema::create('expense_subsection_default_rows', function ($table): void {
+        Schema::create('expense_catalog_items', function ($table): void {
             $table->id();
-            $table->string('subsection_code', 30);
+            $table->unsignedBigInteger('subsection_id');
             $table->string('item_name');
             $table->unsignedInteger('chart_of_account_id')->nullable();
+            $table->unsignedBigInteger('pattern_id')->nullable();
             $table->unsignedInteger('sort_order')->default(1);
             $table->json('default_values')->nullable();
             $table->boolean('is_active')->default(true);
@@ -302,18 +290,13 @@ class PlanYearReportBuilderTest extends TestCase
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedBigInteger('section_id');
             $table->unsignedBigInteger('subsection_id')->nullable();
+            $table->unsignedBigInteger('catalog_item_id')->nullable();
+            $table->unsignedInteger('chart_of_account_id')->nullable();
             $table->unsignedBigInteger('pattern_id')->nullable();
+            $table->string('item_name')->nullable();
             $table->string('plan_detail');
-        });
-
-        Schema::create('expense_plan_values', function ($table): void {
-            $table->id();
-            $table->unsignedBigInteger('expense_plan_id');
-            $table->string('field_key', 50);
-            $table->text('value_text')->nullable();
-            $table->decimal('value_number', 18, 2)->nullable();
-            $table->date('value_date')->nullable();
-            $table->boolean('value_boolean')->nullable();
+            $table->json('calculation_values')->nullable();
+            $table->json('pattern_snapshot')->nullable();
         });
     }
 }

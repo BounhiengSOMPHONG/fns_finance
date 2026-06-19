@@ -4,10 +4,10 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
+use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
-use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PeriodPlanOverride;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearReviewRound;
@@ -30,7 +30,7 @@ class ManagePlanController extends Controller
         $plans = PlanningYear::with([
             'academicIncomePlans.items',
             'salaryPlans.entries',
-            'expensePlans.values' => fn ($query) => $query->where('field_key', 'yearly_total'),
+            'expensePlans.pattern',
         ])
             ->withCount('expensePlans')
             ->orderByDesc('year')
@@ -648,7 +648,6 @@ class ManagePlanController extends Controller
 
             $expensePlanIds = $planningYear->expensePlans()->pluck('id');
             if ($expensePlanIds->isNotEmpty()) {
-                DB::table('expense_plan_values')->whereIn('expense_plan_id', $expensePlanIds)->delete();
                 DB::table('expense_plans')->whereIn('id', $expensePlanIds)->delete();
             }
 
@@ -718,11 +717,12 @@ class ManagePlanController extends Controller
 
     private function buildExpenseStructureFromDefaultRows(PlanningYear $planningYear): void
     {
-        $codes = ExpenseSubsectionDefaultRow::query()
-            ->select('subsection_code')
+        $codes = ExpenseCatalogItem::query()
+            ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_catalog_items.subsection_id')
+            ->select('expense_subsections.code')
             ->distinct()
-            ->orderBy('subsection_code')
-            ->pluck('subsection_code')
+            ->orderBy('expense_subsections.code')
+            ->pluck('expense_subsections.code')
             ->filter()
             ->values();
 
@@ -796,7 +796,7 @@ class ManagePlanController extends Controller
         $sectionIdMap = [];
         $subsectionIdMap = [];
 
-        $sourceSections = ExpenseSection::with('subsections')
+        $sourceSections = ExpenseSection::with('subsections.catalogItems')
             ->where('planning_year_id', $sourceYear->id)
             ->orderBy('display_order')
             ->get();
@@ -828,6 +828,18 @@ class ManagePlanController extends Controller
                 ]);
 
                 $subsectionIdMap[$sourceSubsection->id] = $subsection->id;
+
+                foreach ($sourceSubsection->catalogItems->sortBy('sort_order') as $catalogItem) {
+                    ExpenseCatalogItem::create([
+                        'subsection_id' => $subsection->id,
+                        'item_name' => $catalogItem->item_name,
+                        'chart_of_account_id' => $catalogItem->chart_of_account_id,
+                        'pattern_id' => $catalogItem->pattern_id,
+                        'default_values' => $catalogItem->default_values ?? [],
+                        'sort_order' => $catalogItem->sort_order,
+                        'is_active' => $catalogItem->is_active,
+                    ]);
+                }
             }
         }
 

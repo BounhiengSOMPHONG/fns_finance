@@ -10,7 +10,7 @@ class SyncExpenseNames extends Command
 {
     protected $signature = 'expense:sync-names {--dry-run : Preview changes without writing to the database}';
 
-    protected $description = 'Safely sync expense section, subsection, and guarded default row names.';
+    protected $description = 'Safely sync expense section, subsection, and guarded catalog item names.';
 
     public function handle(): int
     {
@@ -45,7 +45,7 @@ class SyncExpenseNames extends Command
             }
 
             foreach ($changes['default_rows'] as $change) {
-                DB::table('expense_subsection_default_rows')
+                DB::table('expense_catalog_items')
                     ->where('id', $change['id'])
                     ->update(['item_name' => $change['new'], 'updated_at' => $now]);
             }
@@ -56,10 +56,10 @@ class SyncExpenseNames extends Command
                     ->update(['plan_detail' => $change['new'], 'updated_at' => $now]);
             }
 
-            foreach ($changes['plan_value_item_names'] as $change) {
-                DB::table('expense_plan_values')
+            foreach ($changes['plan_item_names'] as $change) {
+                DB::table('expense_plans')
                     ->where('id', $change['id'])
-                    ->update(['value' => $change['new'], 'updated_at' => $now]);
+                    ->update(['item_name' => $change['new'], 'updated_at' => $now]);
             }
         });
 
@@ -78,7 +78,7 @@ class SyncExpenseNames extends Command
             'subsection_orders' => [],
             'default_rows' => [],
             'plan_details' => [],
-            'plan_value_item_names' => [],
+            'plan_item_names' => [],
         ];
 
         DB::table('expense_sections')
@@ -145,11 +145,17 @@ class SyncExpenseNames extends Command
 
         $finalDefaultRows = [];
 
-        DB::table('expense_subsection_default_rows')
-            ->whereIn('subsection_code', array_keys($names))
-            ->orderBy('subsection_code')
-            ->orderBy('sort_order')
-            ->get(['id', 'subsection_code', 'item_name', 'sort_order'])
+        DB::table('expense_catalog_items')
+            ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_catalog_items.subsection_id')
+            ->whereIn('expense_subsections.code', array_keys($names))
+            ->orderBy('expense_subsections.code')
+            ->orderBy('expense_catalog_items.sort_order')
+            ->get([
+                'expense_catalog_items.id',
+                'expense_subsections.code as subsection_code',
+                'expense_catalog_items.item_name',
+                'expense_catalog_items.sort_order',
+            ])
             ->each(function ($row) use (&$changes, &$finalDefaultRows): void {
                 $sortOrder = (int) $row->sort_order;
                 $target = ExpenseStructureNames::defaultRowTargetName($row->subsection_code, $sortOrder, $row->item_name);
@@ -189,6 +195,7 @@ class SyncExpenseNames extends Command
                     ->orderBy('expense_plans.id')
                     ->get([
                         'expense_plans.id',
+                        'expense_plans.item_name',
                         'expense_plans.plan_detail',
                         'expense_plans.subsection_id',
                     ]);
@@ -206,29 +213,15 @@ class SyncExpenseNames extends Command
                         'new' => $rowInfo['final'],
                     ];
 
-                    DB::table('expense_plan_values')
-                        ->where('expense_plan_id', $plan->id)
-                        ->where('field_key', 'item_name')
-                        ->where(function ($query) use ($candidates): void {
-                            $query->whereIn('value', $candidates)
-                                ->orWhereNull('value')
-                                ->orWhere('value', '');
-                        })
-                        ->orderBy('id')
-                        ->get(['id', 'expense_plan_id', 'value'])
-                        ->each(function ($value) use (&$changes, $code, $rowInfo): void {
-                            if ($value->value === $rowInfo['final']) {
-                                return;
-                            }
-
-                            $changes['plan_value_item_names'][] = [
-                                'id' => $value->id,
-                                'context' => 'plan '.$value->expense_plan_id,
-                                'code' => $code,
-                                'old' => $value->value,
-                                'new' => $rowInfo['final'],
-                            ];
-                        });
+                    if (($plan->item_name ?? null) !== $rowInfo['final']) {
+                        $changes['plan_item_names'][] = [
+                            'id' => $plan->id,
+                            'context' => 'plan '.$plan->id,
+                            'code' => $code,
+                            'old' => $plan->item_name,
+                            'new' => $rowInfo['final'],
+                        ];
+                    }
                 }
             }
         }
@@ -255,9 +248,9 @@ class SyncExpenseNames extends Command
             'sections' => 'Sections',
             'subsections' => 'Subsections',
             'subsection_orders' => 'Subsection display orders',
-            'default_rows' => 'Default rows',
+            'default_rows' => 'Catalog items',
             'plan_details' => 'Plan details',
-            'plan_value_item_names' => 'Plan value item_name fields',
+            'plan_item_names' => 'Plan item names',
         ] as $key => $label) {
             $this->newLine();
             $this->info($label.': '.count($changes[$key]));

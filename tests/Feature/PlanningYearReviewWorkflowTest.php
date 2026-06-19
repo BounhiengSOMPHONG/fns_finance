@@ -256,6 +256,41 @@ class PlanningYearReviewWorkflowTest extends TestCase
             ->assertDontSee('ປິດຮອບແລ້ວ');
     }
 
+    public function test_finance_head_can_delete_pending_review_plan(): void
+    {
+        $roundId = $this->createPendingReview();
+        $commentId = DB::table('planning_year_review_comments')->insertGetId([
+            'planning_year_review_round_id' => $roundId,
+            'planning_year_id' => 1,
+            'user_id' => $this->reviewer->id,
+            'comment' => 'Please adjust totals.',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('planning_year_review_comment_agreements')->insert([
+            'planning_year_review_comment_id' => $commentId,
+            'user_id' => $this->otherUser->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->seedPlanningYearChildren();
+
+        $this->actingAs($this->financeHead)
+            ->delete(route('head_of_finance.manage-plan.destroy', 1))
+            ->assertRedirect(route('head_of_finance.manage-plan.index'));
+
+        $this->assertDatabaseMissing('planning_years', ['id' => 1]);
+        $this->assertDatabaseMissing('planning_year_review_rounds', ['id' => $roundId]);
+        $this->assertDatabaseMissing('planning_year_review_comments', ['id' => $commentId]);
+        $this->assertDatabaseMissing('planning_year_review_comment_agreements', [
+            'planning_year_review_comment_id' => $commentId,
+        ]);
+        $this->assertDatabaseMissing('planning_year_reviewers', [
+            'planning_year_review_round_id' => $roundId,
+        ]);
+        $this->assertDatabaseMissing('period_plan_overrides', ['planning_year_id' => 1]);
+    }
+
     private function createPendingReview(array $reviewerIds = []): int
     {
         $reviewerIds = $reviewerIds ?: [$this->reviewer->id];
@@ -287,6 +322,71 @@ class PlanningYearReviewWorkflowTest extends TestCase
         ]);
 
         return $roundId;
+    }
+
+    private function seedPlanningYearChildren(): void
+    {
+        DB::table('academic_income_plans')->insert([
+            'id' => 1,
+            'planning_year_id' => 1,
+            'fiscal_year' => 2027,
+            'created_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('academic_income_items')->insert([
+            'id' => 1,
+            'plan_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('salary_plans')->insert([
+            'id' => 1,
+            'planning_year_id' => 1,
+            'fiscal_year' => 2027,
+            'month' => 1,
+            'created_by' => $this->financeHead->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('salary_entries')->insert([
+            'id' => 1,
+            'plan_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('expense_sections')->insert([
+            'id' => 1,
+            'planning_year_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('expense_subsections')->insert([
+            'id' => 1,
+            'section_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('expense_plans')->insert([
+            'id' => 1,
+            'planning_year_id' => 1,
+            'section_id' => 1,
+            'subsection_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('expense_plan_values')->insert([
+            'id' => 1,
+            'expense_plan_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('period_plan_overrides')->insert([
+            'id' => 1,
+            'planning_year_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     private function seedUsers(): void
@@ -331,6 +431,15 @@ class PlanningYearReviewWorkflowTest extends TestCase
     private function createTables(): void
     {
         foreach ([
+            'period_plan_overrides',
+            'expense_plan_values',
+            'expense_plans',
+            'expense_subsections',
+            'expense_sections',
+            'salary_entries',
+            'salary_plans',
+            'academic_income_items',
+            'academic_income_plans',
             'planning_year_review_comment_agreements',
             'planning_year_review_comments',
             'planning_year_reviewers',
@@ -407,6 +516,68 @@ class PlanningYearReviewWorkflowTest extends TestCase
             $table->unsignedInteger('user_id');
             $table->timestamps();
             $table->unique(['planning_year_review_comment_id', 'user_id']);
+        });
+
+        Schema::create('academic_income_plans', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('planning_year_id')->nullable();
+            $table->unsignedSmallInteger('fiscal_year');
+            $table->unsignedInteger('created_by')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('academic_income_items', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('plan_id');
+            $table->timestamps();
+        });
+
+        Schema::create('salary_plans', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('planning_year_id')->nullable();
+            $table->unsignedSmallInteger('fiscal_year');
+            $table->unsignedTinyInteger('month');
+            $table->unsignedInteger('created_by');
+            $table->timestamps();
+        });
+
+        Schema::create('salary_entries', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('plan_id');
+            $table->timestamps();
+        });
+
+        Schema::create('expense_sections', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('planning_year_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('expense_subsections', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('section_id');
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('expense_plans', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('planning_year_id');
+            $table->unsignedBigInteger('section_id');
+            $table->unsignedBigInteger('subsection_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('expense_plan_values', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('expense_plan_id');
+            $table->timestamps();
+        });
+
+        Schema::create('period_plan_overrides', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('planning_year_id');
+            $table->timestamps();
         });
     }
 }

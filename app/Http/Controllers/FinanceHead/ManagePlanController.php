@@ -602,15 +602,38 @@ class ManagePlanController extends Controller
 
     public function destroy(PlanningYear $planningYear)
     {
-        abort_if(
-            $planningYear->canBeEdited() === false,
-            403,
-            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
-        );
-
         $year = $planningYear->year;
 
         DB::transaction(function () use ($planningYear): void {
+            $reviewRoundIds = $planningYear->reviewRounds()->pluck('id');
+            if ($reviewRoundIds->isNotEmpty()) {
+                $planningYear->update(['current_review_round_id' => null]);
+
+                $reviewCommentIds = DB::table('planning_year_review_comments')
+                    ->whereIn('planning_year_review_round_id', $reviewRoundIds)
+                    ->pluck('id');
+
+                if ($reviewCommentIds->isNotEmpty()) {
+                    DB::table('planning_year_review_comment_agreements')
+                        ->whereIn('planning_year_review_comment_id', $reviewCommentIds)
+                        ->delete();
+                }
+
+                DB::table('planning_year_review_comments')
+                    ->whereIn('planning_year_review_round_id', $reviewRoundIds)
+                    ->delete();
+                DB::table('planning_year_reviewers')
+                    ->whereIn('planning_year_review_round_id', $reviewRoundIds)
+                    ->delete();
+                DB::table('planning_year_review_rounds')
+                    ->whereIn('id', $reviewRoundIds)
+                    ->delete();
+            }
+
+            DB::table('period_plan_overrides')
+                ->where('planning_year_id', $planningYear->id)
+                ->delete();
+
             $incomePlanIds = $planningYear->academicIncomePlans()->pluck('id');
             if ($incomePlanIds->isNotEmpty()) {
                 DB::table('academic_income_items')->whereIn('plan_id', $incomePlanIds)->delete();

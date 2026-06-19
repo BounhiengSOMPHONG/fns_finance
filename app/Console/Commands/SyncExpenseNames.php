@@ -59,7 +59,7 @@ class SyncExpenseNames extends Command
             foreach ($changes['plan_value_item_names'] as $change) {
                 DB::table('expense_plan_values')
                     ->where('id', $change['id'])
-                    ->update(['value_text' => $change['new'], 'updated_at' => $now]);
+                    ->update(['value' => $change['new'], 'updated_at' => $now]);
             }
         });
 
@@ -210,14 +210,14 @@ class SyncExpenseNames extends Command
                         ->where('expense_plan_id', $plan->id)
                         ->where('field_key', 'item_name')
                         ->where(function ($query) use ($candidates): void {
-                            $query->whereIn('value_text', $candidates)
-                                ->orWhereNull('value_text')
-                                ->orWhere('value_text', '');
+                            $query->whereIn('value', $candidates)
+                                ->orWhereNull('value')
+                                ->orWhere('value', '');
                         })
                         ->orderBy('id')
-                        ->get(['id', 'expense_plan_id', 'value_text'])
+                        ->get(['id', 'expense_plan_id', 'value'])
                         ->each(function ($value) use (&$changes, $code, $rowInfo): void {
-                            if ($value->value_text === $rowInfo['final']) {
+                            if ($value->value === $rowInfo['final']) {
                                 return;
                             }
 
@@ -225,7 +225,7 @@ class SyncExpenseNames extends Command
                                 'id' => $value->id,
                                 'context' => 'plan '.$value->expense_plan_id,
                                 'code' => $code,
-                                'old' => $value->value_text,
+                                'old' => $value->value,
                                 'new' => $rowInfo['final'],
                             ];
                         });

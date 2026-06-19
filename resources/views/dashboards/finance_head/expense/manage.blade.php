@@ -80,7 +80,7 @@
         'detail' => $row->detail,
         'total' => $row->yearlyTotal(),
         'values' => $row->values->mapWithKeys(fn ($value) => [
-            $value->field_key => $value->value_number ?? $value->value_text ?? $value->value_date ?? $value->value_boolean
+            $value->field_key => $value->typedValue()
         ]),
     ])->values();
 

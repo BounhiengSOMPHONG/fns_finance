@@ -137,7 +137,7 @@ class ExpensePlanRowController extends Controller
     private function preserveLockedRowValues(ExpensePlan $expensePlan, array $values): array
     {
         $currentValues = $expensePlan->values->mapWithKeys(function (ExpensePlanValue $value) {
-            return [$value->field_key => $value->value_number ?? $value->value_text ?? $value->value_date ?? $value->value_boolean];
+            return [$value->field_key => $value->typedValue()];
         });
 
         foreach (['item_name', 'reference'] as $fieldKey) {
@@ -154,20 +154,21 @@ class ExpensePlanRowController extends Controller
         $payload = [
             'expense_plan_id' => $expensePlan->id,
             'field_key' => $fieldKey,
-            'value_text' => null,
-            'value_number' => null,
-            'value_date' => null,
-            'value_boolean' => null,
+            'value' => null,
         ];
 
         if ($dataType === 'number') {
-            $payload['value_number'] = is_numeric($value) ? $value : 0;
+            $payload['value'] = is_numeric($value) ? $value : 0;
         } elseif ($dataType === 'date') {
-            $payload['value_date'] = $value ?: null;
+            $payload['value'] = $value ?: null;
         } elseif ($dataType === 'boolean') {
-            $payload['value_boolean'] = (bool) $value;
+            $payload['value'] = (bool) $value ? '1' : '0';
         } else {
-            $payload['value_text'] = $value;
+            $payload['value'] = $value;
+        }
+
+        if ($payload['value'] === null || $payload['value'] === '') {
+            return;
         }
 
         ExpensePlanValue::create($payload);
@@ -199,7 +200,7 @@ class ExpensePlanRowController extends Controller
             'detail' => $expensePlan->detail,
             'total' => $expensePlan->yearlyTotal(),
             'values' => $expensePlan->values->mapWithKeys(function (ExpensePlanValue $value) {
-                return [$value->field_key => $value->value_number ?? $value->value_text ?? $value->value_date ?? $value->value_boolean];
+                return [$value->field_key => $value->typedValue()];
             }),
         ];
     }

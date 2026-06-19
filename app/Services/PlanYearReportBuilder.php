@@ -172,10 +172,7 @@ class PlanYearReportBuilder
     private function valuesByKey(ExpensePlan $plan): array
     {
         return $plan->values
-            ->mapWithKeys(fn ($value) => [$value->field_key => $value->value_text
-                ?? $value->value_number
-                ?? $value->value_date
-                ?? $value->value_boolean])
+            ->mapWithKeys(fn ($value) => [$value->field_key => $value->typedValue()])
             ->all();
     }
 

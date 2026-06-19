@@ -182,10 +182,7 @@ class ExpenseReportBuilder
 
     private function valueFromRecord($value): mixed
     {
-        return $value->value_text
-            ?? $value->value_number
-            ?? $value->value_date
-            ?? $value->value_boolean;
+        return $value->typedValue();
     }
 
     private function value(array $values, string $key): mixed

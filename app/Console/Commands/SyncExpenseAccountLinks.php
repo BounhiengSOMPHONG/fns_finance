@@ -101,10 +101,7 @@ class SyncExpenseAccountLinks extends Command
                     'expense_plan_id' => $plan->id,
                     'field_key' => 'reference',
                 ], [
-                    'value_text' => $defaultRow->chartOfAccount?->account_code,
-                    'value_number' => null,
-                    'value_date' => null,
-                    'value_boolean' => null,
+                    'value' => $defaultRow->chartOfAccount?->account_code,
                 ]);
             });
     }

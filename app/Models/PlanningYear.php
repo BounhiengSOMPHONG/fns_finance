@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class PlanningYear extends Model
 {
@@ -145,6 +146,6 @@ class PlanningYear extends Model
 
         return (float) ExpensePlanValue::whereIn('expense_plan_id', $planIds)
             ->where('field_key', 'yearly_total')
-            ->sum('value_number');
+            ->sum(DB::raw('CAST(value AS DECIMAL(18,2))'));
     }
 }

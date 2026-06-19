@@ -221,12 +221,16 @@ class ExpensePlanController extends Controller
                     $fieldValues = [];
                     foreach ($pattern->fields as $field) {
                         if (array_key_exists($field->field_key, $values)) {
-                            $fieldValues[] = $this->makeExpensePlanValuePayload(
+                            $payload = $this->makeExpensePlanValuePayload(
                                 $field->field_key,
                                 $field->data_type,
                                 $values[$field->field_key],
                                 $now
                             );
+
+                            if ($payload) {
+                                $fieldValues[] = $payload;
+                            }
                         }
                     }
 
@@ -263,27 +267,28 @@ class ExpensePlanController extends Controller
         });
     }
 
-    private function makeExpensePlanValuePayload(string $fieldKey, string $dataType, mixed $value, $now): array
+    private function makeExpensePlanValuePayload(string $fieldKey, string $dataType, mixed $value, $now): ?array
     {
         $payload = [
             'expense_plan_id' => null,
             'field_key' => $fieldKey,
-            'value_text' => null,
-            'value_number' => null,
-            'value_date' => null,
-            'value_boolean' => null,
+            'value' => null,
             'created_at' => $now,
             'updated_at' => $now,
         ];
 
         if ($dataType === 'number') {
-            $payload['value_number'] = is_numeric($value) ? $value : 0;
+            $payload['value'] = is_numeric($value) ? $value : 0;
         } elseif ($dataType === 'date') {
-            $payload['value_date'] = $value ?: null;
+            $payload['value'] = $value ?: null;
         } elseif ($dataType === 'boolean') {
-            $payload['value_boolean'] = (bool) $value;
+            $payload['value'] = (bool) $value ? '1' : '0';
         } else {
-            $payload['value_text'] = $value;
+            $payload['value'] = $value;
+        }
+
+        if ($payload['value'] === null || $payload['value'] === '') {
+            return null;
         }
 
         return $payload;

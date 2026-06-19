@@ -182,10 +182,7 @@ class ExpenseDefaultRowAccountController extends Controller
             'expense_plan_id' => $plan->id,
             'field_key' => $fieldKey,
         ], [
-            'value_text' => $value,
-            'value_number' => null,
-            'value_date' => null,
-            'value_boolean' => null,
+            'value' => $value,
         ]);
     }
 

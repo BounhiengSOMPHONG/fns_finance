@@ -45,6 +45,8 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             Route::resource('degree-programs', \App\Http\Controllers\FinanceHead\Settings\DegreeProgramController::class)->except(['show']);
             Route::resource('credit-unit-price', \App\Http\Controllers\FinanceHead\Settings\CreditUnitPriceController::class, ['parameters' => ['credit-unit-price' => 'creditUnitPrice']])->only(['index', 'update']);
             Route::resource('course-credits', \App\Http\Controllers\FinanceHead\Settings\CourseCreditController::class, ['parameters' => ['course-credits' => 'courseCredit']])->except(['show']);
+            Route::patch('course-credit-splits/{level}', [\App\Http\Controllers\FinanceHead\Settings\CourseCreditController::class, 'updateSplit'])->name('course-credit-splits.update');
+            Route::post('course-credit-splits/reset-defaults', [\App\Http\Controllers\FinanceHead\Settings\CourseCreditController::class, 'resetSplitDefaults'])->name('course-credit-splits.reset-defaults');
             Route::resource('registration-fee', \App\Http\Controllers\FinanceHead\Settings\RegistrationFeeController::class, ['parameters' => ['registration-fee' => 'registrationFee']])->only(['index', 'edit', 'update']);
             Route::resource('nuol-pct', \App\Http\Controllers\FinanceHead\Settings\NuolPctSettingController::class, ['parameters' => ['nuol-pct' => 'nuolPct']])->only(['index', 'update']);
             Route::resource('expense-patterns', \App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, ['parameters' => ['expense-patterns' => 'expensePattern']])->only(['index', 'store', 'update']);

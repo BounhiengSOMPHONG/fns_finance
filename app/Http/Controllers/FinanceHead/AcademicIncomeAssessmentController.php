@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FinanceHead;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
 use App\Models\AcademicIncomeItem;
+use App\Models\CourseCreditSplitSetting;
 use App\Models\CreditUnitPriceSetting;
 use App\Models\DegreeProgram;
 use App\Models\NuolPctSetting;
@@ -123,12 +124,12 @@ class AcademicIncomeAssessmentController extends Controller
         $feeYear1 = RegistrationFeeSetting::where('section_type', 'year1')
             ->with('items')->orderByDesc('start_year')->first();
 
-        // Section 1.1 — bachelor yr2-4 (60/40) + master/phd (40/60)
+        // Section 1.1 — bachelor yr2-4 + master/phd year 2+ split.
         $inputs11 = $request->input('s11', []);
         foreach ($programs11 as $program) {
             $nuol       = $nuolByLevel[$program->level] ?? $nuolBachelor;
             $count      = (int) ($inputs11[$program->id] ?? 0);
-            $creditUnit = $program->latestCourseCredit?->course_credit_unit ?? 0;
+            $creditUnit = $this->courseCreditUnitFor($program, false);
             $price      = $creditPrices[$program->level]?->credit_unit_price ?? 0;
             $total      = $count * $creditUnit * $price * (1 - $nuol);
 
@@ -166,13 +167,12 @@ class AcademicIncomeAssessmentController extends Controller
             );
         }
 
-        // Section 1.3 master/phd — year 1 has 60% of total program credits (vs 40% in year 2+).
-        // Use year1_credit_unit × price/unit so pricing stays consistent with section 1.1.
+        // Section 1.3 master/phd — year 1 split of total program credits.
         $inputs13m = $request->input('s13m', []);
         foreach ($programs13_master as $program) {
             $nuol       = $nuolByLevel[$program->level] ?? $nuolMaster;
             $count      = (int) ($inputs13m[$program->id] ?? 0);
-            $creditUnit = $program->latestCourseCredit?->year1_credit_unit ?? 0;
+            $creditUnit = $this->courseCreditUnitFor($program, true);
             $price      = $creditPrices[$program->level]?->credit_unit_price ?? 0;
             $total      = $count * $creditUnit * $price * (1 - $nuol);
 
@@ -373,9 +373,7 @@ class AcademicIncomeAssessmentController extends Controller
 
         $section = $inputPrefix === 's11' ? '1.1' : '1.3';
         $nuol = $nuolByLevel[$program->level] ?? $nuolByLevel['bachelor'];
-        $creditUnit = $inputPrefix === 's13m'
-            ? ($program->latestCourseCredit?->year1_credit_unit ?? 0)
-            : ($program->latestCourseCredit?->course_credit_unit ?? 0);
+        $creditUnit = $this->courseCreditUnitFor($program, $inputPrefix === 's13m');
         $price = $creditPrices[$program->level]?->credit_unit_price ?? 0;
         $total = $count * $creditUnit * $price * (1 - $nuol);
 
@@ -492,6 +490,21 @@ class AcademicIncomeAssessmentController extends Controller
     private function nuolFor(string $level, float $default): float
     {
         return (float) (NuolPctSetting::where('level', $level)->orderByDesc('start_year')->first()?->percentage ?? $default);
+    }
+
+    private function courseCreditUnitFor(DegreeProgram $program, bool $year1): float
+    {
+        $total = (float) ($program->latestCourseCredit?->course_credit_unit ?? 0);
+
+        if (! in_array($program->level, ['master', 'phd'], true)) {
+            return $total;
+        }
+
+        $percentage = $year1
+            ? CourseCreditSplitSetting::year1For($program->level)
+            : CourseCreditSplitSetting::year2For($program->level);
+
+        return round($total * $percentage, 2);
     }
 
     private function updateIncomeRate(string $key, float $rate): void

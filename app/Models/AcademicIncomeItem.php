@@ -80,7 +80,11 @@ class AcademicIncomeItem extends Model
         }
 
         if ($this->section_code === '1.3' && in_array($program->level, ['master', 'phd'], true)) {
-            return (float) ($credit->year1_credit_unit ?? 0);
+            return (float) ($credit->course_credit_unit ?? 0) * CourseCreditSplitSetting::year1For($program->level);
+        }
+
+        if ($this->section_code === '1.1' && in_array($program->level, ['master', 'phd'], true)) {
+            return (float) ($credit->course_credit_unit ?? 0) * CourseCreditSplitSetting::year2For($program->level);
         }
 
         return (float) ($credit->course_credit_unit ?? 0);

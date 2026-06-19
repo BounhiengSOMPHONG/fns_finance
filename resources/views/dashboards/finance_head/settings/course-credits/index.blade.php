@@ -11,8 +11,10 @@
         'phd' => ['label' => 'ປ.ເອກ', 'full' => 'ປະລິນຍາເອກ'],
     ];
     $pct = fn ($value) => rtrim(rtrim(number_format((float) $value * 100, 4, '.', ''), '0'), '.');
+    $splitPct = fn ($value) => rtrim(rtrim(number_format((float) $value * 100, 2, '.', ''), '0'), '.');
     $configuredPrices = $prices->filter()->count();
     $configuredNuol = $nuolPcts->filter()->count();
+    $configuredSplits = $creditSplits->filter()->count();
 @endphp
 
 <section class="erp-shell">
@@ -38,6 +40,11 @@
             <span>ມຊ%</span>
             <strong>{{ $configuredNuol }}/3</strong>
             <em>ອັດຕາທີ່ພ້ອມໃຊ້</em>
+        </div>
+        <div class="erp-metric">
+            <span>ສັດສ່ວນ ປ.ໂທ/ປ.ເອກ</span>
+            <strong>{{ $configuredSplits }}/2</strong>
+            <em>ປີ 1 / ປີ 2+</em>
         </div>
         <div class="erp-metric">
             <span>ຫຼັກສູດ</span>
@@ -125,6 +132,55 @@
     </section>
 
     <section class="erp-panel">
+        <div class="erp-panel-head">
+            <div>
+                <h3>ສັດສ່ວນໜ່ວຍກິດ ປ.ໂທ / ປ.ເອກ</h3>
+                <p>ຕັ້ງຄ່າວ່າປີ 1 ແລະ ປີ 2+ ຈະຄຳນວນຈາກໜ່ວຍກິດລວມກີ່ເປີເຊັນ.</p>
+            </div>
+            <form method="POST" action="{{ route('head_of_finance.settings.course-credit-splits.reset-defaults') }}">
+                @csrf
+                <button type="submit" class="erp-btn erp-btn-save">Set ປ.ໂທ/ປ.ເອກ 60/40</button>
+            </form>
+        </div>
+
+        <div class="erp-split-grid">
+            @foreach(['master', 'phd'] as $level)
+                @php
+                    $split = $creditSplits->get($level);
+                    $year1Pct = $split ? $splitPct($split->year1_percentage) : '60';
+                    $year2Pct = $split ? $splitPct($split->year2_percentage) : '40';
+                    $meta = $levelMeta[$level];
+                @endphp
+                <form method="POST" action="{{ route('head_of_finance.settings.course-credit-splits.update', $level) }}" class="erp-split-card dirty-form">
+                    @csrf
+                    @method('PATCH')
+                    <div class="erp-level-cell">
+                        <strong>{{ $meta['label'] }}</strong>
+                        <span>{{ $meta['full'] }}</span>
+                    </div>
+                    <label>
+                        <span>ປີ 1 (%)</span>
+                        <input type="number" name="year1_percentage" step="0.01" min="0" max="100" required value="{{ old('year1_percentage', $year1Pct) }}" class="erp-input erp-input-num data-dirty js-split-year1">
+                    </label>
+                    <label>
+                        <span>ປີ 2+ (%)</span>
+                        <input type="number" name="year2_percentage" step="0.01" min="0" max="100" required value="{{ old('year2_percentage', $year2Pct) }}" class="erp-input erp-input-num data-dirty js-split-year2">
+                    </label>
+                    <label>
+                        <span>ເອກະສານ</span>
+                        <input type="text" name="gov_doc_id" value="{{ old('gov_doc_id', $split->gov_doc_id ?? '') }}" class="erp-input data-dirty">
+                    </label>
+                    <label>
+                        <span>ປີ</span>
+                        <input type="number" name="start_year" min="2000" max="2100" required value="{{ old('start_year', $split->start_year ?? date('Y')) }}" class="erp-input erp-input-year data-dirty">
+                    </label>
+                    <button type="submit" class="erp-btn erp-btn-save btn-save">ບັນທຶກສັດສ່ວນ</button>
+                </form>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="erp-panel">
         <div class="erp-panel-head erp-table-head">
             <div>
                 <h3>ໜ່ວຍກິດຕາມຫຼັກສູດ</h3>
@@ -164,7 +220,6 @@
                             $level = $s->degreeProgram?->level;
                             $meta = $levelMeta[$level] ?? ['label' => $level ?: '-', 'full' => $level ?: '-'];
                             $programName = $s->degreeProgram?->name ?? '-';
-                            $totalCreditUnit = (float) $s->course_credit_unit + (float) $s->year1_credit_unit;
                         @endphp
                         <tr class="cc-row" data-level="{{ $level }}" data-name="{{ \Illuminate\Support\Str::lower($programName) }}">
                             <td>
@@ -172,7 +227,7 @@
                             </td>
                             <td><span class="erp-badge">{{ $meta['label'] }}</span></td>
                             <td class="erp-num">{{ $s->degreeProgram?->study_year ?: '-' }}</td>
-                            <td class="erp-num">{{ $totalCreditUnit }}</td>
+                            <td class="erp-num">{{ (float) $s->course_credit_unit }}</td>
                             <td class="erp-num">{{ $s->start_year }}</td>
                             <td>{{ $s->gov_doc_id ?: '-' }}</td>
                             <td class="erp-actions">
@@ -183,7 +238,6 @@
                                     data-degree-program-id="{{ $s->degree_program_id }}"
                                     data-level="{{ $level }}"
                                     data-course-credit-unit="{{ (float) $s->course_credit_unit }}"
-                                    data-year1-credit-unit="{{ (float) $s->year1_credit_unit }}"
                                     data-gov-doc-id="{{ $s->gov_doc_id }}"
                                     data-start-year="{{ $s->start_year }}">
                                     ✎
@@ -234,29 +288,10 @@
                 </label>
             </div>
 
-            <div id="cc-mp-fields" class="erp-calc-panel" style="display:none;">
+            <div class="erp-modal-grid erp-modal-grid-wide">
                 <label class="erp-field">
-                    <span>ໜ່ວຍກິດລວມທັງໝົດ</span>
-                    <input type="number" id="cc-total-units" min="1" max="9999" step="1" class="erp-input" placeholder="ເຊັ່ນ: 115">
-                </label>
-                <div class="erp-modal-grid">
-                    <label class="erp-field">
-                        <span>ສັດສ່ວນ ປີ 2+ (%)</span>
-                        <input type="number" id="cc-ratio-yr2" min="0" max="100" step="1" class="erp-input" value="40">
-                    </label>
-                    <label class="erp-field">
-                        <span>ສັດສ່ວນ ປີ 1 (%)</span>
-                        <input type="number" id="cc-ratio-yr1" min="0" max="100" step="1" class="erp-input" value="60">
-                    </label>
-                </div>
-                <input type="hidden" id="cc-unit-mp">
-                <input type="hidden" id="cc-yr1-unit-mp">
-            </div>
-
-            <div id="cc-bachelor-fields" class="erp-modal-grid erp-modal-grid-wide">
-                <label class="erp-field">
-                    <span>ໜ່ວຍກິດ <b>*</b></span>
-                    <input type="number" id="cc-unit-bach" name="course_credit_unit" min="1" max="999" step="0.5" class="erp-input">
+                    <span>ໜ່ວຍກິດລວມຂອງຫຼັກສູດ <b>*</b></span>
+                    <input type="number" id="cc-unit-bach" name="course_credit_unit" min="1" max="999" step="0.5" class="erp-input" required>
                 </label>
             </div>
 
@@ -290,7 +325,7 @@
     .erp-kicker { color:#64748b; font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
     .erp-topbar h2 { margin:.12rem 0; color:#172642; font-size:1.08rem; font-weight:900; }
     .erp-topbar p { margin:0; color:#64748b; font-size:.78rem; }
-    .erp-summary { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.7rem; }
+    .erp-summary { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:.7rem; }
     .erp-metric { padding:.75rem .85rem; }
     .erp-metric span { display:block; color:#64748b; font-size:.7rem; font-weight:800; }
     .erp-metric strong { display:block; margin:.08rem 0; color:#111827; font-size:1.2rem; line-height:1; font-variant-numeric:tabular-nums; }
@@ -321,6 +356,14 @@
         display:block; color:#64748b; font-size:.68rem; font-weight:800; margin-bottom:.18rem;
     }
     .erp-inline-form { display:grid; grid-template-columns:1fr 1fr 86px auto; gap:.45rem; align-items:end; }
+    .erp-split-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.7rem; padding:.85rem; }
+    .erp-split-card {
+        display:grid; grid-template-columns:120px repeat(4, minmax(0, 1fr)) auto;
+        gap:.45rem; align-items:end; border:1px solid #e5e7eb; border-radius:8px; padding:.7rem; background:#fff;
+    }
+    .erp-split-card label span {
+        display:block; color:#64748b; font-size:.68rem; font-weight:800; margin-bottom:.18rem;
+    }
     .erp-input, .erp-select, .erp-search input {
         width:100%; height:42px; border:1px solid #cbd5e1; border-radius:6px; background:#fff;
         color:#172642; font-size:.82rem; padding:0 .65rem; outline:none;
@@ -397,6 +440,8 @@
     @media (max-width:900px) {
         .erp-topbar, .erp-panel-head { align-items:stretch; flex-direction:column; }
         .erp-summary { grid-template-columns:1fr; }
+        .erp-split-grid { grid-template-columns:1fr; }
+        .erp-split-card { grid-template-columns:1fr; }
         .erp-toolbar { width:100%; align-items:stretch; flex-direction:column; }
         .erp-search, .erp-select { width:100%; }
     }
@@ -446,89 +491,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('cc-modal-form');
     const method = document.getElementById('cc-form-method');
     const degreeProgram = document.getElementById('cc-degree-program');
-    const mpFields = document.getElementById('cc-mp-fields');
-    const bachelorFields = document.getElementById('cc-bachelor-fields');
-    const totalUnits = document.getElementById('cc-total-units');
-    const ratioYr2 = document.getElementById('cc-ratio-yr2');
-    const ratioYr1 = document.getElementById('cc-ratio-yr1');
-    const unitMp = document.getElementById('cc-unit-mp');
-    const yr1UnitMp = document.getElementById('cc-yr1-unit-mp');
     const unitBach = document.getElementById('cc-unit-bach');
     const govDoc = document.getElementById('cc-gov-doc');
     const startYear = document.getElementById('cc-start-year');
     const submit = document.getElementById('cc-submit');
     const createUrl = @json(route('head_of_finance.settings.course-credits.store'));
-
-    function currentLevel() {
-        const selected = degreeProgram.options[degreeProgram.selectedIndex];
-        return selected ? selected.dataset.level : '';
-    }
-
-    function isMasterPhd() {
-        return ['master', 'phd'].includes(currentLevel());
-    }
-
-    function fillFromTotal() {
-        const total = Number(totalUnits.value);
-        if (!total) {
-            unitMp.value = '';
-            yr1UnitMp.value = '';
-            return;
-        }
-
-        const yr2Pct = Number(ratioYr2.value) || 0;
-        const yr2Units = Math.round(total * yr2Pct) / 100;
-        const yr1Units = Math.round((total - yr2Units) * 10) / 10;
-        unitMp.value = yr2Units;
-        yr1UnitMp.value = yr1Units;
-    }
-
-    function prefillTotalFromUnits() {
-        const yr2Units = Number(unitMp.value) || 0;
-        const yr1Units = Number(yr1UnitMp.value) || 0;
-        const total = yr2Units + yr1Units;
-        totalUnits.value = total || '';
-
-        if (total) {
-            ratioYr2.value = Math.round((yr2Units / total) * 100);
-            ratioYr1.value = 100 - Number(ratioYr2.value);
-        } else {
-            ratioYr2.value = 40;
-            ratioYr1.value = 60;
-        }
-    }
-
-    function syncRatio(changed) {
-        const source = changed === 'yr1' ? ratioYr1 : ratioYr2;
-        const target = changed === 'yr1' ? ratioYr2 : ratioYr1;
-        const value = Math.max(0, Math.min(100, Number(source.value) || 0));
-        source.value = value;
-        target.value = 100 - value;
-        fillFromTotal();
-    }
-
-    function toggleCreditFields() {
-        const mp = isMasterPhd();
-        mpFields.style.display = mp ? '' : 'none';
-        bachelorFields.style.display = mp ? 'none' : '';
-
-        if (mp) {
-            unitBach.removeAttribute('name');
-            unitBach.removeAttribute('required');
-            unitMp.setAttribute('name', 'course_credit_unit');
-            yr1UnitMp.setAttribute('name', 'year1_credit_unit');
-            totalUnits.setAttribute('required', '');
-            prefillTotalFromUnits();
-            return;
-        }
-
-        unitBach.setAttribute('name', 'course_credit_unit');
-        unitBach.setAttribute('required', '');
-        unitMp.removeAttribute('name');
-        yr1UnitMp.removeAttribute('name');
-        totalUnits.removeAttribute('required');
-        totalUnits.value = '';
-    }
 
     function openModal(mode, data = {}) {
         form.action = mode === 'edit' ? data.url : createUrl;
@@ -539,13 +506,8 @@ document.addEventListener('DOMContentLoaded', function () {
         form.reset();
         degreeProgram.value = data.degreeProgramId || '';
         unitBach.value = data.courseCreditUnit || '';
-        unitMp.value = data.courseCreditUnit || '';
-        yr1UnitMp.value = data.year1CreditUnit || '';
-        ratioYr2.value = 40;
-        ratioYr1.value = 60;
         govDoc.value = data.govDocId || '';
         startYear.value = data.startYear || @json(date('Y'));
-        toggleCreditFields();
 
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
@@ -567,7 +529,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 url: edit.dataset.url,
                 degreeProgramId: edit.dataset.degreeProgramId,
                 courseCreditUnit: edit.dataset.courseCreditUnit,
-                year1CreditUnit: edit.dataset.year1CreditUnit,
                 govDocId: edit.dataset.govDocId,
                 startYear: edit.dataset.startYear,
             });
@@ -579,10 +540,18 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
     });
-    degreeProgram.addEventListener('change', toggleCreditFields);
-    totalUnits.addEventListener('input', fillFromTotal);
-    ratioYr2.addEventListener('input', () => syncRatio('yr2'));
-    ratioYr1.addEventListener('input', () => syncRatio('yr1'));
+    document.querySelectorAll('.erp-split-card').forEach(card => {
+        const year1 = card.querySelector('.js-split-year1');
+        const year2 = card.querySelector('.js-split-year2');
+        const sync = (source, target) => {
+            const value = Math.max(0, Math.min(100, Number(source.value) || 0));
+            source.value = value;
+            target.value = Math.round((100 - value) * 100) / 100;
+        };
+
+        year1?.addEventListener('input', () => sync(year1, year2));
+        year2?.addEventListener('input', () => sync(year2, year1));
+    });
 });
 </script>
 @endpush

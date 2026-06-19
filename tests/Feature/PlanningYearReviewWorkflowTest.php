@@ -48,10 +48,10 @@ class PlanningYearReviewWorkflowTest extends TestCase
             'round_number' => 1,
             'note' => 'Please review totals',
         ]);
-        $this->assertDatabaseHas('planning_year_reviewers', [
-            'user_id' => $this->reviewer->id,
-            'notified_at' => null,
-        ]);
+        $this->assertSame(
+            [$this->reviewer->id],
+            json_decode((string) DB::table('planning_year_review_rounds')->where('id', 1)->value('reviewer_user_ids'), true)
+        );
 
         Notification::assertNothingSent();
     }
@@ -125,19 +125,13 @@ class PlanningYearReviewWorkflowTest extends TestCase
             ->post(route('reviews.planning-years.comments.agreement', [1, $comment]))
             ->assertRedirect();
 
-        $this->assertDatabaseHas('planning_year_review_comment_agreements', [
-            'planning_year_review_comment_id' => $comment->id,
-            'user_id' => $this->otherUser->id,
-        ]);
+        $this->assertSame([$this->otherUser->id], $comment->fresh()->agreementIds());
 
         $this->actingAs($this->otherUser)
             ->post(route('reviews.planning-years.comments.agreement', [1, $comment]))
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('planning_year_review_comment_agreements', [
-            'planning_year_review_comment_id' => $comment->id,
-            'user_id' => $this->otherUser->id,
-        ]);
+        $this->assertSame([], $comment->fresh()->agreementIds());
     }
 
     public function test_closing_review_moves_plan_to_modifying_and_blocks_new_comments(): void
@@ -205,14 +199,8 @@ class PlanningYearReviewWorkflowTest extends TestCase
             'planning_year_id' => 1,
             'requested_by' => $this->financeHead->id,
             'round_number' => 2,
+            'reviewer_user_ids' => json_encode([$this->reviewer->id]),
             'requested_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        DB::table('planning_year_reviewers')->insert([
-            'planning_year_review_round_id' => $secondRoundId,
-            'user_id' => $this->reviewer->id,
-            'notified_at' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -267,12 +255,9 @@ class PlanningYearReviewWorkflowTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        DB::table('planning_year_review_comment_agreements')->insert([
-            'planning_year_review_comment_id' => $commentId,
-            'user_id' => $this->otherUser->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        DB::table('planning_year_review_comments')
+            ->where('id', $commentId)
+            ->update(['agreement_user_ids' => json_encode([$this->otherUser->id])]);
         $this->seedPlanningYearChildren();
 
         $this->actingAs($this->financeHead)
@@ -282,12 +267,6 @@ class PlanningYearReviewWorkflowTest extends TestCase
         $this->assertDatabaseMissing('planning_years', ['id' => 1]);
         $this->assertDatabaseMissing('planning_year_review_rounds', ['id' => $roundId]);
         $this->assertDatabaseMissing('planning_year_review_comments', ['id' => $commentId]);
-        $this->assertDatabaseMissing('planning_year_review_comment_agreements', [
-            'planning_year_review_comment_id' => $commentId,
-        ]);
-        $this->assertDatabaseMissing('planning_year_reviewers', [
-            'planning_year_review_round_id' => $roundId,
-        ]);
         $this->assertDatabaseMissing('period_plan_overrides', ['planning_year_id' => 1]);
     }
 
@@ -299,20 +278,11 @@ class PlanningYearReviewWorkflowTest extends TestCase
             'planning_year_id' => 1,
             'requested_by' => $this->financeHead->id,
             'round_number' => 1,
+            'reviewer_user_ids' => json_encode(array_values($reviewerIds)),
             'requested_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
-        foreach ($reviewerIds as $reviewerId) {
-            DB::table('planning_year_reviewers')->insert([
-                'planning_year_review_round_id' => $roundId,
-                'user_id' => $reviewerId,
-                'notified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
 
         DB::table('planning_years')->where('id', 1)->update([
             'status' => PlanningYear::STATUS_PENDING_REVIEW,
@@ -440,9 +410,7 @@ class PlanningYearReviewWorkflowTest extends TestCase
             'salary_plans',
             'academic_income_items',
             'academic_income_plans',
-            'planning_year_review_comment_agreements',
             'planning_year_review_comments',
-            'planning_year_reviewers',
             'planning_year_review_rounds',
             'planning_years',
             'users',
@@ -487,18 +455,10 @@ class PlanningYearReviewWorkflowTest extends TestCase
             $table->unsignedInteger('closed_by')->nullable();
             $table->unsignedInteger('round_number');
             $table->text('note')->nullable();
+            $table->json('reviewer_user_ids')->nullable();
             $table->timestamp('requested_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamps();
-        });
-
-        Schema::create('planning_year_reviewers', function ($table): void {
-            $table->id();
-            $table->unsignedBigInteger('planning_year_review_round_id');
-            $table->unsignedInteger('user_id');
-            $table->timestamp('notified_at')->nullable();
-            $table->timestamps();
-            $table->unique(['planning_year_review_round_id', 'user_id']);
         });
 
         Schema::create('planning_year_review_comments', function ($table): void {
@@ -507,15 +467,8 @@ class PlanningYearReviewWorkflowTest extends TestCase
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedInteger('user_id');
             $table->text('comment');
+            $table->json('agreement_user_ids')->nullable();
             $table->timestamps();
-        });
-
-        Schema::create('planning_year_review_comment_agreements', function ($table): void {
-            $table->id();
-            $table->unsignedBigInteger('planning_year_review_comment_id');
-            $table->unsignedInteger('user_id');
-            $table->timestamps();
-            $table->unique(['planning_year_review_comment_id', 'user_id']);
         });
 
         Schema::create('academic_income_plans', function ($table): void {

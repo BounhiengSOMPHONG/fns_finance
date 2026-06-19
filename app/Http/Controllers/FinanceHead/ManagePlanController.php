@@ -48,14 +48,10 @@ class ManagePlanController extends Controller
     ) {
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
-            'currentReviewRound.reviewers.user.role',
             'currentReviewRound.comments.user.role',
-            'currentReviewRound.comments.agreements.user',
             'reviewRounds.requester',
             'reviewRounds.closer',
-            'reviewRounds.reviewers.user.role',
             'reviewRounds.comments.user.role',
-            'reviewRounds.comments.agreements.user',
         ]);
 
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
@@ -524,15 +520,9 @@ class ManagePlanController extends Controller
                 'requested_by' => Auth::id(),
                 'round_number' => $roundNumber,
                 'note' => $data['note'] ?? null,
+                'reviewer_user_ids' => $reviewers->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
                 'requested_at' => now(),
             ]);
-
-            foreach ($reviewers as $reviewer) {
-                $reviewRound->reviewers()->create([
-                    'user_id' => $reviewer->id,
-                    'notified_at' => null,
-                ]);
-            }
 
             $planningYear->update([
                 'status' => PlanningYear::STATUS_PENDING_REVIEW,
@@ -609,20 +599,7 @@ class ManagePlanController extends Controller
             if ($reviewRoundIds->isNotEmpty()) {
                 $planningYear->update(['current_review_round_id' => null]);
 
-                $reviewCommentIds = DB::table('planning_year_review_comments')
-                    ->whereIn('planning_year_review_round_id', $reviewRoundIds)
-                    ->pluck('id');
-
-                if ($reviewCommentIds->isNotEmpty()) {
-                    DB::table('planning_year_review_comment_agreements')
-                        ->whereIn('planning_year_review_comment_id', $reviewCommentIds)
-                        ->delete();
-                }
-
                 DB::table('planning_year_review_comments')
-                    ->whereIn('planning_year_review_round_id', $reviewRoundIds)
-                    ->delete();
-                DB::table('planning_year_reviewers')
                     ->whereIn('planning_year_review_round_id', $reviewRoundIds)
                     ->delete();
                 DB::table('planning_year_review_rounds')

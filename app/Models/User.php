@@ -66,11 +66,6 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
-    public function planningYearReviewAssignments(): HasMany
-    {
-        return $this->hasMany(PlanningYearReviewer::class);
-    }
-
     public function planningYearReviewComments(): HasMany
     {
         return $this->hasMany(PlanningYearReviewComment::class);

@@ -129,10 +129,10 @@ class PlanningYear extends Model
             return false;
         }
 
-        return PlanningYearReviewer::query()
-            ->where('planning_year_review_round_id', $this->current_review_round_id)
-            ->where('user_id', $user->id)
-            ->exists();
+        return PlanningYearReviewRound::query()
+            ->whereKey($this->current_review_round_id)
+            ->first()
+            ?->hasReviewer($user) ?? false;
     }
 
     public function totalAmount(): float

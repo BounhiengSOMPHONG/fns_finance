@@ -644,7 +644,6 @@ class PeriodPlanOverrideTest extends TestCase
             'expense_sections',
             'salary_entries',
             'salary_plans',
-            'planning_year_reviewers',
             'planning_year_review_rounds',
             'planning_years',
             'chart_of_accounts',
@@ -699,18 +698,10 @@ class PeriodPlanOverrideTest extends TestCase
             $table->unsignedInteger('closed_by')->nullable();
             $table->unsignedInteger('round_number');
             $table->text('note')->nullable();
+            $table->json('reviewer_user_ids')->nullable();
             $table->timestamp('requested_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamps();
-        });
-
-        Schema::create('planning_year_reviewers', function ($table): void {
-            $table->id();
-            $table->unsignedBigInteger('planning_year_review_round_id');
-            $table->unsignedInteger('user_id');
-            $table->timestamp('notified_at')->nullable();
-            $table->timestamps();
-            $table->unique(['planning_year_review_round_id', 'user_id']);
         });
 
         Schema::create('salary_plans', function ($table): void {

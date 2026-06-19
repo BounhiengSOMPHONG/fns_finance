@@ -2,8 +2,10 @@
     $isAdmin         = auth()->user()?->can('admin');
     $isHeadOfFinance = auth()->user()?->can('head_of_finance');
     $reviewAssignmentCount = auth()->check()
-        ? auth()->user()->planningYearReviewAssignments()
-            ->whereHas('reviewRound.planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
+        ? \App\Models\PlanningYearReviewRound::with('planningYear')
+            ->whereHas('planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
+            ->get()
+            ->filter(fn ($round) => $round->hasReviewer(auth()->user()))
             ->count()
         : 0;
     $settingsActive = request()->routeIs('head_of_finance.settings.degree-programs.*')

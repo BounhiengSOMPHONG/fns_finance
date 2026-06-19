@@ -5,34 +5,59 @@ namespace App\Http\Controllers\Review;
 use App\Http\Controllers\Controller;
 use App\Models\PlanningYear;
 use App\Models\PlanningYearReviewComment;
-use App\Models\PlanningYearReviewCommentAgreement;
+use App\Models\PlanningYearReviewRound;
 use App\Models\PlanningYearReviewer;
 use App\Services\AcademicIncomeReportBuilder;
 use App\Services\ExpenseReportBuilder;
 use App\Services\PlanYearReportBuilder;
 use App\Services\SalaryReportBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
 class PlanningYearReviewController extends Controller
 {
     public function index()
     {
-        $latestAssignmentIds = PlanningYearReviewer::query()
-            ->selectRaw('MAX(planning_year_reviewers.id)')
-            ->join('planning_year_review_rounds', 'planning_year_reviewers.planning_year_review_round_id', '=', 'planning_year_review_rounds.id')
-            ->where('planning_year_reviewers.user_id', Auth::id())
-            ->groupBy('planning_year_review_rounds.planning_year_id');
+        $user = Auth::user();
+        $perPage = 12;
+        $page = LengthAwarePaginator::resolveCurrentPage();
 
-        $assignments = PlanningYearReviewer::with([
-            'reviewRound.planningYear.currentReviewRound',
-            'reviewRound.requester',
-            'user',
+        $rounds = PlanningYearReviewRound::with([
+            'planningYear.currentReviewRound',
+            'requester',
         ])
-            ->whereIn('id', $latestAssignmentIds)
-            ->whereHas('reviewRound.planningYear')
+            ->whereHas('planningYear')
             ->latest('id')
-            ->paginate(12);
+            ->get()
+            ->filter(fn (PlanningYearReviewRound $round): bool => $round->hasReviewer($user))
+            ->unique(fn (PlanningYearReviewRound $round): int => (int) $round->planning_year_id)
+            ->values();
+
+        $assignments = new LengthAwarePaginator(
+            $rounds
+                ->forPage($page, $perPage)
+                ->values()
+                ->map(function (PlanningYearReviewRound $round) use ($user): PlanningYearReviewer {
+                    $assignment = new PlanningYearReviewer([
+                        'planning_year_review_round_id' => $round->id,
+                        'user_id' => $user->id,
+                        'notified_at' => null,
+                    ]);
+                    $assignment->exists = true;
+                    $assignment->setRelation('reviewRound', $round);
+                    $assignment->setRelation('user', $user);
+
+                    return $assignment;
+                }),
+            $rounds->count(),
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
 
         return view('reviews.planning-years.index', compact('assignments'));
     }
@@ -54,14 +79,10 @@ class PlanningYearReviewController extends Controller
 
         $planningYear->load([
             'academicIncomePlans.items.degreeProgram',
-            'currentReviewRound.reviewers.user.role',
             'currentReviewRound.comments.user.role',
-            'currentReviewRound.comments.agreements.user',
             'reviewRounds.requester',
             'reviewRounds.closer',
-            'reviewRounds.reviewers.user.role',
             'reviewRounds.comments.user.role',
-            'reviewRounds.comments.agreements.user',
         ]);
 
         $report = $reportBuilder->buildForPlans($planningYear->academicIncomePlans);
@@ -121,21 +142,10 @@ class PlanningYearReviewController extends Controller
             403
         );
 
-        $agreement = PlanningYearReviewCommentAgreement::query()
-            ->where('planning_year_review_comment_id', $comment->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($agreement) {
-            $agreement->delete();
+        if (! $comment->toggleAgreement($user)) {
 
             return back()->with('success', 'ຍົກເລີກການເຫັນດີແລ້ວ');
         }
-
-        PlanningYearReviewCommentAgreement::create([
-            'planning_year_review_comment_id' => $comment->id,
-            'user_id' => $user->id,
-        ]);
 
         return back()->with('success', 'ບັນທຶກການເຫັນດີແລ້ວ');
     }

@@ -7,7 +7,6 @@ use App\Models\ExpensePattern;
 use App\Models\ExpensePatternField;
 use App\Models\ExpensePlan;
 use App\Models\ExpensePlanValue;
-use App\Models\PlanningYearFieldSetting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -123,10 +122,8 @@ class ExpensePatternController extends Controller
             ->where('field_key', $expensePatternField->field_key)
             ->exists();
 
-        $hasYearSettings = PlanningYearFieldSetting::where('pattern_field_id', $expensePatternField->id)->exists();
-
-        if ($hasPlanValues || $hasYearSettings) {
-            return back()->with('error', 'Cannot delete this field because it is already used by plan data or year settings.');
+        if ($hasPlanValues) {
+            return back()->with('error', 'Cannot delete this field because it is already used by plan data.');
         }
 
         $expensePatternField->delete();

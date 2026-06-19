@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
-use App\Models\ExpenseCalculationRule;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpensePlanValue;
@@ -36,27 +35,7 @@ class ExpensePlanRowController extends Controller
         $pattern = ExpensePattern::with('fields')->findOrFail($data['pattern_id']);
 
         $values = $data['values'];
-        $rule = ExpenseCalculationRule::where('planning_year_id', $planningYear->id)
-            ->where('pattern_id', $pattern->id)
-            ->where(function ($query) use ($section) {
-                $query->whereNull('section_id')->orWhere('section_id', $section->id);
-            })
-            ->where(function ($query) use ($subsection) {
-                $query->whereNull('subsection_id');
-                if ($subsection) {
-                    $query->orWhere('subsection_id', $subsection->id);
-                }
-            })
-            ->where('is_active', true)
-            ->orderByRaw('subsection_id IS NULL')
-            ->orderByRaw('section_id IS NULL')
-            ->first();
-
-        if ($rule) {
-            $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
-        } else {
-            $values['yearly_total'] = $this->calculatePatternTotal($pattern->key, $values);
-        }
+        $values['yearly_total'] = $this->calculatePatternTotal($pattern->key, $values);
 
         $expensePlan = DB::transaction(function () use ($data, $planningYear, $section, $subsection, $pattern, $values) {
             $expensePlan = ExpensePlan::create([
@@ -105,28 +84,8 @@ class ExpensePlanRowController extends Controller
             'values' => 'required|array',
         ]);
 
-        $rule = ExpenseCalculationRule::where('planning_year_id', $expensePlan->planning_year_id)
-            ->where('pattern_id', $expensePlan->pattern_id)
-            ->where(function ($query) use ($expensePlan) {
-                $query->whereNull('section_id')->orWhere('section_id', $expensePlan->section_id);
-            })
-            ->where(function ($query) use ($expensePlan) {
-                $query->whereNull('subsection_id');
-                if ($expensePlan->subsection_id) {
-                    $query->orWhere('subsection_id', $expensePlan->subsection_id);
-                }
-            })
-            ->where('is_active', true)
-            ->orderByRaw('subsection_id IS NULL')
-            ->orderByRaw('section_id IS NULL')
-            ->first();
-
         $values = $this->preserveLockedRowValues($expensePlan, $data['values']);
-        if ($rule) {
-            $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
-        } else {
-            $values['yearly_total'] = $this->calculatePatternTotal($expensePlan->pattern?->key, $values);
-        }
+        $values['yearly_total'] = $this->calculatePatternTotal($expensePlan->pattern?->key, $values);
 
         DB::transaction(function () use ($expensePlan, $data, $values) {
             $expensePlan->update([
@@ -212,25 +171,6 @@ class ExpensePlanRowController extends Controller
         }
 
         ExpensePlanValue::create($payload);
-    }
-
-    private function calculateFormula(string $formula, array $values): float
-    {
-        $sum = 0.0;
-        foreach (explode('+', $formula) as $addend) {
-            $product = 1.0;
-            foreach (explode('*', $addend) as $token) {
-                $key = trim($token);
-                if ($key === '') {
-                    continue;
-                }
-
-                $product *= is_numeric($key) ? (float) $key : (float) ($values[$key] ?? 0);
-            }
-            $sum += $product;
-        }
-
-        return $sum;
     }
 
     private function calculatePatternTotal(?string $patternKey, array $values): float

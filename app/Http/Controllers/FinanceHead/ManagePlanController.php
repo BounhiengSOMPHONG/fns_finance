@@ -4,14 +4,12 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
-use App\Models\ExpenseCalculationRule;
 use App\Models\ExpensePattern;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PeriodPlanOverride;
 use App\Models\PlanningYear;
-use App\Models\PlanningYearFieldSetting;
 use App\Models\PlanningYearReviewRound;
 use App\Models\SalaryPlan;
 use App\Models\User;
@@ -634,9 +632,6 @@ class ManagePlanController extends Controller
             $sectionIds = $planningYear->sections()->pluck('id');
             $subsectionIds = ExpenseSubsection::whereIn('section_id', $sectionIds)->pluck('id');
 
-            DB::table('expense_calculation_rules')->where('planning_year_id', $planningYear->id)->delete();
-            DB::table('planning_year_field_settings')->where('planning_year_id', $planningYear->id)->delete();
-
             if ($subsectionIds->isNotEmpty()) {
                 DB::table('expense_subsections')->whereIn('id', $subsectionIds)->update(['parent_id' => null]);
                 DB::table('expense_subsections')->whereIn('id', $subsectionIds)->delete();
@@ -822,34 +817,5 @@ class ManagePlanController extends Controller
             }
         }
 
-        PlanningYearFieldSetting::where('planning_year_id', $sourceYear->id)
-            ->get()
-            ->each(function (PlanningYearFieldSetting $setting) use ($targetYear): void {
-                PlanningYearFieldSetting::updateOrCreate([
-                    'planning_year_id' => $targetYear->id,
-                    'pattern_field_id' => $setting->pattern_field_id,
-                ], [
-                    'label' => $setting->label,
-                    'display_order' => $setting->display_order,
-                    'is_required' => $setting->is_required,
-                    'is_active' => $setting->is_active,
-                    'default_value' => $setting->default_value,
-                ]);
-            });
-
-        ExpenseCalculationRule::where('planning_year_id', $sourceYear->id)
-            ->get()
-            ->each(function (ExpenseCalculationRule $rule) use ($targetYear, $sectionIdMap, $subsectionIdMap): void {
-                ExpenseCalculationRule::firstOrCreate([
-                    'planning_year_id' => $targetYear->id,
-                    'pattern_id' => $rule->pattern_id,
-                    'section_id' => $rule->section_id ? ($sectionIdMap[$rule->section_id] ?? null) : null,
-                    'subsection_id' => $rule->subsection_id ? ($subsectionIdMap[$rule->subsection_id] ?? null) : null,
-                    'target_field_key' => $rule->target_field_key,
-                ], [
-                    'formula' => $rule->formula,
-                    'is_active' => $rule->is_active,
-                ]);
-            });
     }
 }

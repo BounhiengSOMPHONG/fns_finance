@@ -4,14 +4,12 @@ namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
-use App\Models\ExpenseCalculationRule;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
-use App\Models\PlanningYearFieldSetting;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -84,15 +82,11 @@ class ExpensePlanController extends Controller
             ->orderBy('id')
             ->get();
 
-        $fieldSettings = PlanningYearFieldSetting::where('planning_year_id', $planningYear->id)
-            ->get()
-            ->keyBy('pattern_field_id');
+        $fieldSettings = collect();
 
-        $rules = ExpenseCalculationRule::where('planning_year_id', $planningYear->id)
-            ->where('is_active', true)
-            ->get();
+        $rules = collect();
 
-        $this->ensureDefaultExpenseRows($planningYear, $sections, $patterns, $rules);
+        $this->ensureDefaultExpenseRows($planningYear, $sections, $patterns);
 
         $expenseRows = ExpensePlan::with(['values', 'section', 'subsection', 'pattern'])
             ->where('planning_year_id', $planningYear->id)
@@ -152,7 +146,7 @@ class ExpensePlanController extends Controller
         ]);
     }
 
-    private function ensureDefaultExpenseRows(PlanningYear $planningYear, $sections, $patterns, $rules): void
+    private function ensureDefaultExpenseRows(PlanningYear $planningYear, $sections, $patterns): void
     {
         $subsections = $sections->flatMap(fn ($section) => $section->subsections);
         $subsectionCodes = $subsections->pluck('code')->unique()->values();
@@ -169,7 +163,7 @@ class ExpensePlanController extends Controller
 
         $patternsById = $patterns->keyBy('id');
 
-        DB::transaction(function () use ($planningYear, $subsections, $defaultsByCode, $patternsById, $rules): void {
+        DB::transaction(function () use ($planningYear, $subsections, $defaultsByCode, $patternsById): void {
             $existingKeys = ExpensePlan::where('planning_year_id', $planningYear->id)
                 ->whereIn('subsection_id', $subsections->pluck('id')->filter()->values())
                 ->get(['subsection_id', 'plan_detail'])
@@ -208,17 +202,6 @@ class ExpensePlanController extends Controller
                         'item_name' => $defaultRow->item_name,
                         'reference' => $defaultRow->chartOfAccount?->account_code,
                     ]);
-
-                    $rule = $rules
-                        ->where('pattern_id', $pattern->id)
-                        ->filter(fn ($rule) => $rule->section_id === null || (int) $rule->section_id === (int) $subsection->section_id)
-                        ->filter(fn ($rule) => $rule->subsection_id === null || (int) $rule->subsection_id === (int) $subsection->id)
-                        ->sortBy(fn ($rule) => ($rule->subsection_id === null ? 1 : 0) + ($rule->section_id === null ? 1 : 0))
-                        ->first();
-
-                    if ($rule) {
-                        $values[$rule->target_field_key] = $this->calculateFormula($rule->formula, $values);
-                    }
 
                     $planRows[] = [
                         'planning_year_id' => $planningYear->id,
@@ -278,25 +261,6 @@ class ExpensePlanController extends Controller
                 DB::table('expense_plan_values')->insert($chunk);
             }
         });
-    }
-
-    private function calculateFormula(string $formula, array $values): float
-    {
-        $sum = 0.0;
-        foreach (explode('+', $formula) as $addend) {
-            $product = 1.0;
-            foreach (explode('*', $addend) as $token) {
-                $key = trim($token);
-                if ($key === '') {
-                    continue;
-                }
-
-                $product *= is_numeric($key) ? (float) $key : (float) ($values[$key] ?? 0);
-            }
-            $sum += $product;
-        }
-
-        return $sum;
     }
 
     private function makeExpensePlanValuePayload(string $fieldKey, string $dataType, mixed $value, $now): array
@@ -458,32 +422,5 @@ class ExpensePlanController extends Controller
             }
         }
 
-        PlanningYearFieldSetting::where('planning_year_id', $sourceYear->id)
-            ->get()
-            ->each(function (PlanningYearFieldSetting $setting) use ($targetYear) {
-                PlanningYearFieldSetting::create([
-                    'planning_year_id' => $targetYear->id,
-                    'pattern_field_id' => $setting->pattern_field_id,
-                    'label' => $setting->label,
-                    'display_order' => $setting->display_order,
-                    'is_required' => $setting->is_required,
-                    'is_active' => $setting->is_active,
-                    'default_value' => $setting->default_value,
-                ]);
-            });
-
-        ExpenseCalculationRule::where('planning_year_id', $sourceYear->id)
-            ->get()
-            ->each(function (ExpenseCalculationRule $rule) use ($targetYear, $sectionIdMap, $subsectionIdMap) {
-                ExpenseCalculationRule::create([
-                    'planning_year_id' => $targetYear->id,
-                    'pattern_id' => $rule->pattern_id,
-                    'section_id' => $rule->section_id ? ($sectionIdMap[$rule->section_id] ?? null) : null,
-                    'subsection_id' => $rule->subsection_id ? ($subsectionIdMap[$rule->subsection_id] ?? null) : null,
-                    'target_field_key' => $rule->target_field_key,
-                    'formula' => $rule->formula,
-                    'is_active' => $rule->is_active,
-                ]);
-            });
     }
 }

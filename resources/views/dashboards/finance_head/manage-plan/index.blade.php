@@ -65,7 +65,7 @@
                     </div>
                     <div>
                         <span>ປະເມີນລາຍຈ່າຍ</span>
-                        <strong>{{ $expenseRows > 0 ? number_format((float) $expenseTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
+                        <strong>{{ number_format((float) $expenseTotal, 0) }} ກີບ</strong>
                     </div>
                     <div>
                         <span>ເງິນເດືອນ</span>

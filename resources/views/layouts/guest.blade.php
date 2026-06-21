@@ -19,7 +19,7 @@
                     <img src="{{ asset('storage/NUOL-Logo-26_960x960.png') }}" alt="NUOL Logo">
                     <div>
                         <div class="fns-login-title">FNS Finance</div>
-                        <div class="fns-login-subtitle">ລະບົບການເງິນ · ມະຫາວິທະຍາໄລ</div>
+                        <div class="fns-login-subtitle">ລະບົບບໍລິຫານການເງິນ · ມະຫາວິທະຍາໄລ</div>
                     </div>
                 </div>
                 <div class="fns-login-divider"></div>

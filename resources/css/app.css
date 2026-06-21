@@ -332,15 +332,17 @@
 /* ── Login Page ─────────────────────────────────────────── */
 .fns-login-bg {
     min-height: 100vh;
-    background: var(--fns-navy-deep);
+    background-color: #101827;
     background-image:
-        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(201,153,26,0.1) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 60%, rgba(26,74,46,0.15) 0%, transparent 60%),
-        radial-gradient(ellipse 100% 100% at 50% 100%, rgba(139,26,26,0.08) 0%, transparent 50%);
+        linear-gradient(90deg, rgba(8,17,32,0.86) 0%, rgba(8,17,32,0.58) 46%, rgba(8,17,32,0.2) 100%),
+        linear-gradient(180deg, rgba(8,17,32,0.18) 0%, rgba(8,17,32,0.5) 100%),
+        url('/storage/BG-login.png');
+    background-size: cover;
+    background-position: center;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
+    justify-content: flex-start;
+    padding: clamp(1.25rem, 4vw, 4rem);
     position: relative;
     overflow: hidden;
 }
@@ -350,24 +352,19 @@
     position: absolute;
     inset: 0;
     background-image:
-        radial-gradient(circle at 15% 85%, rgba(255,255,255,0.025) 0%, transparent 40%),
-        radial-gradient(circle at 85% 15%, rgba(255,255,255,0.02) 0%, transparent 40%);
+        radial-gradient(circle at 22% 22%, rgba(255,255,255,0.2) 0 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 38px 38px, 110px 110px, 110px 110px;
+    opacity: 0.2;
     pointer-events: none;
 }
 
-/* Decorative geometric lines */
 .fns-login-bg::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image:
-        repeating-linear-gradient(
-            -45deg,
-            transparent,
-            transparent 60px,
-            rgba(255,255,255,0.012) 60px,
-            rgba(255,255,255,0.012) 61px
-        );
+    background: linear-gradient(90deg, rgba(8,17,32,0.18), transparent 42%);
     pointer-events: none;
 }
 
@@ -375,17 +372,17 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 420px;
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 2.5rem 2rem;
+    max-width: 430px;
+    margin-left: min(8vw, 7rem);
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.72);
+    border-radius: 14px;
+    padding: clamp(1.5rem, 3vw, 2.15rem);
     box-shadow:
-        0 32px 80px rgba(0,0,0,0.5),
-        0 0 0 1px rgba(201,153,26,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.08);
+        0 28px 70px rgba(8,17,32,0.34),
+        0 0 0 1px rgba(26,39,68,0.06);
     animation: cardReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -396,96 +393,139 @@
 
 .fns-login-logo-wrap {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
+    gap: 0.85rem;
+    margin-bottom: 1.1rem;
     animation: fadeSlideUp 0.5s 0.1s ease both;
 }
 
 .fns-login-logo-wrap img {
-    width: 72px;
-    height: 72px;
-    object-fit: cover;
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
     border-radius: 50%;
-    filter: drop-shadow(0 4px 16px rgba(201,153,26,0.3));
-    animation: logoPulse 3s ease-in-out infinite;
-}
-
-@keyframes logoPulse {
-    0%, 100% { filter: drop-shadow(0 4px 16px rgba(201,153,26,0.3)); }
-    50%       { filter: drop-shadow(0 4px 24px rgba(201,153,26,0.5)); }
+    background: #f8fafc;
+    border: 1px solid rgba(26,39,68,0.1);
+    box-shadow: 0 8px 18px rgba(26,39,68,0.1);
 }
 
 .fns-login-title {
     font-family: 'Cinzel', serif;
-    font-size: 1.35rem;
+    font-size: 1.18rem;
     font-weight: 700;
-    color: var(--fns-gold-light);
-    letter-spacing: 0.12em;
-    text-align: center;
+    color: var(--fns-navy);
+    letter-spacing: 0.08em;
+    text-align: left;
     text-transform: uppercase;
+    line-height: 1.15;
 }
 
 .fns-login-subtitle {
     font-size: 0.72rem;
-    color: rgba(255,255,255,0.4);
-    text-align: center;
-    letter-spacing: 0.04em;
-    margin-top: 0.1rem;
+    color: var(--fns-gray-600);
+    text-align: left;
+    margin-top: 0.2rem;
 }
 
 .fns-login-divider {
     height: 1px;
-    background: linear-gradient(to right, transparent, rgba(201,153,26,0.4), transparent);
-    margin: 1.5rem 0;
+    background: linear-gradient(to right, rgba(201,153,26,0.45), rgba(26,39,68,0.08), transparent);
+    margin: 1.1rem 0 1.25rem;
+}
+
+.fns-login-status {
+    color: #14532d;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.78rem;
+    margin-bottom: 1rem;
+}
+
+.fns-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+}
+
+.fns-login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.38rem;
 }
 
 .fns-form-label {
     display: block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.5);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.45rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: 0;
 }
 
 .fns-form-input {
     width: 100%;
-    padding: 0.7rem 0.9rem;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 10px;
-    color: rgba(255,255,255,0.9);
-    font-size: 0.88rem;
+    padding: 0.72rem 0.85rem;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #0f172a;
+    font-size: 0.86rem;
     font-family: inherit;
     transition: all 0.2s ease;
     outline: none;
 }
 
-.fns-form-input::placeholder { color: rgba(255,255,255,0.25); }
+.fns-form-input::placeholder { color: #94a3b8; }
 
 .fns-form-input:focus {
-    background: rgba(255,255,255,0.09);
-    border-color: rgba(201,153,26,0.6);
-    box-shadow: 0 0 0 3px rgba(201,153,26,0.12);
+    background: #fff;
+    border-color: var(--fns-navy-light);
+    box-shadow: 0 0 0 3px rgba(46,63,110,0.13);
+}
+
+.fns-login-error {
+    color: #b91c1c;
+    font-size: 0.74rem;
+}
+
+.fns-login-options {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #475569;
+    font-size: 0.78rem;
+}
+
+.fns-login-options label {
+    cursor: pointer;
+}
+
+.fns-login-checkbox {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--fns-navy);
+    border-radius: 4px;
+}
+
+.fns-login-action {
+    margin-top: 0.35rem;
 }
 
 .fns-btn-primary {
     width: 100%;
-    padding: 0.8rem 1.5rem;
-    background: linear-gradient(135deg, var(--fns-gold) 0%, var(--fns-gold-light) 100%);
-    color: var(--fns-navy-deep);
+    padding: 0.78rem 1.25rem;
+    background: var(--fns-navy);
+    color: #fff;
     font-weight: 700;
-    font-size: 0.88rem;
-    border-radius: 10px;
+    font-size: 0.86rem;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: 0;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 20px rgba(201,153,26,0.4);
+    box-shadow: 0 10px 22px rgba(26,39,68,0.24);
     position: relative;
     overflow: hidden;
 }
@@ -494,18 +534,31 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.16) 0%, transparent 100%);
     opacity: 0;
     transition: opacity 0.2s;
 }
 
 .fns-btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 28px rgba(201,153,26,0.5);
+    background: var(--fns-navy-mid);
+    box-shadow: 0 14px 28px rgba(26,39,68,0.28);
 }
 
 .fns-btn-primary:hover::before { opacity: 1; }
 .fns-btn-primary:active { transform: translateY(0); }
+
+@media (max-width: 760px) {
+    .fns-login-bg {
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .fns-login-card {
+        margin-left: 0;
+        max-width: 100%;
+    }
+}
 
 /* ── Content Area ───────────────────────────────────────── */
 .fns-main {

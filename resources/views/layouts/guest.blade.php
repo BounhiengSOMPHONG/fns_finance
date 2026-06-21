@@ -14,7 +14,7 @@
             <div class="fns-login-card">
                 <!-- Logo & Branding -->
                 <div class="fns-login-logo-wrap">
-                    <img src="{{ asset('storage/logo fns.jpg') }}" alt="FNS Logo">
+                    <img src="{{ asset('storage/NUOL-Logo-26_960x960.png') }}" alt="NUOL Logo">
                     <div>
                         <div class="fns-login-title">FNS Finance</div>
                         <div class="fns-login-subtitle">ລະບົບການເງິນ · ມະຫາວິທະຍາໄລ</div>

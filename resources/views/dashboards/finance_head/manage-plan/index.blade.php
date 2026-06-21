@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Manage plan')
-@section('page-title', 'Manage plan')
+@section('title', 'ຈັດການແຜນປະຈຳປີ')
+@section('page-title', 'ຈັດການແຜນປະຈຳປີ')
 
 @section('content')
 @php
@@ -11,9 +11,9 @@
 <section class="mp-shell">
     <div class="mp-head">
         <div>
-            <span class="mp-kicker">Planning workspace</span>
-            <h2>Manage plan</h2>
-            <p>ສ້າງແຜນປີດຽວ ແລ້ວຈັດການ ປະເມີນລາຍຮັບ, ເງິນເດືອນ, ແລະ ລາຍຈ່າຍ ໃນໜ້າດຽວ.</p>
+            <span class="mp-kicker">ພື້ນທີ່ຈັດແຜນ</span>
+            <h2>ຈັດການແຜນງົບປະມານ</h2>
+            <p>ສ້າງແຜນປະຈຳປີ ແລ້ວຈັດການລາຍຮັບ, ເງິນເດືອນ ແລະລາຍຈ່າຍຈາກໜ້າດຽວ.</p>
         </div>
         <button type="button" class="mp-primary" id="openManagePlanModal">
             <span>+</span>
@@ -35,10 +35,10 @@
                 $isSavedPlan = $plan->status === \App\Models\PlanningYear::STATUS_SAVED;
                 $canOpenPeriodThreeFour = $plan->canOpenPeriodThreeFour();
                 $statusLabels = [
-                    'DRAFT' => 'Draft',
-                    'PENDING_REVIEW' => 'Pending review',
-                    'MODIFYING' => 'Modifying',
-                    'SAVED' => 'Saved',
+                    'DRAFT' => 'ກຳລັງຈັດເຮັດ',
+                    'PENDING_REVIEW' => 'ລໍຖ້າກວດ',
+                    'MODIFYING' => 'ກຳລັງແກ້ໄຂ',
+                    'SAVED' => 'ບັນທຶກແລ້ວ',
                 ];
             @endphp
             <article class="mp-card  {{ $isCurrent ? 'is-current' : '' }}">
@@ -48,13 +48,13 @@
                         <strong>{{ $plan->year }}</strong>
                     </div>
                     <div class="mp-card-title">
-                        <h3>{{ $plan->name ?: 'Planning ' . $plan->year }}</h3>
+                        <h3>{{ $plan->name ?: 'ແຜນປີ ' . $plan->year }}</h3>
                         <p>{{ $plan->description ?: 'ຈັດການແຜນປະຈຳປີຮ່ວມກັນ' }}</p>
                     </div>
                     @if($isCurrent)
                         <span class="mp-pill">ປະຈຸບັນ</span>
                     @else
-                        <span class="mp-pill mp-pill-muted">{{ $statusLabels[$plan->status ?? 'DRAFT'] ?? ($plan->status ?? 'Draft') }}</span>
+                        <span class="mp-pill mp-pill-muted">{{ $statusLabels[$plan->status ?? 'DRAFT'] ?? ($plan->status ?? 'ກຳລັງຈັດເຮັດ') }}</span>
                     @endif
                 </div>
 
@@ -150,7 +150,7 @@
     <div class="mp-modal" role="dialog" aria-modal="true" aria-labelledby="managePlanModalTitle">
         <div class="mp-modal-head">
             <div>
-                <span class="mp-kicker">Create once</span>
+                <span class="mp-kicker">ສ້າງຄັ້ງດຽວ</span>
                 <h3 id="managePlanModalTitle">ສ້າງແຜນປີໃໝ່</h3>
             </div>
             <button type="button" class="mp-close" data-close-manage-plan>&times;</button>
@@ -164,7 +164,7 @@
             </label>
             <label>
                 <span>ຊື່ແຜນ</span>
-                <input type="text" name="name" value="{{ old('name') }}" placeholder="Planning {{ $currentYear + 1 }}">
+                <input type="text" name="name" value="{{ old('name') }}" placeholder="ແຜນປີ {{ $currentYear + 1 }}">
             </label>
             <label>
                 <span>ລາຍລະອຽດ</span>
@@ -182,41 +182,44 @@
 </div>
 
 <style>
-    .mp-shell { display:flex; flex-direction:column; gap:1rem; }
+    .mp-shell { display:flex; flex-direction:column; gap:.85rem; }
     .mp-head {
-        display:flex; align-items:flex-end; justify-content:space-between; gap:1rem;
-        background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; padding:1.1rem 1.2rem;
-        box-shadow:0 2px 12px rgba(26,39,68,.05);
+        display:flex; align-items:center; justify-content:space-between; gap:1rem;
+        background:linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+        border:1px solid var(--fns-gray-200); border-left:4px solid var(--fns-gold);
+        border-radius:8px; padding:1rem 1.15rem;
+        box-shadow:0 2px 10px rgba(26,39,68,.05);
     }
-    .mp-kicker { color:var(--fns-gold); font-size:.72rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
-    .mp-head h2 { margin:.2rem 0; color:var(--fns-navy); font-size:1.35rem; }
-    .mp-head p { margin:0; color:var(--fns-gray-500); font-size:.86rem; }
+    .mp-kicker { color:#9b7410; font-size:.72rem; font-weight:900; }
+    .mp-head h2 { margin:.18rem 0; color:var(--fns-navy); font-size:1.15rem; font-weight:900; }
+    .mp-head p { margin:0; color:var(--fns-gray-600); font-size:.82rem; line-height:1.45; }
     .mp-primary, .mp-secondary, .mp-action {
         border-radius:8px; font-family:inherit; font-weight:900; font-size:.82rem; cursor:pointer;
     }
     .mp-primary {
         display:inline-flex; align-items:center; justify-content:center; gap:.45rem;
         border:1px solid var(--fns-gold); background:var(--fns-gold); color:#111b33;
-        padding:.65rem .9rem; box-shadow:0 8px 18px rgba(201,153,26,.22);
+        min-height:2.45rem; padding:.6rem .9rem; box-shadow:0 8px 18px rgba(201,153,26,.18);
     }
+    .mp-primary:hover { background:var(--fns-gold-light); }
     .mp-secondary { border:1px solid var(--fns-gray-200); background:#fff; color:var(--fns-navy); padding:.65rem .9rem; }
-    .mp-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:.85rem; }
+    .mp-grid { display:grid; grid-template-columns:1fr; gap:.75rem; }
     .mp-card {
         background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; padding:1rem;
-        box-shadow:0 2px 12px rgba(26,39,68,.05);
+        box-shadow:0 2px 10px rgba(26,39,68,.045);
     }
-    .mp-card.is-current { border-color:rgba(201,153,26,.7); }
-    .mp-card-top { display:grid; grid-template-columns:auto 1fr auto; gap:.8rem; align-items:start; }
-    .mp-year { min-width:72px; border-radius:8px; background:#eef2f7; padding:.55rem; text-align:center; }
+    .mp-card.is-current { border-color:rgba(201,153,26,.55); box-shadow:0 2px 12px rgba(201,153,26,.09); }
+    .mp-card-top { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:.8rem; align-items:center; }
+    .mp-year { min-width:68px; border-radius:8px; background:#f1f5f9; padding:.55rem; text-align:center; border:1px solid #e2e8f0; }
     .mp-year span { display:block; color:var(--fns-gray-400); font-size:.68rem; font-weight:900; }
     .mp-year strong { display:block; color:var(--fns-navy); font-size:1.35rem; line-height:1.1; }
-    .mp-card-title h3 { margin:0; color:var(--fns-navy); font-size:1rem; }
-    .mp-card-title p { margin:.25rem 0 0; color:var(--fns-gray-500); font-size:.8rem; }
-    .mp-pill { align-self:start; border-radius:999px; background:rgba(201,153,26,.16); color:#8a6410; padding:.25rem .5rem; font-size:.7rem; font-weight:900; }
+    .mp-card-title h3 { margin:0; color:var(--fns-navy); font-size:1rem; font-weight:900; }
+    .mp-card-title p { margin:.2rem 0 0; color:var(--fns-gray-600); font-size:.8rem; line-height:1.4; }
+    .mp-pill { align-self:center; border-radius:999px; background:rgba(201,153,26,.16); color:#8a6410; padding:.28rem .58rem; font-size:.72rem; font-weight:900; white-space:nowrap; }
     .mp-pill-muted { background:#eef2f7; color:#64748b; }
-    .mp-status { display:grid; grid-template-columns:repeat(3, 1fr); gap:.55rem; margin:1rem 0; }
-    .mp-status div { border:1px solid var(--fns-gray-200); border-radius:8px; padding:.55rem; }
-    .mp-status span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:900; }
+    .mp-status { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:.55rem; margin:.85rem 0; }
+    .mp-status div { border:1px solid #e2e8f0; border-radius:8px; padding:.6rem .7rem; background:#fbfdff; }
+    .mp-status span { display:block; color:#64748b; font-size:.72rem; font-weight:900; }
     .mp-status strong {
         display:block; margin-top:.15rem;
         color:var(--fns-navy);
@@ -226,17 +229,22 @@
         overflow-wrap:anywhere;
         line-height:1.25;
     }
-    .mp-actions { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+    .mp-actions {
+        display:flex; flex-wrap:wrap; gap:.45rem; align-items:center;
+        padding-top:.85rem; border-top:1px solid #eef2f7;
+    }
     .mp-actions form { margin:0; }
     .mp-actions form:last-child { margin-left:auto; }
     .mp-action {
-        display:inline-flex; align-items:center; gap:.45rem; border:1px solid var(--fns-gray-200);
-        background:#fff; color:var(--fns-navy); padding:.55rem .7rem; text-decoration:none;
+        display:inline-flex; align-items:center; justify-content:center; gap:.45rem; border:1px solid var(--fns-gray-200);
+        background:#fff; color:var(--fns-navy); min-height:2.15rem; padding:.48rem .68rem; text-decoration:none;
+        transition:background .16s ease, border-color .16s ease, transform .16s ease;
     }
     .mp-action svg { width:15px; height:15px; }
+    .mp-action:hover { transform:translateY(-1px); border-color:#cbd5e1; background:#f8fafc; }
     .mp-action-strong { background:var(--fns-navy); border-color:var(--fns-navy); color:#fff; }
+    .mp-action-strong:hover { background:var(--fns-navy-mid); border-color:var(--fns-navy-mid); }
     .mp-action-period { background:#f7faf6; border-color:#cfe0d0; color:var(--fns-green); }
-    .mp-action-preview { background:#fff7df; border-color:#f4d37a; color:#72500b; }
     .mp-action-light { background:#fbfbfc; }
     .mp-action-disabled { background:#f1f5f9; border-color:#e2e8f0; color:#94a3b8; cursor:not-allowed; opacity:.82; }
     .mp-action-disabled svg { opacity:.55; }
@@ -266,9 +274,9 @@
     .mp-modal-actions { display:flex; justify-content:flex-end; gap:.55rem; padding-top:.4rem; }
     @media (max-width:760px) {
         .mp-head { align-items:stretch; flex-direction:column; }
-        .mp-grid { grid-template-columns:1fr; }
         .mp-card-top { grid-template-columns:1fr; }
         .mp-status { grid-template-columns:1fr; }
+        .mp-actions form:last-child { margin-left:0; }
     }
 </style>
 

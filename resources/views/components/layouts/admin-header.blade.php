@@ -59,7 +59,7 @@
                 <a href="{{ route('head_of_finance.manage-plan.index') }}"
                    class="fns-topnav-item {{ $managePlanActive ? 'active' : '' }}">
                     <x-icons.book-open />
-                    Manage plan
+                    ຈັດການແຜນ
                 </a>
 
                 {{-- Settings dropdown --}}

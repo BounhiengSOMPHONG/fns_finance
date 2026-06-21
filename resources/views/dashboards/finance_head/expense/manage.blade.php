@@ -1,26 +1,30 @@
 @extends('layouts.admin')
 
-@section('title', 'ລາຍຈ່າຍ ' . $planningYear->year)
-@section('page-title', 'ລາຍຈ່າຍ ' . $planningYear->year)
+@section('title', 'ປະເມີນລາຍຈ່າຍ ' . $planningYear->year)
+@section('page-title', 'ປະເມີນລາຍຈ່າຍ ' . $planningYear->year)
+@section('page-title-actions')
+    <div class="expense-budget-summary">
+        <div>
+            <span>ຍອດຄົງເຫຼືອ</span>
+            <strong id="budgetRemainingTotal">{{ number_format((float) $budgetSummary['remaining_total'], 0, '.', '.') }}</strong>
+        </div>
+    </div>
+@endsection
 
 @section('content')
 @php
-    $fieldSettingsById = $fieldSettings;
-
-    $patternsPayload = $patterns->mapWithKeys(function ($pattern) use ($fieldSettingsById) {
-        $fields = $pattern->fields->map(function ($field) use ($fieldSettingsById) {
-            $setting = $fieldSettingsById->get($field->id);
-
+    $patternsPayload = $patterns->mapWithKeys(function ($pattern) {
+        $fields = $pattern->fields->map(function ($field) {
             return [
-                'id' => $field->id,
+                'id' => $field->field_key,
                 'key' => $field->field_key,
-                'label' => $setting?->label ?? $field->default_label,
+                'label' => $field->default_label,
                 'type' => $field->data_type,
-                'order' => $setting?->display_order ?? $field->display_order,
-                'required' => (bool) ($setting?->is_required ?? $field->is_required),
+                'order' => $field->display_order,
+                'required' => (bool) $field->is_required,
                 'calculated' => (bool) $field->is_calculated,
-                'active' => (bool) ($setting?->is_active ?? true),
-                'default_value' => $setting?->default_value ?? $field->default_value,
+                'active' => true,
+                'default_value' => $field->default_value,
             ];
         })->filter(fn ($field) => $field['active'])
           ->sortBy('order')
@@ -32,6 +36,7 @@
             'name' => $pattern->name,
             'description' => $pattern->description,
             'fields' => $fields,
+            'formula' => $pattern->formula_schema,
         ]];
     });
 
@@ -68,11 +73,13 @@
         'pattern_key' => $row->pattern?->key,
         'code' => $row->subsection?->code ?? $row->section?->code,
         'label' => $row->subsection?->name ?? $row->section?->name,
-        'plan_detail' => $row->plan_detail,
+        'plan_detail' => $row->item_name ?: $row->plan_detail,
         'detail' => $row->detail,
         'total' => $row->yearlyTotal(),
-        'values' => $row->values->mapWithKeys(fn ($value) => [
-            $value->field_key => $value->value_number ?? $value->value_text ?? $value->value_date ?? $value->value_boolean
+        'values' => array_merge($row->calculation_values ?? [], [
+            'item_name' => $row->item_name ?: $row->plan_detail,
+            'reference' => $row->chartOfAccount?->account_code,
+            'note' => $row->detail,
         ]),
     ])->values();
 
@@ -126,6 +133,45 @@
 </div>
 
 <style>
+    .expense-budget-summary {
+        display:grid;
+        grid-template-columns:minmax(126px, auto);
+        gap:.45rem;
+        align-items:stretch;
+        justify-content:end;
+        position:fixed;
+        top:5.25rem;
+        right:1.25rem;
+        z-index:900;
+    }
+    .expense-budget-summary > div {
+        min-width:126px;
+        border:1px solid var(--fns-gray-200);
+        border-radius:7px;
+        background:#fff;
+        padding:.45rem .65rem;
+        text-align:right;
+        box-shadow:0 1px 8px rgba(26,39,68,.04);
+    }
+    .expense-budget-summary span {
+        display:block;
+        color:var(--fns-gray-500);
+        font-size:.68rem;
+        font-weight:900;
+        line-height:1.2;
+        white-space:nowrap;
+    }
+    .expense-budget-summary strong {
+        display:block;
+        margin-top:.18rem;
+        color:var(--fns-navy);
+        font-family:'Cinzel', serif;
+        font-size:1.03rem;
+        font-weight:900;
+        line-height:1.15;
+        font-variant-numeric:tabular-nums;
+        white-space:nowrap;
+    }
     .excel-plan { display:flex; flex-direction:column; gap:1rem; }
     .excel-section-total span { display:block; color:var(--fns-gray-400); font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
     .excel-overview {
@@ -245,7 +291,8 @@
     .excel-tab.active .excel-tab-name small { color:#3b3218; }
     .excel-sheet { background:#fff; border:1px solid var(--fns-gray-200); border-radius:8px; overflow:hidden; box-shadow:0 2px 12px rgba(26,39,68,.05); }
     .excel-section-head {
-        display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;
+        display:none !important;
+        justify-content:space-between; align-items:flex-start; gap:1rem;
         padding:1rem 1.15rem; border-bottom:1px solid var(--fns-gray-200); background:#fbfbfc;
     }
     .excel-section-head h2 { margin:0; color:var(--fns-navy); font-size:1.15rem; }
@@ -285,6 +332,33 @@
     .excel-block-title-main { display:flex; align-items:flex-start; gap:.65rem; min-width:0; }
     .excel-block-title h3 { margin:0; color:#061226; font-size:1rem; line-height:1.35; font-weight:900; }
     .excel-block-title p { margin:.3rem 0 0; color:var(--fns-gray-500); font-size:.75rem; }
+    .excel-block-total {
+        flex:0 0 auto;
+        min-width:155px;
+        border:1px solid #e3e8f1;
+        border-radius:7px;
+        background:#f8fafc;
+        padding:.45rem .65rem;
+        text-align:right;
+    }
+    .excel-block-total span {
+        display:block;
+        color:var(--fns-gray-500);
+        font-size:.68rem;
+        font-weight:900;
+        line-height:1.1;
+    }
+    .excel-block-total strong {
+        display:block;
+        margin-top:.16rem;
+        color:var(--fns-navy);
+        font-family:'Cinzel', serif;
+        font-size:1.05rem;
+        font-weight:900;
+        line-height:1.2;
+        font-variant-numeric:tabular-nums;
+        white-space:nowrap;
+    }
     .excel-collapse-btn {
         flex:0 0 auto;
         width:2rem;
@@ -329,10 +403,20 @@
     .excel-unit { text-align:right; color:#111b33; font-weight:800; padding:.45rem .65rem; background:#f7f8fa; border-bottom:1px solid #d8dce5; }
     .excel-toast { position:fixed; right:1rem; bottom:1rem; z-index:10000; background:var(--fns-navy); color:#fff; border-radius:8px; padding:.75rem .9rem; box-shadow:0 18px 38px rgba(17,27,51,.22); font-size:.82rem; }
     @media (max-width:760px) {
+        .expense-budget-summary {
+            width:auto;
+            grid-template-columns:minmax(132px, auto);
+            top:auto;
+            right:.75rem;
+            bottom:.75rem;
+        }
+        .expense-budget-summary > div { text-align:right; }
         .excel-section-head { grid-template-columns:1fr; display:flex; flex-direction:column; }
         .excel-section-actions { width:100%; justify-content:flex-start; margin-left:0; }
         .excel-section-total { width:100%; text-align:left; }
         .excel-overview-head { flex-direction:column; }
+        .excel-block-title { flex-direction:column; }
+        .excel-block-total { width:100%; text-align:left; }
         .excel-section-nav { grid-template-columns:auto auto; }
         .excel-tabs { grid-column:1 / -1; order:2; }
         .excel-nav-btn { min-height:34px; }
@@ -347,6 +431,7 @@ const PATTERNS = @json($patternsPayload);
 const RULES = @json($rulesPayload);
 const CHART_ACCOUNTS = @json($chartAccountsPayload);
 const DEFAULT_ROWS = @json($defaultRowsPayload);
+const INCOME_TOTAL = Number(@json((float) $budgetSummary['income_total']));
 let ROWS = @json($rowsPayload);
 let selectedSectionId = SECTIONS[0]?.id || null;
 let lastInputSectionId = SECTIONS[0]?.id || null;
@@ -564,23 +649,10 @@ function calculateFormula(formula, values) {
     }, 0);
 }
 
-function calculatedTotalForPattern(patternKey, values = {}) {
-    const number = key => numberValue(values[key]);
-
-    switch (patternKey) {
-        case 'monthly':
-            return number('amount_per_month') * number('month_count');
-        case 'unit_quantity':
-            return number('unit_price') * number('quantity');
-        case 'unit_quantity_frequency':
-            return number('unit_price') * number('quantity') * number('times_per_year');
-        case 'frequency_based':
-            return number('unit_price') * number('quantity') * number('frequency_count');
-        case 'event_based':
-            return number('unit_price') * number('event_count') * number('people_count');
-        default:
-            return 0;
-    }
+function calculatedTotalForPattern(pattern, values = {}) {
+    const fields = pattern?.formula?.fields || [];
+    if (!fields.length) return numberValue(values.yearly_total);
+    return fields.reduce((total, field) => total * numberValue(values[field]), 1);
 }
 
 function rowTotal(row) {
@@ -590,8 +662,29 @@ function rowTotal(row) {
         return calculateFormula(rule.formula, row.values || {});
     }
 
+    const pattern = PATTERNS[row.pattern_id];
     const storedTotal = numberValue(row.values?.yearly_total ?? row.total);
-    return storedTotal > 0 ? storedTotal : calculatedTotalForPattern(row.pattern_key, row.values || {});
+    return storedTotal > 0 ? storedTotal : calculatedTotalForPattern(pattern, row.values || {});
+}
+
+function currentExpenseTotal() {
+    const visibleRowIds = new Set();
+    const visibleTotal = [...document.querySelectorAll('.excel-saved-row')].reduce((sum, row) => {
+        visibleRowIds.add(Number(row.dataset.row));
+        return sum + numberValue(row.querySelector('input[name="yearly_total"]')?.value);
+    }, 0);
+
+    const storedTotal = ROWS
+        .filter(row => !visibleRowIds.has(Number(row.id)))
+        .reduce((sum, row) => sum + rowTotal(row), 0);
+
+    return storedTotal + visibleTotal;
+}
+
+function updateBudgetSummary() {
+    const expenseTotal = currentExpenseTotal();
+    const remainingTotal = INCOME_TOTAL - expenseTotal;
+    document.getElementById('budgetRemainingTotal').textContent = fmt.format(remainingTotal);
 }
 
 function fieldsForPattern(pattern) {
@@ -645,6 +738,7 @@ function renderSheet() {
         .map(subsection => renderSubsectionGroup(section, subsection))
         .join('');
     bindSheetEvents();
+    updateBudgetSummary();
 }
 
 function summaryValue(rows, keys) {
@@ -764,6 +858,10 @@ function renderSubsection(section, subsection) {
                         <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
                     </div>
                 </div>
+                <div class="excel-block-total">
+                    <span>ລວມເງິນ</span>
+                    <strong class="excel-block-total-value">${fmt.format(subtotal)}</strong>
+                </div>
             </div>
             <div class="excel-block-body">
                 <div class="excel-unit">ໜ່ວຍ: ກີບ</div>
@@ -784,7 +882,7 @@ function renderSubsection(section, subsection) {
                         <tfoot>
                             <tr>
                                 <td colspan="${normalFields.length + 1}" class="excel-number">ລວມ</td>
-                                ${totalField ? `<td class="excel-number">${fmt.format(subtotal)}</td>` : ''}
+                                ${totalField ? `<td class="excel-number excel-block-footer-total">${fmt.format(subtotal)}</td>` : ''}
                             </tr>
                         </tfoot>
                     </table>
@@ -878,19 +976,31 @@ function updateSourceTotal(block, row) {
     const pattern = PATTERNS[patternId];
     const total = rule
         ? calculateFormula(rule.formula, values)
-        : calculatedTotalForPattern(pattern?.key, values);
+        : calculatedTotalForPattern(pattern, values);
     const totalInput = row.querySelector('input[name="yearly_total"]');
     if (totalInput) totalInput.value = moneyInputValue(total);
 }
 
 function updateBlockTotal(block) {
     block.querySelectorAll('.excel-saved-row').forEach(row => updateSourceTotal(block, row));
+    refreshBlockSubtotal(block);
 }
 
 function updateLineTotal(row) {
     if (!row) return;
     const block = row.closest('.excel-block');
     updateSourceTotal(block, row);
+    refreshBlockSubtotal(block);
+}
+
+function refreshBlockSubtotal(block) {
+    if (!block) return;
+    const subtotal = [...block.querySelectorAll('.excel-saved-row input[name="yearly_total"]')]
+        .reduce((sum, input) => sum + numberValue(input.value), 0);
+    block.querySelector('.excel-block-total-value').textContent = fmt.format(subtotal);
+    const footerTotal = block.querySelector('.excel-block-footer-total');
+    if (footerTotal) footerTotal.textContent = fmt.format(subtotal);
+    updateBudgetSummary();
 }
 
 async function updateSavedRow(row) {
@@ -924,6 +1034,7 @@ async function updateSavedRow(row) {
     } : item);
     renderTabs();
     renderSheet();
+    updateBudgetSummary();
     toast('Updated');
 }
 
@@ -1011,5 +1122,6 @@ document.getElementById('backFromTotalPage')?.addEventListener('click', () => {
 
 renderTabs();
 renderSheet();
+updateBudgetSummary();
 </script>
 @endsection

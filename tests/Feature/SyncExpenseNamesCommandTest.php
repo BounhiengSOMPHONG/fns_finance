@@ -112,13 +112,15 @@ class SyncExpenseNamesCommandTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        DB::table('expense_subsection_default_rows')->insert([
+        DB::table('expense_catalog_items')->insert([
             'id' => 30,
-            'subsection_code' => '2.2.4',
+            'subsection_id' => 20,
             'item_name' => 'ອູປະກອນທົດລອງຟິຊິກສາດ',
             'sort_order' => 1,
             'chart_of_account_id' => 123,
+            'pattern_id' => null,
             'default_values' => json_encode(['yearly_total' => 999]),
+            'is_active' => true,
             'updated_at' => now(),
         ]);
 
@@ -128,8 +130,14 @@ class SyncExpenseNamesCommandTest extends TestCase
                 'planning_year_id' => 13,
                 'section_id' => 1,
                 'subsection_id' => 20,
+                'catalog_item_id' => 30,
+                'chart_of_account_id' => 123,
+                'pattern_id' => null,
+                'item_name' => 'ອູປະກອນທົດລອງຟິຊິກສາດ',
                 'plan_detail' => 'ອູປະກອນທົດລອງຟິຊິກສາດ',
                 'detail' => 'keep note',
+                'calculation_values' => json_encode(['yearly_total' => 999]),
+                'pattern_snapshot' => json_encode(['formula_schema' => ['operation' => 'multiply', 'fields' => []]]),
                 'updated_at' => now(),
             ],
             [
@@ -137,57 +145,34 @@ class SyncExpenseNamesCommandTest extends TestCase
                 'planning_year_id' => 13,
                 'section_id' => 1,
                 'subsection_id' => 20,
+                'catalog_item_id' => null,
+                'chart_of_account_id' => null,
+                'pattern_id' => null,
+                'item_name' => 'custom user text',
                 'plan_detail' => 'custom user text',
                 'detail' => 'keep custom note',
-                'updated_at' => now(),
-            ],
-        ]);
-
-        DB::table('expense_plan_values')->insert([
-            [
-                'id' => 50,
-                'expense_plan_id' => 40,
-                'field_key' => 'item_name',
-                'value_text' => 'ອູປະກອນທົດລອງຟິຊິກສາດ',
-                'value_number' => null,
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 51,
-                'expense_plan_id' => 41,
-                'field_key' => 'item_name',
-                'value_text' => 'custom user text',
-                'value_number' => null,
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 52,
-                'expense_plan_id' => 40,
-                'field_key' => 'yearly_total',
-                'value_text' => null,
-                'value_number' => 999,
+                'calculation_values' => json_encode(['yearly_total' => 222]),
+                'pattern_snapshot' => json_encode(['formula_schema' => ['operation' => 'multiply', 'fields' => []]]),
                 'updated_at' => now(),
             ],
         ]);
 
         $this->artisan('expense:sync-names')->assertExitCode(0);
 
-        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_subsection_default_rows')->where('id', 30)->value('item_name'));
-        $this->assertSame(123, DB::table('expense_subsection_default_rows')->where('id', 30)->value('chart_of_account_id'));
-        $this->assertSame(['yearly_total' => 999], json_decode(DB::table('expense_subsection_default_rows')->where('id', 30)->value('default_values'), true));
+        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_catalog_items')->where('id', 30)->value('item_name'));
+        $this->assertSame(123, DB::table('expense_catalog_items')->where('id', 30)->value('chart_of_account_id'));
+        $this->assertSame(['yearly_total' => 999], json_decode(DB::table('expense_catalog_items')->where('id', 30)->value('default_values'), true));
         $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plans')->where('id', 40)->value('plan_detail'));
+        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plans')->where('id', 40)->value('item_name'));
         $this->assertSame('custom user text', DB::table('expense_plans')->where('id', 41)->value('plan_detail'));
+        $this->assertSame('custom user text', DB::table('expense_plans')->where('id', 41)->value('item_name'));
         $this->assertSame('keep note', DB::table('expense_plans')->where('id', 40)->value('detail'));
-        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plan_values')->where('id', 50)->value('value_text'));
-        $this->assertSame('custom user text', DB::table('expense_plan_values')->where('id', 51)->value('value_text'));
-        $this->assertSame('999', (string) DB::table('expense_plan_values')->where('id', 52)->value('value_number'));
     }
 
     private function createExpenseSyncTables(): void
     {
-        Schema::dropIfExists('expense_plan_values');
         Schema::dropIfExists('expense_plans');
-        Schema::dropIfExists('expense_subsection_default_rows');
+        Schema::dropIfExists('expense_catalog_items');
         Schema::dropIfExists('expense_subsections');
         Schema::dropIfExists('expense_sections');
 
@@ -208,13 +193,15 @@ class SyncExpenseNamesCommandTest extends TestCase
             $table->timestamp('updated_at')->nullable();
         });
 
-        Schema::create('expense_subsection_default_rows', function ($table): void {
+        Schema::create('expense_catalog_items', function ($table): void {
             $table->id();
-            $table->string('subsection_code', 30);
+            $table->unsignedBigInteger('subsection_id');
             $table->string('item_name');
             $table->unsignedInteger('sort_order')->default(1);
             $table->unsignedInteger('chart_of_account_id')->nullable();
+            $table->unsignedBigInteger('pattern_id')->nullable();
             $table->json('default_values')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamp('updated_at')->nullable();
         });
 
@@ -223,17 +210,14 @@ class SyncExpenseNamesCommandTest extends TestCase
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedBigInteger('section_id');
             $table->unsignedBigInteger('subsection_id')->nullable();
+            $table->unsignedBigInteger('catalog_item_id')->nullable();
+            $table->unsignedInteger('chart_of_account_id')->nullable();
+            $table->unsignedBigInteger('pattern_id')->nullable();
+            $table->string('item_name')->nullable();
             $table->string('plan_detail');
             $table->text('detail')->nullable();
-            $table->timestamp('updated_at')->nullable();
-        });
-
-        Schema::create('expense_plan_values', function ($table): void {
-            $table->id();
-            $table->unsignedBigInteger('expense_plan_id');
-            $table->string('field_key', 50);
-            $table->text('value_text')->nullable();
-            $table->decimal('value_number', 18, 2)->nullable();
+            $table->json('calculation_values')->nullable();
+            $table->json('pattern_snapshot')->nullable();
             $table->timestamp('updated_at')->nullable();
         });
     }

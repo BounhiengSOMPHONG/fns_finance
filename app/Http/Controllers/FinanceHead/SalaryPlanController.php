@@ -47,6 +47,12 @@ final class SalaryPlanController extends Controller
             ]
         );
 
+        abort_if(
+            $planningYear->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $plan = SalaryPlan::create([
             'planning_year_id' => $planningYear->id,
             'fiscal_year' => (int) $data['fiscal_year'],
@@ -61,6 +67,12 @@ final class SalaryPlanController extends Controller
 
     public function manage(SalaryPlan $salaryPlan)
     {
+        abort_if(
+            $salaryPlan->planningYear?->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $entries = $salaryPlan->entries()
             ->with('chartOfAccount')
             ->orderBy('id')

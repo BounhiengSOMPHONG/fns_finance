@@ -90,7 +90,7 @@ class ExpenseStructureNames
         }
 
         $placeholders = [
-            'Default row name',
+            'Catalog item name',
             'Expense row',
             '-',
         ];

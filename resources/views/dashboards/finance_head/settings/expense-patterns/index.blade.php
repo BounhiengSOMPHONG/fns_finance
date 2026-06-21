@@ -1,10 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Expense patterns')
-@section('page-title', 'Expense patterns')
+@section('title', 'Expense Setup')
+@section('page-title', 'Expense Setup')
 
 @section('content')
 <div class="space-y-6">
+    @include('dashboards.finance_head.settings.expense-setup-tabs')
+
     @if ($errors->any())
         <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
@@ -13,8 +15,8 @@
 
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-5 py-4">
-            <h2 class="text-base font-semibold text-slate-900">Add new pattern</h2>
-            <p class="mt-1 text-sm text-slate-500">Use keys like monthly, unit_quantity, fixed_times, or event.</p>
+            <h2 class="text-base font-semibold text-slate-900">Pattern Builder</h2>
+            <p class="mt-1 text-sm text-slate-500">Create a form pattern by adding fields and ticking the number fields that should be multiplied.</p>
         </div>
         <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.store') }}" class="grid gap-4 px-5 py-4 md:grid-cols-[150px_220px_1fr_auto] md:items-end">
             @csrf
@@ -96,13 +98,17 @@
                             <th class="py-2 pr-3">Default</th>
                             <th class="py-2 pr-3">Required</th>
                             <th class="py-2 pr-3">Calculated</th>
+                            <th class="py-2 pr-3">Use in total</th>
                             <th class="py-2 pr-3"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($pattern->fields as $field)
-                            <tr class="js-autosave-row" data-url="{{ route('head_of_finance.settings.expense-pattern-fields.update', $field) }}">
-                                <form method="POST" action="{{ route('head_of_finance.settings.expense-pattern-fields.update', $field) }}" class="js-autosave-source-form">
+                            @php
+                                $formulaFields = collect($pattern->formula_schema['fields'] ?? []);
+                            @endphp
+                            <tr class="js-autosave-row" data-url="{{ route('head_of_finance.settings.expense-patterns.fields.update', [$pattern, $field->field_key]) }}">
+                                <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.fields.update', [$pattern, $field->field_key]) }}" class="js-autosave-source-form">
                                     @csrf
                                     @method('PATCH')
                                     <td class="py-2 pr-3 font-mono text-xs text-slate-600">{{ $field->field_key }}</td>
@@ -128,10 +134,13 @@
                                     <td class="py-2 pr-3 text-center">
                                         <input type="checkbox" name="is_calculated" value="1" @checked($field->is_calculated) class="rounded border-slate-300">
                                     </td>
+                                    <td class="py-2 pr-3 text-center">
+                                        <input type="checkbox" name="include_in_formula" value="1" @checked($formulaFields->contains($field->field_key)) class="rounded border-slate-300">
+                                    </td>
                                     <td class="py-2 pr-3 whitespace-nowrap">
                                         <button type="button"
                                                 class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
-                                                data-url="{{ route('head_of_finance.settings.expense-pattern-fields.destroy', $field) }}"
+                                                data-url="{{ route('head_of_finance.settings.expense-patterns.fields.destroy', [$pattern, $field->field_key]) }}"
                                                 data-message="Delete this field?">
                                             Delete
                                         </button>
@@ -168,6 +177,9 @@
                                 </td>
                                 <td class="py-3 pr-3 text-center">
                                     <input type="checkbox" name="is_calculated" value="1" class="rounded border-slate-300">
+                                </td>
+                                <td class="py-3 pr-3 text-center">
+                                    <input type="checkbox" name="include_in_formula" value="1" checked class="rounded border-slate-300">
                                 </td>
                                 <td class="py-3 pr-3">
                                     <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">Add field</button>

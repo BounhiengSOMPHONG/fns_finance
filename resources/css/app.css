@@ -1,8 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+    font-display: block;
+    font-family: 'Noto Sans Lao';
+    font-style: normal;
+    font-weight: 300 600;
+    src: url('../fonts/NotoSansLao-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-display: block;
+    font-family: 'Noto Sans Lao';
+    font-style: normal;
+    font-weight: 700 900;
+    src: url('../fonts/NotoSansLao-Bold.ttf') format('truetype');
+}
 
 /* ── FNS Design System ─────────────────────────────────── */
 :root {

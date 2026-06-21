@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\ChartOfAccount;
 use App\Models\ExpensePlan;
-use App\Models\ExpenseSubsectionDefaultRow;
 use App\Models\PlanningYear;
 use App\Models\SalaryEntry;
 use Illuminate\Support\Collection;
@@ -80,7 +79,7 @@ class PlanYearReportBuilder
         Collection $accountsByCode,
         array &$warnings
     ): void {
-        $plans = ExpensePlan::with(['values', 'subsection', 'pattern.fields'])
+        $plans = ExpensePlan::with(['chartOfAccount', 'subsection', 'pattern'])
             ->where('planning_year_id', $planningYear->id)
             ->get();
 
@@ -88,24 +87,14 @@ class PlanYearReportBuilder
             return;
         }
 
-        $defaults = ExpenseSubsectionDefaultRow::with('chartOfAccount')
-            ->whereIn('subsection_code', $plans->pluck('subsection.code')->filter()->unique()->values())
-            ->get()
-            ->groupBy('subsection_code')
-            ->map(fn (Collection $rows): Collection => $rows->keyBy(fn (ExpenseSubsectionDefaultRow $row): string => $this->normalize($row->item_name)));
-
         foreach ($plans as $plan) {
-            $values = $this->valuesByKey($plan);
             $subsectionCode = (string) ($plan->subsection?->code ?? '');
-            $itemName = (string) ($values['item_name'] ?? $plan->plan_detail ?? '');
-            $defaultRow = $defaults->get($subsectionCode)?->get($this->normalize($itemName));
-            $account = $defaultRow?->chartOfAccount;
-            $resolvedBy = 'default';
+            $itemName = (string) ($plan->item_name ?: $plan->plan_detail ?: '');
+            $account = $plan->chartOfAccount;
 
             if (! $account) {
-                $reference = trim((string) ($values['reference'] ?? ''));
+                $reference = trim((string) (($plan->calculation_values ?? [])['reference'] ?? ''));
                 $account = $reference !== '' ? $accountsByCode->get($reference) : null;
-                $resolvedBy = $account ? 'reference' : 'none';
             }
 
             if (! $account || ! $accountsById->has($account->id)) {
@@ -113,27 +102,18 @@ class PlanYearReportBuilder
                     'plan_id' => $plan->id,
                     'subsection_code' => $subsectionCode,
                     'item_name' => $itemName ?: $plan->plan_detail,
-                    'reference' => $values['reference'] ?? null,
-                    'amount' => $this->yearlyTotal($plan, $values),
+                    'reference' => ($plan->calculation_values ?? [])['reference'] ?? null,
+                    'amount' => $plan->yearlyTotal(),
                 ];
 
                 continue;
-            }
-
-            if ($resolvedBy === 'reference') {
-                $warnings['reference_fallbacks'][] = [
-                    'plan_id' => $plan->id,
-                    'subsection_code' => $subsectionCode,
-                    'item_name' => $itemName ?: $plan->plan_detail,
-                    'account_code' => $account->account_code,
-                ];
             }
 
             $this->addAmountToAccountAndAncestors(
                 $rows,
                 $accountsById,
                 (int) $account->id,
-                $this->yearlyTotal($plan, $values),
+                $plan->yearlyTotal(),
                 'faculty_amount'
             );
         }
@@ -167,35 +147,6 @@ class PlanYearReportBuilder
             'state_amount' => 0.0,
             'faculty_amount' => 0.0,
         ];
-    }
-
-    private function valuesByKey(ExpensePlan $plan): array
-    {
-        return $plan->values
-            ->mapWithKeys(fn ($value) => [$value->field_key => $value->value_text
-                ?? $value->value_number
-                ?? $value->value_date
-                ?? $value->value_boolean])
-            ->all();
-    }
-
-    private function yearlyTotal(ExpensePlan $plan, array $values): float
-    {
-        $total = (float) ($values['yearly_total'] ?? 0);
-        if ($total > 0) {
-            return $total;
-        }
-
-        $number = fn (string $key): float => (float) ($values[$key] ?? 0);
-
-        return match ($plan->pattern?->key) {
-            'monthly' => $number('amount_per_month') * $number('month_count'),
-            'unit_quantity' => $number('unit_price') * $number('quantity'),
-            'unit_quantity_frequency' => $number('unit_price') * $number('quantity') * $number('times_per_year'),
-            'frequency_based' => $number('unit_price') * $number('quantity') * $number('frequency_count'),
-            'event_based' => $number('unit_price') * $number('event_count') * $number('people_count'),
-            default => 0.0,
-        };
     }
 
     private function levelFor(ChartOfAccount $account, Collection $accountsById): int

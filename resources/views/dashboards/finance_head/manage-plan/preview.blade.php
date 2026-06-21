@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Preview plan ' . $planningYear->year)
-@section('page-title', 'Preview plan')
+@section('title', 'Planning ' . $planningYear->year)
+@section('page-title', 'Planning')
 
 @section('content')
 @php
@@ -114,6 +114,7 @@
         'DRAFT' => 'Draft',
         'PENDING_REVIEW' => 'Pending review',
         'MODIFYING' => 'Modifying',
+        'SAVED' => 'Saved',
     ];
 @endphp
 
@@ -138,6 +139,19 @@
                 Review
                 <span>{{ $reviewRounds->sum(fn ($round) => ($round->comments ?? collect())->count()) }}</span>
             </button>
+        @endif
+
+        <button type="button" class="review-primary-btn" data-print-plan>
+            ພິມ
+        </button>
+
+        @if($reviewContext['can_manage_review'] && $planningYear->canBeEdited())
+            <form method="POST" action="{{ route('head_of_finance.manage-plan.save', $planningYear) }}">
+                @csrf
+                <button type="submit" class="review-save-btn" onclick="return confirm('ບັນທຶກແຜນ ແລະ ປິດການແກ້ໄຂລາຍຮັບ, ລາຍຈ່າຍ, ເງິນເດືອນ?')">
+                    ບັນທຶກແຜນ
+                </button>
+            </form>
         @endif
 
         @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
@@ -280,7 +294,7 @@
 @endif
 
 <div class="income-preview">
-    <section class="paper plan-year-paper">
+    <section class="paper plan-year-paper" id="period-1-2">
         <div class="official-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -293,7 +307,6 @@
         </div>
 
         <div class="plan-year-title-block">
-            <h1 class="report-title plan-year-report-title">ແຜນງົບປະມານເນື້ອໃນລາຍຈ່າຍ</h1>
             <p>ແຜນລາຍຈ່າຍງົບປະມານປີ {{ $planningYear->year }}</p>
         </div>
 
@@ -317,26 +330,23 @@
             </colgroup>
             <thead>
                 <tr class="plan-year-head-row">
-                    <th><span>ພາກ</span><span>ສ່ວນ</span></th>
-                    <th><span>ພາກ</span><span>ຮ່ວງ</span></th>
-                    <th><span>ຮ່ວງ</span><span>ລວມ</span></th>
-                    <th><span>ລຶກ</span><span>ປົກກະຕິ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ພາກ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ພາກ</span><span>ສ່ວນ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ຮ່ວງ</span></th>
+                    <th rowspan="2" class="plan-year-code-head"><span>ລູກ</span><span>ຮ່ວງ</span></th>
                     <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
-                    <th rowspan="2" style="width:132px">ລວມ</th>
-                    <th rowspan="2" style="width:132px">ງົບລັດ</th>
-                    <th rowspan="2" style="width:132px">ວິຊາການ</th>
+                    <th colspan="3" class="plan-year-budget-head">ແຜນງົບປະມານ</th>
                 </tr>
-                <tr class="plan-year-code-row">
-                    <th style="width:42px"></th>
-                    <th style="width:42px"></th>
-                    <th style="width:42px"></th>
-                    <th style="width:42px"></th>
+                <tr class="plan-year-budget-row">
+                    <th>ລວມ</th>
+                    <th>ງົບລັດ</th>
+                    <th>ວິຊາການ</th>
                 </tr>
             </thead>
             <tbody>
                 <tr class="plan-year-overall-row">
                     <td colspan="4"></td>
-                    <td>ລວມຍອດ ເງິນ ພາກ ສ່ວນ ({{ $planYearSectionFormula ?: '...' }}) =</td>
+                    <td class="plan-year-overall-label">ລວມຍອດ ເງິນ ພາກ ສ່ວນ ({{ $planYearSectionFormula ?: '...' }}) =</td>
                     <td class="num">{{ $money($planYearTotals['total_amount']) }}</td>
                     <td class="num">{{ $money($planYearTotals['state_amount']) }}</td>
                     <td class="num">{{ $money($planYearTotals['faculty_amount']) }}</td>
@@ -394,34 +404,34 @@
                 </div>
             @endforeach
         </div>
-        <div class="plan-year-page-number">1</div>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper balance-paper">
-        <div class="report-top">
-            <div>
-                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
-                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
-            </div>
+        <h2 class="balance-title">ແຜນງົບປະມານດຸນດ່ຽງລາຍຮັບ ແລະ ລາຍຈ່າຍວິຊາການ ຂອງ ຄວທ ປະຈຳ ສົກຮຽນ {{ $planningYear->year }}</h2>
+
+        <div class="balance-org">
+            <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+            <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
         </div>
 
         <table class="report-table balance-table">
             <thead>
                 <tr>
-                    <th rowspan="2" style="width:40px">ລ/ດ</th>
+                    <th rowspan="2" class="balance-num-col">ລ/ດ</th>
                     <th colspan="3">ລາຍຮັບ</th>
                     <th colspan="3">ລາຍຈ່າຍ</th>
                     <th colspan="2">ດຸນດ່ຽງ</th>
                 </tr>
                 <tr>
                     <th>ລາຍການລາຍຮັບຈາກພາກສ່ວນຕ່າງໆ</th>
-                    <th style="width:112px">ງົບປະມານ/ປີ</th>
-                    <th style="width:112px">ງົບປະມານ/ເດືອນ</th>
+                    <th class="balance-money-col">ງົບປະມານ/ປີ</th>
+                    <th class="balance-money-col">ງົບປະມານ/ເດືອນ</th>
                     <th>ເນື້ອໃນລາຍຈ່າຍ</th>
-                    <th style="width:112px">ລາຍຈ່າຍ/ປີ</th>
-                    <th style="width:112px">ລາຍຈ່າຍ/ເດືອນ</th>
-                    <th style="width:112px">ດຸນດ່ຽງຕໍ່ປີ</th>
-                    <th style="width:112px">ດຸນດ່ຽງ/ເດືອນ</th>
+                    <th class="balance-money-col">ລາຍຈ່າຍ/ປີ</th>
+                    <th class="balance-money-col">ລາຍຈ່າຍ/ເດືອນ</th>
+                    <th class="balance-money-col">ດຸນດ່ຽງຕໍ່ປີ</th>
+                    <th class="balance-money-col">ດຸນດ່ຽງ/ເດືອນ</th>
                 </tr>
             </thead>
             <tbody>
@@ -467,26 +477,26 @@
             @endforeach
         </div>
 
-        <h2 class="summary-caption balance-caption">ແຜນງົບປະມານດຸນດ່ຽງລາຍຮັບ ແລະ ລາຍຈ່າຍວິຊາການ ຂອງ ຄວທ ປະຈຳ ສົກຮຽນ {{ $planningYear->year }}</h2>
+        <div class="balance-page-number" aria-hidden="true"></div>
     </section>
 
-    <section class="paper paper-summary">
-        <div class="report-top">
-            <div>
-                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
-                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
-            </div>
+    <section class="paper paper-summary income-summary-paper">
+        <h2 class="plan-year-report-title">1. ແຜນງົບປະມານລາຍຮັບວິຊາການຂອງ ຄວທ ສົກ {{ $planningYear->year }}</h2>
+
+        <div class="income-summary-org">
+            <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+            <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
         </div>
 
-        <table class="report-table plan-table">
+        <table class="report-table plan-table income-summary-table">
             <thead>
                 <tr>
-                    <th style="width:44px">ລ/ດ</th>
+                    <th class="income-summary-num-col">ລ/ດ</th>
                     <th>ລາຍການ</th>
-                    <th style="width:150px">ຈຳນວນເງິນຕາມແຜນ</th>
-                    <th style="width:150px">ຈຳນວນເງິນຮັບຕົວຈິງ</th>
-                    <th style="width:120px">ດຸນດ່ຽງ</th>
-                    <th style="width:120px">ໝາຍເຫດ</th>
+                    <th class="income-summary-money-col">ຈຳນວນເງິນຕາມແຜນ</th>
+                    <th class="income-summary-money-col">ຈຳນວນເງິນຮັບຕົວຈິງ</th>
+                    <th class="income-summary-bal-col">ດຸນດ່ຽງ</th>
+                    <th class="income-summary-note-col">ໝາຍເຫດ</th>
                 </tr>
             </thead>
             <tbody>
@@ -511,10 +521,10 @@
             </tbody>
         </table>
 
-        <h2 class="summary-caption">1. ແຜນງົບປະມານລາຍຮັບວິຊາການຂອງ ຄວທ ສົກ {{ $planningYear->year }}</h2>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
-    <section class="paper">
+    <section class="paper income-overview-paper">
         <div class="official-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -635,6 +645,8 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -692,6 +704,8 @@
                 </tr>
             </tbody>
         </table>
+
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -702,6 +716,8 @@
             'money' => $money,
             'pct' => $pct,
         ])
+
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -759,6 +775,8 @@
                 </tr>
             </tbody>
         </table>
+
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     <section class="paper detail-paper">
@@ -769,14 +787,16 @@
             'money' => $money,
             'pct' => $pct,
         ])
+
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
-    <section class="paper paper-summary expense-paper">
-        <div class="report-top">
-            <div>
-                <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
-                <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
-            </div>
+    <section class="paper paper-summary expense-paper expense-summary-paper">
+        <h2 class="expense-summary-title">2. ງົບປະມານລາຍຈ່າຍບໍລິຫານ ແລະ ວິຊາການຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+
+        <div class="expense-org">
+            <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
+            <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
         </div>
 
         <table class="report-table plan-table expense-summary-table">
@@ -814,7 +834,7 @@
             </tbody>
         </table>
 
-        <div class="signature-grid">
+        <div class="signature-grid expense-signatures">
             @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
                 <div class="signature">
                     <span>ວັນທີ ......./......./.......</span>
@@ -824,20 +844,20 @@
             @endforeach
         </div>
 
-        <h2 class="summary-caption">2. ແຜນງົບປະມານລາຍຈ່າຍບໍລິຫານຂອງ ຄວທ ປະຈຳ ສົກປີ {{ $planningYear->year }}</h2>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
     @foreach($expenseReport['sections'] as $expenseSection)
-        <section class="paper detail-paper expense-paper">
-            <div class="report-top">
-                <div>
+        <section class="paper detail-paper expense-paper expense-detail-paper">
+            <h2 class="expense-section-title">{{ $expenseSection['code'] }} ແຜນງົບປະມານ{{ $expenseSection['title'] }} ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+
+            <div class="expense-detail-header">
+                <div class="expense-org">
                     <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
                     <strong>ຄະນະວິທະຍາສາດທຳມະຊາດ</strong>
                 </div>
                 <span class="unit-label">ໜ່ວຍ: ກີບ</span>
             </div>
-
-            <h2 class="detail-title">{{ $expenseSection['code'] }} ແຜນງົບປະມານ{{ $expenseSection['title'] }} ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
 
             <table class="report-table expense-summary-table">
                 <thead>
@@ -929,10 +949,12 @@
                     </tbody>
                 </table>
             @endforeach
+
+            <div class="plan-year-page-number" aria-hidden="true"></div>
         </section>
     @endforeach
 
-    <section class="paper salary-paper">
+    <section class="paper salary-paper" id="period-3-4">
         <div class="official-header salary-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -962,9 +984,9 @@
                 </tr>
                 <tr>
                     <th style="width:38px">ພ</th>
-                    <th style="width:38px">ມສ</th>
+                    <th style="width:38px">ພສ</th>
                     <th style="width:38px">ຮ່ວງ</th>
-                    <th style="width:38px">ລະ</th>
+                    <th style="width:38px">ລຮ</th>
                     <th style="width:128px">ໂອນເຂົ້າ ATM</th>
                     <th style="width:128px">ຖອນເງິນສົດ</th>
                     <th style="width:128px">ລວມ</th>
@@ -1021,7 +1043,7 @@
 
         <div class="signature-grid salary-signatures">
             @foreach(['ຄະນະບໍດີ', 'ຫົວໜ້າພະແນກຈັດຕັ້ງ-ສັງລວມ', 'ຫົວໜ້າພະແນກວິຊາການ', 'ຫົວໜ້າພະແນກການເງິນ-ຊັບສິນ'] as $signature)
-                <div class="signature">
+                <div class="signature salary-signature">
                     <span>ວັນທີ ......./......./.......</span>
                     <div></div>
                     <strong>{{ $signature }}</strong>
@@ -1029,7 +1051,7 @@
             @endforeach
         </div>
 
-        <h2 class="summary-caption salary-caption">3. ແຜນງົບປະມານລາຍຈ່າຍເງິນເດືອນ ຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
+        <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 </div>
 
@@ -1099,8 +1121,14 @@
         color: var(--fns-green);
     }
 
+    .review-status-saved {
+        background: rgba(22, 101, 52, .12);
+        color: #166534;
+    }
+
     .review-primary-btn,
     .review-secondary-btn,
+    .review-save-btn,
     .review-warning-btn {
         align-items: center;
         border-radius: 8px;
@@ -1131,6 +1159,12 @@
         background: rgba(201, 153, 26, .16);
         border: 1px solid rgba(201, 153, 26, .35);
         color: #7a5b0b;
+    }
+
+    .review-save-btn {
+        background: var(--fns-green);
+        border: 1px solid var(--fns-green);
+        color: #fff;
     }
 
     .review-drawer-toggle {
@@ -1502,12 +1536,14 @@
         flex-direction: column;
         gap: 1.25rem;
         color: #111827;
+        font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
     }
 
     .paper {
         background: #fff;
         border: 1px solid #d8dce3;
         border-radius: 8px;
+        max-width: 100%;
         box-shadow: 0 3px 14px rgba(17, 24, 39, .06);
         overflow-x: auto;
         padding: 1.2rem;
@@ -1515,18 +1551,23 @@
 
     .plan-year-paper {
         border-color: #cfd8e5;
+        box-sizing: border-box;
+        min-width: 0;
+        padding: clamp(2.5rem, 8vw, 150px) 1.2rem 34px;
         position: relative;
+        width: 100%;
     }
 
     .plan-year-table {
         color: #111;
-        font-size: .7rem;
-        min-width: 1180px;
+        font-size: .78rem;
+        min-width: 1120px;
         table-layout: fixed;
+        width: 1120px;
     }
 
     .plan-year-code-col {
-        width: 48px;
+        width: 56px;
     }
 
     .plan-year-name-col {
@@ -1534,14 +1575,14 @@
     }
 
     .plan-year-money-col {
-        width: 132px;
+        width: 150px;
     }
 
     .plan-year-table th,
     .plan-year-table td {
-        border-color: #1f2933;
+        border-color: #000;
         line-height: 1.2;
-        padding: 3px 4px;
+        padding: 4px 5px;
     }
 
     .plan-year-table th {
@@ -1551,22 +1592,38 @@
     }
 
     .plan-year-head-row th {
-        height: 32px;
-        vertical-align: bottom;
+        height: 48px;
+        vertical-align: middle;
     }
 
     .plan-year-head-row th span {
         display: block;
     }
 
-    .plan-year-code-row th {
-        height: 10px;
-        padding: 0;
+    .plan-year-head-row .plan-year-code-head {
+        line-height: 1.45;
+        padding-top: 8px;
+        vertical-align: top;
+    }
+
+    .plan-year-budget-head {
+        font-size: .78rem;
+        height: 28px;
+        text-align: center;
+    }
+
+    .plan-year-budget-row th {
+        height: 28px;
+        text-align: center;
     }
 
     .plan-year-overall-row td {
-        background: #fff;
+        background: #ccffff;
         font-weight: 900;
+    }
+
+    .plan-year-overall-label {
+        color: #000;
     }
 
     .plan-year-overall-row .num {
@@ -1575,7 +1632,7 @@
     }
 
     .plan-year-overall-row td:first-child {
-        border-right-color: transparent;
+        border-right-color: #000;
     }
 
     .plan-year-overall-row td:nth-child(2) {
@@ -1583,7 +1640,7 @@
     }
 
     .plan-year-root-row td {
-        background: #d9ffc7;
+        background: #ccffcc;
         font-weight: 900;
     }
 
@@ -1596,7 +1653,7 @@
 
     .plan-year-code-cell {
         color: #111;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family: inherit;
         font-weight: 700;
         white-space: nowrap;
     }
@@ -1620,13 +1677,13 @@
     }
 
     .plan-year-title-block {
-        margin: .25rem 0 .55rem;
+        margin: 14px 0 28px;
         text-align: center;
     }
 
     .plan-year-title-block p {
         color: #111;
-        font-size: .96rem;
+        font-size: 1.5rem;
         font-weight: 800;
         line-height: 1.3;
         margin: .05rem 0 0;
@@ -1634,6 +1691,120 @@
 
     .plan-year-report-title {
         margin: 0;
+    }
+
+    .income-summary-paper {
+        break-inside: avoid;
+    }
+
+    .income-summary-paper .plan-year-report-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .income-summary-org {
+        margin-bottom: .55rem;
+    }
+
+    .income-summary-org strong {
+        color: #111827;
+        display: block;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+
+    .income-summary-table {
+        font-size: .78rem;
+        min-width: 1180px;
+    }
+
+    .income-summary-num-col {
+        width: 40px;
+    }
+
+    .income-summary-money-col {
+        width: 150px;
+    }
+
+    .income-summary-bal-col {
+        width: 100px;
+    }
+
+    .income-summary-note-col {
+        width: 120px;
+    }
+
+    .income-overview-paper {
+        break-inside: avoid;
+    }
+
+    .income-overview-paper .official-header {
+        align-items: flex-start;
+        display: grid;
+        grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+        margin: 0 0 16px;
+        min-height: 96px;
+    }
+
+    .income-overview-paper .org-left {
+        grid-column: 1;
+        padding-top: 3rem;
+    }
+
+    .income-overview-paper .nation-right {
+        grid-column: 2;
+        justify-self: center;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .income-overview-paper .official-header strong {
+        color: #000;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.72;
+    }
+
+    .income-overview-paper .nation-right span {
+        color: #000;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+
+    .income-overview-paper .signature-grid {
+        margin-top: 1.65rem;
+    }
+
+    .income-overview-paper .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .income-overview-paper .signature span {
+        order: 1;
+    }
+
+    .income-overview-paper .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .income-overview-paper .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
     }
 
     .plan-year-page-number {
@@ -1672,6 +1843,26 @@
         margin-bottom: .8rem;
     }
 
+    .plan-year-paper .official-header {
+        align-items: flex-start;
+        display: grid;
+        grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+        margin: 0 0 20px;
+        min-height: clamp(96px, 11vw, 172px);
+    }
+
+    .plan-year-paper .org-left {
+        grid-column: 1;
+        padding-top: clamp(3rem, 6.6vw, 104px);
+    }
+
+    .plan-year-paper .nation-right {
+        grid-column: 2;
+        justify-self: center;
+        min-width: 0;
+        padding-top: 0;
+    }
+
     .report-top strong,
     .official-header strong,
     .official-header span {
@@ -1686,6 +1877,39 @@
 
     .nation-right span {
         font-size: .72rem;
+    }
+
+    .plan-year-paper .official-header strong {
+        color: #000;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.72;
+    }
+
+    .plan-year-paper .nation-right span {
+        color: #000;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.55;
+    }
+
+    @media (max-width: 1100px) {
+        .plan-year-paper .official-header {
+            grid-template-columns: minmax(0, 1fr);
+            min-height: 0;
+            row-gap: .75rem;
+        }
+
+        .plan-year-paper .org-left,
+        .plan-year-paper .nation-right {
+            grid-column: 1;
+            justify-self: stretch;
+            padding-top: 0;
+        }
+
+        .plan-year-paper .nation-right {
+            order: -1;
+        }
     }
 
     .report-title,
@@ -1708,8 +1932,92 @@
         text-align: left;
     }
 
+    .detail-paper {
+        break-inside: avoid;
+    }
+
+    .detail-paper .detail-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .55rem;
+        text-align: center;
+    }
+
     .expense-paper {
         break-inside: avoid;
+    }
+
+    .expense-summary-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .expense-section-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .expense-org {
+        margin-bottom: .55rem;
+    }
+
+    .expense-org strong {
+        color: #111827;
+        display: block;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+
+    .expense-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: .55rem;
+    }
+
+    .expense-detail-header .expense-org {
+        margin-bottom: 0;
+    }
+
+    .expense-signatures {
+        margin-top: 1.65rem;
+    }
+
+    .expense-signatures .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .expense-signatures .signature span {
+        order: 1;
+    }
+
+    .expense-signatures .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .expense-signatures .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
     }
 
     .unit-label {
@@ -1750,6 +2058,40 @@
 
     .salary-paper {
         break-inside: auto;
+    }
+
+    .salary-paper .official-header {
+        align-items: flex-start;
+        display: grid;
+        grid-template-columns: minmax(180px, 370px) minmax(360px, 1fr) minmax(180px, 370px);
+        margin: 0 0 16px;
+        min-height: 96px;
+    }
+
+    .salary-paper .org-left {
+        grid-column: 1;
+        padding-top: 3rem;
+    }
+
+    .salary-paper .nation-right {
+        grid-column: 2;
+        justify-self: center;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .salary-paper .official-header strong {
+        color: #000;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.72;
+    }
+
+    .salary-paper .nation-right span {
+        color: #000;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.55;
     }
 
     .salary-title {
@@ -1809,7 +2151,31 @@
     }
 
     .salary-signatures {
-        margin-top: 1.45rem;
+        column-gap: 4rem;
+        margin-top: 2.65rem;
+    }
+
+    .salary-signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .salary-signature span {
+        order: 1;
+    }
+
+    .salary-signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .salary-signature div {
+        order: 3;
     }
 
     .salary-caption {
@@ -1820,6 +2186,35 @@
         break-inside: avoid;
     }
 
+    .balance-title {
+        color: #000;
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.45;
+        margin: 0 0 .35rem;
+        text-align: center;
+    }
+
+    .balance-org {
+        margin-bottom: .55rem;
+    }
+
+    .balance-org strong {
+        color: #111827;
+        display: block;
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.55;
+    }
+
+    .balance-num-col {
+        width: 30px;
+    }
+
+    .balance-money-col {
+        width: 96px;
+    }
+
     .report-table.balance-table {
         font-size: .72rem;
         min-width: 1180px;
@@ -1827,7 +2222,7 @@
 
     .report-table.balance-table th,
     .report-table.balance-table td {
-        padding: .34rem .42rem;
+        padding: .3rem .36rem;
     }
 
     .report-table.balance-table th {
@@ -1843,11 +2238,79 @@
     }
 
     .balance-signatures {
-        margin-top: 1.55rem;
+        margin-top: 1.65rem;
     }
 
-    .balance-caption {
-        text-align: right;
+    .balance-paper .balance-signatures {
+        column-gap: 4rem;
+        margin-top: 2.65rem;
+    }
+
+    .balance-paper .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .balance-paper .signature span {
+        order: 1;
+    }
+
+    .balance-paper .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .balance-paper .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
+    }
+
+    .plan-year-paper .balance-signatures {
+        column-gap: 4rem;
+        margin-top: 2.65rem;
+        min-width: 1120px;
+        width: 1120px;
+    }
+
+    .plan-year-paper .signature {
+        display: flex;
+        flex-direction: column;
+        font-size: .9rem;
+        line-height: 1.55;
+        min-width: 0;
+        padding: 0 .5rem;
+    }
+
+    .plan-year-paper .signature span {
+        order: 1;
+    }
+
+    .plan-year-paper .signature strong {
+        font-weight: 700;
+        order: 2;
+        white-space: normal;
+    }
+
+    .plan-year-paper .signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+        order: 3;
+    }
+
+    .balance-page-number {
+        display: none;
+        font-size: .76rem;
+        font-weight: 700;
+        margin-top: .35rem;
+        text-align: center;
     }
 
     .report-table th,
@@ -1909,39 +2372,64 @@
         margin-bottom: .35rem;
     }
 
+    .salary-signature div {
+        border-bottom: 0;
+        height: 7.5rem;
+        margin: 0;
+    }
+
     @media print {
         @page {
-            margin: 10mm;
+            margin: 8mm;
             size: A4 landscape;
+
+            @bottom-center {
+                color: #111;
+                content: counter(page);
+                font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
+                font-size: 8pt;
+            }
         }
 
+        html,
         body {
             background: #fff !important;
+            font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif !important;
+            margin: 0 !important;
         }
 
         .fns-topnav,
         .fns-sidebar,
+        .fns-alert,
+        .fns-page-title,
         .review-toolbar,
         .review-panel,
         .review-drawer-backdrop,
-        .review-modal-backdrop {
+        .review-modal-backdrop,
+        [data-print-plan] {
             display: none !important;
         }
 
+        .fns-main,
         .fns-content {
             margin: 0 !important;
             padding: 0 !important;
         }
 
+        .fns-main > div:has(.fns-page-title) {
+            display: none !important;
+        }
+
         .income-preview {
-            gap: 0;
+            gap: 1.25rem;
+            width: 100%;
+            zoom: 0.74;
         }
 
         .paper {
             border: 0;
             border-radius: 0;
             box-shadow: none;
-            min-height: 185mm;
             overflow: visible;
             padding: 0;
             page-break-after: always;
@@ -1951,190 +2439,85 @@
             page-break-after: auto;
         }
 
+        thead {
+            display: table-row-group;
+        }
+
         .report-table {
-            font-size: 8.2pt;
             min-width: 0;
-        }
-
-        .plan-year-paper {
-            min-height: 185mm;
-            padding-top: 0;
-        }
-
-        .plan-year-paper .official-header {
-            font-size: 8.6pt;
-            margin-bottom: 4pt;
-        }
-
-        .plan-year-paper .nation-right {
-            min-width: 310px;
-        }
-
-        .plan-year-paper .nation-right span {
-            font-size: 7.2pt;
-        }
-
-        .plan-year-title-block {
-            margin: 2pt 0 5pt;
-        }
-
-        .plan-year-report-title,
-        .plan-year-title-block p {
-            font-size: 10pt;
-            line-height: 1.18;
-        }
-
-        .report-table.plan-year-table {
-            font-size: 6.85pt;
-            table-layout: fixed;
-        }
-
-        .plan-year-code-col {
-            width: 10mm;
-        }
-
-        .plan-year-money-col {
-            width: 31mm;
-        }
-
-        .report-table.plan-year-table th,
-        .report-table.plan-year-table td {
-            padding: 1.7pt 2.4pt;
-            white-space: normal;
-        }
-
-        .report-table.plan-year-table .num,
-        .report-table.plan-year-table .plan-year-code-cell {
-            white-space: nowrap;
-        }
-
-        .plan-year-head-row th {
-            height: 21pt;
-        }
-
-        .plan-year-code-row th {
-            height: 4pt;
-        }
-
-        .plan-year-name {
-            min-width: 0;
-        }
-
-        .plan-year-warning {
-            border-width: .5pt;
-            font-size: 7pt;
-            margin-bottom: 4pt;
-            padding: 3pt 4pt;
-        }
-
-        .plan-year-paper .balance-signatures {
-            margin-top: 10pt;
-        }
-
-        .plan-year-paper .signature div {
-            height: 24pt;
-        }
-
-        .plan-year-page-number {
-            display: block;
-        }
-
-        .balance-paper {
-            min-height: 185mm;
-        }
-
-        .report-table.balance-table {
-            font-size: 7.2pt;
-            table-layout: fixed;
-        }
-
-        .report-table.balance-table th,
-        .report-table.balance-table td {
-            padding: 2.4pt 3pt;
-            white-space: normal;
-        }
-
-        .report-table.balance-table .num {
-            white-space: nowrap;
-        }
-
-        .balance-signatures {
-            margin-top: 14pt;
-        }
-
-        .balance-signatures .signature div {
-            height: 28pt;
-        }
-
-        .balance-caption {
-            font-size: 9pt;
-            margin-top: 8pt;
-        }
-
-        .expense-subtitle {
-            font-size: 8.8pt;
-            margin: 8pt 0 4pt;
-        }
-
-        .salary-paper {
-            min-height: 185mm;
-        }
-
-        .salary-title {
-            font-size: 10pt;
-            margin: 7pt 0 3pt;
-        }
-
-        .salary-meta {
-            font-size: 7.6pt;
-            margin-bottom: 5pt;
-        }
-
-        .salary-table {
-            font-size: 6.9pt;
-            table-layout: fixed;
-        }
-
-        .salary-table th,
-        .salary-table td {
-            padding: 2.1pt 2.7pt;
-            white-space: normal;
-        }
-
-        .salary-table .num {
-            white-space: nowrap;
-        }
-
-        .salary-signatures {
-            margin-top: 12pt;
-        }
-
-        .salary-signatures .signature div {
-            height: 28pt;
-        }
-
-        .salary-caption {
-            font-size: 9pt;
-            margin-top: 8pt;
         }
 
         .report-table th,
         .report-table td {
-            padding: 3.2pt 4pt;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
         }
 
         .report-table th,
         .grand-row td,
         .plan-year-root-row td,
         .total-row td,
-        .section-row td {
+        .section-row td,
+        .salary-root-row td {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+        }
+
+        .plan-year-paper {
+            min-height: 0;
+            padding: clamp(1.5rem, 5vw, 80px) 0 20px;
+        }
+
+        .plan-year-paper .official-header {
+            min-height: 72px;
+        }
+
+        .plan-year-paper .official-header strong {
+            white-space: nowrap;
+        }
+
+        .plan-year-page-number,
+        .balance-page-number {
+            display: none !important;
+        }
+
+        .plan-year-paper .balance-signatures {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .plan-year-name {
+            min-width: 0;
+        }
+
+        .detail-paper,
+        .income-overview-paper,
+        .income-summary-paper,
+        .expense-paper,
+        .balance-paper,
+        .salary-paper {
+            min-height: 0;
+        }
+
+        .salary-signatures,
+        .expense-signatures,
+        .balance-signatures,
+        .plan-year-paper .balance-signatures,
+        .balance-paper .balance-signatures {
+            column-gap: 1.5rem;
         }
     }
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const printButton = document.querySelector('[data-print-plan]');
+
+        if (printButton) {
+            printButton.addEventListener('click', function () {
+                window.print();
+            });
+        }
+
         const modal = document.querySelector('[data-review-modal]');
         const openButton = document.querySelector('[data-open-review-modal]');
 

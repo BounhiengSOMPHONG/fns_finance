@@ -2,9 +2,13 @@
 <div class="ai-rows">
 @forelse($programs as $p)
     @php
-        $creditUnit = $useYear1Unit
-            ? ($p->latestCourseCredit?->year1_credit_unit ?? null)
-            : ($p->latestCourseCredit?->course_credit_unit ?? null);
+        $totalCreditUnit = $p->latestCourseCredit?->course_credit_unit;
+        $creditUnit = $totalCreditUnit;
+        if ($totalCreditUnit && in_array($p->level, ['master', 'phd'], true)) {
+            $creditUnit = (float) $totalCreditUnit * ($useYear1Unit
+                ? \App\Models\CourseCreditSplitSetting::year1For($p->level)
+                : \App\Models\CourseCreditSplitSetting::year2For($p->level));
+        }
         $price    = $creditPrices[$p->level]?->credit_unit_price ?? null;
         $warn     = !$creditUnit || !$price;
         $existing = $existingItems->get($section . '_' . $p->id);

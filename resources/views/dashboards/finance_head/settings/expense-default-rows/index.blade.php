@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Default row accounts')
-@section('page-title', 'Default row accounts')
+@section('title', 'Expense Setup')
+@section('page-title', 'Expense Setup')
 
 @section('content')
 @php
@@ -10,6 +10,8 @@
 @endphp
 
 <div class="space-y-5">
+    @include('dashboards.finance_head.settings.expense-setup-tabs')
+
     @if ($errors->any())
         <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
@@ -19,9 +21,9 @@
     <section class="rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h2 class="text-lg font-semibold text-slate-900">Connect default expense rows to chart accounts</h2>
+                <h2 class="text-lg font-semibold text-slate-900">Catalog Items</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    The default row name can be different from the chart account name, but still stay connected.
+                    Each expense item owns its chart account and pattern. Budget plans copy from these items.
                 </p>
             </div>
             <form method="GET" action="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="flex min-w-72 flex-1 justify-end gap-2">
@@ -38,9 +40,9 @@
         <div class="border-b border-slate-200 px-5 py-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900">Default row groups</h3>
+                    <h3 class="text-sm font-bold text-slate-900">Catalog item groups</h3>
                     <p class="mt-1 text-xs text-slate-500">
-                        {{ $rows->count() }} rows in {{ $groupedRows->count() }} subsections. Open a subsection to connect its rows.
+                        {{ $rows->count() }} items in {{ $groupedRows->count() }} subsections. Open a subsection to connect chart accounts.
                     </p>
                 </div>
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Autosaves on selection</span>
@@ -64,11 +66,11 @@
                                 {{ $subsection?->name ?? 'No matching subsection' }}
                             </span>
                             <span class="mt-1 block truncate text-xs text-slate-500">
-                                {{ trim(($subsection?->section?->code ?? '') . ' ' . ($subsection?->section?->name ?? '')) ?: 'Default rows only' }}
+                                {{ trim(($subsection?->section?->code ?? '') . ' ' . ($subsection?->section?->name ?? '')) ?: 'Catalog items only' }}
                             </span>
                         </span>
                         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                            {{ $groupRows->count() }} rows
+                            {{ $groupRows->count() }} items
                         </span>
                         <span class="rounded-full {{ $hasMissingLinks ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700' }} px-3 py-1 text-xs font-bold">
                             {{ $linkedCount }}/{{ $groupRows->count() }} linked
@@ -129,7 +131,7 @@
                 </details>
             @empty
                 <div class="rounded-lg border border-slate-200 bg-white px-5 py-12 text-center text-slate-500">
-                    No default rows found.
+                    No catalog items found.
                 </div>
             @endforelse
         </div>

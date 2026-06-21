@@ -2,13 +2,13 @@
 
 namespace App\Support;
 
-use App\Models\ExpenseSubsectionDefaultRow;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class ExpenseAccountLinkCatalog
 {
     /**
-     * Best-fit mappings for default rows that do not already have a trusted user link.
+     * Best-fit mappings for catalog items that do not already have a trusted user link.
      * Keep suggestions conservative; rows marked review should stay visible in warning UI.
      */
     private const SUGGESTIONS = [
@@ -88,14 +88,14 @@ class ExpenseAccountLinkCatalog
         // '2.x.y' => [sort_order => ['badcode']],
     ];
 
-    public function suggestedAccountCode(ExpenseSubsectionDefaultRow $row): ?string
+    public function suggestedAccountCode(Model $row): ?string
     {
         $suggestion = $this->suggestionFor($row);
 
         return $suggestion['code'] ?? null;
     }
 
-    public function needsReview(ExpenseSubsectionDefaultRow $row): bool
+    public function needsReview(Model $row): bool
     {
         $suggestion = $this->suggestionFor($row);
 
@@ -106,7 +106,7 @@ class ExpenseAccountLinkCatalog
         return $row->chart_of_account_id === null && $suggestion !== null;
     }
 
-    public function canAutoUpdate(ExpenseSubsectionDefaultRow $row): bool
+    public function canAutoUpdate(Model $row): bool
     {
         if ($this->suggestedAccountCode($row) === null) {
             return false;
@@ -126,7 +126,7 @@ class ExpenseAccountLinkCatalog
 
     public function decorateRows(Collection $rows, Collection $accountsByCode): Collection
     {
-        return $rows->map(function (ExpenseSubsectionDefaultRow $row) use ($accountsByCode): ExpenseSubsectionDefaultRow {
+        return $rows->map(function (Model $row) use ($accountsByCode): Model {
             $suggestedCode = $this->suggestedAccountCode($row);
             $row->setAttribute('suggested_account_code', $suggestedCode);
             $row->setAttribute('suggested_account', $suggestedCode ? $accountsByCode->get($suggestedCode) : null);
@@ -137,7 +137,7 @@ class ExpenseAccountLinkCatalog
         });
     }
 
-    private function suggestionFor(ExpenseSubsectionDefaultRow $row): ?array
+    private function suggestionFor(Model $row): ?array
     {
         $bySubsection = self::SUGGESTIONS[$row->subsection_code] ?? null;
         if ($bySubsection === null) {
@@ -149,7 +149,7 @@ class ExpenseAccountLinkCatalog
             ?? null;
     }
 
-    private function knownWrongCodes(ExpenseSubsectionDefaultRow $row): array
+    private function knownWrongCodes(Model $row): array
     {
         return self::KNOWN_WRONG_LINKS[$row->subsection_code][(int) $row->sort_order] ?? [];
     }

@@ -14,6 +14,8 @@ class PlanningYear extends Model
 
     public const STATUS_MODIFYING = 'MODIFYING';
 
+    public const STATUS_SAVED = 'SAVED';
+
     protected $fillable = [
         'year',
         'name',
@@ -23,6 +25,8 @@ class PlanningYear extends Model
         'current_review_round_id',
         'review_requested_at',
         'review_closed_at',
+        'period_1_2_saved_at',
+        'period_3_4_saved_at',
     ];
 
     protected $casts = [
@@ -30,6 +34,8 @@ class PlanningYear extends Model
         'is_active' => 'boolean',
         'review_requested_at' => 'datetime',
         'review_closed_at' => 'datetime',
+        'period_1_2_saved_at' => 'datetime',
+        'period_3_4_saved_at' => 'datetime',
     ];
 
     public function sections(): HasMany
@@ -57,6 +63,11 @@ class PlanningYear extends Model
         return $this->hasMany(PlanningYearReviewRound::class);
     }
 
+    public function periodPlanOverrides(): HasMany
+    {
+        return $this->hasMany(PeriodPlanOverride::class);
+    }
+
     public function currentReviewRound(): BelongsTo
     {
         return $this->belongsTo(PlanningYearReviewRound::class, 'current_review_round_id');
@@ -77,28 +88,58 @@ class PlanningYear extends Model
         return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_MODIFYING], true);
     }
 
+    public function canBeEdited(): bool
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_MODIFYING], true);
+    }
+
+    public function canEditPeriods(): bool
+    {
+        return $this->status === self::STATUS_SAVED;
+    }
+
+    public function hasSavedPeriodOneTwo(): bool
+    {
+        return $this->period_1_2_saved_at !== null;
+    }
+
+    public function canEditPeriodOneTwo(): bool
+    {
+        return $this->canEditPeriods() && ! $this->hasSavedPeriodOneTwo();
+    }
+
+    public function canOpenPeriodThreeFour(): bool
+    {
+        return $this->canEditPeriods() && $this->hasSavedPeriodOneTwo();
+    }
+
+    public function hasSavedPeriodThreeFour(): bool
+    {
+        return $this->period_3_4_saved_at !== null;
+    }
+
+    public function canEditPeriodThreeFour(): bool
+    {
+        return $this->canOpenPeriodThreeFour() && ! $this->hasSavedPeriodThreeFour();
+    }
+
     public function hasCurrentReviewer(User $user): bool
     {
         if (! $this->current_review_round_id) {
             return false;
         }
 
-        return PlanningYearReviewer::query()
-            ->where('planning_year_review_round_id', $this->current_review_round_id)
-            ->where('user_id', $user->id)
-            ->exists();
+        return PlanningYearReviewRound::query()
+            ->whereKey($this->current_review_round_id)
+            ->first()
+            ?->hasReviewer($user) ?? false;
     }
 
     public function totalAmount(): float
     {
-        $planIds = $this->expensePlans()->pluck('id');
-
-        if ($planIds->isEmpty()) {
-            return 0.0;
-        }
-
-        return (float) ExpensePlanValue::whereIn('expense_plan_id', $planIds)
-            ->where('field_key', 'yearly_total')
-            ->sum('value_number');
+        return (float) $this->expensePlans()
+            ->with('pattern')
+            ->get()
+            ->sum(fn (ExpensePlan $plan): float => $plan->yearlyTotal());
     }
 }

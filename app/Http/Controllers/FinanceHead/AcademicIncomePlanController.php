@@ -30,6 +30,12 @@ class AcademicIncomePlanController extends Controller
             ]
         );
 
+        abort_if(
+            $planningYear->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $plan = AcademicIncomePlan::create([
             ...$validated,
             'planning_year_id' => $planningYear->id,
@@ -174,6 +180,12 @@ class AcademicIncomePlanController extends Controller
 
     public function destroy(AcademicIncomePlan $academicIncome)
     {
+        abort_if(
+            $academicIncome->planningYear?->canBeEdited() === false,
+            403,
+            'ແຜນນີ້ຢູ່ໃນສະຖານະຂໍຄວາມເຫັນ ບໍ່ສາມາດແກ້ໄຂໄດ້'
+        );
+
         $academicIncome->delete();
 
         return redirect()

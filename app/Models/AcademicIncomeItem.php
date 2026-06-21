@@ -8,11 +8,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AcademicIncomeItem extends Model
 {
     protected $fillable = [
-        'plan_id', 'setting_set_id', 'section_code', 'degree_program_id', 'student_count',
-        'total_income',
+        'plan_id', 'section_code', 'degree_program_id', 'student_count',
+        'credit_unit_price_setting_id', 'income_rate_setting_id',
+        'registration_fee_setting_id', 'nuol_pct_setting_id',
+        'snap_credit_unit_price', 'snap_course_credit_unit', 'snap_registration_fee_rate',
+        'snap_nuol_pct', 'total_income',
     ];
 
     protected $casts = [
+        'snap_credit_unit_price' => 'decimal:2',
+        'snap_course_credit_unit' => 'decimal:2',
+        'snap_registration_fee_rate' => 'decimal:2',
+        'snap_nuol_pct' => 'decimal:4',
         'total_income' => 'decimal:2',
     ];
 
@@ -21,14 +28,29 @@ class AcademicIncomeItem extends Model
         return $this->belongsTo(AcademicIncomePlan::class, 'plan_id');
     }
 
-    public function settingSet(): BelongsTo
-    {
-        return $this->belongsTo(AcademicIncomeSettingSet::class, 'setting_set_id');
-    }
-
     public function degreeProgram(): BelongsTo
     {
         return $this->belongsTo(DegreeProgram::class);
+    }
+
+    public function creditUnitPriceSetting(): BelongsTo
+    {
+        return $this->belongsTo(CreditUnitPriceSetting::class);
+    }
+
+    public function incomeRateSetting(): BelongsTo
+    {
+        return $this->belongsTo(IncomeRateSetting::class);
+    }
+
+    public function registrationFeeSetting(): BelongsTo
+    {
+        return $this->belongsTo(RegistrationFeeSetting::class);
+    }
+
+    public function nuolPctSetting(): BelongsTo
+    {
+        return $this->belongsTo(NuolPctSetting::class);
     }
 
     public function getFirstPaymentAmountAttribute(): float
@@ -59,8 +81,12 @@ class AcademicIncomeItem extends Model
         };
     }
 
-    public function getSnapCourseCreditUnitAttribute($value = null): ?int
+    public function getSnapCourseCreditUnitAttribute($value = null): ?float
     {
+        if ($value !== null) {
+            return (float) $value;
+        }
+
         if (! in_array($this->section_code, ['1.1', '1.3'], true) || ! $this->degree_program_id) {
             return null;
         }
@@ -76,14 +102,22 @@ class AcademicIncomeItem extends Model
         }
 
         if ($this->section_code === '1.3' && in_array($program->level, ['master', 'phd'], true)) {
-            return (int) ($credit->year1_credit_unit ?? 0);
+            return (float) ($credit->course_credit_unit ?? 0) * CourseCreditSplitSetting::year1For($program->level);
         }
 
-        return (int) ($credit->course_credit_unit ?? 0);
+        if ($this->section_code === '1.1' && in_array($program->level, ['master', 'phd'], true)) {
+            return (float) ($credit->course_credit_unit ?? 0) * CourseCreditSplitSetting::year2For($program->level);
+        }
+
+        return (float) ($credit->course_credit_unit ?? 0);
     }
 
     public function getSnapCreditUnitPriceAttribute($value = null): ?float
     {
+        if ($value !== null) {
+            return (float) $value;
+        }
+
         if (in_array($this->section_code, ['1.1', '1.3'], true)) {
             $level = $this->degreeProgram?->level;
             if (! $level) {
@@ -104,6 +138,10 @@ class AcademicIncomeItem extends Model
 
     public function getSnapRegistrationFeeRateAttribute($value = null): ?float
     {
+        if ($value !== null) {
+            return (float) $value;
+        }
+
         $sectionType = match ($this->section_code) {
             '1.2' => 'year2_4',
             '1.4' => 'year1',
@@ -128,6 +166,10 @@ class AcademicIncomeItem extends Model
 
     public function getSnapNuolPctAttribute($value = null): float
     {
+        if ($value !== null) {
+            return (float) $value;
+        }
+
         if (in_array($this->section_code, ['1.1', '1.3'], true)) {
             $level = $this->degreeProgram?->level;
             if (! $level) {
@@ -163,65 +205,18 @@ class AcademicIncomeItem extends Model
         return (float) ($setting->items->sum(fn ($item) => $item->amount * $item->nuol_pct) / $setting->total_rate);
     }
 
-    private function effectiveSettingSet(): ?AcademicIncomeSettingSet
-    {
-        if ($this->relationLoaded('settingSet') && $this->getRelation('settingSet')) {
-            return $this->getRelation('settingSet');
-        }
-
-        if ($this->setting_set_id) {
-            return $this->settingSet()->first();
-        }
-
-        $fiscalYear = $this->relationLoaded('plan')
-            ? $this->plan?->fiscal_year
-            : $this->plan()->value('fiscal_year');
-
-        return $fiscalYear ? AcademicIncomeSettingSet::latestForFiscalYear((int) $fiscalYear) : null;
-    }
-
     private function creditUnitPriceFor(string $level): ?CreditUnitPriceSetting
     {
-        $settingSet = $this->effectiveSettingSet();
-        $query = CreditUnitPriceSetting::where('level', $level);
-
-        if ($settingSet) {
-            $scoped = CreditUnitPriceSetting::where('setting_set_id', $settingSet->id)->where('level', $level);
-            if ($scoped->exists()) {
-                $query = $scoped;
-            }
-        }
-
-        return $query->orderByDesc('start_year')->first();
+        return CreditUnitPriceSetting::where('level', $level)->orderByDesc('start_year')->first();
     }
 
     private function incomeRateFor(string $key): ?IncomeRateSetting
     {
-        $settingSet = $this->effectiveSettingSet();
-        $query = IncomeRateSetting::where('key', $key);
-
-        if ($settingSet) {
-            $scoped = IncomeRateSetting::where('setting_set_id', $settingSet->id)->where('key', $key);
-            if ($scoped->exists()) {
-                $query = $scoped;
-            }
-        }
-
-        return $query->first();
+        return IncomeRateSetting::where('key', $key)->first();
     }
 
     private function nuolFor(string $level): ?NuolPctSetting
     {
-        $settingSet = $this->effectiveSettingSet();
-        $query = NuolPctSetting::where('level', $level);
-
-        if ($settingSet) {
-            $scoped = NuolPctSetting::where('setting_set_id', $settingSet->id)->where('level', $level);
-            if ($scoped->exists()) {
-                $query = $scoped;
-            }
-        }
-
-        return $query->orderByDesc('start_year')->first();
+        return NuolPctSetting::where('level', $level)->orderByDesc('start_year')->first();
     }
 }

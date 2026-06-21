@@ -7,6 +7,8 @@
 
     <title>@yield('title', 'Admin') — {{ config('app.name', 'FNS Finance') }}</title>
 
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/NotoSansLao-Regular.ttf') }}" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/NotoSansLao-Bold.ttf') }}" as="font" type="font/ttf" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -37,8 +39,13 @@
 
             {{-- Page Title --}}
             @hasSection('page-title')
-                <div style="margin-bottom:1.25rem;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;">
                     <h1 class="fns-page-title">@yield('page-title')</h1>
+                    @hasSection('page-title-actions')
+                        <div style="margin-left:auto;display:flex;justify-content:flex-end;">
+                            @yield('page-title-actions')
+                        </div>
+                    @endif
                 </div>
             @endif
 

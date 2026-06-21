@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Expense structure')
-@section('page-title', 'Expense structure')
+@section('title', 'Expense Setup')
+@section('page-title', 'Expense Setup')
 
 @section('content')
 @php
@@ -13,6 +13,8 @@
 @endphp
 
 <div class="es-page">
+    @include('dashboards.finance_head.settings.expense-setup-tabs')
+
     @if ($errors->any())
         <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
@@ -22,11 +24,11 @@
     <div class="es-hero">
         <div>
             <h2>Expense structure & account links</h2>
-            <p>Set the workbook structure first, then connect each default row to the right chart account.</p>
+            <p>Build the section tree. Catalog items and chart accounts are managed in the Catalog Items tab.</p>
             <div class="es-stats">
                 <span>{{ $sections->count() }} sections</span>
                 <span>{{ $sections->sum(fn ($section) => $section->subsections->count()) }} subsections</span>
-                <span>{{ $defaultRowTotal }} default rows</span>
+                <span>{{ $defaultRowTotal }} catalog items</span>
                 <span class="{{ $defaultRowTotal > $linkedDefaultRowTotal ? 'is-warn' : 'is-ok' }}">
                     {{ $linkedDefaultRowTotal }}/{{ $defaultRowTotal }} linked
                 </span>
@@ -49,8 +51,8 @@
         <section class="es-warning-panel">
             <div class="es-warning-head">
                 <div>
-                    <h3>Account links to check before printing annual plan</h3>
-                    <p>{{ $unlinkedAccountWarnings->count() }} unlinked rows · {{ $reviewAccountWarnings->count() }} best-fit rows need review</p>
+                    <h3>Catalog account links to check before printing annual plan</h3>
+                    <p>{{ $unlinkedAccountWarnings->count() }} unlinked items · {{ $reviewAccountWarnings->count() }} suggested links need review</p>
                 </div>
                 <div class="es-warning-actions">
                     <button type="button" class="es-filter-btn is-active" data-account-filter="all">All</button>
@@ -79,7 +81,7 @@
     @elseif($planningYear)
         <section class="es-ready-panel">
             <strong>Ready for annual plan</strong>
-            <span>All default rows visible in this planning year have chart account links.</span>
+            <span>All catalog items visible in this planning year have chart account links.</span>
         </section>
     @endif
 
@@ -170,7 +172,7 @@
                             {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} linked
                         </span>
                     @else
-                        <span class="es-pill">No default rows</span>
+                        <span class="es-pill">No catalog items</span>
                     @endif
                 </div>
 
@@ -272,7 +274,7 @@
                                                     {{ $linkedRowsForSubsection }}/{{ $defaultRowsForSubsection->count() }} linked
                                                 </span>
                                             @else
-                                                <span class="es-pill">No defaults</span>
+                                                <span class="es-pill">No catalog items</span>
                                             @endif
                                         </td>
                                         <td class="py-2 pr-3">
@@ -296,11 +298,11 @@
                                         <details class="es-account-panel">
                                             <summary>
                                                 <span class="min-w-0 truncate">
-                                                    Manage default rows for {{ $subsection->code }} - {{ $subsection->name }}
+                                                    Manage catalog items for {{ $subsection->code }} - {{ $subsection->name }}
                                                 </span>
                                                 <span class="flex shrink-0 items-center gap-2 text-xs">
                                                     <span class="js-default-group-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : 'is-warn' }}">
-                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' linked' : 'No defaults' }}
+                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' linked' : 'No catalog items' }}
                                                     </span>
                                                     <span class="es-summary-action">Open</span>
                                                 </span>
@@ -326,7 +328,7 @@
                                                         @method('PATCH')
                                                         <div class="min-w-0">
                                                             <label class="es-default-field">
-                                                                <span>Row name</span>
+                                                                <span>Expense item</span>
                                                                 <input name="item_name" value="{{ $defaultRow->item_name }}" class="fns-input" required>
                                                             </label>
                                                             <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
@@ -366,21 +368,22 @@
                                                             <button type="button"
                                                                     class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
                                                                     data-url="{{ route('head_of_finance.settings.expense-default-rows.destroy', $defaultRow) }}"
-                                                                    data-message="Delete this default row?">
+                                                                    data-message="Delete this catalog item?">
                                                                 Delete
                                                             </button>
                                                         </div>
                                                     </form>
                                                 @empty
-                                                    <div class="es-default-empty">No default rows yet.</div>
+                                                    <div class="es-default-empty">No catalog items yet.</div>
                                                 @endforelse
 
                                                 <form method="POST" action="{{ route('head_of_finance.settings.expense-default-rows.store') }}" class="es-default-add-form">
                                                     @csrf
                                                     <input type="hidden" name="subsection_code" value="{{ $subsection->code }}">
+                                                    <input type="hidden" name="subsection_id" value="{{ $subsection->id }}">
                                                     <label>
-                                                        <span>Row name</span>
-                                                        <input name="item_name" class="fns-input" placeholder="Default row name" required>
+                                                        <span>Expense item</span>
+                                                        <input name="item_name" class="fns-input" placeholder="Expense item name" required>
                                                     </label>
                                                     <label>
                                                         <span>Account</span>
@@ -395,7 +398,7 @@
                                                         <span>Order</span>
                                                         <input type="number" name="sort_order" class="fns-input" min="1" max="999" value="{{ ($defaultRowsForSubsection->max('sort_order') ?? 0) + 1 }}" required>
                                                     </label>
-                                                    <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">Add default row</button>
+                                                    <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">Add catalog item</button>
                                                 </form>
                                             </div>
                                         </details>

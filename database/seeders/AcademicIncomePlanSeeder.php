@@ -141,9 +141,9 @@ class AcademicIncomePlanSeeder extends Seeder
             ]);
         }
 
-        // Master/PhD year 1: year1_credit_unit is 60% of the total program.
+        // Master/PhD year 1: calculated from 60% of the total program credits.
         // The price per unit now lives in academic income settings.
-        // gross = year1_credit_unit × price/unit × count  (same formula as sec 1.1 yr2+)
+        // gross = year1 credit share × price/unit × count  (same formula as sec 1.1 yr2+)
         $items13_master = [
             // ['dp', 'n', 'year1_cu', 'price_per_unit']
             ['dp' => 44, 'n' =>  4, 'cu' =>  66,   'price' => 240000],  // M-PHYS:  66×240k=15,840,000

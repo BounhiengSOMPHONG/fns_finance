@@ -45,4 +45,9 @@ class ExpenseSubsection extends Model
     {
         return $this->belongsTo(ExpensePattern::class, 'default_pattern_id');
     }
+
+    public function catalogItems(): HasMany
+    {
+        return $this->hasMany(ExpenseCatalogItem::class, 'subsection_id')->orderBy('sort_order');
+    }
 }

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\AcademicIncomeItem;
 use App\Models\AcademicIncomePlan;
-use App\Models\AcademicIncomeSettingSet;
 use App\Models\DegreeProgram;
 use App\Models\RegistrationFeeSetting;
 use Illuminate\Support\Collection;
@@ -13,7 +12,7 @@ class AcademicIncomeReportBuilder
 {
     public function buildForPlans(Collection $plans): array
     {
-        $plans->loadMissing('items.degreeProgram.latestCourseCredit', 'items.settingSet');
+        $plans->loadMissing('items.degreeProgram.latestCourseCredit');
 
         $persistedItems = $plans
             ->flatMap(fn (AcademicIncomePlan $plan) => $plan->items)
@@ -201,7 +200,6 @@ class AcademicIncomeReportBuilder
             return $items;
         }
 
-        $settingSet = AcademicIncomeSettingSet::latestForFiscalYear((int) $plan->fiscal_year);
         $itemsByKey = $items->keyBy(fn (AcademicIncomeItem $item): string => $this->itemKey($item->section_code, $item->degree_program_id));
         $programs = DegreeProgram::where('is_active', true)
             ->with('latestCourseCredit')
@@ -218,7 +216,7 @@ class AcademicIncomeReportBuilder
         ) || in_array($program->level, ['master', 'phd'], true));
 
         foreach ($programs11 as $program) {
-            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $settingSet, '1.1', $program);
+            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, '1.1', $program);
         }
 
         $programs13 = $programs->filter(fn (DegreeProgram $program): bool => (
@@ -226,11 +224,11 @@ class AcademicIncomeReportBuilder
         ) || in_array($program->level, ['master', 'phd'], true));
 
         foreach ($programs13 as $program) {
-            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $settingSet, '1.3', $program);
+            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, '1.3', $program);
         }
 
         foreach (['1.2', '1.4', '2.1', '2.2', '2.3', '2.4'] as $section) {
-            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $settingSet, $section);
+            $this->pushPlaceholderIfMissing($placeholders, $itemsByKey, $plan, $section);
         }
 
         return $items->concat($placeholders)->values();
@@ -240,7 +238,6 @@ class AcademicIncomeReportBuilder
         Collection $placeholders,
         Collection $itemsByKey,
         AcademicIncomePlan $plan,
-        ?AcademicIncomeSettingSet $settingSet,
         string $section,
         ?DegreeProgram $program = null
     ): void {
@@ -250,7 +247,6 @@ class AcademicIncomeReportBuilder
 
         $item = new AcademicIncomeItem([
             'plan_id' => $plan->id,
-            'setting_set_id' => $settingSet?->id,
             'section_code' => $section,
             'degree_program_id' => $program?->id,
             'student_count' => 0,
@@ -259,7 +255,6 @@ class AcademicIncomeReportBuilder
 
         $item->exists = false;
         $item->setRelation('plan', $plan);
-        $item->setRelation('settingSet', $settingSet);
         if ($program) {
             $item->setRelation('degreeProgram', $program);
         }

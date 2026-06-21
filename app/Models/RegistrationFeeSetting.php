@@ -14,6 +14,11 @@ class RegistrationFeeSetting extends Model
         return $this->hasMany(RegistrationFeeItem::class, 'fee_setting_id')->orderBy('sort_order');
     }
 
+    public function academicIncomeItems(): HasMany
+    {
+        return $this->hasMany(AcademicIncomeItem::class);
+    }
+
     public function getTotalRateAttribute(): float
     {
         return $this->items->sum('amount');

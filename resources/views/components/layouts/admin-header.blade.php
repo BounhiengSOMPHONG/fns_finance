@@ -2,20 +2,20 @@
     $isAdmin         = auth()->user()?->can('admin');
     $isHeadOfFinance = auth()->user()?->can('head_of_finance');
     $reviewAssignmentCount = auth()->check()
-        ? auth()->user()->planningYearReviewAssignments()
-            ->whereHas('reviewRound.planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
+        ? \App\Models\PlanningYearReviewRound::with('planningYear')
+            ->whereHas('planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
+            ->get()
+            ->filter(fn ($round) => $round->hasReviewer(auth()->user()))
             ->count()
         : 0;
-    $unreadNotificationCount = auth()->check() ? auth()->user()->unreadNotifications()->count() : 0;
-
     $settingsActive = request()->routeIs('head_of_finance.settings.degree-programs.*')
         || request()->routeIs('head_of_finance.settings.course-credits.*')
         || request()->routeIs('head_of_finance.settings.credit-unit-price.*')
         || request()->routeIs('head_of_finance.settings.nuol-pct.*')
         || request()->routeIs('head_of_finance.settings.registration-fee.*')
         || request()->routeIs('head_of_finance.settings.expense-patterns.*')
-        || request()->routeIs('head_of_finance.settings.expense-pattern-fields.*')
         || request()->routeIs('head_of_finance.settings.expense-default-rows.*')
+        || request()->routeIs('head_of_finance.settings.expense-setup.*')
         || request()->routeIs('head_of_finance.settings.expense-structure.*');
 
     $systemActive = request()->routeIs('admin.users.*')
@@ -34,7 +34,7 @@
 
         {{-- ===== Brand ===== --}}
         <a href="{{ $isHeadOfFinance ? route('head_of_finance.home') : '/' }}" class="fns-topnav-brand">
-            <img src="{{ asset('storage/logo fns.jpg') }}" alt="FNS">
+            <img src="{{ asset('storage/NUOL-Logo-26_960x960.png') }}" alt="NUOL">
             <span class="fns-topnav-brand-text">
                 <strong>FNS</strong><span>Finance</span>
             </span>
@@ -79,13 +79,9 @@
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">
                             <x-icons.book-open /> ລາຄາ & ໜ່ວຍກິດ & ມຊ%
                         </a>
-                        <a href="{{ route('head_of_finance.settings.expense-patterns.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-patterns.*') || request()->routeIs('head_of_finance.settings.expense-pattern-fields.*') ? 'active' : '' }}">
-                            <x-icons.settings /> Expense patterns
-                        </a>
-                        <a href="{{ route('head_of_finance.settings.expense-structure.index') }}"
-                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-structure.*') || request()->routeIs('head_of_finance.settings.expense-default-rows.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Expense structure & accounts
+                        <a href="{{ route('head_of_finance.settings.expense-setup.index') }}"
+                           class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-setup.*') || request()->routeIs('head_of_finance.settings.expense-structure.*') || request()->routeIs('head_of_finance.settings.expense-default-rows.*') || request()->routeIs('head_of_finance.settings.expense-patterns.*') ? 'active' : '' }}">
+                            <x-icons.book-open /> Expense Setup
                         </a>
                         <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">
@@ -143,12 +139,6 @@
             </span>
 
             @auth
-                @if($unreadNotificationCount > 0)
-                    <a href="{{ route('reviews.planning-years.index') }}" class="fns-topnav-pill fns-topnav-pill-link">
-                        {{ $unreadNotificationCount }} ແຈ້ງເຕືອນ
-                    </a>
-                @endif
-
                 <span class="fns-topnav-pill">
                     <x-icons.user style="width:13px;height:13px;opacity:0.7;" />
                     {{ Auth::user()->full_name ?? Auth::user()->username ?? 'Admin' }}

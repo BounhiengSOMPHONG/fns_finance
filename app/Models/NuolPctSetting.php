@@ -3,13 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class NuolPctSetting extends Model
 {
-    protected $fillable = ['setting_set_id', 'level', 'percentage', 'gov_doc_id', 'start_year'];
+    protected $fillable = ['level', 'percentage', 'gov_doc_id', 'start_year'];
 
     protected $casts = ['percentage' => 'decimal:4'];
+
+    public function academicIncomeItems(): HasMany
+    {
+        return $this->hasMany(AcademicIncomeItem::class);
+    }
 
     public static function levelLabel(string $level): string
     {
@@ -27,8 +32,4 @@ class NuolPctSetting extends Model
         return static::where('level', $level)->orderByDesc('start_year')->first();
     }
 
-    public function settingSet(): BelongsTo
-    {
-        return $this->belongsTo(AcademicIncomeSettingSet::class, 'setting_set_id');
-    }
 }

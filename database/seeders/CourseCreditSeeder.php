@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\CourseCreditSetting;
+use App\Models\CourseCreditSplitSetting;
 use App\Models\CreditUnitPriceSetting;
 use App\Models\DegreeProgram;
 use Illuminate\Database\Seeder;
@@ -43,6 +44,15 @@ class CourseCreditSeeder extends Seeder
                 ['name' => $name, 'level' => 'bachelor', 'study_year' => 1, 'is_active' => true]
             );
         }
+
+        CourseCreditSplitSetting::updateOrCreate(
+            ['level' => 'master', 'start_year' => 2026],
+            ['year1_percentage' => 0.60, 'year2_percentage' => 0.40]
+        );
+        CourseCreditSplitSetting::updateOrCreate(
+            ['level' => 'phd', 'start_year' => 2026],
+            ['year1_percentage' => 0.60, 'year2_percentage' => 0.40]
+        );
 
         // ── 3. Seed course credit units ──────────────────────────────────
         // Formula verified: fee_per_student (from Planning 2026.xls) / credit_unit_price = credit_units
@@ -114,7 +124,7 @@ class CourseCreditSeeder extends Seeder
             'B-MATS-Y4' => 27,  //   945,000 / 35,000
             'B-NPHY-Y4' => 28,  //   980,000 / 35,000
 
-            // ── Master — section 1.1 year-2+ rate / 240,000 ──
+            // ── Master — full program credits (old year-2+ + old year-1) ──
             'M-PHYS'    => 45,  // 10,800,000 / 240,000
             'M-MATH'    => 46,  // 11,040,000 / 240,000
             'M-BIO'     => 41,  //  9,840,000 / 240,000
@@ -124,15 +134,15 @@ class CourseCreditSeeder extends Seeder
             'MR-CHEM'   => 46,  // 11,040,000 / 240,000
             'MR-BIO'    => 46,  // 11,040,000 / 240,000
 
-            // ── PhD — section 1.1 rate / 600,000 ──
+            // ── PhD — full program credits (old year-2+ + old year-1) ──
             'D-PHYS'    => 38,  // 22,800,000 / 600,000
             'D-BIO'     => 40,  // 24,000,000 / 600,000
         ];
 
-        // Year-1 credit units for master/phd (section 1.3).
+        // Legacy year-1 units for master/phd, used here only to reconstruct
+        // full program credits before the configurable 60/40 split is applied.
         // Principle: year1 = 60% of total program credits, year2+ = 40%.
-        // So year1_credit_unit = year2+_credit_unit × 1.5  (60/40 ratio).
-        // Formula: year1_credit_unit = year1_rate_from_excel / price_per_unit
+        // Formula: legacy_year1_units = year1_rate_from_excel / price_per_unit
         //   master (240,000/unit): M-PHYS=66, M-MATH=69, M-BIO=62, M-CHEM=69, M-CS=69 …
         //   phd    (600,000/unit): D-PHYS=57, D-BIO=60
         $year1CreditUnits = [
@@ -156,11 +166,12 @@ class CourseCreditSeeder extends Seeder
             $programId = $programIds[$code] ?? null;
             if (!$programId) continue;
 
+            $totalUnits = $units + ($year1CreditUnits[$code] ?? 0);
+
             CourseCreditSetting::updateOrCreate(
                 ['degree_program_id' => $programId],
                 [
-                    'course_credit_unit' => $units,
-                    'year1_credit_unit'  => $year1CreditUnits[$code] ?? null,
+                    'course_credit_unit' => $totalUnits,
                     'start_year'         => 2026,
                     'updated_at'         => $now,
                 ]

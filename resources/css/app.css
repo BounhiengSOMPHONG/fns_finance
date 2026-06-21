@@ -81,28 +81,34 @@
 .fns-topnav-brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.7rem;
     text-decoration: none;
     flex-shrink: 0;
-    padding-right: 1rem;
-    border-right: 1px solid rgba(255,255,255,0.08);
+    padding: 0.35rem 1.35rem 0.35rem 0;
+    border-right: 1px solid rgba(255,255,255,0.1);
 }
 .fns-topnav-brand img {
-    width: 34px; height: 34px;
-    object-fit: cover;
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
     border-radius: 50%;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    padding: 2px;
+    background: #ffffff;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.82),
+        0 6px 16px rgba(0,0,0,0.22);
 }
 .fns-topnav-brand-text {
     display: flex;
     flex-direction: column;
     line-height: 1.05;
+    min-width: 4.1rem;
 }
 .fns-topnav-brand-text strong {
     font-family: 'Cinzel', serif;
     font-size: 0.92rem; font-weight: 700;
     color: var(--fns-gold-light);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
 }
 .fns-topnav-brand-text span {
     font-size: 0.6rem;

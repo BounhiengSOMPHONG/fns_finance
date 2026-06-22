@@ -63,8 +63,8 @@
 .ai-search input:focus { border-color:var(--fns-gold); box-shadow:0 0 0 3px rgba(201,153,26,.14); }
 .ai-panel-body { padding:.65rem .7rem .75rem; }
 .ai-section-note {
-    display:flex; align-items:center; justify-content:flex-end; gap:.8rem;
-    margin-bottom:.5rem; color:var(--fns-gray-600); font-size:.75rem;
+    display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+    margin-bottom:.55rem; color:var(--fns-gray-600); font-size:.75rem; flex-wrap:wrap;
 }
 .ai-tally { white-space:nowrap; font-weight:900; color:var(--fns-navy); }
 .ai-tally b { font-family:'Cinzel', serif; font-size:1rem; }
@@ -187,22 +187,33 @@
     border-radius:8px; text-align:center; color:var(--fns-gray-500); font-size:.82rem;
 }
 
-.ai-fee-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:.55rem; }
-.ai-item { min-height:66px; align-items:flex-start; padding:.62rem; }
-.ai-item .ai-row-name { flex-direction:column; align-items:flex-start; gap:.2rem; }
-.ai-item-title { display:flex; align-items:center; gap:.45rem; color:#334155; font-weight:900; }
+.ai-fee-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(285px, 1fr)); gap:.62rem; align-items:stretch; }
+.ai-item {
+    display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:.65rem; align-items:center;
+    min-height:82px; padding:.72rem .8rem; border-color:#c8d6ea; background:#fbfdff;
+}
+.ai-item:hover { background:#fffdf7; border-color:#d6ad39; }
+.ai-item:focus-within { background:#fff; }
+.ai-item .ai-row-name { flex-direction:column; align-items:flex-start; gap:.26rem; min-width:0; }
+.ai-item-title {
+    display:grid; grid-template-columns:auto minmax(0, 1fr); align-items:center; gap:.45rem;
+    width:100%; color:#1f355f; font-weight:900;
+}
 .ai-item-tag {
     display:inline-flex; align-items:center; justify-content:center; min-width:2rem;
     border-radius:7px; background:#fff3c4; color:#73520b; padding:.12rem .35rem;
     font-family:'Cinzel', serif; font-size:.68rem; font-weight:900;
 }
-.ai-item-rate { color:var(--fns-gray-500); font-size:.73rem; line-height:1.35; }
+.ai-item .ai-row-txt { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ai-item-rate { color:#475569; font-size:.72rem; line-height:1.4; }
 .ai-item-rate b { color:var(--fns-navy); }
 .ai-item-rate.warn { color:#b45309; }
-.ai-item-side { display:flex; align-items:center; gap:.45rem; flex-shrink:0; }
+.ai-item-side { display:flex; align-items:center; justify-content:flex-end; gap:.42rem; min-width:0; }
+.ai-item-side .ai-num { width:5.1rem; min-width:5.1rem; padding:.44rem .55rem; }
 .ai-eq {
     border:1px solid #e2c66d; background:#fff9e8; color:#73520b; border-radius:8px;
-    padding:.35rem .5rem; font-family:inherit; font-size:.72rem; font-weight:900; cursor:pointer;
+    padding:.38rem .48rem; font-family:inherit; font-size:.68rem; font-weight:900; cursor:pointer;
+    white-space:nowrap; line-height:1;
 }
 .ai-eq:hover { background:#fff3c4; }
 .ai-rate-details {
@@ -259,12 +270,14 @@
     .ai-top { grid-template-columns:auto 1fr; }
     .ai-steps { grid-template-columns:1fr; }
     .ai-panel-head { grid-template-columns:1fr; }
+    .ai-fee-grid { grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); }
 }
 @media (max-width: 560px) {
     .ai-top { border-radius:0; margin-left:-1rem; margin-right:-1rem; }
     .ai-fee-grid { grid-template-columns:1fr; }
-    .ai-item { flex-direction:column; }
+    .ai-item { grid-template-columns:1fr; align-items:stretch; }
     .ai-item-side { width:100%; justify-content:space-between; }
+    .ai-item-side .ai-num { width:6rem; min-width:6rem; }
     .ai-panel-actions { align-items:stretch; flex-direction:column; }
     .ai-action-group { width:100%; }
     .ai-action-group .ai-nav-btn { flex:1; }
@@ -470,16 +483,6 @@
     </section>
 
     <section class="ai-step-panel" data-step-panel="2">
-        <div class="ai-panel-head">
-            <div>
-                <h2>2. ຄ່າລົງທະບຽນ ແລະ ຄ່າທຳນຽມ</h2>
-                <p>ກອກຈຳນວນຄົນຂອງລາຍການທີ່ເຫຼືອ. ອັດຕາລາຄາຈະສະແດງເພື່ອອ້າງອີງ ແລະ ສາມາດເປີດແກ້ໄດ້ໃນຂັ້ນສູງ.</p>
-            </div>
-            <label class="ai-search">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.41 9.823l3.633 3.634a.75.75 0 1 0 1.06-1.06l-3.633-3.634A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
-                <input type="text" data-step-filter="2" placeholder="ຄົ້ນຫາລາຍການ..." autocomplete="off">
-            </label>
-        </div>
         <div class="ai-panel-body">
             <div class="ai-section-note">
                 <span>ປຸ່ມ <b>= 1.2+1.4</b> ຈະໃສ່ຈຳນວນລວມຈາກຄ່າລົງທະບຽນປີ 1 ແລະ ປີ 2-4.</span>

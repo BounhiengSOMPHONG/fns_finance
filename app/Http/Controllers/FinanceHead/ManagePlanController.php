@@ -628,17 +628,7 @@ class ManagePlanController extends Controller
                 DB::table('expense_plans')->whereIn('id', $expensePlanIds)->delete();
             }
 
-            $sectionIds = $planningYear->sections()->pluck('id');
-            $subsectionIds = ExpenseSubsection::whereIn('section_id', $sectionIds)->pluck('id');
-
-            if ($subsectionIds->isNotEmpty()) {
-                DB::table('expense_subsections')->whereIn('id', $subsectionIds)->update(['parent_id' => null]);
-                DB::table('expense_subsections')->whereIn('id', $subsectionIds)->delete();
-            }
-
-            if ($sectionIds->isNotEmpty()) {
-                DB::table('expense_sections')->whereIn('id', $sectionIds)->delete();
-            }
+            $planningYear->sections()->update(['planning_year_id' => null]);
 
             $planningYear->delete();
         });
@@ -764,6 +754,29 @@ class ManagePlanController extends Controller
             $parentCode = implode('.', array_slice($parts, 0, -1));
             if (isset($subsectionsByCode[$parentCode])) {
                 $subsection->update(['parent_id' => $subsectionsByCode[$parentCode]->id]);
+            }
+        }
+
+        $sourceCatalogItems = ExpenseCatalogItem::with('subsection')
+            ->whereHas('subsection', fn ($query) => $query->whereIn('code', array_keys($subsectionsByCode)))
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy(fn (ExpenseCatalogItem $item): ?string => $item->subsection?->code)
+            ->map(fn ($items) => $items
+                ->unique(fn (ExpenseCatalogItem $item): string => $item->sort_order.'|'.$item->item_name)
+                ->values());
+
+        foreach ($subsectionsByCode as $code => $subsection) {
+            foreach ($sourceCatalogItems->get($code, collect()) as $catalogItem) {
+                ExpenseCatalogItem::create([
+                    'subsection_id' => $subsection->id,
+                    'item_name' => $catalogItem->item_name,
+                    'chart_of_account_id' => $catalogItem->chart_of_account_id,
+                    'pattern_id' => $catalogItem->pattern_id ?: $subsection->default_pattern_id,
+                    'default_values' => $catalogItem->default_values ?? [],
+                    'sort_order' => $catalogItem->sort_order,
+                    'is_active' => $catalogItem->is_active,
+                ]);
             }
         }
     }

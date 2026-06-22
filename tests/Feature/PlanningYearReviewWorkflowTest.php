@@ -268,6 +268,10 @@ class PlanningYearReviewWorkflowTest extends TestCase
         $this->assertDatabaseMissing('planning_year_review_rounds', ['id' => $roundId]);
         $this->assertDatabaseMissing('planning_year_review_comments', ['id' => $commentId]);
         $this->assertDatabaseMissing('period_plan_overrides', ['planning_year_id' => 1]);
+        $this->assertDatabaseMissing('expense_plans', ['planning_year_id' => 1]);
+        $this->assertDatabaseHas('expense_sections', ['id' => 1, 'planning_year_id' => null]);
+        $this->assertDatabaseHas('expense_subsections', ['id' => 1, 'section_id' => 1]);
+        $this->assertDatabaseHas('expense_catalog_items', ['id' => 1, 'subsection_id' => 1, 'chart_of_account_id' => 123]);
     }
 
     private function createPendingReview(array $reviewerIds = []): int
@@ -334,6 +338,14 @@ class PlanningYearReviewWorkflowTest extends TestCase
         DB::table('expense_subsections')->insert([
             'id' => 1,
             'section_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('expense_catalog_items')->insert([
+            'id' => 1,
+            'subsection_id' => 1,
+            'item_name' => 'Linked default row',
+            'chart_of_account_id' => 123,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -404,6 +416,7 @@ class PlanningYearReviewWorkflowTest extends TestCase
             'period_plan_overrides',
             'expense_plan_values',
             'expense_plans',
+            'expense_catalog_items',
             'expense_subsections',
             'expense_sections',
             'salary_entries',
@@ -510,6 +523,14 @@ class PlanningYearReviewWorkflowTest extends TestCase
             $table->id();
             $table->unsignedBigInteger('section_id');
             $table->unsignedBigInteger('parent_id')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('expense_catalog_items', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('subsection_id');
+            $table->string('item_name')->nullable();
+            $table->unsignedInteger('chart_of_account_id')->nullable();
             $table->timestamps();
         });
 

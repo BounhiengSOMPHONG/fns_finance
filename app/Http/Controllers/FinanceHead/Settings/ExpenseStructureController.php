@@ -333,5 +333,28 @@ class ExpenseStructureController extends Controller
                 $subsection->update(['parent_id' => $subsectionsByCode[$parentCode]->id]);
             }
         }
+
+        $sourceCatalogItems = ExpenseCatalogItem::with('subsection')
+            ->whereHas('subsection', fn ($query) => $query->whereIn('code', array_keys($subsectionsByCode)))
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy(fn (ExpenseCatalogItem $item): ?string => $item->subsection?->code)
+            ->map(fn ($items) => $items
+                ->unique(fn (ExpenseCatalogItem $item): string => $item->sort_order.'|'.$item->item_name)
+                ->values());
+
+        foreach ($subsectionsByCode as $code => $subsection) {
+            foreach ($sourceCatalogItems->get($code, collect()) as $catalogItem) {
+                ExpenseCatalogItem::create([
+                    'subsection_id' => $subsection->id,
+                    'item_name' => $catalogItem->item_name,
+                    'chart_of_account_id' => $catalogItem->chart_of_account_id,
+                    'pattern_id' => $catalogItem->pattern_id ?: $subsection->default_pattern_id,
+                    'default_values' => $catalogItem->default_values ?? [],
+                    'sort_order' => $catalogItem->sort_order,
+                    'is_active' => $catalogItem->is_active,
+                ]);
+            }
+        }
     }
 }

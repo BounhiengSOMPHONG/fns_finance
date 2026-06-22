@@ -1,3 +1,12 @@
+@php
+    $displayProgramName = function (?string $name): string {
+        $name = (string) ($name ?? '');
+        $display = trim((string) preg_replace('/\s*(?:ປີ|ปี)\s*1\s*$/u', '', $name));
+
+        return $display !== '' ? $display : $name;
+    };
+@endphp
+
 <div class="fns-form-group">
     <label class="fns-label">ສາຂາວິຊາ <span style="color:red;">*</span></label>
     <select name="degree_program_id" id="degree_program_id"
@@ -7,7 +16,7 @@
             <option value="{{ $p->id }}"
                 data-level="{{ $p->level }}"
                 @selected(old('degree_program_id', $setting->degree_program_id ?? '') == $p->id)>
-                [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $p->name }}
+                [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $displayProgramName($p->name) }}
             </option>
         @endforeach
     </select>

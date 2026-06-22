@@ -12,6 +12,12 @@
     ];
     $pct = fn ($value) => rtrim(rtrim(number_format((float) $value * 100, 4, '.', ''), '0'), '.');
     $splitPct = fn ($value) => rtrim(rtrim(number_format((float) $value * 100, 2, '.', ''), '0'), '.');
+    $displayProgramName = function (?string $name): string {
+        $name = (string) ($name ?? '');
+        $display = trim((string) preg_replace('/\s*(?:ປີ|ปี)\s*1\s*$/u', '', $name));
+
+        return $display !== '' ? $display : $name;
+    };
     $configuredPrices = $prices->filter()->count();
     $configuredNuol = $nuolPcts->filter()->count();
     $configuredSplits = $creditSplits->filter()->count();
@@ -220,10 +226,11 @@
                             $level = $s->degreeProgram?->level;
                             $meta = $levelMeta[$level] ?? ['label' => $level ?: '-', 'full' => $level ?: '-'];
                             $programName = $s->degreeProgram?->name ?? '-';
+                            $shownProgramName = $displayProgramName($programName);
                         @endphp
-                        <tr class="cc-row" data-level="{{ $level }}" data-name="{{ \Illuminate\Support\Str::lower($programName) }}">
+                        <tr class="cc-row" data-level="{{ $level }}" data-name="{{ \Illuminate\Support\Str::lower($shownProgramName.' '.$programName) }}">
                             <td>
-                                <strong class="erp-program">{{ $programName }}</strong>
+                                <strong class="erp-program">{{ $shownProgramName }}</strong>
                             </td>
                             <td><span class="erp-badge">{{ $meta['label'] }}</span></td>
                             <td class="erp-num">{{ $s->degreeProgram?->study_year ?: '-' }}</td>
@@ -281,7 +288,7 @@
                         <option value="">-- ເລືອກສາຂາວິຊາ --</option>
                         @foreach($programs as $p)
                             <option value="{{ $p->id }}" data-level="{{ $p->level }}">
-                                [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $p->name }}
+                                [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $displayProgramName($p->name) }}
                             </option>
                         @endforeach
                     </select>

@@ -38,14 +38,10 @@
     </section>
 
     <section class="admin-filter-panel">
-        <form method="GET" action="{{ route('admin.chart-of-accounts.index') }}" class="admin-filter-form admin-filter-form-simple">
+        <form method="GET" action="{{ route('admin.chart-of-accounts.index') }}" class="admin-filter-form admin-filter-form-simple admin-filter-form-auto" x-data="{ filterTimer: null, submitFilter() { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.$el.requestSubmit(), 450); } }" @input="submitFilter()">
             <div class="admin-field">
                 <label for="search">ຄົ້ນຫາ</label>
                 <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ລະຫັດ ຫຼື ຊື່ບັນຊີ">
-            </div>
-            <div class="admin-filter-actions">
-                <button type="submit" class="fns-btn fns-btn-primary">ຄົ້ນຫາ</button>
-                <a href="{{ route('admin.chart-of-accounts.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
             </div>
         </form>
     </section>

@@ -40,7 +40,7 @@
     </section>
 
     <section class="admin-filter-panel">
-        <form method="GET" action="{{ route('admin.departments.index') }}" class="admin-filter-form" style="--filter-cols: 1;">
+        <form method="GET" action="{{ route('admin.departments.index') }}" class="admin-filter-form admin-filter-form-auto" style="--filter-cols: 1;" x-data="{ filterTimer: null, submitFilter() { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.$el.requestSubmit(), 450); } }" @input="submitFilter()" @change="$el.requestSubmit()">
             <div class="admin-field">
                 <label for="search">ຄົ້ນຫາ</label>
                 <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ຊື່ພະແນກ ຫຼື ປະເພດ">
@@ -53,10 +53,6 @@
                         <option value="{{ $type }}" {{ request('department_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
                     @endforeach
                 </select>
-            </div>
-            <div class="admin-filter-actions">
-                <button type="submit" class="fns-btn fns-btn-primary">ຄົ້ນຫາ</button>
-                <a href="{{ route('admin.departments.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
             </div>
         </form>
     </section>

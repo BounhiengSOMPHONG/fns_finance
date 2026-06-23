@@ -115,6 +115,14 @@
         grid-template-columns: minmax(240px, 1fr) auto;
     }
 
+    .admin-filter-form-auto {
+        grid-template-columns: minmax(240px, 1fr) repeat(var(--filter-cols, 0), minmax(170px, .32fr));
+    }
+
+    .admin-filter-form-simple.admin-filter-form-auto {
+        grid-template-columns: minmax(240px, 1fr);
+    }
+
     .admin-field {
         display: flex;
         flex-direction: column;

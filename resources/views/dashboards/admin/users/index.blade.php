@@ -40,7 +40,7 @@
     </section>
 
     <section class="admin-filter-panel">
-        <form method="GET" action="{{ route('admin.users.index') }}" class="admin-filter-form" style="--filter-cols: 3;">
+        <form method="GET" action="{{ route('admin.users.index') }}" class="admin-filter-form admin-filter-form-auto" style="--filter-cols: 3;" x-data="{ filterTimer: null, submitFilter() { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.$el.requestSubmit(), 450); } }" @input="submitFilter()" @change="$el.requestSubmit()">
             <div class="admin-field">
                 <label for="search">ຄົ້ນຫາ</label>
                 <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ຊື່ຜູ້ໃຊ້ ຫຼື ຊື່ເຕັມ">
@@ -70,10 +70,6 @@
                     <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>ໃຊ້ງານ</option>
                     <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>ບໍ່ໃຊ້ງານ</option>
                 </select>
-            </div>
-            <div class="admin-filter-actions">
-                <button type="submit" class="fns-btn fns-btn-primary">ຄົ້ນຫາ</button>
-                <a href="{{ route('admin.users.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
             </div>
         </form>
     </section>

@@ -31,6 +31,17 @@
                 <div class="col-span-2 text-sm text-gray-900">{{ $chartOfAccount->account_name }}</div>
             </div>
 
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-sm font-medium text-gray-500">ບັນຊີແມ່ / parent_id</div>
+                <div class="col-span-2 text-sm text-gray-900">
+                    @if($chartOfAccount->parent)
+                        #{{ $chartOfAccount->parent_id }} · {{ $chartOfAccount->parent->account_code }} - {{ $chartOfAccount->parent->account_name }}
+                    @else
+                        ໝວດໃຫຍ່
+                    @endif
+                </div>
+            </div>
+
             <!-- Back Button -->
             <div class="pt-6 border-t border-gray-200">
                 <a href="{{ route('admin.chart-of-accounts.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">

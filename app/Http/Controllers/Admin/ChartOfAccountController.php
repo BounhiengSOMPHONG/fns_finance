@@ -14,7 +14,7 @@ class ChartOfAccountController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ChartOfAccount::query();
+        $query = ChartOfAccount::with('parent');
 
         // Search
         if ($request->filled('search')) {
@@ -26,8 +26,9 @@ class ChartOfAccountController extends Controller
         }
 
         $chartOfAccounts = $query->orderBy('account_code')->paginate(10)->withQueryString();
+        $parentAccounts = ChartOfAccount::orderBy('account_code')->get(['id', 'account_code', 'account_name', 'parent_id']);
 
-        return view('dashboards.admin.chart-of-accounts.index', compact('chartOfAccounts'));
+        return view('dashboards.admin.chart-of-accounts.index', compact('chartOfAccounts', 'parentAccounts'));
     }
 
     /**
@@ -35,7 +36,9 @@ class ChartOfAccountController extends Controller
      */
     public function create()
     {
-        return view('dashboards.admin.chart-of-accounts.create');
+        $parentAccounts = ChartOfAccount::orderBy('account_code')->get(['id', 'account_code', 'account_name']);
+
+        return view('dashboards.admin.chart-of-accounts.create', compact('parentAccounts'));
     }
 
     /**
@@ -46,7 +49,10 @@ class ChartOfAccountController extends Controller
         $validated = $request->validate([
             'account_code' => 'required|string|max:20|unique:chart_of_accounts',
             'account_name' => 'required|string|max:255',
+            'parent_id' => 'nullable|integer|exists:chart_of_accounts,id',
         ]);
+
+        $validated['parent_id'] = $validated['parent_id'] ?? null;
 
         ChartOfAccount::create($validated);
 
@@ -60,6 +66,8 @@ class ChartOfAccountController extends Controller
      */
     public function show(ChartOfAccount $chartOfAccount)
     {
+        $chartOfAccount->load('parent');
+
         return view('dashboards.admin.chart-of-accounts.show', compact('chartOfAccount'));
     }
 
@@ -68,7 +76,11 @@ class ChartOfAccountController extends Controller
      */
     public function edit(ChartOfAccount $chartOfAccount)
     {
-        return view('dashboards.admin.chart-of-accounts.edit', compact('chartOfAccount'));
+        $parentAccounts = ChartOfAccount::whereKeyNot($chartOfAccount->id)
+            ->orderBy('account_code')
+            ->get(['id', 'account_code', 'account_name']);
+
+        return view('dashboards.admin.chart-of-accounts.edit', compact('chartOfAccount', 'parentAccounts'));
     }
 
     /**
@@ -79,7 +91,16 @@ class ChartOfAccountController extends Controller
         $validated = $request->validate([
             'account_code' => ['required', 'string', 'max:20', Rule::unique('chart_of_accounts')->ignore($chartOfAccount->id)],
             'account_name' => 'required|string|max:255',
+            'parent_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id', Rule::notIn([$chartOfAccount->id])],
         ]);
+
+        $validated['parent_id'] = $validated['parent_id'] ?? null;
+
+        if ($validated['parent_id'] && $this->parentWouldCreateCycle($chartOfAccount, (int) $validated['parent_id'])) {
+            return back()
+                ->withErrors(['parent_id' => 'ບໍ່ສາມາດເລືອກບັນຊີລູກເປັນບັນຊີແມ່ໄດ້'])
+                ->withInput();
+        }
 
         $chartOfAccount->update($validated);
 
@@ -98,5 +119,21 @@ class ChartOfAccountController extends Controller
         return redirect()
             ->route('admin.chart-of-accounts.index')
             ->with('success', 'ลบบัญชีสำเร็จ');
+    }
+
+    private function parentWouldCreateCycle(ChartOfAccount $account, int $parentId): bool
+    {
+        $seen = [];
+
+        while ($parentId) {
+            if ($parentId === $account->id || in_array($parentId, $seen, true)) {
+                return true;
+            }
+
+            $seen[] = $parentId;
+            $parentId = (int) (ChartOfAccount::whereKey($parentId)->value('parent_id') ?? 0);
+        }
+
+        return false;
     }
 }

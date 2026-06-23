@@ -62,6 +62,7 @@
                         <th>ID</th>
                         <th>ລະຫັດ</th>
                         <th>ຊື່ບັນຊີ</th>
+                        <th>ບັນຊີແມ່</th>
                         <th class="text-right">ຈັດການ</th>
                     </tr>
                 </thead>
@@ -73,6 +74,14 @@
                             <td>
                                 <div class="admin-cell-strong">{{ $account->account_name }}</div>
                                 <div class="admin-muted">account code {{ $account->account_code }}</div>
+                            </td>
+                            <td>
+                                @if($account->parent)
+                                    <span class="admin-pill admin-pill-navy">{{ $account->parent->account_code }}</span>
+                                    <div class="admin-muted">{{ $account->parent->account_name }}</div>
+                                @else
+                                    <span class="admin-pill admin-pill-gray">ໝວດໃຫຍ່</span>
+                                @endif
                             </td>
                             <td>
                                 <div class="admin-row-actions">
@@ -94,7 +103,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5">
                                 <div class="admin-empty">
                                     <x-icons.book-open />
                                     <span>ບໍ່ພົບຂໍ້ມູນບັນຊີ</span>
@@ -141,6 +150,19 @@
                         <input type="text" name="account_name" id="create-account-name" value="{{ old('admin_create_modal') ? old('account_name') : '' }}" placeholder="ຊື່ບັນຊີ">
                         @error('account_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
                     </div>
+
+                    <div class="admin-modal-field admin-modal-field-full">
+                        <label for="create-parent-id">ບັນຊີແມ່ / parent_id</label>
+                        <select name="parent_id" id="create-parent-id">
+                            <option value="">ໝວດໃຫຍ່ (ບໍ່ມີ parent_id)</option>
+                            @foreach($parentAccounts as $parent)
+                                <option value="{{ $parent->id }}" {{ old('admin_create_modal') && (string) old('parent_id') === (string) $parent->id ? 'selected' : '' }}>
+                                    {{ $parent->account_code }} - {{ $parent->account_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('parent_id')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                    </div>
                 </div>
 
                 <div class="admin-modal-foot">
@@ -178,6 +200,18 @@
                         <div class="admin-detail-row">
                             <div class="admin-detail-label">ຊື່ບັນຊີ</div>
                             <div class="admin-detail-value">{{ $account->account_name }}</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ບັນຊີແມ່ / parent_id</div>
+                            <div class="admin-detail-value">
+                                @if($account->parent)
+                                    <span class="admin-code">#{{ $account->parent_id }}</span>
+                                    <span class="admin-pill admin-pill-navy">{{ $account->parent->account_code }}</span>
+                                    <div class="admin-muted">{{ $account->parent->account_name }}</div>
+                                @else
+                                    <span class="admin-pill admin-pill-gray">ໝວດໃຫຍ່</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -217,6 +251,20 @@
                             <label for="account-name-{{ $account->id }}">ຊື່ບັນຊີ *</label>
                             <input type="text" name="account_name" id="account-name-{{ $account->id }}" value="{{ old('admin_edit_modal') === $modalKey ? old('account_name') : $account->account_name }}" placeholder="ຊື່ບັນຊີ">
                             @error('account_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-field admin-modal-field-full">
+                            <label for="parent-id-{{ $account->id }}">ບັນຊີແມ່ / parent_id</label>
+                            <select name="parent_id" id="parent-id-{{ $account->id }}">
+                                <option value="">ໝວດໃຫຍ່ (ບໍ່ມີ parent_id)</option>
+                                @foreach($parentAccounts as $parent)
+                                    @continue($parent->id === $account->id)
+                                    <option value="{{ $parent->id }}" {{ (string) (old('admin_edit_modal') === $modalKey ? old('parent_id') : $account->parent_id) === (string) $parent->id ? 'selected' : '' }}>
+                                        {{ $parent->account_code }} - {{ $parent->account_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('parent_id')<span class="admin-modal-error">{{ $message }}</span>@enderror
                         </div>
                     </div>
 

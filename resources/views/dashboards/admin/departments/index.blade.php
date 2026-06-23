@@ -4,10 +4,10 @@
 @section('page-title', 'ຈັດການພະແນກ')
 
 @section('page-title-actions')
-    <a href="{{ route('admin.departments.create') }}" class="fns-btn fns-btn-primary">
+    <button type="button" class="fns-btn fns-btn-primary" x-data @click="$dispatch('open-create-modal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         ເພີ່ມພະແນກ
-    </a>
+    </button>
 @endsection
 
 @section('content')
@@ -19,7 +19,7 @@
         ->count();
 @endphp
 
-<div class="admin-resource" x-data="{ editModal: @js(old('admin_edit_modal')), viewModal: null }">
+<div class="admin-resource" x-data="{ createModal: @js((bool) old('admin_create_modal')), editModal: @js(old('admin_edit_modal')), viewModal: null }" @open-create-modal.window="createModal = true">
     <section class="admin-resource-bar">
         <div>
             <div class="admin-resource-kicker">ORGANIZATION</div>
@@ -129,6 +129,44 @@
             </div>
         @endif
     </section>
+
+    <div x-cloak x-show="createModal" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="createModal = false">
+        <div class="admin-modal" @click.outside="createModal = false">
+            <div class="admin-modal-head">
+                <div>
+                    <h2>ເພີ່ມພະແນກ</h2>
+                    <p>ເພີ່ມໜ່ວຍງານໃໝ່ເພື່ອຜູກກັບຜູ້ໃຊ້</p>
+                </div>
+                <button type="button" class="admin-modal-close" @click="createModal = false" aria-label="Close">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.departments.store') }}" method="POST" class="admin-modal-body">
+                @csrf
+                <input type="hidden" name="admin_create_modal" value="1">
+
+                <div class="admin-modal-grid">
+                    <div class="admin-modal-field">
+                        <label for="create-department-name">ຊື່ພະແນກ *</label>
+                        <input type="text" name="department_name" id="create-department-name" value="{{ old('admin_create_modal') ? old('department_name') : '' }}" placeholder="ຊື່ພະແນກ">
+                        @error('department_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                    </div>
+
+                    <div class="admin-modal-field">
+                        <label for="create-department-type">ປະເພດພະແນກ *</label>
+                        <input type="text" name="department_type" id="create-department-type" value="{{ old('admin_create_modal') ? old('department_type') : '' }}" placeholder="ປະເພດພະແນກ">
+                        @error('department_type')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                    </div>
+                </div>
+
+                <div class="admin-modal-foot">
+                    <button type="button" class="fns-btn fns-btn-secondary" @click="createModal = false">ຍົກເລີກ</button>
+                    <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     @foreach ($departments as $dept)
         @php $modalKey = 'department-' . $dept->id; @endphp

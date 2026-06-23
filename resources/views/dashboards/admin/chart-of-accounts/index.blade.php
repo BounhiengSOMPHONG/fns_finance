@@ -4,10 +4,10 @@
 @section('page-title', 'ຈັດການຜັງບັນຊີ')
 
 @section('page-title-actions')
-    <a href="{{ route('admin.chart-of-accounts.create') }}" class="fns-btn fns-btn-primary">
+    <button type="button" class="fns-btn fns-btn-primary" x-data @click="$dispatch('open-create-modal')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         ເພີ່ມບັນຊີ
-    </a>
+    </button>
 @endsection
 
 @section('content')
@@ -17,7 +17,7 @@
     $lastCode = $chartOfAccounts->getCollection()->last()?->account_code ?? '-';
 @endphp
 
-<div class="admin-resource" x-data="{ editModal: @js(old('admin_edit_modal')), viewModal: null }">
+<div class="admin-resource" x-data="{ createModal: @js((bool) old('admin_create_modal')), editModal: @js(old('admin_edit_modal')), viewModal: null }" @open-create-modal.window="createModal = true">
     <section class="admin-resource-bar">
         <div>
             <div class="admin-resource-kicker">CHART OF ACCOUNTS</div>
@@ -112,6 +112,44 @@
             </div>
         @endif
     </section>
+
+    <div x-cloak x-show="createModal" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="createModal = false">
+        <div class="admin-modal" @click.outside="createModal = false">
+            <div class="admin-modal-head">
+                <div>
+                    <h2>ເພີ່ມບັນຊີ</h2>
+                    <p>ເພີ່ມລະຫັດ ແລະຊື່ບັນຊີໃໝ່ໃນຜັງບັນຊີ</p>
+                </div>
+                <button type="button" class="admin-modal-close" @click="createModal = false" aria-label="Close">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.chart-of-accounts.store') }}" method="POST" class="admin-modal-body">
+                @csrf
+                <input type="hidden" name="admin_create_modal" value="1">
+
+                <div class="admin-modal-grid">
+                    <div class="admin-modal-field">
+                        <label for="create-account-code">ລະຫັດບັນຊີ *</label>
+                        <input type="text" name="account_code" id="create-account-code" value="{{ old('admin_create_modal') ? old('account_code') : '' }}" placeholder="ລະຫັດບັນຊີ">
+                        @error('account_code')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                    </div>
+
+                    <div class="admin-modal-field">
+                        <label for="create-account-name">ຊື່ບັນຊີ *</label>
+                        <input type="text" name="account_name" id="create-account-name" value="{{ old('admin_create_modal') ? old('account_name') : '' }}" placeholder="ຊື່ບັນຊີ">
+                        @error('account_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                    </div>
+                </div>
+
+                <div class="admin-modal-foot">
+                    <button type="button" class="fns-btn fns-btn-secondary" @click="createModal = false">ຍົກເລີກ</button>
+                    <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     @foreach ($chartOfAccounts as $account)
         @php $modalKey = 'account-' . $account->id; @endphp

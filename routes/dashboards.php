@@ -53,7 +53,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
             Route::post('expense-patterns/{expensePattern}/fields', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'storeField'])->name('expense-patterns.fields.store');
             Route::patch('expense-patterns/{expensePattern}/fields/{fieldKey}', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'updateField'])->name('expense-patterns.fields.update');
             Route::delete('expense-patterns/{expensePattern}/fields/{fieldKey}', [\App\Http\Controllers\FinanceHead\Settings\ExpensePatternController::class, 'destroyField'])->name('expense-patterns.fields.destroy');
-            Route::get('expense-setup', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'index'])->name('expense-setup.index');
+            Route::get('expense-setup', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'overview'])->name('expense-setup.index');
             Route::get('expense-structure', [\App\Http\Controllers\FinanceHead\Settings\ExpenseStructureController::class, 'index'])->name('expense-structure.index');
             Route::get('expense-default-rows/accounts', [\App\Http\Controllers\FinanceHead\Settings\ExpenseDefaultRowAccountController::class, 'index'])->name('expense-default-rows.accounts.index');
             Route::post('expense-default-rows', [\App\Http\Controllers\FinanceHead\Settings\ExpenseDefaultRowAccountController::class, 'store'])->name('expense-default-rows.store');

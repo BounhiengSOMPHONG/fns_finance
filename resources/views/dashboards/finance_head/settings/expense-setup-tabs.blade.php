@@ -1,20 +1,20 @@
 @php
     $expenseSetupTabs = [
         [
-            'label' => 'ໂຄງສ້າງລາຍຈ່າຍ',
-            'description' => 'ໝວດຫຼັກ ແລະ ກຸ່ມຍ່ອຍ',
+            'label' => 'DEF ແຕ່ລະປີ',
+            'description' => 'ໝວດ, ກຸ່ມ, ລາຍການຕາມສົກປີ',
             'route' => route('head_of_finance.settings.expense-setup.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-setup.*') || request()->routeIs('head_of_finance.settings.expense-structure.*'),
         ],
         [
-            'label' => 'ລາຍການ & ບັນຊີ',
-            'description' => 'ລາຍການມາດຕະຖານ ແລະ ບັນຊີລວມ',
+            'label' => 'ລາຍການລິ້ງບັນຊີ',
+            'description' => 'ຄົ້ນຫາ ແລະ ເຊື່ອມ Chart of Account',
             'route' => route('head_of_finance.settings.expense-default-rows.accounts.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-default-rows.*'),
         ],
         [
-            'label' => 'ແບບຄຳນວນ',
-            'description' => 'ຊ່ອງກອກ ແລະ ສູດຄຳນວນ',
+            'label' => 'ສູດຄຳນວນ',
+            'description' => 'ຊ່ອງກອກ ແລະ ຕົວຄູນ',
             'route' => route('head_of_finance.settings.expense-patterns.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-patterns.*'),
         ],

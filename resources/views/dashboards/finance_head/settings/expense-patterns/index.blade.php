@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'ແບບຄຳນວນ')
-@section('page-title', 'ແບບຄຳນວນ')
+@section('title', 'ສູດຄຳນວນ')
+@section('page-title', 'ສູດຄຳນວນ')
 
 @section('content')
 <div class="space-y-6">
@@ -24,8 +24,8 @@
 
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-5 py-4">
-            <h2 class="text-base font-semibold text-slate-900">ແບບຄຳນວນລາຍຈ່າຍ</h2>
-            <p class="mt-1 text-sm text-slate-500">ກຳນົດຊ່ອງກອກ ແລະ ຊ່ອງຕົວເລກທີ່ໃຊ້ຄູນເປັນຍອດລວມ.</p>
+            <h2 class="text-base font-semibold text-slate-900">ສູດຄຳນວນລາຍຈ່າຍ</h2>
+            <p class="mt-1 text-sm text-slate-500">ກຳນົດຊ່ອງກອກ, ຕົວຄູນ ແລະວິທີຄິດຍອດລວມຂອງລາຍຈ່າຍ.</p>
         </div>
         <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.store') }}" class="grid gap-4 px-5 py-4 md:grid-cols-[150px_220px_1fr_auto] md:items-end">
             @csrf

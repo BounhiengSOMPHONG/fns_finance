@@ -10,6 +10,7 @@
     $linkedDefaultRowTotal = $defaultRowsByCode->reduce(fn ($total, $rows) => $total + $rows->whereNotNull('chart_of_account_id')->count(), 0);
     $unlinkedAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id === null)->values();
     $reviewAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id !== null && (bool) $row->getAttribute('needs_review'))->values();
+    $unlinkedDefaultRowTotal = max($defaultRowTotal - $linkedDefaultRowTotal, 0);
 @endphp
 
 <div class="es-page">
@@ -23,8 +24,8 @@
 
     <div class="es-hero">
         <div>
-            <h2>ຕັ້ງຄ່າລາຍຈ່າຍກາງ</h2>
-            <p>ຈັດໝວດລາຍຈ່າຍ, ລາຍການມາດຕະຖານ ແລະ ບັນຊີທີ່ໃຊ້ລວມໃນແຜນປີ.</p>
+            <h2>DEF ແຕ່ລະປີ</h2>
+            <p>ຈັດໝວດ, ກຸ່ມ ແລະ ລາຍການລາຍຈ່າຍຂອງສົກປີທີ່ເລືອກ.</p>
             <div class="es-stats">
                 <span>{{ $sections->count() }} ໝວດຫຼັກ</span>
                 <span>{{ $sections->sum(fn ($section) => $section->subsections->count()) }} ກຸ່ມຍ່ອຍ</span>
@@ -47,41 +48,21 @@
         </form>
     </div>
 
-    @if($planningYear && $accountWarnings->isNotEmpty())
-        <section class="es-warning-panel">
-            <div class="es-warning-head">
-                <div>
-                    <h3>ລາຍການທີ່ຕ້ອງກວດບັນຊີກ່ອນພິມແຜນປີ</h3>
-                    <p>{{ $unlinkedAccountWarnings->count() }} ລາຍການຍັງບໍ່ເຊື່ອມ · {{ $reviewAccountWarnings->count() }} ລາຍການຄວນກວດຄືນ</p>
-                </div>
-                <div class="es-warning-actions">
-                    <button type="button" class="es-filter-btn is-active" data-account-filter="all">ທັງໝົດ</button>
-                    <button type="button" class="es-filter-btn" data-account-filter="unlinked">ຍັງບໍ່ເຊື່ອມ</button>
-                    <button type="button" class="es-filter-btn" data-account-filter="review">ກວດຄືນ</button>
-                    <button type="button" class="es-filter-btn" data-account-filter="linked">ເຊື່ອມແລ້ວ</button>
-                </div>
+    @if($planningYear)
+        <section class="{{ $unlinkedDefaultRowTotal > 0 ? 'es-link-banner is-warn' : 'es-link-banner is-ok' }}">
+            <div>
+                <strong>{{ $linkedDefaultRowTotal }}/{{ $defaultRowTotal }} ລາຍການເຊື່ອມບັນຊີແລ້ວ</strong>
+                <span>
+                    @if($unlinkedDefaultRowTotal > 0)
+                        {{ $unlinkedDefaultRowTotal }} ລາຍການຍັງບໍ່ເຊື່ອມ. ການລິ້ງບັນຊີຖືກແຍກໄປໜ້າຂອງມັນເພື່ອບໍ່ໃຫ້ DEF ປົນກັນ.
+                    @else
+                        ລາຍການຂອງສົກປີນີ້ມີບັນຊີຄົບແລ້ວ.
+                    @endif
+                </span>
             </div>
-
-            <div class="es-warning-list">
-                @foreach($accountWarnings->take(18) as $warningRow)
-                    @php
-                        $suggestedAccount = $warningRow->getAttribute('suggested_account');
-                    @endphp
-                    <button type="button"
-                            class="es-warning-item"
-                            data-jump-default-row="{{ $warningRow->id }}">
-                        <span class="es-warning-code">{{ $warningRow->subsection_code }}</span>
-                        <span class="es-warning-name">{{ $warningRow->item_name }}</span>
-                        <span class="es-warning-current">{{ $warningRow->chartOfAccount?->account_code ?: 'ຍັງບໍ່ເຊື່ອມ' }}</span>
-                        <span class="es-warning-suggest">{{ $suggestedAccount?->account_code ? 'ແນະນຳ '.$suggestedAccount->account_code : 'ເລືອກບັນຊີ' }}</span>
-                    </button>
-                @endforeach
-            </div>
-        </section>
-    @elseif($planningYear)
-        <section class="es-ready-panel">
-            <strong>ພ້ອມໃຊ້ໃນແຜນປີ</strong>
-            <span>ລາຍການທັງໝົດມີບັນຊີລວມແລ້ວ.</span>
+            <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="fns-btn fns-btn-secondary">
+                ໄປລິ້ງບັນຊີ
+            </a>
         </section>
     @endif
 
@@ -298,7 +279,7 @@
                                         <details class="es-account-panel">
                                             <summary>
                                                 <span class="min-w-0 truncate">
-                                                    ລາຍການມາດຕະຖານຂອງ {{ $subsection->code }} - {{ $subsection->name }}
+                                                    DEF ຂອງ {{ $subsection->code }} - {{ $subsection->name }}
                                                 </span>
                                                 <span class="flex shrink-0 items-center gap-2 text-xs">
                                                     <span class="js-default-group-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : 'is-warn' }}">
@@ -326,37 +307,27 @@
                                                           data-url="{{ route('head_of_finance.settings.expense-default-rows.account.update', $defaultRow) }}">
                                                         @csrf
                                                         @method('PATCH')
+                                                        <input type="hidden" name="chart_of_account_id" value="{{ $defaultRow->chart_of_account_id }}">
                                                         <div class="min-w-0">
                                                             <label class="es-default-field">
                                                                 <span>ລາຍການລາຍຈ່າຍ</span>
                                                                 <input name="item_name" value="{{ $defaultRow->item_name }}" class="fns-input" required>
                                                             </label>
                                                             <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
-                                                                <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                                                                    ບັນຊີ: <span class="js-default-reference">{{ $selectedReference ?: '-' }}</span>
-                                                                </span>
-                                                                @if($suggestedAccount)
-                                                                    <span class="es-account-hint {{ $needsReview ? 'is-review' : '' }}">
-                                                                        ແນະນຳ: {{ $suggestedAccount->account_code }}
-                                                                    </span>
-                                                                @endif
+                                                                <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">ລຳດັບ: {{ $defaultRow->sort_order }}</span>
+                                                                <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">ບັນຊີ: {{ $selectedReference ?: '-' }}</span>
                                                             </div>
                                                         </div>
 
                                                         <div class="es-default-fields">
-                                                            <label class="es-default-field">
-                                                                <span>ບັນຊີລວມ</span>
-                                                                <input class="fns-input js-default-account-search"
-                                                                       list="expense-structure-account-options"
-                                                                       value="{{ $selectedLabel }}"
-                                                                       placeholder="ພິມລະຫັດ ຫຼື ຊື່ບັນຊີ"
-                                                                       autocomplete="off">
-                                                                <input type="hidden" name="chart_of_account_id" value="{{ $defaultRow->chart_of_account_id }}">
-                                                            </label>
                                                             <label class="es-default-field es-default-order">
                                                                 <span>ລຳດັບ</span>
                                                                 <input type="number" name="sort_order" value="{{ $defaultRow->sort_order }}" class="fns-input" min="1" max="999" required>
                                                             </label>
+                                                            <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index', ['q' => $defaultRow->item_name]) }}"
+                                                               class="fns-btn fns-btn-secondary fns-btn-sm">
+                                                                ໄປລິ້ງບັນຊີ
+                                                            </a>
                                                         </div>
 
                                                         <div class="es-default-actions">
@@ -364,7 +335,6 @@
                                                                 {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'ກວດຄືນ' : 'ເຊື່ອມແລ້ວ') : 'ຍັງບໍ່ເຊື່ອມ' }}
                                                             </span>
                                                             <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">ບັນທຶກ</button>
-                                                            <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">ລ້າງບັນຊີ</button>
                                                             <button type="button"
                                                                     class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
                                                                     data-url="{{ route('head_of_finance.settings.expense-default-rows.destroy', $defaultRow) }}"
@@ -386,13 +356,8 @@
                                                         <input name="item_name" class="fns-input" placeholder="ຊື່ລາຍການລາຍຈ່າຍ" required>
                                                     </label>
                                                     <label>
-                                                        <span>ບັນຊີລວມ</span>
-                                                        <select name="chart_of_account_id" class="fns-input">
-                                                            <option value="">ຍັງບໍ່ເຊື່ອມ</option>
-                                                            @foreach($accountOptions as $account)
-                                                                <option value="{{ $account['id'] }}">{{ $account['label'] }}</option>
-                                                            @endforeach
-                                                        </select>
+                                                        <span>ສະຖານະບັນຊີ</span>
+                                                        <input class="fns-input" value="ບັນທຶກກ່ອນ ແລ້ວໄປລິ້ງບັນຊີ" disabled>
                                                     </label>
                                                     <label>
                                                         <span>ລຳດັບ</span>
@@ -505,6 +470,21 @@
         font-weight:900;
         text-transform:uppercase;
     }
+    .es-link-banner {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:1rem;
+        border:1px solid #d8e1ed;
+        border-radius:8px;
+        background:#f8fbff;
+        padding:.9rem 1rem;
+        box-shadow:0 1px 8px rgba(26,39,68,.04);
+    }
+    .es-link-banner.is-warn { border-color:#f1cd73; background:#fffaf0; }
+    .es-link-banner.is-ok { border-color:#b9e4c9; background:#f0fbf4; }
+    .es-link-banner strong { display:block; color:var(--fns-navy); font-size:.9rem; font-weight:900; }
+    .es-link-banner span { display:block; margin-top:.2rem; color:#64748b; font-size:.78rem; line-height:1.45; }
     .es-warning-panel,
     .es-ready-panel {
         border:1px solid var(--fns-gray-200);
@@ -832,6 +812,7 @@
     .es-default-add-form .fns-input { padding:.48rem .6rem; font-size:.78rem; }
     @media (max-width:900px) {
         .es-hero { flex-direction:column; }
+        .es-link-banner { align-items:flex-start; flex-direction:column; }
         .es-year-form { width:100%; }
         .es-section-nav { grid-template-columns:auto auto; }
         .es-section-tabs { grid-column:1 / -1; order:2; grid-template-columns:1fr; }

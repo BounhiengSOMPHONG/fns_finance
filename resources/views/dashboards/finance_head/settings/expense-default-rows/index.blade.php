@@ -21,9 +21,9 @@
     <section class="rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h2 class="text-lg font-semibold text-slate-900">ລາຍການມາດຕະຖານ & ບັນຊີລວມ</h2>
+                <h2 class="text-lg font-semibold text-slate-900">ລາຍການລິ້ງບັນຊີ</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    ກຳນົດລາຍການລາຍຈ່າຍທີ່ໃຊ້ປະຈຳ ແລະ ບັນຊີທີ່ໃຊ້ລວມໃນແຜນປີ.
+                    ຄົ້ນຫາລາຍການລາຍຈ່າຍ ແລະ ເລືອກ Chart of Account ໃຫ້ຖືກ.
                 </p>
             </div>
             <form method="GET" action="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="flex min-w-72 flex-1 justify-end gap-2">
@@ -33,6 +33,14 @@
                     <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
                 @endif
             </form>
+        </div>
+        <div class="mt-4 grid gap-2 md:grid-cols-[1fr_auto_auto]">
+            <input id="account-link-quick-search"
+                   class="fns-input"
+                   placeholder="ກອງໃນໜ້ານີ້: ລາຍການ, ກຸ່ມ, ບັນຊີ..."
+                   autocomplete="off">
+            <button type="button" class="fns-btn fns-btn-secondary" id="account-link-show-all">ສະແດງທັງໝົດ</button>
+            <button type="button" class="fns-btn fns-btn-secondary" id="account-link-show-unlinked">ສະແດງທີ່ຍັງບໍ່ເຊື່ອມ</button>
         </div>
     </section>
 
@@ -56,7 +64,8 @@
                     $linkedCount = $groupRows->whereNotNull('chart_of_account_id')->count();
                     $hasMissingLinks = $linkedCount < $groupRows->count();
                 @endphp
-                <details class="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md shadow-slate-200/80 ring-1 ring-white transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-xl hover:shadow-slate-300/70">
+                <details class="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md shadow-slate-200/80 ring-1 ring-white transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-xl hover:shadow-slate-300/70"
+                         data-account-group>
                     <summary class="flex cursor-pointer list-none items-center gap-4 bg-white px-5 py-4 hover:bg-amber-50/45">
                         <span class="grid h-12 w-16 shrink-0 place-items-center rounded-lg bg-slate-900 text-sm font-black text-white shadow-md shadow-slate-300">
                             {{ $code }}
@@ -86,7 +95,9 @@
                                     $selectedLabel = $selectedAccount['label'] ?? '';
                                     $selectedReference = $selectedAccount['code'] ?? null;
                                 @endphp
-                                <div class="js-account-row rounded-lg border border-slate-200 p-4" data-row="{{ $row->id }}">
+                                <div class="js-account-row rounded-lg border border-slate-200 p-4"
+                                     data-row="{{ strtolower($row->item_name.' '.$code.' '.($subsection?->name ?? '').' '.$selectedLabel.' '.($selectedReference ?? '')) }}"
+                                     data-linked="{{ $row->chart_of_account_id ? 'true' : 'false' }}">
                                     <div class="grid gap-3 xl:grid-cols-[minmax(18rem,1fr)_minmax(34rem,2fr)_8rem] xl:items-start">
                                         <div class="min-w-0">
                                             <div class="font-semibold text-slate-950">{{ $row->item_name }}</div>
@@ -148,6 +159,23 @@
 <script>
 const ACCOUNT_OPTIONS = @json($accountOptions->values());
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+let accountLinkFilter = 'all';
+
+function applyAccountLinkFilters() {
+    const query = String(document.getElementById('account-link-quick-search')?.value || '').trim().toLowerCase();
+
+    document.querySelectorAll('details[data-account-group]').forEach(group => {
+        const rows = Array.from(group.querySelectorAll('.js-account-row'));
+        rows.forEach(row => {
+            const text = row.dataset.row || '';
+            const matchesText = !query || text.includes(query);
+            const matchesLink = accountLinkFilter === 'all' || row.dataset.linked === 'false';
+            row.hidden = !(matchesText && matchesLink);
+        });
+
+        group.hidden = rows.length > 0 && rows.every(row => row.hidden);
+    });
+}
 
 function findAccount(value) {
     const normalized = String(value || '').trim().toLowerCase();
@@ -223,8 +251,10 @@ async function saveAccountForm(form) {
     row.querySelector('.js-reference').textContent = data.row.reference || '-';
     input.value = data.row.account_label || '';
     hidden.value = data.row.chart_of_account_id || '';
+    row.dataset.linked = data.row.chart_of_account_id ? 'true' : 'false';
     setRowStatus(row, data.row.chart_of_account_id ? 'ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ເຊື່ອມ');
     refreshGroupSummary(row);
+    applyAccountLinkFilters();
 }
 
 document.addEventListener('change', event => {
@@ -247,6 +277,16 @@ document.addEventListener('click', event => {
     form.querySelector('.js-account-search').value = '';
     form.querySelector('input[name="chart_of_account_id"]').value = '';
     saveAccountForm(form);
+});
+
+document.getElementById('account-link-quick-search')?.addEventListener('input', applyAccountLinkFilters);
+document.getElementById('account-link-show-all')?.addEventListener('click', () => {
+    accountLinkFilter = 'all';
+    applyAccountLinkFilters();
+});
+document.getElementById('account-link-show-unlinked')?.addEventListener('click', () => {
+    accountLinkFilter = 'unlinked';
+    applyAccountLinkFilters();
 });
 </script>
 @endpush

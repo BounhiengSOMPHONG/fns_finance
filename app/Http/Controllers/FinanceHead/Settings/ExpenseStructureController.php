@@ -17,6 +17,43 @@ use Illuminate\Validation\Rule;
 
 class ExpenseStructureController extends Controller
 {
+    public function overview()
+    {
+        $years = PlanningYear::with(['sections.subsections.catalogItems'])
+            ->orderByDesc('year')
+            ->get();
+
+        $yearSummaries = $years->map(function (PlanningYear $year): array {
+            $sections = $year->sections;
+            $subsections = $sections->flatMap(fn (ExpenseSection $section) => $section->subsections);
+            $items = $subsections->flatMap(fn (ExpenseSubsection $subsection) => $subsection->catalogItems);
+            $linkedItems = $items->whereNotNull('chart_of_account_id')->count();
+
+            return [
+                'year' => $year,
+                'sections_count' => $sections->count(),
+                'subsections_count' => $subsections->count(),
+                'items_count' => $items->count(),
+                'linked_items_count' => $linkedItems,
+                'unlinked_items_count' => max($items->count() - $linkedItems, 0),
+            ];
+        });
+
+        $catalogItemsCount = ExpenseCatalogItem::count();
+        $linkedCatalogItemsCount = ExpenseCatalogItem::whereNotNull('chart_of_account_id')->count();
+        $patterns = ExpensePattern::orderBy('id')->get();
+
+        return view('dashboards.finance_head.settings.expense-setup.index', [
+            'yearSummaries' => $yearSummaries,
+            'catalogItemsCount' => $catalogItemsCount,
+            'linkedCatalogItemsCount' => $linkedCatalogItemsCount,
+            'unlinkedCatalogItemsCount' => max($catalogItemsCount - $linkedCatalogItemsCount, 0),
+            'activePatternsCount' => $patterns->where('is_active', true)->count(),
+            'patternsCount' => $patterns->count(),
+            'patternFieldsCount' => $patterns->sum(fn (ExpensePattern $pattern): int => $pattern->fields->count()),
+        ]);
+    }
+
     public function index(Request $request, ExpenseAccountLinkCatalog $accountLinkCatalog)
     {
         $years = PlanningYear::orderByDesc('year')->get();

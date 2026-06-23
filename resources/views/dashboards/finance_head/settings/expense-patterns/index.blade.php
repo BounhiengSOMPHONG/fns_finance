@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Expense Setup')
-@section('page-title', 'Expense Setup')
+@section('title', 'ແບບຄຳນວນ')
+@section('page-title', 'ແບບຄຳນວນ')
 
 @section('content')
 <div class="space-y-6">
@@ -13,31 +13,40 @@
         </div>
     @endif
 
+    @php
+        $fieldTypeLabels = [
+            'number' => 'ຕົວເລກ',
+            'text' => 'ຂໍ້ຄວາມ',
+            'date' => 'ວັນທີ',
+            'boolean' => 'ເລືອກແມ່ນ/ບໍ່',
+        ];
+    @endphp
+
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-5 py-4">
-            <h2 class="text-base font-semibold text-slate-900">Pattern Builder</h2>
-            <p class="mt-1 text-sm text-slate-500">Create a form pattern by adding fields and ticking the number fields that should be multiplied.</p>
+            <h2 class="text-base font-semibold text-slate-900">ແບບຄຳນວນລາຍຈ່າຍ</h2>
+            <p class="mt-1 text-sm text-slate-500">ກຳນົດຊ່ອງກອກ ແລະ ຊ່ອງຕົວເລກທີ່ໃຊ້ຄູນເປັນຍອດລວມ.</p>
         </div>
         <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.store') }}" class="grid gap-4 px-5 py-4 md:grid-cols-[150px_220px_1fr_auto] md:items-end">
             @csrf
             <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Key</label>
+                <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດແບບ</label>
                 <input name="key" value="{{ old('key') }}" class="fns-input" placeholder="monthly" required>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Name</label>
-                <input name="name" value="{{ old('name') }}" class="fns-input" placeholder="Monthly expense" required>
+                <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ແບບ</label>
+                <input name="name" value="{{ old('name') }}" class="fns-input" placeholder="ລາຍຈ່າຍປະຈຳເດືອນ" required>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
-                <input name="description" value="{{ old('description') }}" class="fns-input" placeholder="What this form pattern is used for">
+                <label class="mb-1 block text-sm font-medium text-slate-700">ລາຍລະອຽດ</label>
+                <input name="description" value="{{ old('description') }}" class="fns-input" placeholder="ໃຊ້ກັບລາຍຈ່າຍປະເພດໃດ">
             </div>
             <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700">
                 <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
-                Active
+                ໃຊ້ງານ
             </label>
             <div class="md:col-span-4">
-                <button type="submit" class="fns-btn fns-btn-primary">Add pattern</button>
+                <button type="submit" class="fns-btn fns-btn-primary">ເພີ່ມແບບຄຳນວນ</button>
             </div>
         </form>
     </section>
@@ -50,13 +59,13 @@
                         <h2 class="text-base font-semibold text-slate-900">{{ $pattern->name }}</h2>
                         <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ $pattern->key }}</span>
                         <span class="rounded px-2 py-0.5 text-xs font-medium {{ $pattern->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
-                            {{ $pattern->is_active ? 'Active' : 'Inactive' }}
+                            {{ $pattern->is_active ? 'ໃຊ້ງານ' : 'ປິດໄວ້' }}
                         </span>
                         <span class="rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                            {{ number_format($pattern->leaf_default_subsections_count) }} final subsections
+                            {{ number_format($pattern->leaf_default_subsections_count) }} ກຸ່ມທີ່ໃຊ້
                         </span>
                     </div>
-                    <p class="mt-1 text-sm text-slate-500">{{ $pattern->description ?: 'No description yet.' }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ $pattern->description ?: 'ຍັງບໍ່ມີລາຍລະອຽດ.' }}</p>
                     <div class="mt-3 flex flex-wrap gap-2">
                         @forelse($pattern->leafDefaultSubsections as $subsection)
                             <span class="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700">
@@ -64,7 +73,7 @@
                                 {{ $subsection->name }}
                             </span>
                         @empty
-                            <span class="text-xs text-slate-400">No final subsection uses this pattern yet.</span>
+                            <span class="text-xs text-slate-400">ຍັງບໍ່ມີກຸ່ມໃຊ້ແບບນີ້.</span>
                         @endforelse
                     </div>
                 </div>
@@ -74,16 +83,16 @@
                 @csrf
                 @method('PATCH')
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Pattern name</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ແບບ</label>
                     <input name="name" value="{{ old('name', $pattern->name) }}" class="fns-input" required>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">ລາຍລະອຽດ</label>
                     <input name="description" value="{{ old('description', $pattern->description) }}" class="fns-input">
                 </div>
                 <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700">
                     <input type="checkbox" name="is_active" value="1" @checked($pattern->is_active) class="rounded border-slate-300">
-                    Active
+                    ໃຊ້ງານ
                 </label>
             </form>
 
@@ -91,14 +100,14 @@
                 <table class="min-w-full text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                            <th class="py-2 pr-3">Key</th>
-                            <th class="py-2 pr-3">Label</th>
-                            <th class="py-2 pr-3">Type</th>
-                            <th class="py-2 pr-3">Order</th>
-                            <th class="py-2 pr-3">Default</th>
-                            <th class="py-2 pr-3">Required</th>
-                            <th class="py-2 pr-3">Calculated</th>
-                            <th class="py-2 pr-3">Use in total</th>
+                            <th class="py-2 pr-3">ລະຫັດຊ່ອງ</th>
+                            <th class="py-2 pr-3">ຊື່ຊ່ອງ</th>
+                            <th class="py-2 pr-3">ປະເພດ</th>
+                            <th class="py-2 pr-3">ລຳດັບ</th>
+                            <th class="py-2 pr-3">ຄ່າຕັ້ງຕົ້ນ</th>
+                            <th class="py-2 pr-3">ຕ້ອງກອກ</th>
+                            <th class="py-2 pr-3">ຄຳນວນ</th>
+                            <th class="py-2 pr-3">ໃຊ້ລວມ</th>
                             <th class="py-2 pr-3"></th>
                         </tr>
                     </thead>
@@ -118,7 +127,7 @@
                                     <td class="py-2 pr-3">
                                         <select name="data_type" class="fns-input min-w-28" required>
                                             @foreach(['text', 'number', 'date', 'boolean'] as $type)
-                                                <option value="{{ $type }}" @selected($field->data_type === $type)>{{ $type }}</option>
+                                                <option value="{{ $type }}" @selected($field->data_type === $type)>{{ $fieldTypeLabels[$type] }}</option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -141,8 +150,8 @@
                                         <button type="button"
                                                 class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
                                                 data-url="{{ route('head_of_finance.settings.expense-patterns.fields.destroy', [$pattern, $field->field_key]) }}"
-                                                data-message="Delete this field?">
-                                            Delete
+                                                data-message="ລຶບຊ່ອງນີ້?">
+                                            ລຶບ
                                         </button>
                                     </td>
                                 </form>
@@ -160,10 +169,10 @@
                                 </td>
                                 <td class="py-3 pr-3">
                                     <select name="data_type" class="fns-input min-w-28" required>
-                                        <option value="number">number</option>
-                                        <option value="text">text</option>
-                                        <option value="date">date</option>
-                                        <option value="boolean">boolean</option>
+                                        <option value="number">ຕົວເລກ</option>
+                                        <option value="text">ຂໍ້ຄວາມ</option>
+                                        <option value="date">ວັນທີ</option>
+                                        <option value="boolean">ເລືອກແມ່ນ/ບໍ່</option>
                                     </select>
                                 </td>
                                 <td class="py-3 pr-3">
@@ -182,7 +191,7 @@
                                     <input type="checkbox" name="include_in_formula" value="1" checked class="rounded border-slate-300">
                                 </td>
                                 <td class="py-3 pr-3">
-                                    <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">Add field</button>
+                                    <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">ເພີ່ມຊ່ອງ</button>
                                 </td>
                             </form>
                         </tr>
@@ -192,7 +201,7 @@
         </section>
     @empty
         <div class="rounded-lg border border-slate-200 bg-white px-5 py-10 text-center text-slate-500">
-            No expense patterns yet.
+            ຍັງບໍ່ມີແບບຄຳນວນ.
         </div>
     @endforelse
 </div>
@@ -202,7 +211,7 @@
 document.addEventListener('click', async (event) => {
     const button = event.target.closest('.js-delete-setting');
     if (!button) return;
-    if (!confirm(button.dataset.message || 'Delete this row?')) return;
+    if (!confirm(button.dataset.message || 'ລຶບລາຍການນີ້?')) return;
 
     const response = await fetch(button.dataset.url, {
         method: 'DELETE',
@@ -306,9 +315,9 @@ async function autosaveDirtyForms() {
 
     try {
         await Promise.all(forms.map((form) => autosaveForm(form)));
-        showAutosaveStatus(forms.length === 1 ? 'Saved' : `Saved ${forms.length} changes`);
+        showAutosaveStatus(forms.length === 1 ? 'ບັນທຶກແລ້ວ' : `ບັນທຶກ ${forms.length} ຈຸດແລ້ວ`);
     } catch (error) {
-        showAutosaveStatus('Could not autosave all changes', false);
+        showAutosaveStatus('ບັນທຶກບາງຈຸດບໍ່ສຳເລັດ', false);
     }
 }
 

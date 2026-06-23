@@ -81,7 +81,7 @@
                         </a>
                         <a href="{{ route('head_of_finance.settings.expense-setup.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.expense-setup.*') || request()->routeIs('head_of_finance.settings.expense-structure.*') || request()->routeIs('head_of_finance.settings.expense-default-rows.*') || request()->routeIs('head_of_finance.settings.expense-patterns.*') ? 'active' : '' }}">
-                            <x-icons.book-open /> Expense Setup
+                            <x-icons.book-open /> ຕັ້ງຄ່າລາຍຈ່າຍ
                         </a>
                         <a href="{{ route('head_of_finance.settings.registration-fee.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.registration-fee.*') ? 'active' : '' }}">

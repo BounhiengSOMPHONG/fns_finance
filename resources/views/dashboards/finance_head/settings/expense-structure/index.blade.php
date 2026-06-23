@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Expense Setup')
-@section('page-title', 'Expense Setup')
+@section('title', 'ຕັ້ງຄ່າລາຍຈ່າຍ')
+@section('page-title', 'ຕັ້ງຄ່າລາຍຈ່າຍ')
 
 @section('content')
 @php
@@ -23,20 +23,20 @@
 
     <div class="es-hero">
         <div>
-            <h2>Expense structure & account links</h2>
-            <p>Build the section tree. Catalog items and chart accounts are managed in the Catalog Items tab.</p>
+            <h2>ຕັ້ງຄ່າລາຍຈ່າຍກາງ</h2>
+            <p>ຈັດໝວດລາຍຈ່າຍ, ລາຍການມາດຕະຖານ ແລະ ບັນຊີທີ່ໃຊ້ລວມໃນແຜນປີ.</p>
             <div class="es-stats">
-                <span>{{ $sections->count() }} sections</span>
-                <span>{{ $sections->sum(fn ($section) => $section->subsections->count()) }} subsections</span>
-                <span>{{ $defaultRowTotal }} catalog items</span>
+                <span>{{ $sections->count() }} ໝວດຫຼັກ</span>
+                <span>{{ $sections->sum(fn ($section) => $section->subsections->count()) }} ກຸ່ມຍ່ອຍ</span>
+                <span>{{ $defaultRowTotal }} ລາຍການ</span>
                 <span class="{{ $defaultRowTotal > $linkedDefaultRowTotal ? 'is-warn' : 'is-ok' }}">
-                    {{ $linkedDefaultRowTotal }}/{{ $defaultRowTotal }} linked
+                    {{ $linkedDefaultRowTotal }}/{{ $defaultRowTotal }} ເຊື່ອມບັນຊີ
                 </span>
             </div>
         </div>
 
         <form method="GET" action="{{ route('head_of_finance.settings.expense-structure.index') }}" class="es-year-form">
-            <label for="planning_year_id">Planning year</label>
+            <label for="planning_year_id">ສົກປີທີ່ເບິ່ງ</label>
             <select id="planning_year_id" name="planning_year_id" class="fns-input" onchange="this.form.submit()">
                 @foreach($years as $year)
                     <option value="{{ $year->id }}" @selected($planningYear?->id === $year->id)>
@@ -51,14 +51,14 @@
         <section class="es-warning-panel">
             <div class="es-warning-head">
                 <div>
-                    <h3>Catalog account links to check before printing annual plan</h3>
-                    <p>{{ $unlinkedAccountWarnings->count() }} unlinked items · {{ $reviewAccountWarnings->count() }} suggested links need review</p>
+                    <h3>ລາຍການທີ່ຕ້ອງກວດບັນຊີກ່ອນພິມແຜນປີ</h3>
+                    <p>{{ $unlinkedAccountWarnings->count() }} ລາຍການຍັງບໍ່ເຊື່ອມ · {{ $reviewAccountWarnings->count() }} ລາຍການຄວນກວດຄືນ</p>
                 </div>
                 <div class="es-warning-actions">
-                    <button type="button" class="es-filter-btn is-active" data-account-filter="all">All</button>
-                    <button type="button" class="es-filter-btn" data-account-filter="unlinked">Unlinked</button>
-                    <button type="button" class="es-filter-btn" data-account-filter="review">Needs review</button>
-                    <button type="button" class="es-filter-btn" data-account-filter="linked">Linked</button>
+                    <button type="button" class="es-filter-btn is-active" data-account-filter="all">ທັງໝົດ</button>
+                    <button type="button" class="es-filter-btn" data-account-filter="unlinked">ຍັງບໍ່ເຊື່ອມ</button>
+                    <button type="button" class="es-filter-btn" data-account-filter="review">ກວດຄືນ</button>
+                    <button type="button" class="es-filter-btn" data-account-filter="linked">ເຊື່ອມແລ້ວ</button>
                 </div>
             </div>
 
@@ -72,16 +72,16 @@
                             data-jump-default-row="{{ $warningRow->id }}">
                         <span class="es-warning-code">{{ $warningRow->subsection_code }}</span>
                         <span class="es-warning-name">{{ $warningRow->item_name }}</span>
-                        <span class="es-warning-current">{{ $warningRow->chartOfAccount?->account_code ?: 'No account' }}</span>
-                        <span class="es-warning-suggest">{{ $suggestedAccount?->account_code ? 'Suggested '.$suggestedAccount->account_code : 'Choose account' }}</span>
+                        <span class="es-warning-current">{{ $warningRow->chartOfAccount?->account_code ?: 'ຍັງບໍ່ເຊື່ອມ' }}</span>
+                        <span class="es-warning-suggest">{{ $suggestedAccount?->account_code ? 'ແນະນຳ '.$suggestedAccount->account_code : 'ເລືອກບັນຊີ' }}</span>
                     </button>
                 @endforeach
             </div>
         </section>
     @elseif($planningYear)
         <section class="es-ready-panel">
-            <strong>Ready for annual plan</strong>
-            <span>All catalog items visible in this planning year have chart account links.</span>
+            <strong>ພ້ອມໃຊ້ໃນແຜນປີ</strong>
+            <span>ລາຍການທັງໝົດມີບັນຊີລວມແລ້ວ.</span>
         </section>
     @endif
 
@@ -89,40 +89,40 @@
         <details class="es-add-panel">
             <summary>
                 <span>
-                    <strong>Add section</strong>
-                    <small>Create a new top-level expense group.</small>
+                    <strong>ເພີ່ມໝວດຫຼັກ</strong>
+                    <small>ໃຊ້ສຳລັບກຸ່ມລາຍຈ່າຍໃຫຍ່.</small>
                 </span>
-                <span class="es-summary-action">Open</span>
+                <span class="es-summary-action">ເປີດ</span>
             </summary>
             <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.store') }}" class="grid gap-3 px-5 py-4 md:grid-cols-[110px_1fr_120px_auto] md:items-end">
                 @csrf
                 <input type="hidden" name="planning_year_id" value="{{ $planningYear->id }}">
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Code</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
                     <input name="code" class="fns-input" placeholder="2.7" required>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Name</label>
-                    <input name="name" class="fns-input" placeholder="Section name" required>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
+                    <input name="name" class="fns-input" placeholder="ຊື່ໝວດລາຍຈ່າຍ" required>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Order</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">ລຳດັບ</label>
                     <input type="number" name="display_order" class="fns-input" min="0" max="999" value="{{ ($sections->max('display_order') ?? 0) + 1 }}" required>
                 </div>
                 <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700">
                     <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
-                    Active
+                    ໃຊ້ງານ
                 </label>
                 <div class="md:col-span-4">
-                    <textarea name="description" class="fns-input" rows="2" placeholder="Description"></textarea>
-                    <button type="submit" class="fns-btn fns-btn-primary mt-3">Add section</button>
+                    <textarea name="description" class="fns-input" rows="2" placeholder="ລາຍລະອຽດ"></textarea>
+                    <button type="submit" class="fns-btn fns-btn-primary mt-3">ເພີ່ມໝວດ</button>
                 </div>
             </form>
         </details>
 
         @if($sections->isNotEmpty())
-            <div class="es-section-nav" aria-label="Expense sections">
+            <div class="es-section-nav" aria-label="ໝວດລາຍຈ່າຍ">
                 <button type="button" class="es-nav-btn" id="esPrevSection">
                     <span>&larr;</span>
                     <span>ກ່ອນ</span>
@@ -140,7 +140,7 @@
                             <span class="es-section-tab-code">{{ $navSection->code }}</span>
                             <span class="es-section-tab-copy">
                                 <strong>{{ $navSection->name }}</strong>
-                                <small>{{ $navSection->subsections->count() }} subsections</small>
+                                <small>{{ $navSection->subsections->count() }} ກຸ່ມຍ່ອຍ</small>
                             </span>
                             <span class="es-section-tab-total">{{ $navDefaultRows->isNotEmpty() ? $navLinkedRows . '/' . $navDefaultRows->count() : '0' }}</span>
                         </button>
@@ -165,49 +165,49 @@
                     <div class="es-section-code">{{ $section->code }}</div>
                     <div class="min-w-0">
                         <h3>{{ $section->name }}</h3>
-                        <p>{{ $section->subsections->count() }} subsections · {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} accounts linked</p>
+                        <p>{{ $section->subsections->count() }} ກຸ່ມຍ່ອຍ · {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} ເຊື່ອມບັນຊີ</p>
                     </div>
                     @if($sectionDefaultRows->isNotEmpty())
                         <span class="{{ $sectionDefaultRows->count() > $sectionLinkedDefaultRows ? 'es-pill is-warn' : 'es-pill is-ok' }}">
-                            {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} linked
+                            {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} ເຊື່ອມແລ້ວ
                         </span>
                     @else
-                        <span class="es-pill">No catalog items</span>
+                        <span class="es-pill">ຍັງບໍ່ມີລາຍການ</span>
                     @endif
                 </div>
 
                 <details class="es-edit-section">
                     <summary>
-                        <span>Edit section settings</span>
-                        <span class="es-summary-action">Open</span>
+                        <span>ແກ້ໄຂໝວດຫຼັກ</span>
+                        <span class="es-summary-action">ເປີດ</span>
                     </summary>
                     <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.update', $section) }}" class="js-autosave-form grid gap-3 md:grid-cols-[110px_1fr_120px_auto] md:items-end">
                         @csrf
                         @method('PATCH')
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Code</label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
                             <input name="code" value="{{ $section->code }}" class="fns-input" required>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Section name</label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
                             <input name="name" value="{{ $section->name }}" class="fns-input" required>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">Order</label>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">ລຳດັບ</label>
                             <input type="number" name="display_order" value="{{ $section->display_order }}" class="fns-input" min="0" max="999" required>
                         </div>
                         <label class="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
                             <input type="checkbox" name="is_active" value="1" @checked($section->is_active) class="rounded border-slate-300">
-                            Active
+                            ໃຊ້ງານ
                         </label>
                         <div class="md:col-span-4">
-                            <textarea name="description" class="fns-input" rows="2" placeholder="Description">{{ $section->description }}</textarea>
+                            <textarea name="description" class="fns-input" rows="2" placeholder="ລາຍລະອຽດ">{{ $section->description }}</textarea>
                             <div class="mt-3 flex flex-wrap gap-2">
                                 <button type="button"
                                         class="fns-btn fns-btn-danger js-delete-setting"
                                         data-url="{{ route('head_of_finance.settings.expense-structure.sections.destroy', $section) }}"
-                                        data-message="Delete this section?">
-                                    Delete section
+                                        data-message="ລຶບໝວດນີ້?">
+                                    ລຶບໝວດ
                                 </button>
                             </div>
                         </div>
@@ -218,13 +218,13 @@
                     <table class="es-table">
                         <thead>
                             <tr>
-                                <th class="py-2 pr-3">Code</th>
-                                <th class="py-2 pr-3">Subsection name</th>
-                                <th class="py-2 pr-3">Parent</th>
-                                <th class="py-2 pr-3">Pattern</th>
-                                <th class="py-2 pr-3">Accounts</th>
-                                <th class="py-2 pr-3">Order</th>
-                                <th class="py-2 pr-3">Active</th>
+                                <th class="py-2 pr-3">ລະຫັດ</th>
+                                <th class="py-2 pr-3">ຊື່ກຸ່ມຍ່ອຍ</th>
+                                <th class="py-2 pr-3">ຢູ່ໃຕ້</th>
+                                <th class="py-2 pr-3">ແບບຄຳນວນ</th>
+                                <th class="py-2 pr-3">ບັນຊີ</th>
+                                <th class="py-2 pr-3">ລຳດັບ</th>
+                                <th class="py-2 pr-3">ໃຊ້</th>
                                 <th class="py-2 pr-3"></th>
                             </tr>
                         </thead>
@@ -248,7 +248,7 @@
                                         </td>
                                         <td class="py-2 pr-3">
                                             <select name="parent_id" class="fns-input min-w-44">
-                                                <option value="">No parent</option>
+                                                <option value="">ບໍ່ມີກຸ່ມແມ່</option>
                                                 @foreach($parentOptions as $parent)
                                                     @if($parent->id !== $subsection->id)
                                                         <option value="{{ $parent->id }}" @selected($subsection->parent_id === $parent->id)>
@@ -260,7 +260,7 @@
                                         </td>
                                         <td class="py-2 pr-3">
                                             <select name="default_pattern_id" class="fns-input min-w-44">
-                                                <option value="">No pattern</option>
+                                                <option value="">ບໍ່ມີແບບຄຳນວນ</option>
                                                 @foreach($patterns as $pattern)
                                                     <option value="{{ $pattern->id }}" @selected($subsection->default_pattern_id === $pattern->id)>
                                                         {{ $pattern->name }}
@@ -271,10 +271,10 @@
                                         <td class="py-2 pr-3">
                                             @if($defaultRowsForSubsection->isNotEmpty())
                                                 <span class="js-default-subsection-badge es-pill {{ $missingLinksForSubsection ? 'is-warn' : 'is-ok' }}">
-                                                    {{ $linkedRowsForSubsection }}/{{ $defaultRowsForSubsection->count() }} linked
+                                                    {{ $linkedRowsForSubsection }}/{{ $defaultRowsForSubsection->count() }} ເຊື່ອມແລ້ວ
                                                 </span>
                                             @else
-                                                <span class="es-pill">No catalog items</span>
+                                                <span class="es-pill">ຍັງບໍ່ມີລາຍການ</span>
                                             @endif
                                         </td>
                                         <td class="py-2 pr-3">
@@ -287,8 +287,8 @@
                                             <button type="button"
                                                     class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
                                                     data-url="{{ route('head_of_finance.settings.expense-structure.subsections.destroy', $subsection) }}"
-                                                    data-message="Delete this subsection?">
-                                                Delete
+                                                    data-message="ລຶບກຸ່ມຍ່ອຍນີ້?">
+                                                ລຶບ
                                             </button>
                                         </td>
                                     </form>
@@ -298,13 +298,13 @@
                                         <details class="es-account-panel">
                                             <summary>
                                                 <span class="min-w-0 truncate">
-                                                    Manage catalog items for {{ $subsection->code }} - {{ $subsection->name }}
+                                                    ລາຍການມາດຕະຖານຂອງ {{ $subsection->code }} - {{ $subsection->name }}
                                                 </span>
                                                 <span class="flex shrink-0 items-center gap-2 text-xs">
                                                     <span class="js-default-group-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : 'is-warn' }}">
-                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' linked' : 'No catalog items' }}
+                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ມີລາຍການ' }}
                                                     </span>
-                                                    <span class="es-summary-action">Open</span>
+                                                    <span class="es-summary-action">ເປີດ</span>
                                                 </span>
                                             </summary>
 
@@ -328,16 +328,16 @@
                                                         @method('PATCH')
                                                         <div class="min-w-0">
                                                             <label class="es-default-field">
-                                                                <span>Expense item</span>
+                                                                <span>ລາຍການລາຍຈ່າຍ</span>
                                                                 <input name="item_name" value="{{ $defaultRow->item_name }}" class="fns-input" required>
                                                             </label>
                                                             <div class="mt-1 flex flex-wrap gap-1.5 text-xs">
                                                                 <span class="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-                                                                    Ref: <span class="js-default-reference">{{ $selectedReference ?: '-' }}</span>
+                                                                    ບັນຊີ: <span class="js-default-reference">{{ $selectedReference ?: '-' }}</span>
                                                                 </span>
                                                                 @if($suggestedAccount)
                                                                     <span class="es-account-hint {{ $needsReview ? 'is-review' : '' }}">
-                                                                        Suggested: {{ $suggestedAccount->account_code }}
+                                                                        ແນະນຳ: {{ $suggestedAccount->account_code }}
                                                                     </span>
                                                                 @endif
                                                             </div>
@@ -345,36 +345,36 @@
 
                                                         <div class="es-default-fields">
                                                             <label class="es-default-field">
-                                                                <span>Account</span>
+                                                                <span>ບັນຊີລວມ</span>
                                                                 <input class="fns-input js-default-account-search"
                                                                        list="expense-structure-account-options"
                                                                        value="{{ $selectedLabel }}"
-                                                                       placeholder="Type account code or name"
+                                                                       placeholder="ພິມລະຫັດ ຫຼື ຊື່ບັນຊີ"
                                                                        autocomplete="off">
                                                                 <input type="hidden" name="chart_of_account_id" value="{{ $defaultRow->chart_of_account_id }}">
                                                             </label>
                                                             <label class="es-default-field es-default-order">
-                                                                <span>Order</span>
+                                                                <span>ລຳດັບ</span>
                                                                 <input type="number" name="sort_order" value="{{ $defaultRow->sort_order }}" class="fns-input" min="1" max="999" required>
                                                             </label>
                                                         </div>
 
                                                         <div class="es-default-actions">
                                                             <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'is-warn' : 'is-ok') : '' }}">
-                                                                {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'Review' : 'Linked') : 'No link' }}
+                                                                {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'ກວດຄືນ' : 'ເຊື່ອມແລ້ວ') : 'ຍັງບໍ່ເຊື່ອມ' }}
                                                             </span>
-                                                            <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">Save</button>
-                                                            <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">Clear account</button>
+                                                            <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">ບັນທຶກ</button>
+                                                            <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm js-default-clear-account">ລ້າງບັນຊີ</button>
                                                             <button type="button"
                                                                     class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
                                                                     data-url="{{ route('head_of_finance.settings.expense-default-rows.destroy', $defaultRow) }}"
-                                                                    data-message="Delete this catalog item?">
-                                                                Delete
+                                                                    data-message="ລຶບລາຍການນີ້?">
+                                                                ລຶບ
                                                             </button>
                                                         </div>
                                                     </form>
                                                 @empty
-                                                    <div class="es-default-empty">No catalog items yet.</div>
+                                                    <div class="es-default-empty">ຍັງບໍ່ມີລາຍການໃນກຸ່ມນີ້.</div>
                                                 @endforelse
 
                                                 <form method="POST" action="{{ route('head_of_finance.settings.expense-default-rows.store') }}" class="es-default-add-form">
@@ -382,23 +382,23 @@
                                                     <input type="hidden" name="subsection_code" value="{{ $subsection->code }}">
                                                     <input type="hidden" name="subsection_id" value="{{ $subsection->id }}">
                                                     <label>
-                                                        <span>Expense item</span>
-                                                        <input name="item_name" class="fns-input" placeholder="Expense item name" required>
+                                                        <span>ລາຍການລາຍຈ່າຍ</span>
+                                                        <input name="item_name" class="fns-input" placeholder="ຊື່ລາຍການລາຍຈ່າຍ" required>
                                                     </label>
                                                     <label>
-                                                        <span>Account</span>
+                                                        <span>ບັນຊີລວມ</span>
                                                         <select name="chart_of_account_id" class="fns-input">
-                                                            <option value="">No account</option>
+                                                            <option value="">ຍັງບໍ່ເຊື່ອມ</option>
                                                             @foreach($accountOptions as $account)
                                                                 <option value="{{ $account['id'] }}">{{ $account['label'] }}</option>
                                                             @endforeach
                                                         </select>
                                                     </label>
                                                     <label>
-                                                        <span>Order</span>
+                                                        <span>ລຳດັບ</span>
                                                         <input type="number" name="sort_order" class="fns-input" min="1" max="999" value="{{ ($defaultRowsForSubsection->max('sort_order') ?? 0) + 1 }}" required>
                                                     </label>
-                                                    <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">Add catalog item</button>
+                                                    <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">ເພີ່ມລາຍການ</button>
                                                 </form>
                                             </div>
                                         </details>
@@ -413,12 +413,12 @@
                                         <input name="code" class="fns-input min-w-28" placeholder="{{ $section->code }}.1" required>
                                     </td>
                                     <td class="py-3 pr-3">
-                                        <input name="name" class="fns-input min-w-80" placeholder="Subsection name" required>
+                                        <input name="name" class="fns-input min-w-80" placeholder="ຊື່ກຸ່ມຍ່ອຍ" required>
                                         <input type="hidden" name="description" value="">
                                     </td>
                                     <td class="py-3 pr-3">
                                         <select name="parent_id" class="fns-input min-w-44">
-                                            <option value="">No parent</option>
+                                            <option value="">ບໍ່ມີກຸ່ມແມ່</option>
                                             @foreach($parentOptions as $parent)
                                                 <option value="{{ $parent->id }}">{{ $parent->code }} - {{ $parent->name }}</option>
                                             @endforeach
@@ -426,14 +426,14 @@
                                     </td>
                                     <td class="py-3 pr-3">
                                         <select name="default_pattern_id" class="fns-input min-w-44">
-                                            <option value="">No pattern</option>
+                                            <option value="">ບໍ່ມີແບບຄຳນວນ</option>
                                             @foreach($patterns as $pattern)
                                                 <option value="{{ $pattern->id }}">{{ $pattern->name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td class="py-3 pr-3">
-                                        <span class="text-xs font-semibold text-slate-400">After save</span>
+                                        <span class="text-xs font-semibold text-slate-400">ບັນທຶກແລ້ວຈຶ່ງເພີ່ມລາຍການ</span>
                                     </td>
                                     <td class="py-3 pr-3">
                                         <input type="number" name="display_order" value="{{ ($section->subsections->max('display_order') ?? 0) + 1 }}" min="0" max="999" class="fns-input w-24" required>
@@ -442,7 +442,7 @@
                                         <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
                                     </td>
                                     <td class="py-3 pr-3">
-                                        <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">Add</button>
+                                        <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">ເພີ່ມ</button>
                                     </td>
                                 </form>
                             </tr>
@@ -452,12 +452,12 @@
             </section>
         @empty
             <div class="rounded-lg border border-slate-200 bg-white px-5 py-10 text-center text-slate-500">
-                No sections yet for this planning year.
+                ຍັງບໍ່ມີໝວດລາຍຈ່າຍໃນສົກປີນີ້.
             </div>
         @endforelse
     @else
         <div class="rounded-lg border border-slate-200 bg-white px-5 py-10 text-center text-slate-500">
-            Create a planning year first.
+            ສ້າງສົກປີກ່ອນ ແລ້ວຈຶ່ງຕັ້ງຄ່າລາຍຈ່າຍ.
         </div>
     @endif
 
@@ -890,7 +890,7 @@ function moveExpenseStructureSection(direction) {
 document.addEventListener('click', async (event) => {
     const button = event.target.closest('.js-delete-setting');
     if (!button) return;
-    if (!confirm(button.dataset.message || 'Delete this row?')) return;
+    if (!confirm(button.dataset.message || 'ລຶບລາຍການນີ້?')) return;
 
     const response = await fetch(button.dataset.url, {
         method: 'DELETE',
@@ -989,7 +989,7 @@ function updateDefaultAccountBadge(badge, linked, total) {
     if (!badge) return;
 
     const complete = linked === total;
-    badge.textContent = `${linked}/${total} linked`;
+    badge.textContent = `${linked}/${total} ເຊື່ອມແລ້ວ`;
     badge.className = [
         badge.classList.contains('js-default-subsection-badge')
             ? 'js-default-subsection-badge es-pill'
@@ -1016,13 +1016,13 @@ async function saveDefaultAccountRow(row) {
     const account = findExpenseStructureAccount(input.value);
 
     if (input.value.trim() && !account) {
-        setDefaultAccountStatus(row, 'Choose from list', 'error');
+        setDefaultAccountStatus(row, 'ເລືອກຈາກລາຍຊື່', 'error');
         input.focus();
         return;
     }
 
     hidden.value = account?.id || '';
-    setDefaultAccountStatus(row, 'Saving...', 'warning');
+    setDefaultAccountStatus(row, 'ກຳລັງບັນທຶກ...', 'warning');
 
     try {
         const response = await fetch(row.dataset.url, {
@@ -1044,11 +1044,11 @@ async function saveDefaultAccountRow(row) {
         input.value = data.row.account_label || '';
         hidden.value = data.row.chart_of_account_id || '';
         row.dataset.accountState = data.row.chart_of_account_id ? 'linked' : 'unlinked';
-        setDefaultAccountStatus(row, data.row.chart_of_account_id ? 'Linked' : 'No link', data.row.chart_of_account_id ? 'linked' : 'idle');
+        setDefaultAccountStatus(row, data.row.chart_of_account_id ? 'ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ເຊື່ອມ', data.row.chart_of_account_id ? 'linked' : 'idle');
         refreshDefaultAccountSummary(row);
         applyExpenseAccountFilter();
     } catch (error) {
-        setDefaultAccountStatus(row, 'Not saved', 'error');
+        setDefaultAccountStatus(row, 'ບັນທຶກບໍ່ສຳເລັດ', 'error');
         refreshDefaultAccountSummary(row);
     }
 }
@@ -1125,9 +1125,9 @@ async function autosaveDirtyForms() {
 
     try {
         await Promise.all(forms.map((form) => autosaveForm(form)));
-        showAutosaveStatus(forms.length === 1 ? 'Saved' : `Saved ${forms.length} changes`);
+        showAutosaveStatus(forms.length === 1 ? 'ບັນທຶກແລ້ວ' : `ບັນທຶກ ${forms.length} ຈຸດແລ້ວ`);
     } catch (error) {
-        showAutosaveStatus('Could not autosave all changes', false);
+        showAutosaveStatus('ບັນທຶກບາງຈຸດບໍ່ສຳເລັດ', false);
     }
 }
 

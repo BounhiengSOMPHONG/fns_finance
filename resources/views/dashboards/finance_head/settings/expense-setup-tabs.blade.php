@@ -1,20 +1,20 @@
 @php
     $expenseSetupTabs = [
         [
-            'label' => 'Structure',
-            'description' => 'Sections and subsections',
+            'label' => 'ໂຄງສ້າງລາຍຈ່າຍ',
+            'description' => 'ໝວດຫຼັກ ແລະ ກຸ່ມຍ່ອຍ',
             'route' => route('head_of_finance.settings.expense-setup.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-setup.*') || request()->routeIs('head_of_finance.settings.expense-structure.*'),
         ],
         [
-            'label' => 'Catalog Items',
-            'description' => 'Expense items and chart accounts',
+            'label' => 'ລາຍການ & ບັນຊີ',
+            'description' => 'ລາຍການມາດຕະຖານ ແລະ ບັນຊີລວມ',
             'route' => route('head_of_finance.settings.expense-default-rows.accounts.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-default-rows.*'),
         ],
         [
-            'label' => 'Pattern Builder',
-            'description' => 'Fields and multiply formula',
+            'label' => 'ແບບຄຳນວນ',
+            'description' => 'ຊ່ອງກອກ ແລະ ສູດຄຳນວນ',
             'route' => route('head_of_finance.settings.expense-patterns.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-patterns.*'),
         ],

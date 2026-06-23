@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Expense Setup')
-@section('page-title', 'Expense Setup')
+@section('title', 'ລາຍການ & ບັນຊີ')
+@section('page-title', 'ລາຍການ & ບັນຊີ')
 
 @section('content')
 @php
@@ -21,16 +21,16 @@
     <section class="rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h2 class="text-lg font-semibold text-slate-900">Catalog Items</h2>
+                <h2 class="text-lg font-semibold text-slate-900">ລາຍການມາດຕະຖານ & ບັນຊີລວມ</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    Each expense item owns its chart account and pattern. Budget plans copy from these items.
+                    ກຳນົດລາຍການລາຍຈ່າຍທີ່ໃຊ້ປະຈຳ ແລະ ບັນຊີທີ່ໃຊ້ລວມໃນແຜນປີ.
                 </p>
             </div>
             <form method="GET" action="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="flex min-w-72 flex-1 justify-end gap-2">
-                <input name="q" value="{{ $query }}" class="fns-input max-w-md" placeholder="Search row, subsection, or ref code...">
-                <button type="submit" class="fns-btn fns-btn-primary">Search</button>
+                <input name="q" value="{{ $query }}" class="fns-input max-w-md" placeholder="ຄົ້ນຫາລາຍການ, ກຸ່ມ ຫຼື ລະຫັດບັນຊີ...">
+                <button type="submit" class="fns-btn fns-btn-primary">ຄົ້ນຫາ</button>
                 @if($query !== '')
-                    <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="fns-btn fns-btn-secondary">Clear</a>
+                    <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
                 @endif
             </form>
         </div>
@@ -40,12 +40,12 @@
         <div class="border-b border-slate-200 px-5 py-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900">Catalog item groups</h3>
+                    <h3 class="text-sm font-bold text-slate-900">ກຸ່ມລາຍການ</h3>
                     <p class="mt-1 text-xs text-slate-500">
-                        {{ $rows->count() }} items in {{ $groupedRows->count() }} subsections. Open a subsection to connect chart accounts.
+                        {{ $rows->count() }} ລາຍການ ໃນ {{ $groupedRows->count() }} ກຸ່ມຍ່ອຍ.
                     </p>
                 </div>
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Autosaves on selection</span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">ເລືອກແລ້ວບັນທຶກອັດຕະໂນມັດ</span>
             </div>
         </div>
 
@@ -63,17 +63,17 @@
                         </span>
                         <span class="min-w-0 flex-1">
                             <span class="block truncate text-sm font-bold text-slate-950">
-                                {{ $subsection?->name ?? 'No matching subsection' }}
+                                {{ $subsection?->name ?? 'ບໍ່ພົບກຸ່ມຍ່ອຍ' }}
                             </span>
                             <span class="mt-1 block truncate text-xs text-slate-500">
-                                {{ trim(($subsection?->section?->code ?? '') . ' ' . ($subsection?->section?->name ?? '')) ?: 'Catalog items only' }}
+                                {{ trim(($subsection?->section?->code ?? '') . ' ' . ($subsection?->section?->name ?? '')) ?: 'ລາຍການມາດຕະຖານ' }}
                             </span>
                         </span>
                         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                            {{ $groupRows->count() }} items
+                            {{ $groupRows->count() }} ລາຍການ
                         </span>
                         <span class="rounded-full {{ $hasMissingLinks ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700' }} px-3 py-1 text-xs font-bold">
-                            {{ $linkedCount }}/{{ $groupRows->count() }} linked
+                            {{ $linkedCount }}/{{ $groupRows->count() }} ເຊື່ອມແລ້ວ
                         </span>
                         <span class="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-500 transition group-open:rotate-180 group-hover:bg-amber-100 group-hover:text-amber-700">v</span>
                     </summary>
@@ -92,10 +92,10 @@
                                             <div class="font-semibold text-slate-950">{{ $row->item_name }}</div>
                                             <div class="mt-2 flex flex-wrap gap-2 text-xs">
                                                 <span class="rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-700">
-                                                    Ref: <span class="js-reference">{{ $selectedReference ?: '-' }}</span>
+                                                    ບັນຊີ: <span class="js-reference">{{ $selectedReference ?: '-' }}</span>
                                                 </span>
                                                 <span class="rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-700">
-                                                    Order: {{ $row->sort_order }}
+                                                    ລຳດັບ: {{ $row->sort_order }}
                                                 </span>
                                             </div>
                                         </div>
@@ -108,19 +108,19 @@
                                             <div class="flex gap-2">
                                                 <div class="min-w-0 flex-1">
                                                     <input class="fns-input js-account-search !py-3"
-                                                           list="chart-account-options"
-                                                           value="{{ $selectedLabel }}"
-                                                           placeholder="Type chart account code or name..."
-                                                           autocomplete="off">
+                                                   list="chart-account-options"
+                                                   value="{{ $selectedLabel }}"
+                                                   placeholder="ພິມລະຫັດ ຫຼື ຊື່ບັນຊີ..."
+                                                   autocomplete="off">
                                                     <input type="hidden" name="chart_of_account_id" value="{{ $row->chart_of_account_id }}">
                                                 </div>
-                                                <button type="button" class="fns-btn fns-btn-secondary js-clear-account">Clear</button>
+                                                <button type="button" class="fns-btn fns-btn-secondary js-clear-account">ລ້າງ</button>
                                             </div>
                                         </form>
 
                                         <div>
                                             <span class="js-row-status inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">
-                                                {{ $row->chart_of_account_id ? 'Linked' : 'No link' }}
+                                                {{ $row->chart_of_account_id ? 'ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ເຊື່ອມ' }}
                                             </span>
                                         </div>
                                     </div>
@@ -131,7 +131,7 @@
                 </details>
             @empty
                 <div class="rounded-lg border border-slate-200 bg-white px-5 py-12 text-center text-slate-500">
-                    No catalog items found.
+                    ບໍ່ພົບລາຍການ.
                 </div>
             @endforelse
         </div>
@@ -179,7 +179,7 @@ function refreshGroupSummary(row) {
     const linkedBadge = badges[3];
     if (!linkedBadge) return;
 
-    linkedBadge.textContent = `${linked}/${rows.length} linked`;
+    linkedBadge.textContent = `${linked}/${rows.length} ເຊື່ອມແລ້ວ`;
     linkedBadge.className = [
         'rounded-full px-3 py-1 text-xs font-bold',
         linked === rows.length ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
@@ -194,14 +194,14 @@ async function saveAccountForm(form) {
 
     if (input.value.trim() && !account) {
         hidden.value = '';
-        setRowStatus(row, 'Choose from list', false);
+        setRowStatus(row, 'ເລືອກຈາກລາຍຊື່', false);
         input.focus();
         refreshGroupSummary(row);
         return;
     }
 
     hidden.value = account?.id || '';
-    setRowStatus(row, 'Saving...');
+    setRowStatus(row, 'ກຳລັງບັນທຶກ...');
 
     const response = await fetch(form.action, {
         method: 'PATCH',
@@ -215,7 +215,7 @@ async function saveAccountForm(form) {
     const data = await response.json();
 
     if (!response.ok || !data.success) {
-        setRowStatus(row, 'Not saved', false);
+        setRowStatus(row, 'ບັນທຶກບໍ່ສຳເລັດ', false);
         refreshGroupSummary(row);
         return;
     }
@@ -223,7 +223,7 @@ async function saveAccountForm(form) {
     row.querySelector('.js-reference').textContent = data.row.reference || '-';
     input.value = data.row.account_label || '';
     hidden.value = data.row.chart_of_account_id || '';
-    setRowStatus(row, data.row.chart_of_account_id ? 'Linked' : 'No link');
+    setRowStatus(row, data.row.chart_of_account_id ? 'ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ເຊື່ອມ');
     refreshGroupSummary(row);
 }
 

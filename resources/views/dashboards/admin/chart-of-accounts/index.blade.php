@@ -17,7 +17,7 @@
     $lastCode = $chartOfAccounts->getCollection()->last()?->account_code ?? '-';
 @endphp
 
-<div class="admin-resource">
+<div class="admin-resource" x-data="{ editModal: @js(old('admin_edit_modal')), viewModal: null }">
     <section class="admin-resource-bar">
         <div>
             <div class="admin-resource-kicker">CHART OF ACCOUNTS</div>
@@ -76,12 +76,12 @@
                             </td>
                             <td>
                                 <div class="admin-row-actions">
-                                    <a href="{{ route('admin.chart-of-accounts.show', $account) }}" class="admin-icon-btn" title="ເບິ່ງ">
+                                    <button type="button" class="admin-icon-btn" title="ເບິ່ງ" @click="viewModal = 'account-{{ $account->id }}'">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                    </a>
-                                    <a href="{{ route('admin.chart-of-accounts.edit', $account) }}" class="admin-icon-btn" title="ແກ້ໄຂ">
+                                    </button>
+                                    <button type="button" class="admin-icon-btn" title="ແກ້ໄຂ" @click="editModal = 'account-{{ $account->id }}'">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.688-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931z"/></svg>
-                                    </a>
+                                    </button>
                                     <form action="{{ route('admin.chart-of-accounts.destroy', $account) }}" method="POST" onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບບັນຊີນີ້?');">
                                         @csrf
                                         @method('DELETE')
@@ -112,5 +112,83 @@
             </div>
         @endif
     </section>
+
+    @foreach ($chartOfAccounts as $account)
+        @php $modalKey = 'account-' . $account->id; @endphp
+        <div x-cloak x-show="viewModal === @js($modalKey)" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="viewModal = null">
+            <div class="admin-modal" @click.outside="viewModal = null">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>ລາຍລະອຽດບັນຊີ</h2>
+                        <p>{{ $account->account_code }} · {{ $account->account_name }}</p>
+                    </div>
+                    <button type="button" class="admin-modal-close" @click="viewModal = null" aria-label="Close">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+
+                <div class="admin-modal-body">
+                    <div class="admin-detail-list">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ID</div>
+                            <div class="admin-detail-value"><span class="admin-code">#{{ $account->id }}</span></div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ລະຫັດບັນຊີ</div>
+                            <div class="admin-detail-value"><span class="admin-code">{{ $account->account_code }}</span></div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ຊື່ບັນຊີ</div>
+                            <div class="admin-detail-value">{{ $account->account_name }}</div>
+                        </div>
+                    </div>
+
+                    <div class="admin-modal-foot">
+                        <button type="button" class="fns-btn fns-btn-secondary" @click="viewModal = null">ປິດ</button>
+                        <button type="button" class="fns-btn fns-btn-primary" @click="viewModal = null; editModal = @js($modalKey)">ແກ້ໄຂ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-cloak x-show="editModal === @js($modalKey)" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="editModal = null">
+            <div class="admin-modal" @click.outside="editModal = null">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>ແກ້ໄຂບັນຊີ</h2>
+                        <p>{{ $account->account_code }} · {{ $account->account_name }}</p>
+                    </div>
+                    <button type="button" class="admin-modal-close" @click="editModal = null" aria-label="Close">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('admin.chart-of-accounts.update', $account) }}" method="POST" class="admin-modal-body">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="admin_edit_modal" value="{{ $modalKey }}">
+
+                    <div class="admin-modal-grid">
+                        <div class="admin-modal-field">
+                            <label for="account-code-{{ $account->id }}">ລະຫັດບັນຊີ *</label>
+                            <input type="text" name="account_code" id="account-code-{{ $account->id }}" value="{{ old('admin_edit_modal') === $modalKey ? old('account_code') : $account->account_code }}" placeholder="ລະຫັດບັນຊີ">
+                            @error('account_code')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-field">
+                            <label for="account-name-{{ $account->id }}">ຊື່ບັນຊີ *</label>
+                            <input type="text" name="account_name" id="account-name-{{ $account->id }}" value="{{ old('admin_edit_modal') === $modalKey ? old('account_name') : $account->account_name }}" placeholder="ຊື່ບັນຊີ">
+                            @error('account_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+
+                    <div class="admin-modal-foot">
+                        <button type="button" class="fns-btn fns-btn-secondary" @click="editModal = null">ຍົກເລີກ</button>
+                        <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
 </div>
 @endsection

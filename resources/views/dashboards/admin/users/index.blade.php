@@ -19,7 +19,7 @@
     $pageActiveUsers = $users->getCollection()->where('is_active', true)->count();
 @endphp
 
-<div class="admin-resource">
+<div class="admin-resource" x-data="{ editModal: @js(old('admin_edit_modal')), viewModal: null }">
     <section class="admin-resource-bar">
         <div>
             <div class="admin-resource-kicker">USER DIRECTORY</div>
@@ -114,12 +114,12 @@
                             </td>
                             <td>
                                 <div class="admin-row-actions">
-                                    <a href="{{ route('admin.users.show', $user) }}" class="admin-icon-btn" title="ເບິ່ງ">
+                                    <button type="button" class="admin-icon-btn" title="ເບິ່ງ" @click="viewModal = 'user-{{ $user->id }}'">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                    </a>
-                                    <a href="{{ route('admin.users.edit', $user) }}" class="admin-icon-btn" title="ແກ້ໄຂ">
+                                    </button>
+                                    <button type="button" class="admin-icon-btn" title="ແກ້ໄຂ" @click="editModal = 'user-{{ $user->id }}'">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.688-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931z"/></svg>
-                                    </a>
+                                    </button>
                                     <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບຜູ້ໃຊ້ນີ້?');">
                                         @csrf
                                         @method('DELETE')
@@ -150,5 +150,134 @@
             </div>
         @endif
     </section>
+
+    @foreach ($users as $user)
+        @php $modalKey = 'user-' . $user->id; @endphp
+        <div x-cloak x-show="viewModal === @js($modalKey)" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="viewModal = null">
+            <div class="admin-modal" @click.outside="viewModal = null">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>ລາຍລະອຽດຜູ້ໃຊ້</h2>
+                        <p>{{ $user->full_name }} · {{ $user->username }}</p>
+                    </div>
+                    <button type="button" class="admin-modal-close" @click="viewModal = null" aria-label="Close">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+
+                <div class="admin-modal-body">
+                    <div class="admin-detail-list">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ID</div>
+                            <div class="admin-detail-value"><span class="admin-code">#{{ $user->id }}</span></div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ຊື່ຜູ້ໃຊ້</div>
+                            <div class="admin-detail-value">{{ $user->username }}</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ຊື່ເຕັມ</div>
+                            <div class="admin-detail-value">{{ $user->full_name }}</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ບົດບາດ</div>
+                            <div class="admin-detail-value"><span class="admin-pill admin-pill-navy">{{ $user->role->role_name }}</span></div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ພະແນກ</div>
+                            <div class="admin-detail-value">{{ $user->department->department_name ?? '-' }}</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ສະຖານະ</div>
+                            <div class="admin-detail-value">
+                                @if ($user->is_active)
+                                    <span class="admin-pill admin-pill-green">ໃຊ້ງານ</span>
+                                @else
+                                    <span class="admin-pill admin-pill-red">ປິດໃຊ້</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-modal-foot">
+                        <button type="button" class="fns-btn fns-btn-secondary" @click="viewModal = null">ປິດ</button>
+                        <button type="button" class="fns-btn fns-btn-primary" @click="viewModal = null; editModal = @js($modalKey)">ແກ້ໄຂ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-cloak x-show="editModal === @js($modalKey)" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="editModal = null">
+            <div class="admin-modal admin-modal-wide" @click.outside="editModal = null">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>ແກ້ໄຂຜູ້ໃຊ້</h2>
+                        <p>{{ $user->full_name }} · {{ $user->username }}</p>
+                    </div>
+                    <button type="button" class="admin-modal-close" @click="editModal = null" aria-label="Close">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('admin.users.update', $user) }}" method="POST" class="admin-modal-body">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="admin_edit_modal" value="{{ $modalKey }}">
+
+                    <div class="admin-modal-grid">
+                        <div class="admin-modal-field">
+                            <label for="username-{{ $user->id }}">ຊື່ຜູ້ໃຊ້ *</label>
+                            <input type="text" name="username" id="username-{{ $user->id }}" value="{{ old('admin_edit_modal') === $modalKey ? old('username') : $user->username }}" placeholder="ຊື່ຜູ້ໃຊ້">
+                            @error('username')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-field">
+                            <label for="full_name-{{ $user->id }}">ຊື່ເຕັມ *</label>
+                            <input type="text" name="full_name" id="full_name-{{ $user->id }}" value="{{ old('admin_edit_modal') === $modalKey ? old('full_name') : $user->full_name }}" placeholder="ຊື່ເຕັມ">
+                            @error('full_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-field">
+                            <label for="password-{{ $user->id }}">ລະຫັດຜ່ານໃໝ່</label>
+                            <input type="password" name="password" id="password-{{ $user->id }}" placeholder="ປ່ອຍວ່າງຖ້າບໍ່ປ່ຽນ">
+                            @error('password')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-field">
+                            <label for="role-edit-{{ $user->id }}">ບົດບາດ *</label>
+                            <select name="role_id" id="role-edit-{{ $user->id }}">
+                                <option value="">ເລືອກບົດບາດ</option>
+                                @foreach ($roles as $role)
+                                    <option value="{{ $role->id }}" {{ (string) (old('admin_edit_modal') === $modalKey ? old('role_id') : $user->role_id) === (string) $role->id ? 'selected' : '' }}>{{ $role->role_name }}</option>
+                                @endforeach
+                            </select>
+                            @error('role_id')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-field">
+                            <label for="department-edit-{{ $user->id }}">ພະແນກ</label>
+                            <select name="department_id" id="department-edit-{{ $user->id }}">
+                                <option value="">ເລືອກພະແນກ</option>
+                                @foreach ($departments as $dept)
+                                    <option value="{{ $dept->id }}" {{ (string) (old('admin_edit_modal') === $modalKey ? old('department_id') : $user->department_id) === (string) $dept->id ? 'selected' : '' }}>{{ $dept->department_name }}</option>
+                                @endforeach
+                            </select>
+                            @error('department_id')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+
+                        <div class="admin-modal-check">
+                            <input type="checkbox" name="is_active" id="active-edit-{{ $user->id }}" value="1" {{ old('admin_edit_modal') === $modalKey ? (old('is_active') ? 'checked' : '') : ($user->is_active ? 'checked' : '') }}>
+                            <label for="active-edit-{{ $user->id }}">ເປີດໃຊ້ງານ</label>
+                        </div>
+                    </div>
+
+                    <div class="admin-modal-foot">
+                        <button type="button" class="fns-btn fns-btn-secondary" @click="editModal = null">ຍົກເລີກ</button>
+                        <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
 </div>
 @endsection

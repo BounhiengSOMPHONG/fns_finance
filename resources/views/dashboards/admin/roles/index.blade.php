@@ -17,7 +17,7 @@
     $emptyRoles = $roles->getCollection()->where('users_count', 0)->count();
 @endphp
 
-<div class="admin-resource">
+<div class="admin-resource" x-data="{ editModal: @js(old('admin_edit_modal')), viewModal: null }">
     <section class="admin-resource-bar">
         <div>
             <div class="admin-resource-kicker">ACCESS CONTROL</div>
@@ -80,12 +80,12 @@
                             </td>
                             <td>
                                 <div class="admin-row-actions">
-                                    <a href="{{ route('admin.roles.show', $role) }}" class="admin-icon-btn" title="ເບິ່ງ">
+                                    <button type="button" class="admin-icon-btn" title="ເບິ່ງ" @click="viewModal = 'role-{{ $role->id }}'">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                    </a>
-                                    <a href="{{ route('admin.roles.edit', $role) }}" class="admin-icon-btn" title="ແກ້ໄຂ">
+                                    </button>
+                                    <button type="button" class="admin-icon-btn" title="ແກ້ໄຂ" @click="editModal = 'role-{{ $role->id }}'">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.688-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931z"/></svg>
-                                    </a>
+                                    </button>
                                     <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບບົດບາດນີ້?');">
                                         @csrf
                                         @method('DELETE')
@@ -116,5 +116,81 @@
             </div>
         @endif
     </section>
+
+    @foreach ($roles as $role)
+        @php $modalKey = 'role-' . $role->id; @endphp
+        <div x-cloak x-show="viewModal === @js($modalKey)" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="viewModal = null">
+            <div class="admin-modal" @click.outside="viewModal = null">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>ລາຍລະອຽດບົດບາດ</h2>
+                        <p>{{ $role->role_name }}</p>
+                    </div>
+                    <button type="button" class="admin-modal-close" @click="viewModal = null" aria-label="Close">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+
+                <div class="admin-modal-body">
+                    <div class="admin-detail-list">
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ID</div>
+                            <div class="admin-detail-value"><span class="admin-code">#{{ $role->id }}</span></div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ຊື່ບົດບາດ</div>
+                            <div class="admin-detail-value">{{ $role->role_name }}</div>
+                        </div>
+                        <div class="admin-detail-row">
+                            <div class="admin-detail-label">ຈຳນວນຜູ້ໃຊ້</div>
+                            <div class="admin-detail-value">
+                                <span class="admin-pill {{ $role->users_count > 0 ? 'admin-pill-green' : 'admin-pill-gray' }}">
+                                    {{ number_format($role->users_count) }} ຄົນ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-modal-foot">
+                        <button type="button" class="fns-btn fns-btn-secondary" @click="viewModal = null">ປິດ</button>
+                        <button type="button" class="fns-btn fns-btn-primary" @click="viewModal = null; editModal = @js($modalKey)">ແກ້ໄຂ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-cloak x-show="editModal === @js($modalKey)" x-transition.opacity class="admin-modal-backdrop" @keydown.escape.window="editModal = null">
+            <div class="admin-modal" @click.outside="editModal = null">
+                <div class="admin-modal-head">
+                    <div>
+                        <h2>ແກ້ໄຂບົດບາດ</h2>
+                        <p>{{ $role->role_name }}</p>
+                    </div>
+                    <button type="button" class="admin-modal-close" @click="editModal = null" aria-label="Close">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('admin.roles.update', $role) }}" method="POST" class="admin-modal-body">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="admin_edit_modal" value="{{ $modalKey }}">
+
+                    <div class="admin-modal-grid">
+                        <div class="admin-modal-field admin-modal-field-full">
+                            <label for="role-name-{{ $role->id }}">ຊື່ບົດບາດ *</label>
+                            <input type="text" name="role_name" id="role-name-{{ $role->id }}" value="{{ old('admin_edit_modal') === $modalKey ? old('role_name') : $role->role_name }}" placeholder="ຊື່ບົດບາດ">
+                            @error('role_name')<span class="admin-modal-error">{{ $message }}</span>@enderror
+                        </div>
+                    </div>
+
+                    <div class="admin-modal-foot">
+                        <button type="button" class="fns-btn fns-btn-secondary" @click="editModal = null">ຍົກເລີກ</button>
+                        <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
 </div>
 @endsection

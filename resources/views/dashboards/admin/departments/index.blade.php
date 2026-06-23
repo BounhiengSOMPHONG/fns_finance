@@ -3,110 +3,131 @@
 @section('title', 'ພະແນກ')
 @section('page-title', 'ຈັດການພະແນກ')
 
-@section('content')
-<div class="bg-white rounded-lg shadow-sm">
-    <!-- Header & Actions -->
-    <div class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 class="text-lg font-semibold text-gray-800">ລາຍຊື່ພະແນກ</h2>
-        <a href="{{ route('admin.departments.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            ເພີ່ມພະແນກ
-        </a>
-    </div>
+@section('page-title-actions')
+    <a href="{{ route('admin.departments.create') }}" class="fns-btn fns-btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        ເພີ່ມພະແນກ
+    </a>
+@endsection
 
-    <!-- Filters -->
-    <div class="p-6 border-b border-gray-200 bg-gray-50">
-        <form method="GET" action="{{ route('admin.departments.index') }}" class="flex flex-wrap gap-4">
-            <div class="flex-1 min-w-[200px]">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="ຄົ້ນຫາຊື່ພະແນກ ຫຼື ປະເພດ..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+@section('content')
+@include('dashboards.admin._resource-index-styles')
+@php
+    $pageUserLinks = $departments->getCollection()->sum('users_count');
+    $activeFilters = collect(['search', 'department_type'])
+        ->filter(fn ($key) => request()->filled($key))
+        ->count();
+@endphp
+
+<div class="admin-resource">
+    <section class="admin-resource-bar">
+        <div>
+            <div class="admin-resource-kicker">ORGANIZATION</div>
+            <h2 class="admin-resource-title">ຈັດການພະແນກ ແລະໜ່ວຍງານ</h2>
+            <p class="admin-resource-copy">ຜູກຜູ້ໃຊ້ກັບພະແນກໃຫ້ຖືກຕ້ອງ ເພື່ອໃຊ້ໃນການອ້າງອີງໜ້າທີ່ ແລະການກວດທານ.</p>
+        </div>
+        <div class="admin-resource-actions">
+            <a href="{{ route('admin.users.index') }}" class="fns-btn fns-btn-secondary">ຜູ້ໃຊ້</a>
+            <a href="{{ route('admin.roles.index') }}" class="fns-btn fns-btn-secondary">ບົດບາດ</a>
+        </div>
+    </section>
+
+    <section class="admin-stats" aria-label="Department summary">
+        <div class="admin-stat"><span>ຜົນລັບທັງໝົດ</span><strong>{{ number_format($departments->total()) }}</strong></div>
+        <div class="admin-stat"><span>ໜ້ານີ້</span><strong>{{ number_format($departments->count()) }}</strong></div>
+        <div class="admin-stat"><span>ຜູ້ໃຊ້ທີ່ຜູກໃນໜ້ານີ້</span><strong>{{ number_format($pageUserLinks) }}</strong></div>
+        <div class="admin-stat"><span>ຕົວກອງ</span><strong>{{ number_format($activeFilters) }}</strong></div>
+    </section>
+
+    <section class="admin-filter-panel">
+        <form method="GET" action="{{ route('admin.departments.index') }}" class="admin-filter-form" style="--filter-cols: 1;">
+            <div class="admin-field">
+                <label for="search">ຄົ້ນຫາ</label>
+                <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ຊື່ພະແນກ ຫຼື ປະເພດ">
             </div>
-            <div class="w-48">
-                <select name="department_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">-- ທຸກປະເພດ --</option>
+            <div class="admin-field">
+                <label for="department_type">ປະເພດ</label>
+                <select id="department_type" name="department_type">
+                    <option value="">ທຸກປະເພດ</option>
                     @foreach ($departmentTypes as $type)
                         <option value="{{ $type }}" {{ request('department_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700">
-                ຄົ້ນຫາ
-            </button>
-            <a href="{{ route('admin.departments.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">
-                ຄືນຄ່າເລີ່ມຕົ້ນ
-            </a>
+            <div class="admin-filter-actions">
+                <button type="submit" class="fns-btn fns-btn-primary">ຄົ້ນຫາ</button>
+                <a href="{{ route('admin.departments.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
+            </div>
         </form>
-    </div>
+    </section>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                <tr>
-                    <th class="px-6 py-4">ID</th>
-                    <th class="px-6 py-4">ຊື່ພະແນກ</th>
-                    <th class="px-6 py-4">ປະເພດ</th>
-                    <th class="px-6 py-4">ຈຳນວນຜູ້ໃຊ້</th>
-                    <th class="px-6 py-4 text-right">ການດໍາເນີນງານ</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @forelse ($departments as $dept)
-                    <tr class="bg-white hover:bg-gray-50">
-                        <td class="px-6 py-4">{{ $dept->id }}</td>
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ $dept->department_name }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                {{ $dept->department_type }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                {{ $dept->users_count ?? $dept->users()->count() }} ຄົນ
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end space-x-2">
-                                <a href="{{ route('admin.departments.show', $dept) }}" class="text-blue-600 hover:text-blue-900" title="ເບິ່ງລາຍລະອຽດ">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                </a>
-                                <a href="{{ route('admin.departments.edit', $dept) }}" class="text-yellow-600 hover:text-yellow-900" title="ແກ້ໄຂ">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                </a>
-                                <form action="{{ route('admin.departments.destroy', $dept) }}" method="POST" class="inline" onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບພະແນກນີ້?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900" title="ລົບ">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                            ບໍ່ພົບຂໍ້ມູນພະແນກ
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    @if ($departments->hasPages())
-        <div class="p-6 border-t border-gray-200">
-            {{ $departments->links() }}
+    <section class="admin-table-panel">
+        <div class="admin-table-head">
+            <h2>ລາຍຊື່ພະແນກ</h2>
+            <span>{{ number_format($departments->firstItem() ?? 0) }}-{{ number_format($departments->lastItem() ?? 0) }} / {{ number_format($departments->total()) }}</span>
         </div>
-    @endif
+        <div class="admin-table-scroll">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ພະແນກ</th>
+                        <th>ປະເພດ</th>
+                        <th>ຜູ້ໃຊ້</th>
+                        <th class="text-right">ຈັດການ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($departments as $dept)
+                        <tr>
+                            <td><span class="admin-code">#{{ $dept->id }}</span></td>
+                            <td>
+                                <div class="admin-cell-strong">{{ $dept->department_name }}</div>
+                                <div class="admin-muted">department id {{ $dept->id }}</div>
+                            </td>
+                            <td><span class="admin-pill admin-pill-gold">{{ $dept->department_type }}</span></td>
+                            <td>
+                                <span class="admin-pill {{ $dept->users_count > 0 ? 'admin-pill-green' : 'admin-pill-gray' }}">
+                                    {{ number_format($dept->users_count) }} ຄົນ
+                                </span>
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a href="{{ route('admin.departments.show', $dept) }}" class="admin-icon-btn" title="ເບິ່ງ">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </a>
+                                    <a href="{{ route('admin.departments.edit', $dept) }}" class="admin-icon-btn" title="ແກ້ໄຂ">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.688-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931z"/></svg>
+                                    </a>
+                                    <form action="{{ route('admin.departments.destroy', $dept) }}" method="POST" onsubmit="return confirm('ທ່ານແນ່ໃຈບໍ່ວ່າຈະລົບພະແນກນີ້?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="admin-icon-btn admin-icon-btn-danger" title="ລົບ">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673A2.25 2.25 0 0 1 15.916 21H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .563c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="admin-empty">
+                                    <x-icons.building-office />
+                                    <span>ບໍ່ພົບຂໍ້ມູນພະແນກ</span>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($departments->hasPages())
+            <div class="admin-pagination">
+                {{ $departments->links() }}
+            </div>
+        @endif
+    </section>
 </div>
 @endsection

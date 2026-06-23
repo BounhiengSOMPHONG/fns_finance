@@ -22,7 +22,7 @@ class RoleController extends Controller
             $query->where('role_name', 'like', "%{$search}%");
         }
 
-        $roles = $query->latest('id')->paginate(10)->withQueryString();
+        $roles = $query->withCount('users')->latest('id')->paginate(10)->withQueryString();
 
         return view('dashboards.admin.roles.index', compact('roles'));
     }

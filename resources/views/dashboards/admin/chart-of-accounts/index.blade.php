@@ -44,6 +44,11 @@
                 <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ລະຫັດ ຫຼື ຊື່ບັນຊີ">
             </div>
         </form>
+        @if(request('search'))
+            <div class="admin-active-filters">
+                <div class="admin-active-filter"><span>ຄົ້ນຫາ</span>{{ request('search') }}</div>
+            </div>
+        @endif
     </section>
 
     <section class="admin-table-panel">

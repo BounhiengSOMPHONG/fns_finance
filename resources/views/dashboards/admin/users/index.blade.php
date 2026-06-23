@@ -17,6 +17,15 @@
         ->filter(fn ($key) => request()->filled($key) || request()->has($key) && request($key) !== '')
         ->count();
     $pageActiveUsers = $users->getCollection()->where('is_active', true)->count();
+    $selectedRole = request('role_id')
+        ? ($roles->firstWhere('id', (int) request('role_id')) ?? $roles->firstWhere('role_name', request('role_id')))
+        : null;
+    $selectedDepartment = request('department_id') ? $departments->firstWhere('id', (int) request('department_id')) : null;
+    $selectedStatus = match (request('is_active')) {
+        '1' => 'ໃຊ້ງານ',
+        '0' => 'ບໍ່ໃຊ້ງານ',
+        default => null,
+    };
 @endphp
 
 <div class="admin-resource" x-data="{ createModal: @js((bool) old('admin_create_modal')), editModal: @js(old('admin_edit_modal')), viewModal: null }" @open-create-modal.window="createModal = true">
@@ -40,23 +49,36 @@
     </section>
 
     <section class="admin-filter-panel">
-        <form method="GET" action="{{ route('admin.users.index') }}" class="admin-filter-form admin-filter-form-auto" style="--filter-cols: 3;" x-data="{ filterTimer: null, submitFilter() { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.$el.requestSubmit(), 450); } }" @input="submitFilter()" @change="$el.requestSubmit()">
+        <form
+            method="GET"
+            action="{{ route('admin.users.index') }}"
+            class="admin-filter-form admin-filter-form-auto"
+            style="--filter-cols: 3;"
+        >
             <div class="admin-field">
                 <label for="search">ຄົ້ນຫາ</label>
-                <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ຊື່ຜູ້ໃຊ້ ຫຼື ຊື່ເຕັມ">
+                <input
+                    id="search"
+                    type="text"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="ຊື່ຜູ້ໃຊ້ ຫຼື ຊື່ເຕັມ"
+                    onkeydown="if (event.key === 'Enter') { event.preventDefault(); window.submitAdminUserFilters(this.form); }"
+                    onchange="window.submitAdminUserFilters(this.form)"
+                >
             </div>
             <div class="admin-field">
                 <label for="role_id">ບົດບາດ</label>
-                <select id="role_id" name="role_id">
+                <select id="role_id" name="role_id" onchange="window.submitAdminUserFilters(this.form)">
                     <option value="">ທຸກບົດບາດ</option>
                     @foreach ($roles as $role)
-                        <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>{{ $role->role_name }}</option>
+                        <option value="{{ $role->id }}" {{ request('role_id') == $role->id || request('role_id') === $role->role_name ? 'selected' : '' }}>{{ $role->role_name }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="admin-field">
                 <label for="department_id">ພະແນກ</label>
-                <select id="department_id" name="department_id">
+                <select id="department_id" name="department_id" onchange="window.submitAdminUserFilters(this.form)">
                     <option value="">ທຸກພະແນກ</option>
                     @foreach ($departments as $dept)
                         <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>{{ $dept->department_name }}</option>
@@ -65,13 +87,21 @@
             </div>
             <div class="admin-field">
                 <label for="is_active">ສະຖານະ</label>
-                <select id="is_active" name="is_active">
+                <select id="is_active" name="is_active" onchange="window.submitAdminUserFilters(this.form)">
                     <option value="">ທຸກສະຖານະ</option>
                     <option value="1" {{ request('is_active') === '1' ? 'selected' : '' }}>ໃຊ້ງານ</option>
                     <option value="0" {{ request('is_active') === '0' ? 'selected' : '' }}>ບໍ່ໃຊ້ງານ</option>
                 </select>
             </div>
         </form>
+        @if(request('search') || $selectedRole || $selectedDepartment || $selectedStatus)
+            <div class="admin-active-filters">
+                @if(request('search'))<div class="admin-active-filter"><span>ຄົ້ນຫາ</span>{{ request('search') }}</div>@endif
+                @if($selectedRole)<div class="admin-active-filter"><span>ບົດບາດ</span>{{ $selectedRole->role_name }}</div>@endif
+                @if($selectedDepartment)<div class="admin-active-filter"><span>ພະແນກ</span>{{ $selectedDepartment->department_name }}</div>@endif
+                @if($selectedStatus)<div class="admin-active-filter"><span>ສະຖານະ</span>{{ $selectedStatus }}</div>@endif
+            </div>
+        @endif
     </section>
 
     <section class="admin-table-panel">
@@ -348,3 +378,24 @@
     @endforeach
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    window.submitAdminUserFilters = function (form) {
+        if (!form) return;
+
+        const params = new URLSearchParams();
+
+        new FormData(form).forEach(function (value, key) {
+            const cleanValue = String(value).trim();
+
+            if (cleanValue !== '') {
+                params.set(key, cleanValue);
+            }
+        });
+
+        window.location.assign(form.action + (params.toString() ? '?' + params.toString() : ''));
+    };
+
+</script>
+@endpush

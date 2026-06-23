@@ -156,6 +156,32 @@
         outline: none;
     }
 
+    .admin-active-filters {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .4rem;
+        margin-top: .65rem;
+    }
+
+    .admin-active-filter {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border: 1px solid rgba(26,39,68,.14);
+        border-radius: 999px;
+        background: rgba(26,39,68,.045);
+        color: var(--fns-navy);
+        font-size: .72rem;
+        font-weight: 800;
+        padding: .25rem .6rem;
+    }
+
+    .admin-active-filter span {
+        color: var(--fns-gray-600);
+        font-weight: 750;
+    }
+
     .admin-table-head {
         display: flex;
         align-items: center;

@@ -17,6 +17,7 @@
     $activeFilters = collect(['search', 'department_type'])
         ->filter(fn ($key) => request()->filled($key))
         ->count();
+    $selectedDepartmentType = request('department_type');
 @endphp
 
 <div class="admin-resource" x-data="{ createModal: @js((bool) old('admin_create_modal')), editModal: @js(old('admin_edit_modal')), viewModal: null }" @open-create-modal.window="createModal = true">
@@ -40,14 +41,14 @@
     </section>
 
     <section class="admin-filter-panel">
-        <form method="GET" action="{{ route('admin.departments.index') }}" class="admin-filter-form admin-filter-form-auto" style="--filter-cols: 1;" x-data="{ filterTimer: null, submitFilter() { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.$el.requestSubmit(), 450); } }" @input="submitFilter()" @change="$el.requestSubmit()">
+        <form method="GET" action="{{ route('admin.departments.index') }}" class="admin-filter-form admin-filter-form-auto" style="--filter-cols: 1;" x-data="{ filterTimer: null, submitFilter() { clearTimeout(this.filterTimer); this.filterTimer = setTimeout(() => this.$el.requestSubmit(), 450); } }" @input="submitFilter()">
             <div class="admin-field">
                 <label for="search">ຄົ້ນຫາ</label>
                 <input id="search" type="text" name="search" value="{{ request('search') }}" placeholder="ຊື່ພະແນກ ຫຼື ປະເພດ">
             </div>
             <div class="admin-field">
                 <label for="department_type">ປະເພດ</label>
-                <select id="department_type" name="department_type">
+                <select id="department_type" name="department_type" onchange="this.form.submit()">
                     <option value="">ທຸກປະເພດ</option>
                     @foreach ($departmentTypes as $type)
                         <option value="{{ $type }}" {{ request('department_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
@@ -55,6 +56,12 @@
                 </select>
             </div>
         </form>
+        @if(request('search') || $selectedDepartmentType)
+            <div class="admin-active-filters">
+                @if(request('search'))<div class="admin-active-filter"><span>ຄົ້ນຫາ</span>{{ request('search') }}</div>@endif
+                @if($selectedDepartmentType)<div class="admin-active-filter"><span>ປະເພດ</span>{{ $selectedDepartmentType }}</div>@endif
+            </div>
+        @endif
     </section>
 
     <section class="admin-table-panel">

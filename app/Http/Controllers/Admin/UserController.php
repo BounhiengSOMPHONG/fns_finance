@@ -17,6 +17,14 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $normalizedFilters = $this->normalizedIndexFilters($request);
+
+        if ($this->indexFiltersNeedRedirect($request, $normalizedFilters)) {
+            return redirect()->route('admin.users.index', $normalizedFilters);
+        }
+
+        $request->merge($normalizedFilters);
+
         $query = User::with(['role', 'department']);
 
         // Search
@@ -30,7 +38,13 @@ class UserController extends Controller
 
         // Filter by role
         if ($request->filled('role_id')) {
-            $query->where('role_id', $request->role_id);
+            $roleId = $request->role_id;
+
+            if (! is_numeric($roleId)) {
+                $roleId = Role::where('role_name', $roleId)->value('id');
+            }
+
+            $query->where('role_id', $roleId);
         }
 
         // Filter by department
@@ -48,6 +62,53 @@ class UserController extends Controller
         $departments = Department::orderBy('department_name')->get();
 
         return view('dashboards.admin.users.index', compact('users', 'roles', 'departments'));
+    }
+
+    private function normalizedIndexFilters(Request $request): array
+    {
+        $filters = [];
+
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $filters['search'] = $search;
+        }
+
+        $roleId = trim((string) $request->input('role_id', ''));
+        if ($roleId !== '') {
+            if (! is_numeric($roleId)) {
+                $roleId = (string) Role::where('role_name', $roleId)->value('id');
+            }
+
+            if ($roleId !== '') {
+                $filters['role_id'] = $roleId;
+            }
+        }
+
+        $departmentId = trim((string) $request->input('department_id', ''));
+        if ($departmentId !== '') {
+            $filters['department_id'] = $departmentId;
+        }
+
+        $isActive = trim((string) $request->input('is_active', ''));
+        if (in_array($isActive, ['0', '1'], true)) {
+            $filters['is_active'] = $isActive;
+        }
+
+        return $filters;
+    }
+
+    private function indexFiltersNeedRedirect(Request $request, array $normalizedFilters): bool
+    {
+        $filterKeys = ['search', 'role_id', 'department_id', 'is_active'];
+        $currentFilters = [];
+
+        foreach ($filterKeys as $key) {
+            if ($request->query->has($key)) {
+                $currentFilters[$key] = (string) $request->query($key);
+            }
+        }
+
+        return $currentFilters !== $normalizedFilters;
     }
 
     /**

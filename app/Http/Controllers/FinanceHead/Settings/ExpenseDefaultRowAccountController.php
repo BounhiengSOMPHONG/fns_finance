@@ -7,6 +7,7 @@ use App\Models\ChartOfAccount;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSubsection;
+use App\Models\PlanningYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -15,8 +16,16 @@ class ExpenseDefaultRowAccountController extends Controller
     public function index(Request $request)
     {
         $query = trim((string) $request->query('q', ''));
+        $planningYear = PlanningYear::where('is_active', true)
+            ->orderByDesc('year')
+            ->first()
+            ?? PlanningYear::orderByDesc('year')->first();
 
         $rows = ExpenseCatalogItem::with(['chartOfAccount.parent', 'subsection.section.planningYear'])
+            ->when($planningYear, function ($builder) use ($planningYear): void {
+                $builder->whereHas('subsection.section', fn ($sectionQuery) => $sectionQuery
+                    ->where('planning_year_id', $planningYear->id));
+            })
             ->when($query !== '', function ($builder) use ($query) {
                 $builder->where(function ($nested) use ($query) {
                     $nested->where('item_name', 'like', "%{$query}%")
@@ -34,6 +43,9 @@ class ExpenseDefaultRowAccountController extends Controller
             ->get();
 
         $subsectionLabels = ExpenseSubsection::with('section.planningYear')
+            ->when($planningYear, fn ($builder) => $builder
+                ->whereHas('section', fn ($sectionQuery) => $sectionQuery
+                    ->where('planning_year_id', $planningYear->id)))
             ->get()
             ->sortByDesc(fn (ExpenseSubsection $subsection) => $subsection->section?->planningYear?->year ?? 0)
             ->unique('code')

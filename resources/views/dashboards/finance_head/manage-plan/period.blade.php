@@ -22,7 +22,6 @@
         'period_3_4_total_amount' => 0,
         'actual_full_year_amount' => 0,
     ];
-    $periodWarnings = $periodReport['warnings'] ?? ['unlinked_expenses' => [], 'reference_fallbacks' => []];
     $canEditPeriod = (bool) ($canEditPeriod ?? false);
     $money = fn ($amount) => number_format((float) $amount, 0, '.', '.');
     $inputValue = fn ($amount) => rtrim(rtrim(number_format((float) $amount, 2, '.', ''), '0'), '.');
@@ -78,13 +77,6 @@
         @elseif(! $canEditPeriod)
             <div class="period-lock-note">
                 ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະປ້ອນຍອດງວດໄດ້. ຖ້າແຜນຢູ່ໃນສະຖານະກວດສອບ ຈະສາມາດເບິ່ງຍອດໄດ້ເທົ່ານັ້ນ.
-            </div>
-        @endif
-
-        @if(! empty($periodWarnings['unlinked_expenses']))
-            <div class="period-warning">
-                <strong>ມີລາຍຈ່າຍທີ່ຍັງບໍ່ໄດ້ຜູກບັນຊີ {{ count($periodWarnings['unlinked_expenses']) }} ລາຍການ</strong>
-                <span>ກວດແກ້ທີ່ Expense Structure & Account Links ກ່ອນປັບຍອດງວດ.</span>
             </div>
         @endif
 
@@ -477,8 +469,7 @@
         max-width: 620px;
     }
 
-    .period-lock-note,
-    .period-warning {
+    .period-lock-note {
         border-radius: 8px;
         padding: .8rem 1rem;
     }
@@ -488,14 +479,6 @@
         border: 1px solid #fed7aa;
         color: #9a3412;
         font-weight: 700;
-    }
-
-    .period-warning {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        display: grid;
-        gap: .2rem;
     }
 
     .period-paper {
@@ -756,8 +739,7 @@
         .fns-alert,
         .fns-page-title,
         .period-toolbar,
-        .period-lock-note,
-        .period-warning {
+        .period-lock-note {
             display: none !important;
         }
 

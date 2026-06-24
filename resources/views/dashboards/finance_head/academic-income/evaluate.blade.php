@@ -238,19 +238,6 @@
 .ai-rate-field.row-saving { opacity:.58; pointer-events:none; }
 .ai-rate-field.row-saved { animation:aiFlashGreen .9s ease; }
 .ai-rate-field.row-error { animation:aiFlashRed .9s ease; }
-.ai-panel-actions {
-    display:flex; justify-content:flex-end; align-items:center; gap:.7rem;
-    padding:.58rem .7rem; border-top:1px solid var(--fns-gray-200); background:#fbfdff;
-    box-shadow:none;
-}
-.ai-action-group { display:flex; gap:.55rem; flex-wrap:wrap; }
-.ai-nav-btn {
-    border:1px solid var(--fns-gray-200); border-radius:8px; background:#fff; color:var(--fns-navy);
-    padding:.5rem .78rem; font-family:inherit; font-size:.78rem; font-weight:900; cursor:pointer;
-}
-.ai-nav-btn:hover { background:#f8fafc; }
-.ai-nav-btn-primary { border-color:var(--fns-gold); background:var(--fns-gold); color:#111b33; box-shadow:0 8px 18px rgba(201,153,26,.2); }
-.ai-nav-btn-save { border-color:#18325c; background:#18325c; color:#fff; box-shadow:0 8px 18px rgba(24,50,92,.18); }
 .ai-toasts {
     position:fixed; right:1.5rem; bottom:1.5rem; z-index:9500;
     display:flex; flex-direction:column; gap:.55rem; pointer-events:none;
@@ -278,9 +265,6 @@
     .ai-item { grid-template-columns:1fr; align-items:stretch; }
     .ai-item-side { width:100%; justify-content:space-between; }
     .ai-item-side .ai-num { width:6rem; min-width:6rem; }
-    .ai-panel-actions { align-items:stretch; flex-direction:column; }
-    .ai-action-group { width:100%; }
-    .ai-action-group .ai-nav-btn { flex:1; }
     .ai-toasts { right:1rem; left:1rem; bottom:1rem; }
 }
 </style>
@@ -532,12 +516,6 @@
             </details>
             <div class="ai-nores" data-nores="2">ບໍ່ພົບລາຍການທີ່ກົງກັບ “<span></span>”</div>
         </div>
-        <div class="ai-panel-actions">
-            <div class="ai-action-group">
-                <button type="button" class="ai-nav-btn" data-step-prev>ກັບຄືນ</button>
-                <button type="submit" class="ai-nav-btn ai-nav-btn-save">ບັນທຶກ</button>
-            </div>
-        </div>
     </section>
 
 </form>
@@ -662,7 +640,6 @@
 
     stepTabs.forEach(tab => tab.addEventListener('click', () => showStep(Number(tab.dataset.stepTarget))));
     document.querySelectorAll('[data-step-next]').forEach(btn => btn.addEventListener('click', () => showStep(currentStep + 1)));
-    document.querySelectorAll('[data-step-prev]').forEach(btn => btn.addEventListener('click', () => showStep(currentStep - 1)));
 
     function numberFromPaste(value) {
         const clean = String(value || '').trim().replace(/,/g, '');

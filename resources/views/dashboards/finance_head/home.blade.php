@@ -435,45 +435,6 @@
         color: #991b1b;
     }
 
-    .fh-board-formula {
-        align-items: center;
-        background: #f8fafc;
-        border-top: 1px solid #e5e7eb;
-        color: #334155;
-        display: flex;
-        flex-wrap: wrap;
-        gap: .38rem;
-        padding: .75rem 1rem;
-    }
-
-    .fh-board-formula strong {
-        color: var(--fns-navy);
-        font-size: .76rem;
-        font-weight: 900;
-    }
-
-    .fh-formula-chip {
-        background: #fff;
-        border: 1px solid #dbe3ef;
-        border-radius: 999px;
-        color: #475569;
-        font-size: .7rem;
-        font-weight: 900;
-        padding: .24rem .52rem;
-    }
-
-    .fh-formula-chip.is-minus {
-        background: #fff7ed;
-        border-color: #fed7aa;
-        color: #9a3412;
-    }
-
-    .fh-formula-chip.is-result {
-        background: #ecfdf5;
-        border-color: #bbf7d0;
-        color: #166534;
-    }
-
     @media (max-width: 980px) {
         .fh-hero {
             grid-template-columns: 1fr;
@@ -622,13 +583,6 @@
             </div>
         </div>
 
-        <div class="fh-board-formula">
-            <strong>ສູດ:</strong>
-            <span class="fh-formula-chip">ງົບປະມານ</span>
-            <span class="fh-formula-chip is-minus">- ໃຊ້ຈ່າຍຈິງ</span>
-            <span class="fh-formula-chip is-minus">- ຜູກພັນ</span>
-            <span class="fh-formula-chip is-result">= ຄົງເຫຼືອ</span>
-        </div>
     </section>
 
 </div>

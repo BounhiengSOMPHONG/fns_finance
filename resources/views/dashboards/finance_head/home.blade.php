@@ -158,39 +158,11 @@
         margin-top: .15rem;
     }
 
-    .fh-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: .75rem;
-    }
-
-    .fh-stat,
     .fh-action {
         background: #fff;
         border: 1px solid var(--fns-gray-200);
         border-radius: 8px;
         box-shadow: 0 1px 5px rgba(26,39,68,.06);
-    }
-
-    .fh-stat {
-        padding: .95rem 1rem;
-        border-top: 3px solid var(--fns-gold);
-    }
-
-    .fh-stat span {
-        display: block;
-        color: var(--fns-gray-600);
-        font-size: .74rem;
-        font-weight: 700;
-        margin-bottom: .35rem;
-    }
-
-    .fh-stat strong {
-        display: block;
-        color: var(--fns-navy);
-        font-family: 'Cinzel', serif;
-        font-size: 1.55rem;
-        line-height: 1;
     }
 
     .fh-section-title {
@@ -268,7 +240,6 @@
             min-width: 0;
         }
 
-        .fh-grid,
         .fh-actions-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -279,7 +250,6 @@
             padding: 1rem;
         }
 
-        .fh-grid,
         .fh-actions-grid {
             grid-template-columns: 1fr;
         }
@@ -323,13 +293,6 @@
                 </strong>
             </div>
         </aside>
-    </section>
-
-    <section class="fh-grid" aria-label="Plan summary">
-        <div class="fh-stat"><span>ແຜນທັງໝົດ</span><strong>{{ number_format($planStats['total']) }}</strong></div>
-        <div class="fh-stat"><span>ກຳລັງຈັດເຮັດ</span><strong>{{ number_format($planStats['draft']) }}</strong></div>
-        <div class="fh-stat"><span>ລໍຖ້າກວດ</span><strong>{{ number_format($planStats['pending_review']) }}</strong></div>
-        <div class="fh-stat"><span>ບັນທຶກແລ້ວ</span><strong>{{ number_format($planStats['saved']) }}</strong></div>
     </section>
 
     <h2 class="fh-section-title">ເມນູທີ່ໃຊ້ເລື້ອຍ</h2>

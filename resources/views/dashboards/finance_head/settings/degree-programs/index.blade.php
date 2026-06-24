@@ -64,6 +64,12 @@
     color: var(--fns-navy); background: rgba(26,39,68,0.06); border-radius: 6px; padding: 0.2rem 0.45rem;
 }
 .dp-name { flex: 1; min-width: 0; font-size: 0.86rem; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-years { display: inline-flex; flex-wrap: wrap; gap: .2rem; margin-left: .35rem; vertical-align: middle; }
+.dp-year-chip {
+    display: inline-flex; align-items: center;
+    border-radius: 999px; background: #eef2f7; color: #64748b;
+    padding: .05rem .38rem; font-size: .62rem; font-weight: 800;
+}
 .dp-off-tag { font-size: 0.66rem; color: var(--fns-gray-400); margin-left: 0.35rem; }
 .dp-row.is-off .dp-name { color: var(--fns-gray-400); }
 .dp-row.is-off .dp-code { opacity: 0.55; }
@@ -109,6 +115,15 @@
 }
 .dp-modal-body { padding: 1.15rem; }
 .dp-modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1.25rem; }
+.dp-year-options { display: flex; flex-wrap: wrap; gap: .45rem; }
+.dp-year-option {
+    display: inline-flex; align-items: center; gap: .35rem;
+    border: 1px solid var(--fns-gray-200); border-radius: 999px;
+    padding: .35rem .62rem; background: #fff; color: var(--fns-navy);
+    font-size: .78rem; font-weight: 800; cursor: pointer;
+}
+.dp-year-option input { margin: 0; }
+.dp-year-help { margin-top: .35rem; color: var(--fns-gray-500); font-size: .72rem; }
 </style>
 
 @php
@@ -117,7 +132,7 @@
         'master'   => ['label' => 'ປະລິນຍາໂທ (ປ.ໂທ)', 'badge' => 'fns-badge-green'],
         'phd'      => ['label' => 'ປະລິນຍາເອກ (ປ.ເອກ)', 'badge' => 'fns-badge-purple'],
     ];
-    $byLevel = $programs->groupBy('level');
+    $byLevel = $displayPrograms->groupBy('level');
 @endphp
 
 <div class="dp-wrap">
@@ -150,19 +165,9 @@
                 <span class="dp-gcount">{{ $items->count() }} ສາຂາ</span>
             </div>
 
-            @if($key === 'bachelor')
-                {{-- bachelor: sub-group by study year --}}
-                @foreach($items->groupBy(fn($p) => $p->study_year ?? 0) as $yr => $rows)
-                    <div class="dp-sublabel">{{ $yr ? 'ປີ '.$yr : 'ບໍ່ລະບຸຊັ້ນປີ' }} · {{ $rows->count() }}</div>
-                    <div class="dp-rows">
-                        @each('dashboards.finance_head.settings.degree-programs._row', $rows, 'p')
-                    </div>
-                @endforeach
-            @else
-                <div class="dp-rows">
-                    @each('dashboards.finance_head.settings.degree-programs._row', $items, 'p')
-                </div>
-            @endif
+            <div class="dp-rows">
+                @each('dashboards.finance_head.settings.degree-programs._row', $items, 'p')
+            </div>
         </div>
         @endif
     @empty
@@ -193,6 +198,7 @@
             <form method="POST" action="{{ route('head_of_finance.settings.degree-programs.store') }}" id="dp-modal-form">
                 @csrf
                 <input type="hidden" name="_method" id="dp-form-method" value="PUT" disabled>
+                <input type="hidden" name="group_ids" id="dp-group-ids">
 
                 <div class="fns-form-group">
                     <label class="fns-label">ລະຫັດສາຂາ <span style="color:red;">*</span></label>
@@ -214,9 +220,17 @@
                     </select>
                 </div>
 
-                <div class="fns-form-group">
+                <div class="fns-form-group" id="dp-year-group">
                     <label class="fns-label">ຊັ້ນປີ (ສຳລັບ ປ.ຕີ)</label>
-                    <input type="number" name="study_year" id="dp-study-year" min="1" max="6" class="fns-input" placeholder="ຕື່ມສຳລັບ ປ.ຕີ ເທົ່ານັ້ນ">
+                    <div class="dp-year-options">
+                        @for($year = 1; $year <= 4; $year++)
+                            <label class="dp-year-option">
+                                <input type="checkbox" name="study_years[]" value="{{ $year }}" class="dp-study-year">
+                                ປີ {{ $year }}
+                            </label>
+                        @endfor
+                    </div>
+                    <div class="dp-year-help">ເລືອກຫຼາຍປີໄດ້. ລະບົບຈະສ້າງລະຫັດເຊັ່ນ B-CS-Y1, B-CS-Y2 ໃຫ້ອັດຕະໂນມັດ.</div>
                 </div>
 
                 <div class="fns-form-group">
@@ -249,7 +263,9 @@
     const code = document.getElementById('dp-code');
     const name = document.getElementById('dp-name');
     const level = document.getElementById('dp-level');
-    const studyYear = document.getElementById('dp-study-year');
+    const groupIds = document.getElementById('dp-group-ids');
+    const yearGroup = document.getElementById('dp-year-group');
+    const studyYears = Array.from(document.querySelectorAll('.dp-study-year'));
     const active = document.getElementById('dp-active');
     const submit = document.getElementById('dp-submit');
     const createUrl = @json(route('head_of_finance.settings.degree-programs.store'));
@@ -290,20 +306,28 @@
     });
 
     function setStudyYearState() {
-        studyYear.disabled = level.value !== 'bachelor';
-        if (studyYear.disabled) studyYear.value = '';
+        const isBachelor = level.value === 'bachelor';
+        yearGroup.style.display = isBachelor ? '' : 'none';
+        studyYears.forEach(input => {
+            input.disabled = !isBachelor;
+            if (!isBachelor) input.checked = false;
+        });
     }
 
     function openModal(mode, data = {}) {
         form.action = mode === 'edit' ? data.url : createUrl;
         method.disabled = mode !== 'edit';
+        groupIds.value = data.groupIds || '';
         modalTitle.textContent = mode === 'edit' ? 'ແກ້ໄຂສາຂາວິຊາ' : 'ເພີ່ມສາຂາວິຊາ';
         submit.textContent = mode === 'edit' ? 'ອັບເດດ' : 'ບັນທຶກ';
 
         code.value = data.code || '';
         name.value = data.name || '';
         level.value = data.level || '';
-        studyYear.value = data.studyYear || '';
+        const selectedYears = (data.studyYears || '').split(',').filter(Boolean);
+        studyYears.forEach(input => {
+            input.checked = selectedYears.includes(input.value);
+        });
         active.checked = data.active !== '0';
         setStudyYearState();
 
@@ -328,7 +352,8 @@
                 code: edit.dataset.code,
                 name: edit.dataset.name,
                 level: edit.dataset.level,
-                studyYear: edit.dataset.studyYear,
+                studyYears: edit.dataset.studyYears,
+                groupIds: edit.dataset.groupIds,
                 active: edit.dataset.active,
             });
             return;

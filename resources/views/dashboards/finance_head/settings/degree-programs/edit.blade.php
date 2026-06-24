@@ -32,7 +32,7 @@
 
         <div class="fns-form-group">
             <label class="fns-label">ຊັ້ນປີ (ສຳລັບ ປ.ຕີ)</label>
-            <input type="number" name="study_year" min="1" max="6"
+            <input type="number" name="study_year" min="1" max="4"
                 value="{{ old('study_year', $degreeProgram->study_year) }}"
                 class="fns-input @error('study_year') fns-input-error @enderror"
                 placeholder="ຕື່ມສຳລັບ ປ.ຕີ ເທົ່ານັ້ນ">

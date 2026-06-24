@@ -67,10 +67,15 @@
     </x-modal>
 
     @forelse($patterns as $pattern)
-        <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <section class="rounded-lg border border-slate-200 bg-white shadow-sm" x-data="{ open: false }">
+            <button type="button"
+                    class="flex w-full flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 text-left hover:bg-slate-50/50 transition"
+                    @click="open = !open">
                 <div>
                     <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
                         <h2 class="text-base font-semibold text-slate-900">{{ $pattern->name }}</h2>
                         <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ $pattern->key }}</span>
                         <span class="rounded px-2 py-0.5 text-xs font-medium {{ $pattern->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
@@ -82,8 +87,9 @@
                     </div>
                     <p class="mt-1 text-sm text-slate-500">{{ $pattern->description ?: 'ຍັງບໍ່ມີລາຍລະອຽດ.' }}</p>
                 </div>
-            </div>
+            </button>
 
+            <div x-show="open" x-transition>
             <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.update', $pattern) }}" class="js-autosave-form grid gap-4 border-b border-slate-200 px-5 py-4 md:grid-cols-[220px_1fr_auto] md:items-end">
                 @csrf
                 @method('PATCH')
@@ -202,6 +208,7 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
             </div>
         </section>
     @empty

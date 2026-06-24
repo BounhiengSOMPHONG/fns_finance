@@ -23,33 +23,48 @@
     @endphp
 
     <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-200 px-5 py-4">
-            <h2 class="text-base font-semibold text-slate-900">ສູດຄຳນວນລາຍຈ່າຍ</h2>
-            <p class="mt-1 text-sm text-slate-500">ກຳນົດຊ່ອງກອກ, ຕົວຄູນ ແລະວິທີຄິດຍອດລວມຂອງລາຍຈ່າຍ.</p>
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">ສູດຄຳນວນລາຍຈ່າຍ</h2>
+                <p class="mt-1 text-sm text-slate-500">ກຳນົດຊ່ອງກອກ, ຕົວຄູນ ແລະວິທີຄິດຍອດລວມຂອງລາຍຈ່າຍ.</p>
+            </div>
+            <button type="button" class="fns-btn fns-btn-primary" x-data @click="$dispatch('open-modal', 'add-pattern-modal')">
+                + ເພີ່ມແບບຄຳນວນ
+            </button>
         </div>
-        <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.store') }}" class="grid gap-4 px-5 py-4 md:grid-cols-[150px_220px_1fr_auto] md:items-end">
+    </section>
+
+    <x-modal name="add-pattern-modal" maxWidth="lg">
+        <div class="px-6 py-4">
+            <h3 class="text-lg font-semibold text-slate-900">ເພີ່ມແບບຄຳນວນໃໝ່</h3>
+            <p class="mt-1 text-sm text-slate-500">ກຳນົດລະຫັດ, ຊື່ ແລະລາຍລະອຽດຂອງແບບຄຳນວນ.</p>
+        </div>
+        <form method="POST" action="{{ route('head_of_finance.settings.expense-patterns.store') }}" class="grid gap-4 px-6 py-4">
             @csrf
             <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດແບບ</label>
-                <input name="key" value="{{ old('key') }}" class="fns-input" placeholder="monthly" required>
+                <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດແບບ <span class="text-red-500">*</span></label>
+                <input name="key" value="{{ old('key') }}" class="fns-input w-full" placeholder="monthly" required>
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ແບບ</label>
-                <input name="name" value="{{ old('name') }}" class="fns-input" placeholder="ລາຍຈ່າຍປະຈຳເດືອນ" required>
+                <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ແບບ <span class="text-red-500">*</span></label>
+                <input name="name" value="{{ old('name') }}" class="fns-input w-full" placeholder="ລາຍຈ່າຍປະຈຳເດືອນ" required>
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-slate-700">ລາຍລະອຽດ</label>
-                <input name="description" value="{{ old('description') }}" class="fns-input" placeholder="ໃຊ້ກັບລາຍຈ່າຍປະເພດໃດ">
+                <input name="description" value="{{ old('description') }}" class="fns-input w-full" placeholder="ໃຊ້ກັບລາຍຈ່າຍປະເພດໃດ">
             </div>
-            <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700">
+            <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 w-fit">
                 <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
                 ໃຊ້ງານ
             </label>
-            <div class="md:col-span-4">
-                <button type="submit" class="fns-btn fns-btn-primary">ເພີ່ມແບບຄຳນວນ</button>
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
+                <button type="button" class="fns-btn fns-btn-secondary" x-data @click="$dispatch('close-modal', 'add-pattern-modal')">
+                    ຍົກເລີກ
+                </button>
+                <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກ</button>
             </div>
         </form>
-    </section>
+    </x-modal>
 
     @forelse($patterns as $pattern)
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">

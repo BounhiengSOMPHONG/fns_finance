@@ -328,7 +328,9 @@
     .excel-block { border:1px solid #d8dce5; border-radius:6px; overflow:hidden; background:#fff; }
     .excel-block.is-collapsed .excel-block-title { border-bottom:0; }
     .excel-block.is-collapsed .excel-block-body { display:none; }
-    .excel-block-title { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:.8rem .95rem; border-bottom:1px solid #d8dce5; background:#fff; }
+    .excel-block-title { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:.8rem .95rem; border-bottom:1px solid #d8dce5; background:#fff; cursor:pointer; }
+    .excel-block-title:hover { background:#fbfcff; }
+    .excel-block-title:focus-visible { outline:2px solid var(--fns-gold); outline-offset:2px; }
     .excel-block-title-main { display:flex; align-items:flex-start; gap:.65rem; min-width:0; }
     .excel-block-title h3 { margin:0; color:#061226; font-size:1rem; line-height:1.35; font-weight:900; }
     .excel-block-title p { margin:.3rem 0 0; color:var(--fns-gray-500); font-size:.75rem; }
@@ -858,11 +860,11 @@ function renderSubsection(section, subsection) {
     const isCollapsed = collapsedSubsections.has(Number(subsection.id));
     return `
         <article class="excel-block ${isCollapsed ? 'is-collapsed' : ''}" data-section="${section.id}" data-subsection="${subsection.id}" data-pattern="${pattern?.id || ''}">
-            <div class="excel-block-title">
+            <div class="excel-block-title" data-collapse-subsection="${subsection.id}" role="button" tabindex="0" aria-expanded="${isCollapsed ? 'false' : 'true'}" aria-label="${isCollapsed ? 'ເປີດລາຍລະອຽດ' : 'ພັບລາຍລະອຽດ'} ${esc(subsection.code)} ${esc(subsection.name)}">
                 <div class="excel-block-title-main">
-                    <button type="button" class="excel-collapse-btn" data-collapse-subsection="${subsection.id}" aria-expanded="${isCollapsed ? 'false' : 'true'}" aria-label="${isCollapsed ? 'ເປີດລາຍລະອຽດ' : 'ພັບລາຍລະອຽດ'} ${esc(subsection.code)} ${esc(subsection.name)}">
+                    <span class="excel-collapse-btn" aria-hidden="true">
                         <span class="excel-collapse-icon">›</span>
-                    </button>
+                    </span>
                     <div>
                         <h3>${esc(subsection.code)} &nbsp;${esc(subsection.name)}</h3>
                         <p>${esc(pattern?.name || 'No pattern')} ${activeRule(section.id, subsection.id, pattern?.id)?.formula ? '· ' + esc(activeRule(section.id, subsection.id, pattern?.id).formula) : ''}</p>
@@ -951,19 +953,29 @@ function bindSheetEvents() {
         });
     });
 
-    document.querySelectorAll('.excel-collapse-btn').forEach(button => {
-        button.addEventListener('click', event => {
+    document.querySelectorAll('.excel-block-title[data-collapse-subsection]').forEach(title => {
+        title.addEventListener('click', event => {
             const subsectionId = Number(event.currentTarget.dataset.collapseSubsection);
+            toggleSubsection(subsectionId);
+        });
 
-            if (collapsedSubsections.has(subsectionId)) {
-                collapsedSubsections.delete(subsectionId);
-            } else {
-                collapsedSubsections.add(subsectionId);
-            }
-
-            renderSheet();
+        title.addEventListener('keydown', event => {
+            if (!['Enter', ' '].includes(event.key)) return;
+            event.preventDefault();
+            const subsectionId = Number(event.currentTarget.dataset.collapseSubsection);
+            toggleSubsection(subsectionId);
         });
     });
+}
+
+function toggleSubsection(subsectionId) {
+    if (collapsedSubsections.has(subsectionId)) {
+        collapsedSubsections.delete(subsectionId);
+    } else {
+        collapsedSubsections.add(subsectionId);
+    }
+
+    renderSheet();
 }
 
 function lineValues(row) {

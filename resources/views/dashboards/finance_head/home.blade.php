@@ -18,6 +18,17 @@
     ];
     $summaryYear = $budgetSummary['year'] ?? null;
     $remainingIsNegative = (float) ($budgetSummary['remaining_total'] ?? 0) < 0;
+    $budgetTotal = max((float) ($budgetSummary['budget_total'] ?? 0), 0.0);
+    $percentOfBudget = function ($amount) use ($budgetTotal): float {
+        if ($budgetTotal <= 0) {
+            return 0.0;
+        }
+
+        return min(100.0, max(0.0, ((float) $amount / $budgetTotal) * 100));
+    };
+    $committedPercent = $percentOfBudget($budgetSummary['committed_total'] ?? 0);
+    $actualPercent = $percentOfBudget($budgetSummary['actual_expense_total'] ?? 0);
+    $remainingPercent = $remainingIsNegative ? 100.0 : $percentOfBudget($budgetSummary['remaining_total'] ?? 0);
 @endphp
 
 <style>
@@ -167,110 +178,300 @@
         margin-top: .15rem;
     }
 
-    .fh-summary-head {
-        align-items: flex-end;
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-top: .2rem;
+    .fh-finance-board {
+        background: #fff;
+        border: 1px solid var(--fns-gray-200);
+        border-radius: 8px;
+        box-shadow: 0 18px 42px rgba(17, 27, 51, .08);
+        overflow: hidden;
     }
 
-    .fh-summary-head h2 {
+    .fh-board-head {
+        align-items: flex-start;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+        padding: 1rem 1.1rem;
+    }
+
+    .fh-board-title {
+        display: grid;
+        gap: .18rem;
+        min-width: 0;
+    }
+
+    .fh-board-title span {
+        color: #9a6b05;
+        font-size: .72rem;
+        font-weight: 900;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+    }
+
+    .fh-board-title h2 {
         color: var(--fns-navy);
-        font-size: 1rem;
+        font-size: 1.08rem;
         font-weight: 900;
         margin: 0;
     }
 
-    .fh-summary-head span {
+    .fh-board-title p {
         color: var(--fns-gray-600);
         font-size: .78rem;
         font-weight: 700;
+        line-height: 1.45;
+        margin: 0;
     }
 
-    .fh-summary-grid {
+    .fh-board-year {
+        background: #f8fafc;
+        border: 1px solid #dbe3ef;
+        border-radius: 999px;
+        color: var(--fns-navy);
+        flex: 0 0 auto;
+        font-size: .78rem;
+        font-weight: 900;
+        padding: .46rem .72rem;
+    }
+
+    .fh-board-body {
+        display: grid;
+        grid-template-columns: minmax(260px, .85fr) minmax(0, 1.5fr);
+    }
+
+    .fh-remaining-panel {
+        background: linear-gradient(145deg, #111b33 0%, #203356 100%);
+        color: #fff;
+        display: grid;
+        gap: .9rem;
+        min-width: 0;
+        padding: 1.15rem;
+    }
+
+    .fh-remaining-panel.is-negative {
+        background: linear-gradient(145deg, #4a1111 0%, #7f1d1d 100%);
+    }
+
+    .fh-remaining-label {
+        align-items: center;
+        display: flex;
+        gap: .7rem;
+        justify-content: space-between;
+    }
+
+    .fh-remaining-label span {
+        color: rgba(255,255,255,.74);
+        font-size: .76rem;
+        font-weight: 900;
+    }
+
+    .fh-remaining-pill {
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 999px;
+        color: var(--fns-gold-light);
+        font-size: .68rem;
+        font-weight: 900;
+        padding: .26rem .48rem;
+    }
+
+    .fh-remaining-value {
+        font-family: 'Cinzel', serif;
+        font-size: clamp(1.7rem, 3.2vw, 2.45rem);
+        font-weight: 900;
+        line-height: 1;
+        overflow-wrap: anywhere;
+    }
+
+    .fh-remaining-note {
+        color: rgba(255,255,255,.7);
+        font-size: .76rem;
+        font-weight: 700;
+        line-height: 1.45;
+        margin: 0;
+    }
+
+    .fh-remaining-meter {
+        background: rgba(255,255,255,.15);
+        border-radius: 999px;
+        height: .55rem;
+        overflow: hidden;
+    }
+
+    .fh-remaining-meter span {
+        background: {{ $remainingIsNegative ? '#fecaca' : '#86efac' }};
+        border-radius: inherit;
+        display: block;
+        height: 100%;
+        width: var(--remaining-width, 0%);
+    }
+
+    .fh-remaining-foot {
+        align-items: center;
+        color: rgba(255,255,255,.72);
+        display: flex;
+        font-size: .72rem;
+        font-weight: 800;
+        gap: .75rem;
+        justify-content: space-between;
+    }
+
+    .fh-ledger {
         display: grid;
         gap: .75rem;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .fh-money-card {
-        background: #fff;
-        border: 1px solid var(--fns-gray-200);
-        border-radius: 8px;
-        box-shadow: 0 12px 28px rgba(26,39,68,.08);
-        min-width: 0;
-        overflow: hidden;
         padding: 1rem;
-        position: relative;
     }
 
-    .fh-money-card::before {
-        content: "";
-        height: 3px;
-        inset: 0 0 auto;
-        position: absolute;
+    .fh-ledger-row {
+        align-items: center;
+        display: grid;
+        gap: .8rem;
+        grid-template-columns: minmax(145px, .75fr) minmax(0, 1fr) minmax(130px, auto);
+        min-width: 0;
     }
 
-    .fh-money-card.is-budget::before {
-        background: var(--fns-gold);
+    .fh-ledger-name {
+        align-items: center;
+        display: flex;
+        gap: .55rem;
+        min-width: 0;
     }
 
-    .fh-money-card.is-commitment::before {
-        background: #d97706;
+    .fh-ledger-step {
+        align-items: center;
+        border-radius: 999px;
+        display: inline-flex;
+        flex: 0 0 auto;
+        font-size: .68rem;
+        font-weight: 900;
+        height: 1.55rem;
+        justify-content: center;
+        min-width: 1.55rem;
     }
 
-    .fh-money-card.is-actual::before {
-        background: #991b1b;
+    .fh-ledger-copy {
+        min-width: 0;
     }
 
-    .fh-money-card.is-remaining-positive::before {
-        background: #15803d;
-    }
-
-    .fh-money-card.is-remaining-negative::before {
-        background: #b91c1c;
-    }
-
-    .fh-money-card span {
-        color: var(--fns-gray-600);
+    .fh-ledger-copy strong {
+        color: var(--fns-navy);
         display: block;
-        font-size: .76rem;
-        font-weight: 800;
-        margin-bottom: .5rem;
+        font-size: .8rem;
+        font-weight: 900;
+        line-height: 1.2;
     }
 
-    .fh-money-card strong {
+    .fh-ledger-copy span {
+        color: #64748b;
+        display: block;
+        font-size: .7rem;
+        font-weight: 700;
+        line-height: 1.35;
+        margin-top: .16rem;
+    }
+
+    .fh-ledger-meter {
+        background: #eef2f7;
+        border-radius: 999px;
+        height: .5rem;
+        overflow: hidden;
+    }
+
+    .fh-ledger-meter span {
+        background: var(--ledger-color, var(--fns-gold));
+        border-radius: inherit;
+        display: block;
+        height: 100%;
+        width: var(--ledger-width, 0%);
+    }
+
+    .fh-ledger-amount {
+        text-align: right;
+    }
+
+    .fh-ledger-amount strong {
         color: var(--fns-navy);
         display: block;
         font-family: 'Cinzel', serif;
-        font-size: clamp(1.25rem, 2vw, 1.65rem);
+        font-size: 1.02rem;
+        font-weight: 900;
         line-height: 1.05;
         overflow-wrap: anywhere;
     }
 
-    .fh-money-card small {
+    .fh-ledger-amount span {
         color: #64748b;
         display: block;
-        font-size: .72rem;
-        font-weight: 700;
-        margin-top: .45rem;
+        font-size: .68rem;
+        font-weight: 800;
+        margin-top: .18rem;
     }
 
-    .fh-money-card.is-commitment strong {
-        color: #92400e;
+    .fh-ledger-row.is-budget {
+        --ledger-color: var(--fns-gold);
     }
 
-    .fh-money-card.is-actual strong {
-        color: #7f1d1d;
+    .fh-ledger-row.is-commitment {
+        --ledger-color: #d97706;
     }
 
-    .fh-money-card.is-remaining-positive strong {
-        color: #166534;
+    .fh-ledger-row.is-actual {
+        --ledger-color: #b91c1c;
     }
 
-    .fh-money-card.is-remaining-negative strong {
+    .fh-ledger-row.is-budget .fh-ledger-step {
+        background: #fff7d6;
+        color: #7a5b0b;
+    }
+
+    .fh-ledger-row.is-commitment .fh-ledger-step {
+        background: #ffedd5;
+        color: #9a3412;
+    }
+
+    .fh-ledger-row.is-actual .fh-ledger-step {
+        background: #fee2e2;
         color: #991b1b;
+    }
+
+    .fh-board-formula {
+        align-items: center;
+        background: #f8fafc;
+        border-top: 1px solid #e5e7eb;
+        color: #334155;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .38rem;
+        padding: .75rem 1rem;
+    }
+
+    .fh-board-formula strong {
+        color: var(--fns-navy);
+        font-size: .76rem;
+        font-weight: 900;
+    }
+
+    .fh-formula-chip {
+        background: #fff;
+        border: 1px solid #dbe3ef;
+        border-radius: 999px;
+        color: #475569;
+        font-size: .7rem;
+        font-weight: 900;
+        padding: .24rem .52rem;
+    }
+
+    .fh-formula-chip.is-minus {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #9a3412;
+    }
+
+    .fh-formula-chip.is-result {
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #166534;
     }
 
     @media (max-width: 980px) {
@@ -282,8 +483,8 @@
             min-width: 0;
         }
 
-        .fh-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        .fh-board-body {
+            grid-template-columns: 1fr;
         }
     }
 
@@ -292,14 +493,19 @@
             padding: 1rem;
         }
 
-        .fh-summary-head {
+        .fh-board-head {
             align-items: flex-start;
             flex-direction: column;
             gap: .25rem;
         }
 
-        .fh-summary-grid {
+        .fh-ledger-row {
             grid-template-columns: 1fr;
+            gap: .45rem;
+        }
+
+        .fh-ledger-amount {
+            text-align: left;
         }
     }
 </style>
@@ -343,32 +549,86 @@
         </aside>
     </section>
 
-    <div class="fh-summary-head">
-        <h2>ສະຫຼຸບຍອດການເງິນ</h2>
-        <span>{{ $summaryYear ? 'ອີງຕາມແຜນປີ '.$summaryYear : 'ຍັງບໍ່ມີແຜນປີ' }}</span>
-    </div>
+    <section class="fh-finance-board" aria-label="Finance summary">
+        <div class="fh-board-head">
+            <div class="fh-board-title">
+                <span>Financial Control</span>
+                <h2>ສະຫຼຸບຍອດການເງິນ</h2>
+                <p>ສະແດງພາບລວມງົບ, ຍອດຜູກພັນ, ຍອດໃຊ້ຈ່າຍຈິງ ແລະຍອດທີ່ຍັງເຫຼືອ.</p>
+            </div>
+            <span class="fh-board-year">{{ $summaryYear ? 'ແຜນປີ '.$summaryYear : 'ຍັງບໍ່ມີແຜນປີ' }}</span>
+        </div>
 
-    <section class="fh-summary-grid" aria-label="Finance summary">
-        <article class="fh-money-card is-budget">
-            <span>ຍອດງົບປະມານ</span>
-            <strong>{{ number_format((float) $budgetSummary['budget_total'], 0, '.', '.') }}</strong>
-            <small>ຍອດຈາກແຜນປີ</small>
-        </article>
-        <article class="fh-money-card is-commitment">
-            <span>ຍອດຜູກພັນ</span>
-            <strong>{{ number_format((float) $budgetSummary['committed_total'], 0, '.', '.') }}</strong>
-            <small>Advance requests ທີ່ບໍ່ຖືກປະຕິເສດ</small>
-        </article>
-        <article class="fh-money-card is-actual">
-            <span>ຍອດໃຊ້ຈ່າຍຈິງ</span>
-            <strong>{{ number_format((float) $budgetSummary['actual_expense_total'], 0, '.', '.') }}</strong>
-            <small>Transactions ປະເພດ expense</small>
-        </article>
-        <article class="fh-money-card {{ $remainingIsNegative ? 'is-remaining-negative' : 'is-remaining-positive' }}">
-            <span>ຍອດຄົງເຫຼືອ</span>
-            <strong>{{ number_format((float) $budgetSummary['remaining_total'], 0, '.', '.') }}</strong>
-            <small>ງົບປະມານ - ໃຊ້ຈ່າຍຈິງ - ຜູກພັນ</small>
-        </article>
+        <div class="fh-board-body">
+            <article class="fh-remaining-panel {{ $remainingIsNegative ? 'is-negative' : '' }}" style="--remaining-width: {{ $remainingPercent }}%;">
+                <div class="fh-remaining-label">
+                    <span>ຍອດຄົງເຫຼືອ</span>
+                    <b class="fh-remaining-pill">{{ $remainingIsNegative ? 'ເກີນງົບ' : 'ພ້ອມໃຊ້' }}</b>
+                </div>
+                <strong class="fh-remaining-value">{{ number_format((float) $budgetSummary['remaining_total'], 0, '.', '.') }}</strong>
+                <p class="fh-remaining-note">ຫຼັງຫັກຍອດໃຊ້ຈ່າຍຈິງ ແລະຍອດຜູກພັນອອກຈາກແຜນງົບປະມານ.</p>
+                <div class="fh-remaining-meter"><span></span></div>
+                <div class="fh-remaining-foot">
+                    <span>{{ $remainingIsNegative ? 'ຄວນກວດງົບ' : 'ຄົງເຫຼືອຈາກງົບ' }}</span>
+                    <span>{{ number_format($remainingPercent, 2) }}%</span>
+                </div>
+            </article>
+
+            <div class="fh-ledger">
+                <div class="fh-ledger-row is-budget" style="--ledger-width: 100%;">
+                    <div class="fh-ledger-name">
+                        <span class="fh-ledger-step">01</span>
+                        <div class="fh-ledger-copy">
+                            <strong>ຍອດງົບປະມານ</strong>
+                            <span>ຍອດລວມຈາກແຜນປີ</span>
+                        </div>
+                    </div>
+                    <div class="fh-ledger-meter"><span></span></div>
+                    <div class="fh-ledger-amount">
+                        <strong>{{ number_format((float) $budgetSummary['budget_total'], 0, '.', '.') }}</strong>
+                        <span>100%</span>
+                    </div>
+                </div>
+
+                <div class="fh-ledger-row is-commitment" style="--ledger-width: {{ $committedPercent }}%;">
+                    <div class="fh-ledger-name">
+                        <span class="fh-ledger-step">02</span>
+                        <div class="fh-ledger-copy">
+                            <strong>ຍອດຜູກພັນ</strong>
+                            <span>Advance requests ທີ່ບໍ່ຖືກປະຕິເສດ</span>
+                        </div>
+                    </div>
+                    <div class="fh-ledger-meter"><span></span></div>
+                    <div class="fh-ledger-amount">
+                        <strong>{{ number_format((float) $budgetSummary['committed_total'], 0, '.', '.') }}</strong>
+                        <span>{{ number_format($committedPercent, 2) }}%</span>
+                    </div>
+                </div>
+
+                <div class="fh-ledger-row is-actual" style="--ledger-width: {{ $actualPercent }}%;">
+                    <div class="fh-ledger-name">
+                        <span class="fh-ledger-step">03</span>
+                        <div class="fh-ledger-copy">
+                            <strong>ຍອດໃຊ້ຈ່າຍຈິງ</strong>
+                            <span>Transactions ປະເພດ expense</span>
+                        </div>
+                    </div>
+                    <div class="fh-ledger-meter"><span></span></div>
+                    <div class="fh-ledger-amount">
+                        <strong>{{ number_format((float) $budgetSummary['actual_expense_total'], 0, '.', '.') }}</strong>
+                        <span>{{ number_format($actualPercent, 2) }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fh-board-formula">
+            <strong>ສູດ:</strong>
+            <span class="fh-formula-chip">ງົບປະມານ</span>
+            <span class="fh-formula-chip is-minus">- ໃຊ້ຈ່າຍຈິງ</span>
+            <span class="fh-formula-chip is-minus">- ຜູກພັນ</span>
+            <span class="fh-formula-chip is-result">= ຄົງເຫຼືອ</span>
+        </div>
     </section>
 
 </div>

@@ -158,79 +158,6 @@
         margin-top: .15rem;
     }
 
-    .fh-action {
-        background: #fff;
-        border: 1px solid var(--fns-gray-200);
-        border-radius: 8px;
-        box-shadow: 0 1px 5px rgba(26,39,68,.06);
-    }
-
-    .fh-section-title {
-        color: var(--fns-navy);
-        font-size: .95rem;
-        font-weight: 800;
-        margin: .25rem 0 0;
-    }
-
-    .fh-actions-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: .75rem;
-    }
-
-    .fh-action {
-        display: flex;
-        gap: .8rem;
-        align-items: flex-start;
-        padding: 1rem;
-        color: inherit;
-        text-decoration: none;
-        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-
-    .fh-action:hover {
-        transform: translateY(-1px);
-        border-color: rgba(201,153,26,.48);
-        box-shadow: 0 10px 28px rgba(26,39,68,.08);
-    }
-
-    .fh-action-icon {
-        display: grid;
-        place-items: center;
-        flex: 0 0 auto;
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
-        background: #f8fafc;
-        color: var(--fns-navy);
-        border: 1px solid #e2e8f0;
-    }
-
-    .fh-action-icon svg {
-        width: 17px;
-        height: 17px;
-    }
-
-    .fh-action strong {
-        display: block;
-        color: var(--fns-navy);
-        font-size: .88rem;
-        line-height: 1.25;
-    }
-
-    .fh-action-body {
-        display: block;
-        min-width: 0;
-    }
-
-    .fh-action-body span {
-        display: block;
-        color: var(--fns-gray-600);
-        font-size: .76rem;
-        line-height: 1.45;
-        margin-top: .2rem;
-    }
-
     @media (max-width: 980px) {
         .fh-hero {
             grid-template-columns: 1fr;
@@ -239,10 +166,6 @@
         .fh-user-panel {
             min-width: 0;
         }
-
-        .fh-actions-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
     }
 
     @media (max-width: 640px) {
@@ -250,9 +173,6 @@
             padding: 1rem;
         }
 
-        .fh-actions-grid {
-            grid-template-columns: 1fr;
-        }
     }
 </style>
 
@@ -295,29 +215,5 @@
         </aside>
     </section>
 
-    <h2 class="fh-section-title">ເມນູທີ່ໃຊ້ເລື້ອຍ</h2>
-    <section class="fh-actions-grid" aria-label="Quick actions">
-        <a href="{{ route('head_of_finance.manage-plan.index') }}" class="fh-action">
-            <span class="fh-action-icon"><x-icons.book-open /></span>
-            <span class="fh-action-body">
-                <strong>ຈັດການແຜນປະຈຳປີ</strong>
-                <span>ເພີ່ມປີ, ປະເມີນລາຍຮັບ, ລາຍຈ່າຍ ແລະເງິນເດືອນ</span>
-            </span>
-        </a>
-        <a href="{{ route('head_of_finance.settings.degree-programs.index') }}" class="fh-action">
-            <span class="fh-action-icon"><x-icons.building-office /></span>
-            <span class="fh-action-body">
-                <strong>ຂໍ້ມູນສາຂາວິຊາ</strong>
-                <span>ກຳນົດໂຄງສ້າງຫຼັກສູດທີ່ໃຊ້ປະເມີນລາຍຮັບ</span>
-            </span>
-        </a>
-        <a href="{{ route('head_of_finance.settings.expense-setup.index') }}" class="fh-action">
-            <span class="fh-action-icon"><x-icons.settings /></span>
-            <span class="fh-action-body">
-                <strong>ໂຄງສ້າງລາຍຈ່າຍ</strong>
-                <span>ຈັດກຸ່ມລາຍຈ່າຍ ແລະກຳນົດລາຍການເລີ່ມຕົ້ນ</span>
-            </span>
-        </a>
-    </section>
 </div>
 </x-app-layout>

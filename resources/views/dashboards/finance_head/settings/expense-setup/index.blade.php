@@ -9,24 +9,32 @@
 @endphp
 
 <div class="ex-setup">
-    @include('dashboards.finance_head.settings.expense-setup-tabs')
-
     <section class="ex-hero">
         <div>
             <span class="ex-kicker">Expense Setup</span>
-            <h2>ເລືອກວຽກທີ່ຈະຕັ້ງຄ່າ</h2>
-            <p>ໜ້ານີ້ແຍກວຽກອອກເປັນ 3 ສ່ວນ: DEF ລາຍປີ, ລິ້ງບັນຊີ, ແລະ ສູດຄຳນວນ.</p>
+            <h2>ຕັ້ງຄ່າລາຍຈ່າຍໃນຈຸດດຽວ</h2>
+            <p>ເລີ່ມຈາກໂຄງສ້າງ DEF, ກວດລິ້ງບັນຊີ, ແລ້ວປັບສູດຄຳນວນຕາມວຽກທີ່ຕ້ອງເຮັດ.</p>
         </div>
-        <div class="ex-hero-stat">
-            <strong>{{ number_format($catalogItemsCount) }}</strong>
-            <span>ລາຍການທັງໝົດ</span>
+        <div class="ex-hero-metrics" aria-label="Expense setup summary">
+            <span>
+                <strong>{{ number_format($catalogItemsCount) }}</strong>
+                <small>ລາຍການ</small>
+            </span>
+            <span>
+                <strong>{{ number_format($linkedCatalogItemsCount) }}</strong>
+                <small>ລິ້ງແລ້ວ</small>
+            </span>
+            <span>
+                <strong>{{ number_format($activePatternsCount) }}</strong>
+                <small>ສູດໃຊ້ງານ</small>
+            </span>
         </div>
     </section>
 
     <div class="ex-workflows">
         <section class="ex-card ex-card-def">
             <div class="ex-card-head">
-                <span class="ex-step">1</span>
+                <span class="ex-step">01</span>
                 <div>
                     <h3>DEF ແຕ່ລະປີ</h3>
                     <p>ກຳນົດໝວດ, ກຸ່ມ, ແລະລາຍການລາຍຈ່າຍໃນແຕ່ລະສົກປີ.</p>
@@ -58,7 +66,7 @@
 
         <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="ex-card ex-card-link">
             <div class="ex-card-head">
-                <span class="ex-step">2</span>
+                <span class="ex-step">02</span>
                 <div>
                     <h3>ລາຍການລິ້ງບັນຊີ</h3>
                     <p>ເຊື່ອມລາຍການລາຍຈ່າຍກັບ Chart of Account.</p>
@@ -79,7 +87,7 @@
 
         <a href="{{ route('head_of_finance.settings.expense-patterns.index') }}" class="ex-card ex-card-formula">
             <div class="ex-card-head">
-                <span class="ex-step">3</span>
+                <span class="ex-step">03</span>
                 <div>
                     <h3>ສູດຄຳນວນ</h3>
                     <p>ກຳນົດຊ່ອງກອກ ແລະຕົວຄູນທີ່ໃຊ້ຄິດຍອດລວມ.</p>
@@ -96,7 +104,7 @@
 </div>
 
 <style>
-    .ex-setup { display:flex; flex-direction:column; gap:1rem; }
+    .ex-setup { display:flex; flex-direction:column; gap:1.05rem; }
     .ex-hero,
     .ex-card {
         border:1px solid #d9e0ea;
@@ -109,7 +117,8 @@
         align-items:center;
         justify-content:space-between;
         gap:1rem;
-        padding:1.1rem 1.25rem;
+        padding:1.2rem 1.35rem;
+        background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);
     }
     .ex-kicker {
         display:inline-flex;
@@ -124,17 +133,23 @@
     .ex-hero h2 { margin-top:.2rem; font-size:1.25rem; }
     .ex-hero p,
     .ex-card p { margin:.35rem 0 0; color:#64748b; font-size:.86rem; line-height:1.55; }
-    .ex-hero-stat {
+    .ex-hero-metrics {
+        display:grid;
+        grid-template-columns:repeat(3,minmax(5.5rem,1fr));
+        gap:.45rem;
+        min-width:23rem;
+    }
+    .ex-hero-metrics span {
         display:grid;
         place-items:center;
-        min-width:9rem;
         border-radius:8px;
         background:#fff8df;
-        padding:.75rem 1rem;
+        border:1px solid rgba(201,153,26,.18);
+        padding:.7rem .85rem;
         color:#6b4a00;
     }
-    .ex-hero-stat strong { font-size:1.55rem; line-height:1; }
-    .ex-hero-stat span { margin-top:.25rem; font-size:.72rem; font-weight:900; }
+    .ex-hero-metrics strong { font-size:1.3rem; line-height:1; font-variant-numeric:tabular-nums; }
+    .ex-hero-metrics small { margin-top:.22rem; font-size:.68rem; font-weight:900; white-space:nowrap; }
     .ex-workflows {
         display:grid;
         grid-template-columns:minmax(0,1.25fr) minmax(18rem,.85fr) minmax(18rem,.85fr);
@@ -151,6 +166,9 @@
         text-decoration:none;
         transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     }
+    .ex-card-def { border-top:4px solid #13213b; }
+    .ex-card-link { border-top:4px solid #16a34a; }
+    .ex-card-formula { border-top:4px solid #c9991a; }
     .ex-card[href]:hover {
         border-color:#d39b27;
         box-shadow:0 12px 26px rgba(15,23,42,.10);
@@ -166,8 +184,9 @@
         border-radius:999px;
         background:#13213b;
         color:#fff;
-        font-size:.8rem;
+        font-size:.72rem;
         font-weight:900;
+        font-variant-numeric:tabular-nums;
     }
     .ex-year-list { display:grid; gap:.55rem; }
     .ex-year-row {
@@ -218,6 +237,13 @@
     }
     .ex-formula-stat { display:flex; align-items:end; gap:.45rem; margin-top:auto; }
     .ex-open {
+        display:inline-flex;
+        align-items:center;
+        width:max-content;
+        border-radius:999px;
+        background:#fff8df;
+        border:1px solid rgba(201,153,26,.28);
+        padding:.28rem .65rem;
         margin-top:auto;
         color:#8a5a00;
         font-size:.8rem;
@@ -230,7 +256,8 @@
     }
     @media (max-width:700px) {
         .ex-hero { align-items:stretch; flex-direction:column; }
-        .ex-hero-stat { place-items:start; min-width:0; }
+        .ex-hero-metrics { grid-template-columns:1fr; min-width:0; }
+        .ex-hero-metrics span { place-items:start; }
     }
 </style>
 @endsection

@@ -66,40 +66,60 @@
     @endif
 
     @if($planningYear)
-        <details class="es-add-panel">
-            <summary>
-                <span>
-                    <strong>ເພີ່ມໝວດຫຼັກ</strong>
-                    <small>ໃຊ້ສຳລັບກຸ່ມລາຍຈ່າຍໃຫຍ່.</small>
+        <section class="es-add-panel">
+            <div class="es-add-panel-head">
+                <span class="es-add-summary-copy">
+                    <strong>ໂຄງສ້າງໝວດລາຍຈ່າຍ</strong>
+                    <small>ເພີ່ມໝວດໃຫຍ່ໃໝ່ໃນສົກປີນີ້</small>
                 </span>
-                <span class="es-summary-action">ເປີດ</span>
-            </summary>
-            <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.store') }}" class="grid gap-3 px-5 py-4 md:grid-cols-[110px_1fr_120px_auto] md:items-end">
-                @csrf
-                <input type="hidden" name="planning_year_id" value="{{ $planningYear->id }}">
+                <button type="button" class="es-add-button" data-open-section-modal>
+                    <span class="es-add-button-icon">+</span>
+                    <span>ເພີ່ມໝວດຫຼັກ</span>
+                </button>
+            </div>
+        </section>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
-                    <input name="code" class="fns-input" placeholder="2.7" required>
+        <div class="es-modal-backdrop" data-section-modal hidden>
+            <div class="es-modal" role="dialog" aria-modal="true" aria-labelledby="esSectionModalTitle">
+                <div class="es-modal-head">
+                    <div>
+                        <span>Expense Section</span>
+                        <h3 id="esSectionModalTitle">ເພີ່ມໝວດຫຼັກ</h3>
+                    </div>
+                    <button type="button" class="es-modal-close" data-close-section-modal aria-label="Close">&times;</button>
                 </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
-                    <input name="name" class="fns-input" placeholder="ຊື່ໝວດລາຍຈ່າຍ" required>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">ລຳດັບ</label>
-                    <input type="number" name="display_order" class="fns-input" min="0" max="999" value="{{ ($sections->max('display_order') ?? 0) + 1 }}" required>
-                </div>
-                <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700">
-                    <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
-                    ໃຊ້ງານ
-                </label>
-                <div class="md:col-span-4">
-                    <textarea name="description" class="fns-input" rows="2" placeholder="ລາຍລະອຽດ"></textarea>
-                    <button type="submit" class="fns-btn fns-btn-primary mt-3">ເພີ່ມໝວດ</button>
-                </div>
-            </form>
-        </details>
+
+                <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.store') }}" class="es-section-modal-form">
+                    @csrf
+                    <input type="hidden" name="planning_year_id" value="{{ $planningYear->id }}">
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
+                        <input name="code" class="fns-input" placeholder="2.7" required data-section-modal-first>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
+                        <input name="name" class="fns-input" placeholder="ຊື່ໝວດລາຍຈ່າຍ" required>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">ລຳດັບ</label>
+                        <input type="number" name="display_order" class="fns-input" min="0" max="999" value="{{ ($sections->max('display_order') ?? 0) + 1 }}" required>
+                    </div>
+                    <label class="es-modal-check">
+                        <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
+                        ໃຊ້ງານ
+                    </label>
+                    <div class="es-modal-wide">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">ລາຍລະອຽດ</label>
+                        <textarea name="description" class="fns-input" rows="3" placeholder="ລາຍລະອຽດ"></textarea>
+                    </div>
+                    <div class="es-modal-actions">
+                        <button type="button" class="fns-btn fns-btn-secondary" data-close-section-modal>ຍົກເລີກ</button>
+                        <button type="submit" class="fns-btn fns-btn-primary">ບັນທຶກໝວດ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         @if($sections->isNotEmpty())
             <div class="es-section-nav" aria-label="ໝວດລາຍຈ່າຍ">
@@ -574,7 +594,12 @@
         background:#fff;
         overflow:hidden;
     }
-    .es-add-panel > summary,
+    .es-add-panel {
+        border-color:#d5dfeb;
+        background:#fbfcff;
+        box-shadow:0 1px 8px rgba(26,39,68,.04);
+    }
+    .es-add-panel-head,
     .es-edit-section > summary,
     .es-account-panel > summary {
         display:flex;
@@ -588,10 +613,143 @@
         font-size:.82rem;
         font-weight:900;
     }
-    .es-add-panel > summary::-webkit-details-marker,
+    .es-add-panel-head {
+        padding:.65rem .75rem .65rem 1rem;
+    }
     .es-edit-section > summary::-webkit-details-marker,
     .es-account-panel > summary::-webkit-details-marker { display:none; }
-    .es-add-panel small { display:block; margin-top:.1rem; color:var(--fns-gray-500); font-size:.72rem; font-weight:700; }
+    .es-add-summary-copy {
+        display:grid;
+        min-width:0;
+        gap:.08rem;
+    }
+    .es-add-summary-copy strong {
+        color:var(--fns-navy);
+        font-size:.84rem;
+        font-weight:900;
+    }
+    .es-add-panel small { display:block; color:var(--fns-gray-500); font-size:.7rem; font-weight:700; }
+    .es-add-button {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:.45rem;
+        min-height:2.35rem;
+        border:1px solid #d2a112;
+        border-radius:7px;
+        background:#d2a112;
+        color:#061226;
+        padding:.5rem .8rem;
+        font-size:.76rem;
+        font-weight:900;
+        line-height:1;
+        white-space:nowrap;
+        box-shadow:0 5px 14px rgba(201,153,26,.18);
+        transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+        cursor:pointer;
+        font-family:inherit;
+    }
+    .es-add-button-icon {
+        display:grid;
+        place-items:center;
+        width:1.2rem;
+        height:1.2rem;
+        border-radius:999px;
+        background:rgba(255,255,255,.55);
+        font-size:.95rem;
+        line-height:1;
+    }
+    .es-add-button:hover {
+        background:#e2b329;
+        box-shadow:0 8px 18px rgba(201,153,26,.24);
+        transform:translateY(-1px);
+    }
+    .es-modal-backdrop {
+        position:fixed;
+        inset:0;
+        z-index:80;
+        display:grid;
+        place-items:center;
+        background:rgba(6,18,38,.42);
+        padding:1.25rem;
+        backdrop-filter:blur(3px);
+    }
+    .es-modal-backdrop[hidden] { display:none; }
+    .es-modal {
+        width:min(680px, 100%);
+        max-height:min(720px, calc(100vh - 2.5rem));
+        overflow:auto;
+        border:1px solid #dbe2ec;
+        border-radius:8px;
+        background:#fff;
+        box-shadow:0 24px 70px rgba(6,18,38,.28);
+    }
+    .es-modal-head {
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:1rem;
+        border-bottom:1px solid #e2e8f0;
+        padding:1rem 1.1rem;
+        background:#fbfcff;
+    }
+    .es-modal-head span {
+        display:block;
+        color:#a16207;
+        font-size:.68rem;
+        font-weight:900;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+    }
+    .es-modal-head h3 {
+        margin:.12rem 0 0;
+        color:var(--fns-navy);
+        font-size:1rem;
+        font-weight:900;
+    }
+    .es-modal-close {
+        display:grid;
+        place-items:center;
+        width:2rem;
+        height:2rem;
+        border:1px solid #e2e8f0;
+        border-radius:7px;
+        background:#fff;
+        color:#64748b;
+        cursor:pointer;
+        font-size:1.25rem;
+        line-height:1;
+    }
+    .es-modal-close:hover { border-color:#d2a112; color:var(--fns-navy); }
+    .es-section-modal-form {
+        display:grid;
+        grid-template-columns:110px 1fr 120px;
+        gap:.85rem;
+        padding:1.1rem;
+    }
+    .es-modal-check {
+        display:flex;
+        align-items:center;
+        gap:.45rem;
+        min-height:2.55rem;
+        align-self:end;
+        border:1px solid #e2e8f0;
+        border-radius:7px;
+        padding:.55rem .7rem;
+        color:#475569;
+        font-size:.8rem;
+        font-weight:800;
+    }
+    .es-modal-wide,
+    .es-modal-actions {
+        grid-column:1 / -1;
+    }
+    .es-modal-actions {
+        display:flex;
+        justify-content:flex-end;
+        gap:.5rem;
+        padding-top:.15rem;
+    }
     .es-summary-action {
         border-radius:999px;
         background:#f1f5f9;
@@ -821,6 +979,11 @@
         .es-default-fields { grid-template-columns:1fr; }
         .es-default-actions { justify-content:flex-start; }
         .es-default-add-form { grid-template-columns:1fr; }
+        .es-add-panel-head { align-items:stretch; flex-direction:column; }
+        .es-add-button { width:100%; }
+        .es-section-modal-form { grid-template-columns:1fr; }
+        .es-modal-actions { align-items:stretch; flex-direction:column-reverse; }
+        .es-modal-actions .fns-btn { width:100%; }
     }
 </style>
 
@@ -830,6 +993,24 @@ const EXPENSE_STRUCTURE_ACCOUNT_OPTIONS = @json($accountOptions->values());
 const EXPENSE_STRUCTURE_CSRF = document.querySelector('meta[name="csrf-token"]').content;
 let activeExpenseStructureSection = document.querySelector('.es-section-tab.is-active')?.dataset.sectionTarget || null;
 let activeAccountFilter = 'all';
+
+function openSectionModal() {
+    const modal = document.querySelector('[data-section-modal]');
+    if (!modal) return;
+
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('[data-section-modal-first]')?.focus(), 30);
+}
+
+function closeSectionModal() {
+    const modal = document.querySelector('[data-section-modal]');
+    if (!modal || modal.hidden) return;
+
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    document.querySelector('[data-open-section-modal]')?.focus();
+}
 
 function syncExpenseStructureSectionNav() {
     const tabs = Array.from(document.querySelectorAll('.es-section-tab'));
@@ -1121,6 +1302,21 @@ function queueAutosave(input) {
 document.querySelectorAll('.js-autosave-form, .js-autosave-row').forEach(snapshotAutosaveForm);
 
 document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-open-section-modal]')) {
+        openSectionModal();
+        return;
+    }
+
+    if (event.target.closest('[data-close-section-modal]')) {
+        closeSectionModal();
+        return;
+    }
+
+    if (event.target.matches('[data-section-modal]')) {
+        closeSectionModal();
+        return;
+    }
+
     const filterButton = event.target.closest('.es-filter-btn');
     if (filterButton) {
         applyExpenseAccountFilter(filterButton.dataset.accountFilter || 'all');
@@ -1142,6 +1338,11 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeSectionModal();
+        return;
+    }
+
     const input = event.target.closest('.js-autosave-form input, .js-autosave-form select, .js-autosave-form textarea, .js-autosave-row input, .js-autosave-row select, .js-autosave-row textarea');
     if (!input || event.key !== 'Enter') return;
 

@@ -48,7 +48,7 @@ class HomeController extends Controller
             'budget_total' => $budgetTotal,
             'committed_total' => $committedTotal,
             'actual_expense_total' => $actualExpenseTotal,
-            'remaining_total' => $budgetTotal - $actualExpenseTotal,
+            'remaining_total' => $budgetTotal - $actualExpenseTotal - $committedTotal,
         ];
     }
 }

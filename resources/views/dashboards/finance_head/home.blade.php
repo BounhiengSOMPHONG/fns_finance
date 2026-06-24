@@ -367,7 +367,7 @@
         <article class="fh-money-card {{ $remainingIsNegative ? 'is-remaining-negative' : 'is-remaining-positive' }}">
             <span>ຍອດຄົງເຫຼືອ</span>
             <strong>{{ number_format((float) $budgetSummary['remaining_total'], 0, '.', '.') }}</strong>
-            <small>ງົບປະມານ - ໃຊ້ຈ່າຍຈິງ</small>
+            <small>ງົບປະມານ - ໃຊ້ຈ່າຍຈິງ - ຜູກພັນ</small>
         </article>
     </section>
 

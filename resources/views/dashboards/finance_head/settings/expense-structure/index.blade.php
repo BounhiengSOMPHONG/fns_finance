@@ -300,7 +300,8 @@
                                                         {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ມີລາຍການ' }}
                                                     </span>
                                                     <button type="button" class="es-default-open-btn" data-open-default-modal="{{ $subsection->id }}">
-                                                        ລາຍການລາຍຈ່າຍ
+                                                        <span aria-hidden="true">+</span>
+                                                        ເພີ່ມລາຍການ
                                                     </button>
                                                 </div>
                                             @endif
@@ -1027,21 +1028,33 @@
         display:inline-flex;
         align-items:center;
         justify-content:center;
+        gap:.35rem;
         min-height:2rem;
-        border:1px solid #d8e0ea;
-        border-radius:999px;
-        background:#fff9e8;
-        color:#7a5607;
-        padding:.35rem .65rem;
+        border:1px solid #c29014;
+        border-radius:7px;
+        background:#d2a112;
+        color:#061226;
+        padding:.42rem .72rem;
         font-size:.72rem;
         font-weight:900;
         line-height:1;
         white-space:nowrap;
-        transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+        box-shadow:0 2px 6px rgba(111,78,0,.16);
+        transition:box-shadow .16s ease, transform .16s ease, background .16s ease;
+    }
+    .es-default-open-btn span {
+        display:grid;
+        place-items:center;
+        width:1rem;
+        height:1rem;
+        border-radius:999px;
+        background:rgba(255,255,255,.55);
+        font-size:.86rem;
+        line-height:1;
     }
     .es-default-open-btn:hover {
-        border-color:#c29014;
-        box-shadow:0 6px 14px rgba(15,23,42,.08);
+        background:#e1b326;
+        box-shadow:0 7px 16px rgba(111,78,0,.18);
         transform:translateY(-1px);
     }
     .es-default-open-btn:focus-visible {

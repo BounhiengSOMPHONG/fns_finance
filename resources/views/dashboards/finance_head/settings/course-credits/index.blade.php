@@ -57,7 +57,7 @@
                         <option value="{{ $key }}">{{ $meta['label'] }}</option>
                     @endforeach
                 </select>
-                <span class="erp-count"><b id="cc-visible-count">{{ $courseCredits->count() }}</b> / {{ $courseCredits->count() }}</span>
+                <span class="erp-count"><b id="cc-visible-count">{{ $displayCourseCredits->count() }}</b> / {{ $displayCourseCredits->count() }}</span>
                 <button type="button" id="cc-open-create" class="erp-btn erp-btn-primary">
                     <span aria-hidden="true">+</span>
                     ເພີ່ມໃໝ່
@@ -79,20 +79,32 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($courseCredits as $s)
+                    @forelse($displayCourseCredits as $s)
                         @php
                             $level = $s->degreeProgram?->level;
                             $meta = $levelMeta[$level] ?? ['label' => $level ?: '-', 'full' => $level ?: '-'];
                             $programName = $s->degreeProgram?->name ?? '-';
                             $shownProgramName = $displayProgramName($programName);
+                            $displayYears = $s->display_years ?? collect();
+                            $displayCodes = $s->display_codes ?? '';
                         @endphp
-                        <tr class="cc-row" data-level="{{ $level }}" data-name="{{ \Illuminate\Support\Str::lower($shownProgramName.' '.$programName) }}">
+                        <tr class="cc-row" data-level="{{ $level }}" data-name="{{ \Illuminate\Support\Str::lower($shownProgramName.' '.$programName.' '.$displayCodes) }}">
                             <td>
                                 <strong class="erp-program">{{ $shownProgramName }}</strong>
                             </td>
                             <td><span class="erp-badge">{{ $meta['label'] }}</span></td>
-                            <td class="erp-num">{{ $s->degreeProgram?->study_year ?: '-' }}</td>
-                            <td class="erp-num">{{ (float) $s->course_credit_unit }}</td>
+                            <td>
+                                @if($displayYears->count() > 1)
+                                    <div class="erp-year-chip-list">
+                                        @foreach($displayYears as $row)
+                                            <span class="erp-year-chip">ປີ {{ $row['year'] }}: {{ $row['unit'] }}</span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="erp-year-chip">{{ $s->degreeProgram?->study_year ? 'ປີ '.$s->degreeProgram?->study_year : '-' }}</span>
+                                @endif
+                            </td>
+                            <td class="erp-num">{{ $displayYears->count() > 1 ? '-' : (float) $s->course_credit_unit }}</td>
                             <td class="erp-num">{{ $s->start_year }}</td>
                             <td>{{ $s->gov_doc_id ?: '-' }}</td>
                             <td class="erp-actions">
@@ -104,7 +116,8 @@
                                     data-level="{{ $level }}"
                                     data-course-credit-unit="{{ (float) $s->course_credit_unit }}"
                                     data-gov-doc-id="{{ $s->gov_doc_id }}"
-                                    data-start-year="{{ $s->start_year }}">
+                                    data-start-year="{{ $s->start_year }}"
+                                    data-display-years='@json($displayYears)'>
                                     ✎
                                 </button>
                                 <form method="POST" action="{{ route('head_of_finance.settings.course-credits.destroy', $s) }}" onsubmit="return confirm('ທ່ານຕ້ອງການລຶບຂໍ້ມູນນີ້ແທ້ບໍ?')">
@@ -287,21 +300,25 @@
                     <span>ສາຂາວິຊາ <b>*</b></span>
                     <select name="degree_program_id" id="cc-degree-program" class="erp-input" required>
                         <option value="">-- ເລືອກສາຂາວິຊາ --</option>
-                        @foreach($programs as $p)
-                            <option value="{{ $p->id }}" data-level="{{ $p->level }}">
-                                [{{ $p->level_label }}{{ $p->study_year ? ' ປີ '.$p->study_year : '' }}] {{ $displayProgramName($p->name) }}
+                        @foreach($displayPrograms as $p)
+                            <option value="{{ $p->id }}"
+                                data-level="{{ $p->level }}"
+                                data-display-years='@json($p->display_years ?? collect())'>
+                                [{{ $p->level_label }}{{ ($p->display_rows ?? collect())->count() > 1 ? '' : ($p->study_year ? ' ປີ '.$p->study_year : '') }}] {{ $displayProgramName($p->name) }}
                             </option>
                         @endforeach
                     </select>
                 </label>
             </div>
 
-            <div class="erp-modal-grid erp-modal-grid-wide">
+            <div class="erp-modal-grid erp-modal-grid-wide" id="cc-single-unit-wrap">
                 <label class="erp-field">
                     <span>ໜ່ວຍກິດລວມຂອງຫຼັກສູດ <b>*</b></span>
                     <input type="number" id="cc-unit-bach" name="course_credit_unit" min="1" max="999" step="0.5" class="erp-input" required>
                 </label>
             </div>
+
+            <div class="erp-modal-grid erp-modal-grid-wide cc-year-units" id="cc-year-units"></div>
 
             <div class="erp-modal-grid">
                 <label class="erp-field">
@@ -412,6 +429,19 @@
     }
     .erp-data-table th { background:#f8fafc; color:#64748b; font-size:.68rem; font-weight:900; text-transform:uppercase; white-space:nowrap; }
     .erp-program { display:block; max-width:330px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .erp-year-chip-list { display:flex; flex-wrap:wrap; gap:.25rem; justify-content:flex-end; }
+    .erp-year-chip {
+        display:inline-flex; align-items:center; justify-content:center;
+        border-radius:999px; background:#eef2f7; color:#334155;
+        padding:.12rem .48rem; font-size:.68rem; font-weight:900; white-space:nowrap;
+    }
+    .cc-year-units { display:none; }
+    .cc-year-units.is-open { display:grid; }
+    .cc-year-unit-row {
+        display:grid; grid-template-columns:90px minmax(0,1fr); gap:.5rem; align-items:center;
+        border:1px solid #e5e7eb; border-radius:6px; padding:.55rem; background:#fbfdff;
+    }
+    .cc-year-unit-row strong { color:#172642; font-size:.78rem; }
     .erp-num { text-align:right !important; font-variant-numeric:tabular-nums; white-space:nowrap; }
     .erp-badge { display:inline-flex; border:1px solid #cbd5e1; border-radius:999px; padding:.12rem .45rem; color:#334155; background:#f8fafc; font-size:.72rem; font-weight:900; }
     .erp-actions-col { width:92px; text-align:center !important; }
@@ -536,10 +566,55 @@ document.addEventListener('DOMContentLoaded', function () {
     const method = document.getElementById('cc-form-method');
     const degreeProgram = document.getElementById('cc-degree-program');
     const unitBach = document.getElementById('cc-unit-bach');
+    const singleUnitWrap = document.getElementById('cc-single-unit-wrap');
+    const yearUnits = document.getElementById('cc-year-units');
     const govDoc = document.getElementById('cc-gov-doc');
     const startYear = document.getElementById('cc-start-year');
     const submit = document.getElementById('cc-submit');
     const createUrl = @json(route('head_of_finance.settings.course-credits.store'));
+
+    function jsonData(value, fallback = []) {
+        try {
+            return value ? JSON.parse(value) : fallback;
+        } catch (error) {
+            return fallback;
+        }
+    }
+
+    function setSingleUnitMode(enabled) {
+        singleUnitWrap.style.display = enabled ? '' : 'none';
+        unitBach.disabled = !enabled;
+        unitBach.required = enabled;
+        yearUnits.classList.toggle('is-open', !enabled);
+        if (enabled) yearUnits.innerHTML = '';
+    }
+
+    function renderYearUnits(rows, mode) {
+        if (rows.length <= 1) {
+            setSingleUnitMode(true);
+            return;
+        }
+
+        setSingleUnitMode(false);
+        yearUnits.innerHTML = rows.map(row => {
+            const id = mode === 'edit' ? row.id : row.program_id;
+            const name = mode === 'edit' ? `setting_units[${id}]` : `course_credit_units[${id}]`;
+            const value = row.unit ?? '';
+            const year = row.year ? `ປີ ${row.year}` : 'ບໍ່ລະບຸປີ';
+
+            return `
+                <label class="cc-year-unit-row">
+                    <strong>${year}</strong>
+                    <input type="number" name="${name}" min="1" max="999" step="0.5" value="${value}" class="erp-input erp-input-num" required>
+                </label>
+            `;
+        }).join('');
+    }
+
+    function selectedProgramRows() {
+        const option = degreeProgram.selectedOptions[0];
+        return jsonData(option?.dataset.displayYears);
+    }
 
     function openModal(mode, data = {}) {
         form.action = mode === 'edit' ? data.url : createUrl;
@@ -552,6 +627,7 @@ document.addEventListener('DOMContentLoaded', function () {
         unitBach.value = data.courseCreditUnit || '';
         govDoc.value = data.govDocId || '';
         startYear.value = data.startYear || @json(date('Y'));
+        renderYearUnits(data.displayYears || selectedProgramRows(), mode);
 
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
@@ -563,9 +639,11 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.setAttribute('aria-hidden', 'true');
         form.reset();
         method.disabled = true;
+        setSingleUnitMode(true);
     }
 
     document.getElementById('cc-open-create')?.addEventListener('click', () => openModal('create'));
+    degreeProgram?.addEventListener('change', () => renderYearUnits(selectedProgramRows(), 'create'));
     document.addEventListener('click', event => {
         const settingsClose = event.target.closest('[data-settings-close]');
         if (settingsClose) {
@@ -586,6 +664,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 courseCreditUnit: edit.dataset.courseCreditUnit,
                 govDocId: edit.dataset.govDocId,
                 startYear: edit.dataset.startYear,
+                displayYears: jsonData(edit.dataset.displayYears),
             });
             return;
         }

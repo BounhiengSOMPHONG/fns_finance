@@ -10,7 +10,6 @@ use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
-use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -315,7 +314,6 @@ class ExpensePlanController extends Controller
 
     private function copyYearStructure(PlanningYear $sourceYear, PlanningYear $targetYear): void
     {
-        $sectionIdMap = [];
         $subsectionIdMap = [];
 
         $sourceSections = ExpenseSection::with('subsections.catalogItems')
@@ -327,21 +325,19 @@ class ExpensePlanController extends Controller
             $section = ExpenseSection::create([
                 'planning_year_id' => $targetYear->id,
                 'code' => $sourceSection->code,
-                'name' => ExpenseStructureNames::nameFor($sourceSection->code) ?? $sourceSection->name,
+                'name' => $sourceSection->name,
                 'description' => $sourceSection->description,
                 'display_order' => $sourceSection->display_order,
                 'summary_period_count' => $sourceSection->summary_period_count ?? 12,
                 'is_active' => $sourceSection->is_active,
             ]);
 
-            $sectionIdMap[$sourceSection->id] = $section->id;
-
             foreach ($sourceSection->subsections->sortBy('display_order') as $sourceSubsection) {
                 $subsection = ExpenseSubsection::create([
                     'section_id' => $section->id,
                     'parent_id' => null,
                     'code' => $sourceSubsection->code,
-                    'name' => ExpenseStructureNames::nameFor($sourceSubsection->code) ?? $sourceSubsection->name,
+                    'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
                     'default_pattern_id' => $sourceSubsection->default_pattern_id,
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,

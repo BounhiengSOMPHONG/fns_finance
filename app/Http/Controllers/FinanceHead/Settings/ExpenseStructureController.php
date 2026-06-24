@@ -13,6 +13,7 @@ use App\Models\PlanningYear;
 use App\Support\ExpenseAccountLinkCatalog;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 class ExpenseStructureController extends Controller
@@ -70,7 +71,12 @@ class ExpenseStructureController extends Controller
 
         if ($planningYear) {
             if (! ExpenseSection::where('planning_year_id', $planningYear->id)->exists()) {
-                $this->buildStructureFromDefaultRows($planningYear);
+                $detachedSections = $this->latestDetachedExpenseSections();
+                if ($detachedSections->isNotEmpty()) {
+                    $this->copyStructureFromSections($detachedSections, $planningYear);
+                } else {
+                    $this->buildStructureFromDefaultRows($planningYear);
+                }
             }
 
             $sections = ExpenseSection::with(['subsections.defaultPattern', 'subsections.children'])
@@ -391,6 +397,72 @@ class ExpenseStructureController extends Controller
                     'sort_order' => $catalogItem->sort_order,
                     'is_active' => $catalogItem->is_active,
                 ]);
+            }
+        }
+    }
+
+    private function latestDetachedExpenseSections(): Collection
+    {
+        return ExpenseSection::with('subsections.catalogItems')
+            ->whereNull('planning_year_id')
+            ->orderBy('code')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('code')
+            ->sortBy('display_order')
+            ->values();
+    }
+
+    private function copyStructureFromSections(Collection $sourceSections, PlanningYear $targetYear): void
+    {
+        $subsectionIdMap = [];
+
+        foreach ($sourceSections as $sourceSection) {
+            $section = ExpenseSection::create([
+                'planning_year_id' => $targetYear->id,
+                'code' => $sourceSection->code,
+                'name' => $sourceSection->name,
+                'description' => $sourceSection->description,
+                'display_order' => $sourceSection->display_order,
+                'summary_period_count' => $sourceSection->summary_period_count ?? 12,
+                'is_active' => $sourceSection->is_active,
+            ]);
+
+            foreach ($sourceSection->subsections->sortBy('display_order') as $sourceSubsection) {
+                $subsection = ExpenseSubsection::create([
+                    'section_id' => $section->id,
+                    'parent_id' => null,
+                    'code' => $sourceSubsection->code,
+                    'name' => $sourceSubsection->name,
+                    'description' => $sourceSubsection->description,
+                    'default_pattern_id' => $sourceSubsection->default_pattern_id,
+                    'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,
+                    'display_order' => $sourceSubsection->display_order,
+                    'is_active' => $sourceSubsection->is_active,
+                ]);
+
+                $subsectionIdMap[$sourceSubsection->id] = $subsection->id;
+
+                foreach ($sourceSubsection->catalogItems->sortBy('sort_order') as $catalogItem) {
+                    ExpenseCatalogItem::create([
+                        'subsection_id' => $subsection->id,
+                        'item_name' => $catalogItem->item_name,
+                        'chart_of_account_id' => $catalogItem->chart_of_account_id,
+                        'pattern_id' => $catalogItem->pattern_id,
+                        'default_values' => $catalogItem->default_values ?? [],
+                        'sort_order' => $catalogItem->sort_order,
+                        'is_active' => $catalogItem->is_active,
+                    ]);
+                }
+            }
+        }
+
+        foreach ($sourceSections as $sourceSection) {
+            foreach ($sourceSection->subsections as $sourceSubsection) {
+                if ($sourceSubsection->parent_id && isset($subsectionIdMap[$sourceSubsection->id], $subsectionIdMap[$sourceSubsection->parent_id])) {
+                    ExpenseSubsection::whereKey($subsectionIdMap[$sourceSubsection->id])
+                        ->update(['parent_id' => $subsectionIdMap[$sourceSubsection->parent_id]]);
+                }
             }
         }
     }

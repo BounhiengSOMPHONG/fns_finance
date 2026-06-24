@@ -20,6 +20,7 @@ use App\Services\PlanYearReportBuilder;
 use App\Services\SalaryReportBuilder;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -679,6 +680,13 @@ class ManagePlanController extends Controller
             return;
         }
 
+        $detachedSections = $this->latestDetachedExpenseSections();
+        if ($detachedSections->isNotEmpty()) {
+            $this->copyExpenseStructureFromSections($detachedSections, $planningYear);
+
+            return;
+        }
+
         $this->buildExpenseStructureFromDefaultRows($planningYear);
     }
 
@@ -783,33 +791,47 @@ class ManagePlanController extends Controller
 
     private function copyExpenseStructure(PlanningYear $sourceYear, PlanningYear $targetYear): void
     {
-        $sectionIdMap = [];
-        $subsectionIdMap = [];
-
         $sourceSections = ExpenseSection::with('subsections.catalogItems')
             ->where('planning_year_id', $sourceYear->id)
             ->orderBy('display_order')
             ->get();
 
+        $this->copyExpenseStructureFromSections($sourceSections, $targetYear);
+    }
+
+    private function latestDetachedExpenseSections(): Collection
+    {
+        return ExpenseSection::with('subsections.catalogItems')
+            ->whereNull('planning_year_id')
+            ->orderBy('code')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('code')
+            ->sortBy('display_order')
+            ->values();
+    }
+
+    private function copyExpenseStructureFromSections(Collection $sourceSections, PlanningYear $targetYear): void
+    {
+        $subsectionIdMap = [];
+
         foreach ($sourceSections as $sourceSection) {
             $section = ExpenseSection::create([
                 'planning_year_id' => $targetYear->id,
                 'code' => $sourceSection->code,
-                'name' => ExpenseStructureNames::nameFor($sourceSection->code) ?? $sourceSection->name,
+                'name' => $sourceSection->name,
                 'description' => $sourceSection->description,
                 'display_order' => $sourceSection->display_order,
                 'summary_period_count' => $sourceSection->summary_period_count ?? 12,
                 'is_active' => $sourceSection->is_active,
             ]);
 
-            $sectionIdMap[$sourceSection->id] = $section->id;
-
             foreach ($sourceSection->subsections->sortBy('display_order') as $sourceSubsection) {
                 $subsection = ExpenseSubsection::create([
                     'section_id' => $section->id,
                     'parent_id' => null,
                     'code' => $sourceSubsection->code,
-                    'name' => ExpenseStructureNames::nameFor($sourceSubsection->code) ?? $sourceSubsection->name,
+                    'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
                     'default_pattern_id' => $sourceSubsection->default_pattern_id,
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,

@@ -14,6 +14,7 @@ use App\Support\ExpenseAccountLinkCatalog;
 use App\Support\ExpenseStructureNames;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ExpenseStructureController extends Controller
@@ -201,13 +202,20 @@ class ExpenseStructureController extends Controller
 
     public function destroySection(ExpenseSection $expenseSection)
     {
-        if ($expenseSection->subsections()->exists() || ExpensePlan::where('section_id', $expenseSection->id)->exists()) {
-            return back()->with('error', 'Cannot delete this section because it has subsections or plan rows.');
-        }
+        DB::transaction(function () use ($expenseSection): void {
+            $subsectionIds = ExpenseSubsection::where('section_id', $expenseSection->id)->pluck('id');
 
-        $expenseSection->delete();
+            ExpensePlan::where('section_id', $expenseSection->id)->delete();
 
-        return back()->with('success', 'Expense section deleted.');
+            if ($subsectionIds->isNotEmpty()) {
+                ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
+                ExpenseSubsection::whereIn('id', $subsectionIds)->delete();
+            }
+
+            $expenseSection->delete();
+        });
+
+        return back()->with('success', 'Expense section and related rows deleted.');
     }
 
     public function storeSubsection(Request $request, ExpenseSection $expenseSection)
@@ -293,13 +301,18 @@ class ExpenseStructureController extends Controller
 
     public function destroySubsection(ExpenseSubsection $expenseSubsection)
     {
-        if ($expenseSubsection->children()->exists() || ExpensePlan::where('subsection_id', $expenseSubsection->id)->exists()) {
-            return back()->with('error', 'Cannot delete this subsection because it has child subsections or plan rows.');
-        }
+        DB::transaction(function () use ($expenseSubsection): void {
+            $subsectionIds = collect([$expenseSubsection->id])
+                ->merge($this->descendantSubsectionIds($expenseSubsection))
+                ->unique()
+                ->values();
 
-        $expenseSubsection->delete();
+            ExpensePlan::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpenseSubsection::whereIn('id', $subsectionIds)->delete();
+        });
 
-        return back()->with('success', 'Expense subsection deleted.');
+        return back()->with('success', 'Expense subsection and related rows deleted.');
     }
 
     private function accountLabel(ChartOfAccount $account): string
@@ -314,6 +327,14 @@ class ExpenseStructureController extends Controller
         }
 
         return $account->account_code.' - '.implode(' / ', $parts);
+    }
+
+    private function descendantSubsectionIds(ExpenseSubsection $subsection): Collection
+    {
+        $children = ExpenseSubsection::where('parent_id', $subsection->id)->get(['id']);
+
+        return $children->pluck('id')
+            ->merge($children->flatMap(fn (ExpenseSubsection $child): Collection => $this->descendantSubsectionIds($child)));
     }
 
     private function syncSubsectionDefaultPattern(ExpenseSubsection $subsection, ?int $oldPatternId, ?int $newPatternId): void

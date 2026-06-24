@@ -223,7 +223,7 @@
                                 <button type="button"
                                         class="fns-btn fns-btn-danger js-delete-setting"
                                         data-url="{{ route('head_of_finance.settings.expense-structure.sections.destroy', $section) }}"
-                                        data-message="ລຶບໝວດນີ້?">
+                                        data-message="ລຶບໝວດນີ້ພ້ອມຫົວຂໍ້ຍ່ອຍ ແລະ ລາຍການທີ່ຜູກໄວ້?">
                                     ລຶບໝວດ
                                 </button>
                                 <button type="button" class="fns-btn fns-btn-secondary" data-close-section-edit-modal>ປິດ</button>
@@ -316,7 +316,7 @@
                                             <button type="button"
                                                     class="fns-btn fns-btn-danger fns-btn-sm js-delete-setting"
                                                     data-url="{{ route('head_of_finance.settings.expense-structure.subsections.destroy', $subsection) }}"
-                                                    data-message="ລຶບກຸ່ມຍ່ອຍນີ້?">
+                                                    data-message="ລຶບກຸ່ມຍ່ອຍນີ້ພ້ອມລາຍການທີ່ຜູກໄວ້?">
                                                 ລຶບ
                                             </button>
                                         </td>

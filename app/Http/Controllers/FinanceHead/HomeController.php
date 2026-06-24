@@ -11,9 +11,22 @@ class HomeController extends Controller
 {
     public function index(PlanYearReportBuilder $planYearReportBuilder)
     {
+        $currentYear = (int) now()->year;
         $latestPlan = PlanningYear::query()
-            ->orderByDesc('year')
-            ->first();
+            ->where('year', $currentYear)
+            ->first()
+            ?? PlanningYear::query()
+                ->where('is_active', true)
+                ->where('year', '<=', $currentYear)
+                ->orderByDesc('year')
+                ->first()
+            ?? PlanningYear::query()
+                ->where('is_active', true)
+                ->orderByDesc('year')
+                ->first()
+            ?? PlanningYear::query()
+                ->orderByDesc('year')
+                ->first();
 
         $budgetSummary = $this->budgetSummary($latestPlan, $planYearReportBuilder);
 

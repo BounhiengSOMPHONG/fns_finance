@@ -498,7 +498,7 @@
                 </div>
             </div>
             <div class="fh-latest">
-                ແຜນປີລ່າສຸດ
+                ແຜນປີປັດຈຸບັນ
                 <strong>
                     @if($latestPlan)
                         {{ $latestPlan->year }} · {{ $statusLabels[$latestStatus] ?? $latestStatus }}

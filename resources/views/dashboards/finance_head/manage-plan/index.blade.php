@@ -159,12 +159,12 @@
             @csrf
             <label>
                 <span>ປີງົບປະມານ</span>
-                <input type="number" name="year" min="2000" max="2100" value="{{ old('year', $currentYear + 1) }}" required>
+                <input type="number" name="year" min="2000" max="2100" value="{{ old('year', $currentYear) }}" required>
                 @error('year')<small>{{ $message }}</small>@enderror
             </label>
             <label>
                 <span>ຊື່ແຜນ</span>
-                <input type="text" name="name" value="{{ old('name') }}" placeholder="ແຜນປີ {{ $currentYear + 1 }}">
+                <input type="text" name="name" value="{{ old('name') }}" placeholder="ແຜນປີ {{ $currentYear }}">
             </label>
             <label>
                 <span>ລາຍລະອຽດ</span>

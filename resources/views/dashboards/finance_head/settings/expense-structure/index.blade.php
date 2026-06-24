@@ -416,6 +416,17 @@
                                 @endunless
                             @endforeach
 
+                            <tr class="es-add-subsection-heading">
+                                <td colspan="8">
+                                    <div class="es-add-subsection-heading-inner">
+                                        <span class="es-add-subsection-plus">+</span>
+                                        <div>
+                                            <strong>ເພີ່ມກຸ່ມຍ່ອຍໃໝ່</strong>
+                                            <small>ປ້ອນຂໍ້ມູນແຖວລຸ່ມນີ້ແລ້ວກົດເພີ່ມ</small>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                             <tr class="es-add-subsection-row">
                                 <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.subsections.store', $section) }}">
                                     @csrf
@@ -452,7 +463,7 @@
                                         <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
                                     </td>
                                     <td class="py-3 pr-3">
-                                        <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">ເພີ່ມ</button>
+                                        <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">ເພີ່ມກຸ່ມ</button>
                                     </td>
                                 </form>
                             </tr>
@@ -998,7 +1009,62 @@
         color:#475569;
     }
     .es-account-row td { border-bottom:0 !important; background:#f8fafc; }
-    .es-add-subsection-row td { background:#fbfcfe; }
+    .es-add-subsection-heading td {
+        border-top:2px solid #f0d892;
+        border-bottom:0;
+        background:#fffaf0;
+        padding:.75rem .75rem .35rem;
+    }
+    .es-add-subsection-heading-inner {
+        display:flex;
+        align-items:center;
+        gap:.6rem;
+        color:#6f4e00;
+    }
+    .es-add-subsection-heading-inner strong {
+        display:block;
+        color:#13213b;
+        font-size:.82rem;
+        font-weight:900;
+        line-height:1.2;
+    }
+    .es-add-subsection-heading-inner small {
+        display:block;
+        margin-top:.08rem;
+        color:#8a6b1b;
+        font-size:.7rem;
+        font-weight:800;
+    }
+    .es-add-subsection-plus {
+        display:grid;
+        place-items:center;
+        flex:0 0 auto;
+        width:1.8rem;
+        height:1.8rem;
+        border-radius:999px;
+        background:#d2a112;
+        color:#061226;
+        font-size:1.1rem;
+        font-weight:900;
+        line-height:1;
+    }
+    .es-add-subsection-row td {
+        border-bottom:1px solid #f0d892;
+        background:#fffaf0;
+        padding-top:.55rem;
+        padding-bottom:.85rem;
+    }
+    .es-add-subsection-row td:first-child { border-left:1px dashed #e5c55e; border-radius:8px 0 0 8px; }
+    .es-add-subsection-row td:last-child { border-right:1px dashed #e5c55e; border-radius:0 8px 8px 0; }
+    .es-add-subsection-row .fns-input {
+        border-color:#e7d28c;
+        background:#fff;
+        box-shadow:0 1px 2px rgba(111,78,0,.06);
+    }
+    .es-add-subsection-row .fns-input:focus {
+        border-color:#c29014;
+        box-shadow:0 0 0 3px rgba(194,144,20,.12);
+    }
     .es-account-panel { border-color:#dbe2ec; }
     .es-account-panel > summary { padding:.6rem .8rem; background:#fff; }
     .es-default-list { display:grid; gap:.55rem; border-top:1px solid var(--fns-gray-200); padding:.75rem; background:#fbfcfe; }

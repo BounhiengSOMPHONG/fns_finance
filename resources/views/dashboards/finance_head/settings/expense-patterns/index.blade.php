@@ -81,16 +81,6 @@
                         </span>
                     </div>
                     <p class="mt-1 text-sm text-slate-500">{{ $pattern->description ?: 'ຍັງບໍ່ມີລາຍລະອຽດ.' }}</p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        @forelse($pattern->leafDefaultSubsections as $subsection)
-                            <span class="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700">
-                                <span class="font-semibold text-slate-900">{{ $subsection->code }}</span>
-                                {{ $subsection->name }}
-                            </span>
-                        @empty
-                            <span class="text-xs text-slate-400">ຍັງບໍ່ມີກຸ່ມໃຊ້ແບບນີ້.</span>
-                        @endforelse
-                    </div>
                 </div>
             </div>
 

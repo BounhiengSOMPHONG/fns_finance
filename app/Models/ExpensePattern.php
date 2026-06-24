@@ -60,8 +60,17 @@ class ExpensePattern extends Model
             return (float) ($values['yearly_total'] ?? 0);
         }
 
+        $schema = $snapshot['fields_schema'] ?? $this->fields_schema ?? [];
+
         return (float) $fields->reduce(
-            fn (float $carry, string $field): float => $carry * (float) ($values[$field] ?? 0),
+            function (float $carry, string $field) use ($values, $schema): float {
+                $value = $values[$field] ?? null;
+                if ($value === null || $value === '') {
+                    $fieldDef = collect($schema)->firstWhere('field_key', $field);
+                    $value = $fieldDef['default_value'] ?? 0;
+                }
+                return $carry * (float) $value;
+            },
             1.0
         );
     }

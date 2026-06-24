@@ -652,7 +652,11 @@ function calculateFormula(formula, values) {
 function calculatedTotalForPattern(pattern, values = {}) {
     const fields = pattern?.formula?.fields || [];
     if (!fields.length) return numberValue(values.yearly_total);
-    return fields.reduce((total, field) => total * numberValue(values[field]), 1);
+    return fields.reduce((total, fieldKey) => {
+        const fieldDef = (pattern?.fields || []).find(f => f.key === fieldKey);
+        const value = values[fieldKey] ?? fieldDef?.default_value;
+        return total * numberValue(value);
+    }, 1);
 }
 
 function rowTotal(row) {
@@ -663,6 +667,12 @@ function rowTotal(row) {
     }
 
     const pattern = PATTERNS[row.pattern_id];
+    const formulaFields = pattern?.formula?.fields || [];
+
+    if (formulaFields.length > 0) {
+        return calculatedTotalForPattern(pattern, row.values || {});
+    }
+
     const storedTotal = numberValue(row.values?.yearly_total ?? row.total);
     return storedTotal > 0 ? storedTotal : calculatedTotalForPattern(pattern, row.values || {});
 }

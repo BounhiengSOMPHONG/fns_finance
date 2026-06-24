@@ -39,6 +39,10 @@
         ? route('head_of_finance.manage-plan.period-3-4.save', $planningYear)
         : route('head_of_finance.manage-plan.period-1-2.save', $planningYear);
     $isPeriodThreeFour = $periodKey === 'period-3-4';
+    $periodSavedAt = $isPeriodThreeFour
+        ? $planningYear->period_3_4_saved_at
+        : $planningYear->period_1_2_saved_at;
+    $isPeriodSaved = $periodSavedAt !== null;
 @endphp
 
 <div class="period-page">
@@ -47,6 +51,14 @@
             <span class="period-eyebrow">ແຜນປີ {{ $planningYear->year }}</span>
             <h2>{{ $periodTitle }}</h2>
             <p>{{ $planningYear->name }}</p>
+            <div class="period-status-row">
+                <span class="period-save-status {{ $isPeriodSaved ? 'is-saved' : 'is-open' }}">
+                    {{ $isPeriodSaved ? 'ບັນທຶກແລ້ວ' : 'ຍັງບໍ່ບັນທຶກ' }}
+                </span>
+                @if($isPeriodSaved)
+                    <span class="period-save-time">ບັນທຶກເມື່ອ {{ $periodSavedAt->format('d/m/Y H:i') }}</span>
+                @endif
+            </div>
         </div>
         <div class="period-actions">
             @if(in_array($periodKey, ['period-1-2', 'period-3-4'], true))
@@ -412,6 +424,39 @@
     .period-toolbar p {
         color: #64748b;
         margin: .15rem 0 0;
+    }
+
+    .period-status-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        margin-top: .45rem;
+    }
+
+    .period-save-status {
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: .75rem;
+        font-weight: 900;
+        line-height: 1;
+        padding: .34rem .62rem;
+    }
+
+    .period-save-status.is-saved {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .period-save-status.is-open {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .period-save-time {
+        color: #64748b;
+        font-size: .76rem;
+        font-weight: 700;
     }
 
     .period-actions {

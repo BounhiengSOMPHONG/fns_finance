@@ -240,7 +240,7 @@
                                 <th class="py-2 pr-3">ຊື່ກຸ່ມຍ່ອຍ</th>
                                 <th class="py-2 pr-3">ຢູ່ໃຕ້</th>
                                 <th class="py-2 pr-3">ແບບຄຳນວນ</th>
-                                <th class="py-2 pr-3">ບັນຊີ</th>
+                                <th class="py-2 pr-3">ລາຍການລາຍຈ່າຍ</th>
                                 <th class="py-2 pr-3">ລຳດັບ</th>
                                 <th class="py-2 pr-3">ໃຊ້</th>
                                 <th class="py-2 pr-3"></th>
@@ -294,12 +294,15 @@
                                         <td class="py-2 pr-3">
                                             @if($hasChildSubsections)
                                                 <span class="es-pill is-parent">ບໍ່ມີ DEF</span>
-                                            @elseif($defaultRowsForSubsection->isNotEmpty())
-                                                <span class="js-default-subsection-badge es-pill {{ $missingLinksForSubsection ? 'is-warn' : 'is-ok' }}">
-                                                    {{ $linkedRowsForSubsection }}/{{ $defaultRowsForSubsection->count() }} ເຊື່ອມແລ້ວ
-                                                </span>
                                             @else
-                                                <span class="es-pill">ຍັງບໍ່ມີລາຍການ</span>
+                                                <div class="es-default-inline">
+                                                    <span class="js-default-subsection-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : ($defaultRowsForSubsection->isNotEmpty() ? 'is-warn' : '') }}">
+                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ມີລາຍການ' }}
+                                                    </span>
+                                                    <button type="button" class="es-default-open-btn" data-open-default-modal="{{ $subsection->id }}">
+                                                        ລາຍການລາຍຈ່າຍ
+                                                    </button>
+                                                </div>
                                             @endif
                                         </td>
                                         <td class="py-2 pr-3">
@@ -319,22 +322,25 @@
                                     </form>
                                 </tr>
                                 @unless($hasChildSubsections)
-                                <tr class="es-account-row">
-                                    <td colspan="8" class="px-3 pb-4 pt-0">
-                                        <details class="es-account-panel">
-                                            <summary>
-                                                <span class="min-w-0 truncate">
-                                                    DEF ຂອງ {{ $subsection->code }} - {{ $subsection->name }}
-                                                </span>
-                                                <span class="flex shrink-0 items-center gap-2 text-xs">
-                                                    <span class="js-default-group-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : 'is-warn' }}">
-                                                        {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ມີລາຍການ' }}
-                                                    </span>
-                                                    <span class="es-summary-action">ເປີດ</span>
-                                                </span>
-                                            </summary>
+                                <tr class="es-default-modal-row">
+                                    <td colspan="8">
+                                        <div class="es-modal-backdrop" data-default-modal="{{ $subsection->id }}" hidden>
+                                            <div class="es-modal es-default-modal" role="dialog" aria-modal="true" aria-labelledby="esDefaultModalTitle{{ $subsection->id }}">
+                                                <div class="es-modal-head">
+                                                    <div>
+                                                        <span>Default Expense Rows</span>
+                                                        <h3 id="esDefaultModalTitle{{ $subsection->id }}">DEF ຂອງ {{ $subsection->code }} - {{ $subsection->name }}</h3>
+                                                    </div>
+                                                    <button type="button" class="es-modal-close" data-close-default-modal aria-label="Close">&times;</button>
+                                                </div>
 
-                                            <div class="es-default-list">
+                                                <div class="es-default-list">
+                                                    <div class="es-default-modal-summary">
+                                                        <span class="js-default-group-badge es-pill {{ $defaultRowsForSubsection->isNotEmpty() && ! $missingLinksForSubsection ? 'is-ok' : 'is-warn' }}">
+                                                            {{ $defaultRowsForSubsection->isNotEmpty() ? $linkedRowsForSubsection . '/' . $defaultRowsForSubsection->count() . ' ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ມີລາຍການ' }}
+                                                        </span>
+                                                        <button type="button" class="fns-btn fns-btn-secondary fns-btn-sm" data-close-default-modal>ປິດ</button>
+                                                    </div>
                                                 @forelse($defaultRowsForSubsection as $defaultRow)
                                                     @php
                                                         $selectedAccount = $accountOptionsById->get($defaultRow->chart_of_account_id);
@@ -409,8 +415,9 @@
                                                     </label>
                                                     <button type="submit" class="fns-btn fns-btn-primary fns-btn-sm">ເພີ່ມລາຍການ</button>
                                                 </form>
+                                                </div>
                                             </div>
-                                        </details>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endunless
@@ -616,7 +623,6 @@
     }
     .es-account-hint.is-review { background:#fff7df; color:#a16207; }
     .es-default-row.is-filter-hidden,
-    .es-account-row.is-filter-hidden,
     .js-autosave-row.is-filter-hidden {
         display:none;
     }
@@ -624,8 +630,7 @@
         border-color:#d2a112;
         box-shadow:0 0 0 3px rgba(210,161,18,.18);
     }
-    .es-add-panel,
-    .es-account-panel {
+    .es-add-panel {
         border:1px solid var(--fns-gray-200);
         border-radius:8px;
         background:#fff;
@@ -636,8 +641,7 @@
         background:#fbfcff;
         box-shadow:0 1px 8px rgba(26,39,68,.04);
     }
-    .es-add-panel-head,
-    .es-account-panel > summary {
+    .es-add-panel-head {
         display:flex;
         align-items:center;
         justify-content:space-between;
@@ -652,7 +656,6 @@
     .es-add-panel-head {
         padding:.65rem .75rem .65rem 1rem;
     }
-    .es-account-panel > summary::-webkit-details-marker { display:none; }
     .es-add-summary-copy {
         display:grid;
         min-width:0;
@@ -718,6 +721,11 @@
         border-radius:8px;
         background:#fff;
         box-shadow:0 24px 70px rgba(6,18,38,.28);
+    }
+    .es-default-modal {
+        width:min(1180px, 100%);
+        max-height:calc(100vh - 2.5rem);
+        overflow:hidden;
     }
     .es-modal-head {
         display:flex;
@@ -785,16 +793,6 @@
         gap:.5rem;
         padding-top:.15rem;
     }
-    .es-summary-action {
-        border-radius:999px;
-        background:#f1f5f9;
-        color:#475569;
-        padding:.25rem .55rem;
-        font-size:.68rem;
-        font-weight:900;
-        white-space:nowrap;
-    }
-    details[open] > summary .es-summary-action { background:#fff7df; color:#a16207; }
     .es-section-nav {
         display:grid;
         grid-template-columns:auto 1fr auto;
@@ -1008,7 +1006,48 @@
         background:#eef2f7;
         color:#475569;
     }
-    .es-account-row td { border-bottom:0 !important; background:#f8fafc; }
+    .es-default-modal-row,
+    .es-default-modal-row > td {
+        height:0;
+        border:0 !important;
+        background:transparent !important;
+        padding:0 !important;
+        line-height:0;
+    }
+    .es-default-modal-row .es-modal-backdrop {
+        line-height:normal;
+    }
+    .es-default-inline {
+        display:flex;
+        align-items:center;
+        flex-wrap:wrap;
+        gap:.4rem;
+    }
+    .es-default-open-btn {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:2rem;
+        border:1px solid #d8e0ea;
+        border-radius:999px;
+        background:#fff9e8;
+        color:#7a5607;
+        padding:.35rem .65rem;
+        font-size:.72rem;
+        font-weight:900;
+        line-height:1;
+        white-space:nowrap;
+        transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+    .es-default-open-btn:hover {
+        border-color:#c29014;
+        box-shadow:0 6px 14px rgba(15,23,42,.08);
+        transform:translateY(-1px);
+    }
+    .es-default-open-btn:focus-visible {
+        outline:3px solid rgba(194,144,20,.22);
+        outline-offset:2px;
+    }
     .es-add-subsection-heading td {
         border-top:2px solid #f0d892;
         border-bottom:0;
@@ -1065,9 +1104,22 @@
         border-color:#c29014;
         box-shadow:0 0 0 3px rgba(194,144,20,.12);
     }
-    .es-account-panel { border-color:#dbe2ec; }
-    .es-account-panel > summary { padding:.6rem .8rem; background:#fff; }
     .es-default-list { display:grid; gap:.55rem; border-top:1px solid var(--fns-gray-200); padding:.75rem; background:#fbfcfe; }
+    .es-default-modal .es-default-list {
+        max-height:calc(100vh - 9.5rem);
+        overflow:auto;
+    }
+    .es-default-modal-summary {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:.75rem;
+        border:1px solid #dbe2ec;
+        border-radius:7px;
+        background:#fff;
+        padding:.6rem;
+        box-shadow:0 1px 6px rgba(15,23,42,.05);
+    }
     .es-default-empty {
         border:1px dashed #cbd5e1;
         border-radius:7px;
@@ -1139,6 +1191,8 @@
         .es-nav-btn { min-height:36px; }
         .es-section-title { grid-template-columns:auto 1fr; }
         .es-section-title-actions { grid-column:1 / -1; justify-content:flex-start; }
+        .es-default-inline { align-items:stretch; flex-direction:column; }
+        .es-default-open-btn { width:100%; }
         .es-default-row { grid-template-columns:1fr; }
         .es-default-fields { grid-template-columns:1fr; }
         .es-default-actions { justify-content:flex-start; }
@@ -1197,6 +1251,24 @@ async function closeSectionEditModal(modal = document.querySelector('[data-secti
     modal.hidden = true;
     document.body.style.overflow = '';
     document.querySelector(`[data-open-section-edit-modal="${sectionId}"]`)?.focus();
+}
+
+function openDefaultModal(subsectionId) {
+    const modal = document.querySelector(`[data-default-modal="${subsectionId}"]`);
+    if (!modal) return;
+
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('input, button, select, textarea')?.focus(), 30);
+}
+
+function closeDefaultModal(modal = document.querySelector('[data-default-modal]:not([hidden])')) {
+    if (!modal || modal.hidden) return;
+
+    const subsectionId = modal.dataset.defaultModal;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    document.querySelector(`[data-open-default-modal="${subsectionId}"]`)?.focus();
 }
 
 function syncExpenseStructureSectionNav() {
@@ -1307,12 +1379,11 @@ function applyExpenseAccountFilter(filter = activeAccountFilter) {
         row.classList.toggle('is-filter-hidden', activeAccountFilter !== 'all' && state !== activeAccountFilter);
     });
 
-    document.querySelectorAll('.es-account-row').forEach(accountRow => {
-        const visibleRows = Array.from(accountRow.querySelectorAll('.js-default-account-row'))
+    document.querySelectorAll('[data-default-modal]').forEach(defaultModal => {
+        const visibleRows = Array.from(defaultModal.querySelectorAll('.js-default-account-row'))
             .filter(row => !row.classList.contains('is-filter-hidden'));
         const hide = activeAccountFilter !== 'all' && visibleRows.length === 0;
-        accountRow.classList.toggle('is-filter-hidden', hide);
-        accountRow.previousElementSibling?.classList.toggle('is-filter-hidden', hide);
+        defaultModal.closest('tr')?.previousElementSibling?.classList.toggle('is-filter-hidden', hide);
     });
 }
 
@@ -1325,7 +1396,12 @@ function jumpToDefaultAccountRow(rowId) {
         selectExpenseStructureSection(sectionPanel.dataset.sectionPanel);
     }
 
-    row.closest('details')?.setAttribute('open', 'open');
+    const defaultModal = row.closest('[data-default-modal]');
+    if (defaultModal) {
+        defaultModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+    }
+
     row.classList.remove('is-filter-hidden');
     row.scrollIntoView({behavior: 'smooth', block: 'center'});
     row.classList.add('is-focus-pulse');
@@ -1346,15 +1422,16 @@ function updateDefaultAccountBadge(badge, linked, total) {
 }
 
 function refreshDefaultAccountSummary(row) {
-    const details = row.closest('details');
-    if (!details) return;
+    const modal = row.closest('[data-default-modal]');
+    if (!modal) return;
 
-    const rows = Array.from(details.querySelectorAll('.js-default-account-row'));
+    const rows = Array.from(modal.querySelectorAll('.js-default-account-row'));
     const linked = rows.filter(item => item.querySelector('input[name="chart_of_account_id"]')?.value).length;
     const total = rows.length;
+    const subsectionRow = modal.closest('tr')?.previousElementSibling;
 
-    updateDefaultAccountBadge(details.querySelector('.js-default-group-badge'), linked, total);
-    updateDefaultAccountBadge(details.closest('tr')?.previousElementSibling?.querySelector('.js-default-subsection-badge'), linked, total);
+    updateDefaultAccountBadge(modal.querySelector('.es-default-modal-summary .js-default-group-badge'), linked, total);
+    updateDefaultAccountBadge(subsectionRow?.querySelector('.js-default-subsection-badge'), linked, total);
 }
 
 async function saveDefaultAccountRow(row) {
@@ -1521,6 +1598,23 @@ document.addEventListener('click', async (event) => {
         return;
     }
 
+    const defaultButton = event.target.closest('[data-open-default-modal]');
+    if (defaultButton) {
+        openDefaultModal(defaultButton.dataset.openDefaultModal);
+        return;
+    }
+
+    const defaultCloseButton = event.target.closest('[data-close-default-modal]');
+    if (defaultCloseButton) {
+        closeDefaultModal(defaultCloseButton.closest('[data-default-modal]'));
+        return;
+    }
+
+    if (event.target.matches('[data-default-modal]')) {
+        closeDefaultModal(event.target);
+        return;
+    }
+
     const filterButton = event.target.closest('.es-filter-btn');
     if (filterButton) {
         applyExpenseAccountFilter(filterButton.dataset.accountFilter || 'all');
@@ -1543,6 +1637,12 @@ document.addEventListener('submit', (event) => {
 
 document.addEventListener('keydown', async (event) => {
     if (event.key === 'Escape') {
+        const defaultModal = document.querySelector('[data-default-modal]:not([hidden])');
+        if (defaultModal) {
+            closeDefaultModal(defaultModal);
+            return;
+        }
+
         const editModal = document.querySelector('[data-section-edit-modal]:not([hidden])');
         if (editModal) {
             await closeSectionEditModal(editModal);

@@ -11,6 +11,7 @@ use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -85,6 +86,7 @@ class ExpensePlanController extends Controller
         $rules = collect();
 
         $this->ensureCatalogExpenseRows($planningYear, $sections, $patterns);
+        $this->syncRowsWithPatternDefaults($planningYear, $patterns);
 
         $expenseRows = ExpensePlan::with(['section', 'subsection', 'pattern', 'chartOfAccount'])
             ->where('planning_year_id', $planningYear->id)
@@ -113,16 +115,18 @@ class ExpensePlanController extends Controller
             ->flatMap(fn ($section) => $section->subsections->pluck('code'))
             ->unique()
             ->values();
-        $defaultRows = ExpenseCatalogItem::with(['chartOfAccount', 'subsection'])
+        $defaultRows = ExpenseCatalogItem::with(['chartOfAccount', 'pattern', 'subsection'])
             ->whereHas('subsection', fn ($query) => $query->whereIn('code', $subsectionCodes))
             ->where('is_active', true)
             ->orderBy('subsection_id')
             ->orderBy('sort_order')
             ->get()
             ->groupBy(fn (ExpenseCatalogItem $item) => $item->subsection?->code)
-            ->map(fn ($rows) => $rows->map(function ($row) {
-                $values = $row->default_values ?? [];
-                unset($values['note'], $values['reference'], $values['item_name']);
+            ->map(fn ($rows) => $rows->map(function ($row) use ($patterns) {
+                $pattern = $row->pattern ?: $patterns->firstWhere('id', $row->pattern_id ?: $row->subsection?->default_pattern_id);
+                $values = $pattern
+                    ? $this->catalogDefaultValues($row, $pattern)
+                    : $this->cleanExpenseValues($row->default_values ?? []);
 
                 return [
                     'item_name' => $row->item_name,
@@ -191,8 +195,7 @@ class ExpensePlanController extends Controller
                         continue;
                     }
 
-                    $values = $catalogItem->default_values ?? [];
-                    unset($values['item_name'], $values['reference'], $values['note']);
+                    $values = $this->catalogDefaultValues($catalogItem, $pattern);
                     $values['yearly_total'] = $pattern->calculateTotal($values);
 
                     $planRows[] = [
@@ -226,6 +229,78 @@ class ExpensePlanController extends Controller
                 ExpensePlan::insert($chunk);
             }
         });
+    }
+
+    private function catalogDefaultValues(ExpenseCatalogItem $catalogItem, ExpensePattern $pattern): array
+    {
+        $values = $this->cleanExpenseValues($catalogItem->default_values ?? []);
+
+        return array_merge($values, $pattern->defaultInputValues());
+    }
+
+    private function cleanExpenseValues(array $values): array
+    {
+        unset($values['item_name'], $values['reference'], $values['note']);
+
+        return $values;
+    }
+
+    private function syncRowsWithPatternDefaults(PlanningYear $planningYear, Collection $patterns): void
+    {
+        $patternsById = $patterns->keyBy('id');
+
+        ExpensePlan::with('pattern')
+            ->where('planning_year_id', $planningYear->id)
+            ->orderBy('id')
+            ->chunkById(200, function (Collection $rows) use ($patternsById): void {
+                foreach ($rows as $row) {
+                    $pattern = $row->pattern ?: $patternsById->get($row->pattern_id);
+                    if (! $pattern) {
+                        continue;
+                    }
+
+                    $values = $row->calculation_values ?? [];
+                    $changed = false;
+
+                    foreach ($pattern->defaultInputValues() as $key => $defaultValue) {
+                        if (! array_key_exists($key, $values) || $values[$key] === null || $values[$key] === '') {
+                            $values[$key] = $defaultValue;
+                            $changed = true;
+                            continue;
+                        }
+
+                        if ($this->shouldReplaceLegacyDefaultValue($key, $values[$key], $defaultValue, $values)) {
+                            $values[$key] = $defaultValue;
+                            $changed = true;
+                        }
+                    }
+
+                    if (! $changed) {
+                        continue;
+                    }
+
+                    $values['yearly_total'] = $pattern->calculateTotal($values);
+
+                    $row->update([
+                        'calculation_values' => $values,
+                        'pattern_snapshot' => $pattern->snapshot(),
+                    ]);
+                }
+            });
+    }
+
+    private function shouldReplaceLegacyDefaultValue(string $key, mixed $currentValue, mixed $defaultValue, array $values): bool
+    {
+        if ($key !== 'month_count') {
+            return false;
+        }
+
+        if ((float) $currentValue !== 1.0 || (float) $defaultValue === 1.0) {
+            return false;
+        }
+
+        return (float) ($values['amount_per_month'] ?? 0) === 0.0
+            && (float) ($values['yearly_total'] ?? 0) === 0.0;
     }
 
     public function destroy(PlanningYear $expensePlan)

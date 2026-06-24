@@ -136,10 +136,13 @@ class ExpensePlanRowController extends Controller
 
     private function calculationValues(ExpensePattern $pattern, array $values, ?array $snapshot = null): array
     {
-        $calculationValues = collect($values)
+        $inputDefaults = $pattern->defaultInputValues($snapshot);
+        $enteredValues = collect($values)
             ->reject(fn ($value, string $key): bool => in_array($key, ['item_name', 'reference', 'note'], true))
             ->filter(fn ($value): bool => $value !== null && $value !== '')
             ->all();
+
+        $calculationValues = array_merge($inputDefaults, $enteredValues);
         $calculationValues['yearly_total'] = $pattern->calculateTotal($calculationValues, $snapshot);
 
         return $calculationValues;

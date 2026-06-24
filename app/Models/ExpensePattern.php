@@ -49,6 +49,16 @@ class ExpensePattern extends Model
         ];
     }
 
+    public function defaultInputValues(?array $snapshot = null): array
+    {
+        return $this->fieldDefinitions($snapshot)
+            ->reject(fn (object $field): bool => $field->is_calculated)
+            ->reject(fn (object $field): bool => in_array($field->field_key, ['item_name', 'reference', 'note'], true))
+            ->filter(fn (object $field): bool => $field->default_value !== null && $field->default_value !== '')
+            ->mapWithKeys(fn (object $field): array => [$field->field_key => $field->default_value])
+            ->all();
+    }
+
     public function calculateTotal(array $values, ?array $snapshot = null): float
     {
         $formula = $snapshot['formula_schema'] ?? $this->formula_schema ?? [];

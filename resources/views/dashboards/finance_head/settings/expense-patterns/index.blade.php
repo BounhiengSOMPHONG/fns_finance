@@ -209,7 +209,6 @@
                     </tbody>
                 </table>
             </div>
-            </div>
         </section>
     @empty
         <div class="rounded-lg border border-slate-200 bg-white px-5 py-10 text-center text-slate-500">

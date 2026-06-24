@@ -697,9 +697,9 @@ function visibleFields(pattern, subsection) {
 }
 
 function rowDisplayValue(row, field) {
-    if (field.key === 'item_name') return row.values?.item_name ?? row.plan_detail;
-    if (field.key === 'note') return row.values?.note ?? row.detail;
-    return row.values?.[field.key] ?? '';
+    if (field.key === 'item_name') return row.values?.item_name ?? row.plan_detail ?? field.default_value ?? '';
+    if (field.key === 'note') return row.values?.note ?? row.detail ?? field.default_value ?? '';
+    return row.values?.[field.key] ?? field.default_value ?? '';
 }
 
 function renderSheet() {

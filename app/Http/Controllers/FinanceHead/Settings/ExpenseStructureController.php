@@ -101,7 +101,7 @@ class ExpenseStructureController extends Controller
 
         $accountWarnings = $defaultRowsByCode
             ->flatten(1)
-            ->filter(fn (ExpenseCatalogItem $row): bool => $row->chart_of_account_id === null || (bool) $row->getAttribute('needs_review'))
+            ->filter(fn (ExpenseCatalogItem $row): bool => $row->chart_of_account_id === null)
             ->values();
 
         $patterns = ExpensePattern::where('is_active', true)

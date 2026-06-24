@@ -9,7 +9,6 @@
     $defaultRowTotal = $defaultRowsByCode->reduce(fn ($total, $rows) => $total + $rows->count(), 0);
     $linkedDefaultRowTotal = $defaultRowsByCode->reduce(fn ($total, $rows) => $total + $rows->whereNotNull('chart_of_account_id')->count(), 0);
     $unlinkedAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id === null)->values();
-    $reviewAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id !== null && (bool) $row->getAttribute('needs_review'))->values();
     $unlinkedDefaultRowTotal = max($defaultRowTotal - $linkedDefaultRowTotal, 0);
 @endphp
 
@@ -296,8 +295,7 @@
                                                         $selectedLabel = $selectedAccount['label'] ?? '';
                                                         $selectedReference = $selectedAccount['code'] ?? null;
                                                         $suggestedAccount = $defaultRow->getAttribute('suggested_account');
-                                                        $needsReview = (bool) $defaultRow->getAttribute('needs_review');
-                                                        $accountState = $defaultRow->chart_of_account_id === null ? 'unlinked' : ($needsReview ? 'review' : 'linked');
+                                                        $accountState = $defaultRow->chart_of_account_id === null ? 'unlinked' : 'linked';
                                                     @endphp
                                                     <form method="POST"
                                                           action="{{ route('head_of_finance.settings.expense-default-rows.update', $defaultRow) }}"
@@ -331,8 +329,8 @@
                                                         </div>
 
                                                         <div class="es-default-actions">
-                                                            <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'is-warn' : 'is-ok') : '' }}">
-                                                                {{ $defaultRow->chart_of_account_id ? ($needsReview ? 'ກວດຄືນ' : 'ເຊື່ອມແລ້ວ') : 'ຍັງບໍ່ເຊື່ອມ' }}
+                                                            <span class="js-default-row-status es-pill {{ $defaultRow->chart_of_account_id ? 'is-ok' : '' }}">
+                                                                {{ $defaultRow->chart_of_account_id ? 'ເຊື່ອມແລ້ວ' : 'ຍັງບໍ່ເຊື່ອມ' }}
                                                             </span>
                                                             <button type="submit" class="fns-btn fns-btn-secondary fns-btn-sm">ບັນທຶກ</button>
                                                             <button type="button"

@@ -246,7 +246,15 @@
                 @csrf
                 <button type="submit" class="erp-btn erp-btn-save">Set ປ.ໂທ/ປ.ເອກ 60/40</button>
             </form>
-            <div class="erp-split-grid">
+            <div class="erp-split-table">
+                <div class="erp-split-head">
+                    <span>ລະດັບ</span>
+                    <span>ປີ 1 (%)</span>
+                    <span>ປີ 2+ (%)</span>
+                    <span>ເອກະສານ</span>
+                    <span>ປີ</span>
+                    <span>Action</span>
+                </div>
                 @foreach(['master', 'phd'] as $level)
                     @php
                         $split = $creditSplits->get($level);
@@ -254,7 +262,7 @@
                         $year2Pct = $split ? $splitPct($split->year2_percentage) : '40';
                         $meta = $levelMeta[$level];
                     @endphp
-                    <form method="POST" action="{{ route('head_of_finance.settings.course-credit-splits.update', $level) }}" class="erp-split-card dirty-form">
+                    <form method="POST" action="{{ route('head_of_finance.settings.course-credit-splits.update', $level) }}" class="erp-split-row dirty-form">
                         @csrf
                         @method('PATCH')
                         <div class="erp-level-cell">
@@ -385,12 +393,19 @@
         display:block; color:#64748b; font-size:.68rem; font-weight:800; margin-bottom:.18rem;
     }
     .erp-inline-form { display:grid; grid-template-columns:1fr 1fr 86px auto; gap:.45rem; align-items:end; }
-    .erp-split-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.7rem; padding:.85rem; }
-    .erp-split-card {
-        display:grid; grid-template-columns:120px repeat(4, minmax(0, 1fr)) auto;
-        gap:.45rem; align-items:end; border:1px solid #e5e7eb; border-radius:8px; padding:.7rem; background:#fff;
+    .erp-split-table { display:grid; gap:.45rem; }
+    .erp-split-head,
+    .erp-split-row {
+        display:grid; grid-template-columns:130px 92px 92px minmax(120px, 1fr) 92px 96px;
+        gap:.5rem; align-items:end;
     }
-    .erp-split-card label span {
+    .erp-split-head {
+        color:#64748b; font-size:.68rem; font-weight:900; padding:0 .15rem;
+    }
+    .erp-split-row {
+        border:1px solid #e5e7eb; border-radius:8px; padding:.7rem; background:#fff;
+    }
+    .erp-split-row label span {
         display:block; color:#64748b; font-size:.68rem; font-weight:800; margin-bottom:.18rem;
     }
     .erp-input, .erp-select, .erp-search input {
@@ -491,8 +506,8 @@
     @media (max-width:900px) {
         .erp-topbar, .erp-panel-head { align-items:stretch; flex-direction:column; }
         .erp-settings-actions { justify-content:flex-start; max-width:none; }
-        .erp-split-grid { grid-template-columns:1fr; }
-        .erp-split-card { grid-template-columns:1fr; }
+        .erp-split-head { display:none; }
+        .erp-split-row { grid-template-columns:1fr; }
         .erp-settings-row { grid-template-columns:1fr; }
         .erp-toolbar { width:100%; align-items:stretch; flex-direction:column; }
         .erp-search, .erp-select { width:100%; }
@@ -683,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (modal.classList.contains('is-open')) closeModal();
     });
-    document.querySelectorAll('.erp-split-card').forEach(card => {
+    document.querySelectorAll('.erp-split-row').forEach(card => {
         const year1 = card.querySelector('.js-split-year1');
         const year2 = card.querySelector('.js-split-year2');
         const sync = (source, target) => {

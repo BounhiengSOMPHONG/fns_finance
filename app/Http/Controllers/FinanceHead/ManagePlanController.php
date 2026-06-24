@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicIncomePlan;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
+use App\Models\ExpensePlan;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PeriodPlanOverride;

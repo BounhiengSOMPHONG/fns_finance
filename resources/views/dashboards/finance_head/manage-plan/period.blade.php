@@ -144,9 +144,9 @@
                     <thead>
                         <tr class="period-head-row">
                             <th rowspan="2" class="period-code-head"><span>ພາກ</span></th>
-                            <th rowspan="2" class="period-code-head"><span>{{ $isPeriodThreeFour ? 'ພາກສ່ວນ' : 'ພາກ' }}</span>@if(! $isPeriodThreeFour)<span>ສ່ວນ</span>@endif</th>
+                            <th rowspan="2" class="period-code-head"><span>ພາກ</span><span>ສ່ວນ</span></th>
                             <th rowspan="2" class="period-code-head"><span>ຮ່ວງ</span></th>
-                            <th rowspan="2" class="period-code-head"><span>{{ $isPeriodThreeFour ? 'ລູກຮ່ວງ' : 'ລູກ' }}</span>@if(! $isPeriodThreeFour)<span>ຮ່ວງ</span>@endif</th>
+                            <th rowspan="2" class="period-code-head"><span>ລູກ</span><span>ຮ່ວງ</span></th>
                             <th rowspan="2">ເນື້ອໃນລາຍຈ່າຍ</th>
                             <th rowspan="2">ແຜນການ<br>ປີ {{ $planningYear->year }}</th>
                             @if($isPeriodThreeFour)

@@ -78,15 +78,15 @@ class ExpenseStructureController extends Controller
                 ->orderBy('display_order')
                 ->get();
 
-            $subsectionCodes = $sections
-                ->flatMap(fn (ExpenseSection $section) => $section->subsections->pluck('code'))
+            $subsectionIds = $sections
+                ->flatMap(fn (ExpenseSection $section) => $section->subsections->pluck('id'))
                 ->filter()
                 ->unique()
                 ->values();
 
-            if ($subsectionCodes->isNotEmpty()) {
+            if ($subsectionIds->isNotEmpty()) {
                 $defaultRows = ExpenseCatalogItem::with(['chartOfAccount.parent', 'subsection'])
-                    ->whereHas('subsection', fn ($query) => $query->whereIn('code', $subsectionCodes))
+                    ->whereIn('expense_catalog_items.subsection_id', $subsectionIds)
                     ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_catalog_items.subsection_id')
                     ->select('expense_catalog_items.*')
                     ->orderBy('expense_subsections.code')

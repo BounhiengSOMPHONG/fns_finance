@@ -71,8 +71,7 @@
                     <tr>
                         <th>ຫຼັກສູດ</th>
                         <th>ລະດັບ</th>
-                        <th class="erp-num">ປີຮຽນ</th>
-                        <th class="erp-num">ໜ່ວຍກິດ</th>
+                        <th class="erp-num">ໜ່ວຍກິດຕາມປີ</th>
                         <th class="erp-num">ປີເລີ່ມ</th>
                         <th>ເອກະສານ</th>
                         <th class="erp-actions-col">Action</th>
@@ -93,7 +92,7 @@
                                 <strong class="erp-program">{{ $shownProgramName }}</strong>
                             </td>
                             <td><span class="erp-badge">{{ $meta['label'] }}</span></td>
-                            <td>
+                            <td class="erp-year-cell">
                                 @if($displayYears->count() > 1)
                                     <div class="erp-year-chip-list">
                                         @foreach($displayYears as $row)
@@ -101,10 +100,11 @@
                                         @endforeach
                                     </div>
                                 @else
-                                    <span class="erp-year-chip">{{ $s->degreeProgram?->study_year ? 'ປີ '.$s->degreeProgram?->study_year : '-' }}</span>
+                                    <span class="erp-year-chip">
+                                        {{ $s->degreeProgram?->study_year ? 'ປີ '.$s->degreeProgram?->study_year.': ' : '' }}{{ (float) $s->course_credit_unit }}
+                                    </span>
                                 @endif
                             </td>
-                            <td class="erp-num">{{ $displayYears->count() > 1 ? '-' : (float) $s->course_credit_unit }}</td>
                             <td class="erp-num">{{ $s->start_year }}</td>
                             <td>{{ $s->gov_doc_id ?: '-' }}</td>
                             <td class="erp-actions">
@@ -129,7 +129,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="erp-empty">ຍັງບໍ່ມີຂໍ້ມູນໜ່ວຍກິດ</td>
+                            <td colspan="6" class="erp-empty">ຍັງບໍ່ມີຂໍ້ມູນໜ່ວຍກິດ</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -429,6 +429,7 @@
     }
     .erp-data-table th { background:#f8fafc; color:#64748b; font-size:.68rem; font-weight:900; text-transform:uppercase; white-space:nowrap; }
     .erp-program { display:block; max-width:330px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .erp-data-table td.erp-year-cell { text-align:right; }
     .erp-year-chip-list { display:flex; flex-wrap:wrap; gap:.25rem; justify-content:flex-end; }
     .erp-year-chip {
         display:inline-flex; align-items:center; justify-content:center;

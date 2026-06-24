@@ -629,7 +629,16 @@ class ManagePlanController extends Controller
                 DB::table('expense_plans')->whereIn('id', $expensePlanIds)->delete();
             }
 
-            $planningYear->sections()->update(['planning_year_id' => null]);
+            $hasOtherYearStructure = ExpenseSection::whereNotNull('planning_year_id')
+                ->where('planning_year_id', '!=', $planningYear->id)
+                ->exists();
+
+            if ($hasOtherYearStructure) {
+                $this->deleteExpenseStructureForYear($planningYear);
+            } else {
+                $this->deleteDetachedExpenseStructure();
+                $planningYear->sections()->update(['planning_year_id' => null]);
+            }
 
             $planningYear->delete();
         });
@@ -661,6 +670,38 @@ class ManagePlanController extends Controller
                 'created_by' => Auth::id(),
             ]
         )->update(['planning_year_id' => $planningYear->id]);
+    }
+
+    private function deleteExpenseStructureForYear(PlanningYear $planningYear): void
+    {
+        $this->deleteExpenseStructure(
+            ExpenseSection::where('planning_year_id', $planningYear->id)->pluck('id')
+        );
+    }
+
+    private function deleteDetachedExpenseStructure(): void
+    {
+        $this->deleteExpenseStructure(
+            ExpenseSection::whereNull('planning_year_id')->pluck('id')
+        );
+    }
+
+    private function deleteExpenseStructure(Collection $sectionIds): void
+    {
+        if ($sectionIds->isEmpty()) {
+            return;
+        }
+
+        $subsectionIds = ExpenseSubsection::whereIn('section_id', $sectionIds)->pluck('id');
+
+        if ($subsectionIds->isNotEmpty()) {
+            ExpensePlan::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpenseSubsection::whereIn('id', $subsectionIds)->delete();
+        }
+
+        ExpenseSection::whereIn('id', $sectionIds)->delete();
+        ExpenseCatalogItem::whereDoesntHave('subsection')->delete();
     }
 
     private function ensureExpenseStructure(PlanningYear $planningYear): void

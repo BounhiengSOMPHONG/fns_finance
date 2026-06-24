@@ -40,8 +40,14 @@ class ExpenseStructureController extends Controller
             ];
         });
 
-        $catalogItemsCount = ExpenseCatalogItem::count();
-        $linkedCatalogItemsCount = ExpenseCatalogItem::whereNotNull('chart_of_account_id')->count();
+        $catalogYear = $years->firstWhere('is_active', true) ?? $years->first();
+        $catalogItemsQuery = ExpenseCatalogItem::query()
+            ->when($catalogYear, fn ($query) => $query
+                ->whereHas('subsection.section', fn ($sectionQuery) => $sectionQuery
+                    ->where('planning_year_id', $catalogYear->id)));
+
+        $catalogItemsCount = (clone $catalogItemsQuery)->count();
+        $linkedCatalogItemsCount = (clone $catalogItemsQuery)->whereNotNull('chart_of_account_id')->count();
         $patterns = ExpensePattern::orderBy('id')->get();
 
         return view('dashboards.finance_head.settings.expense-setup.index', [

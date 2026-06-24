@@ -80,6 +80,7 @@ class ExpenseStructureController extends Controller
                 $detachedSections = $this->latestDetachedExpenseSections();
                 if ($detachedSections->isNotEmpty()) {
                     $this->copyStructureFromSections($detachedSections, $planningYear);
+                    $this->deleteDetachedExpenseStructure();
                 } else {
                     $this->buildStructureFromDefaultRows($planningYear);
                 }
@@ -471,5 +472,21 @@ class ExpenseStructureController extends Controller
                 }
             }
         }
+    }
+
+    private function deleteDetachedExpenseStructure(): void
+    {
+        $sectionIds = ExpenseSection::whereNull('planning_year_id')->pluck('id');
+        if ($sectionIds->isEmpty()) {
+            return;
+        }
+
+        $subsectionIds = ExpenseSubsection::whereIn('section_id', $sectionIds)->pluck('id');
+        if ($subsectionIds->isNotEmpty()) {
+            ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpenseSubsection::whereIn('id', $subsectionIds)->delete();
+        }
+
+        ExpenseSection::whereIn('id', $sectionIds)->delete();
     }
 }

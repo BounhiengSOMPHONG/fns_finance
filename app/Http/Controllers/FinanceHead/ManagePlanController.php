@@ -731,6 +731,7 @@ class ManagePlanController extends Controller
         $detachedSections = $this->latestDetachedExpenseSections();
         if ($detachedSections->isNotEmpty()) {
             $this->copyExpenseStructureFromSections($detachedSections, $planningYear);
+            $this->deleteDetachedExpenseStructure();
 
             return;
         }

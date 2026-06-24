@@ -146,6 +146,15 @@
         </button>
 
         @if($reviewContext['can_manage_review'] && $planningYear->canBeEdited())
+            @if(! empty($planYearWarnings['unlinked_expenses']))
+                <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}"
+                   class="review-plan-warning"
+                   title="ກວດແກ້ກ່ອນບັນທຶກແຜນປີ">
+                    <strong>{{ count($planYearWarnings['unlinked_expenses']) }} ລາຍການຍັງບໍ່ໄດ້ຜູກບັນຊີ</strong>
+                    <span>ກວດ Account Links ກ່ອນບັນທຶກແຜນປີ</span>
+                </a>
+            @endif
+
             <form method="POST" action="{{ route('head_of_finance.manage-plan.save', $planningYear) }}">
                 @csrf
                 <button type="submit" class="review-save-btn" onclick="return confirm('ບັນທຶກແຜນ ແລະ ປິດການແກ້ໄຂລາຍຮັບ, ລາຍຈ່າຍ, ເງິນເດືອນ?')">
@@ -309,13 +318,6 @@
         <div class="plan-year-title-block">
             <p>ແຜນລາຍຈ່າຍງົບປະມານປີ {{ $planningYear->year }}</p>
         </div>
-
-        @if(! empty($planYearWarnings['unlinked_expenses']))
-            <div class="plan-year-warning">
-                <strong>ມີລາຍຈ່າຍທີ່ຍັງບໍ່ໄດ້ຜູກບັນຊີ {{ count($planYearWarnings['unlinked_expenses']) }} ລາຍການ</strong>
-                <span>ກວດແກ້ທີ່ Expense Structure & Account Links ກ່ອນພິມແຜນປີ.</span>
-            </div>
-        @endif
 
         <table class="report-table plan-year-table">
             <colgroup>
@@ -1161,6 +1163,41 @@
         color: #7a5b0b;
     }
 
+    .review-plan-warning {
+        align-items: flex-start;
+        background: #fff7df;
+        border: 1px solid #e5bc4f;
+        border-radius: 8px;
+        color: #734b04;
+        display: inline-flex;
+        flex-direction: column;
+        gap: .1rem;
+        max-width: 255px;
+        min-height: 38px;
+        padding: .45rem .65rem;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(115, 75, 4, .12);
+    }
+
+    .review-plan-warning strong {
+        font-size: .78rem;
+        font-weight: 900;
+        line-height: 1.1;
+    }
+
+    .review-plan-warning span {
+        color: #8a6413;
+        font-size: .68rem;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    .review-plan-warning:hover {
+        background: #fff1c2;
+        border-color: #d69a18;
+        color: #5f3d03;
+    }
+
     .review-save-btn {
         background: var(--fns-green);
         border: 1px solid var(--fns-green);
@@ -1813,26 +1850,6 @@
         font-weight: 700;
         margin-top: .35rem;
         text-align: center;
-    }
-
-    .plan-year-warning {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin: 0 0 12px;
-        border: 1px solid #f6d58a;
-        border-radius: 7px;
-        background: #fff8e5;
-        color: #7a4c05;
-        padding: 9px 11px;
-        font-size: .76rem;
-        font-weight: 800;
-    }
-
-    .plan-year-warning span {
-        color: #8a6413;
-        font-weight: 700;
     }
 
     .report-top,

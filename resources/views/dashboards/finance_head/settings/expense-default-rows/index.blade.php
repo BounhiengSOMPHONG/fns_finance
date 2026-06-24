@@ -34,11 +34,7 @@
                 @endif
             </form>
         </div>
-        <div class="mt-4 grid gap-2 md:grid-cols-[1fr_auto_auto]">
-            <input id="account-link-quick-search"
-                   class="fns-input"
-                   placeholder="ກອງໃນໜ້ານີ້: ລາຍການ, ກຸ່ມ, ບັນຊີ..."
-                   autocomplete="off">
+        <div class="mt-4 flex flex-wrap justify-end gap-2">
             <button type="button" class="fns-btn fns-btn-secondary" id="account-link-show-all">ສະແດງທັງໝົດ</button>
             <button type="button" class="fns-btn fns-btn-secondary" id="account-link-show-unlinked">ສະແດງທີ່ຍັງບໍ່ເຊື່ອມ</button>
         </div>
@@ -162,15 +158,11 @@ const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 let accountLinkFilter = 'all';
 
 function applyAccountLinkFilters() {
-    const query = String(document.getElementById('account-link-quick-search')?.value || '').trim().toLowerCase();
-
     document.querySelectorAll('details[data-account-group]').forEach(group => {
         const rows = Array.from(group.querySelectorAll('.js-account-row'));
         rows.forEach(row => {
-            const text = row.dataset.row || '';
-            const matchesText = !query || text.includes(query);
             const matchesLink = accountLinkFilter === 'all' || row.dataset.linked === 'false';
-            row.hidden = !(matchesText && matchesLink);
+            row.hidden = !matchesLink;
         });
 
         group.hidden = rows.length > 0 && rows.every(row => row.hidden);
@@ -279,7 +271,6 @@ document.addEventListener('click', event => {
     saveAccountForm(form);
 });
 
-document.getElementById('account-link-quick-search')?.addEventListener('input', applyAccountLinkFilters);
 document.getElementById('account-link-show-all')?.addEventListener('click', () => {
     accountLinkFilter = 'all';
     applyAccountLinkFilters();

@@ -271,15 +271,22 @@ class ExpenseStructureController extends Controller
             return back()->withErrors(['parent_id' => 'A subsection cannot be its own parent.']);
         }
 
+        $oldPatternId = $expenseSubsection->default_pattern_id;
+        $newPatternId = $data['default_pattern_id'] ?? null;
+
         $expenseSubsection->update([
             'parent_id' => $parentId,
             'code' => $data['code'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'default_pattern_id' => $data['default_pattern_id'] ?? null,
+            'default_pattern_id' => $newPatternId,
             'display_order' => $data['display_order'],
             'is_active' => $request->boolean('is_active'),
         ]);
+
+        if ((int) $oldPatternId !== (int) $newPatternId) {
+            $this->syncSubsectionDefaultPattern($expenseSubsection, $oldPatternId, $newPatternId);
+        }
 
         return back()->with('success', 'Expense subsection updated.');
     }
@@ -307,6 +314,66 @@ class ExpenseStructureController extends Controller
         }
 
         return $account->account_code.' - '.implode(' / ', $parts);
+    }
+
+    private function syncSubsectionDefaultPattern(ExpenseSubsection $subsection, ?int $oldPatternId, ?int $newPatternId): void
+    {
+        if (! $newPatternId) {
+            return;
+        }
+
+        $pattern = ExpensePattern::find($newPatternId);
+        if (! $pattern) {
+            return;
+        }
+
+        $catalogItems = ExpenseCatalogItem::where('subsection_id', $subsection->id)
+            ->where(function ($query) use ($oldPatternId): void {
+                $query->whereNull('pattern_id');
+                if ($oldPatternId) {
+                    $query->orWhere('pattern_id', $oldPatternId);
+                }
+            })
+            ->get();
+
+        if ($catalogItems->isNotEmpty()) {
+            ExpenseCatalogItem::whereIn('id', $catalogItems->pluck('id'))->update([
+                'pattern_id' => $pattern->id,
+            ]);
+        }
+
+        $plans = ExpensePlan::where('subsection_id', $subsection->id)
+            ->where(function ($query) use ($catalogItems, $oldPatternId): void {
+                if ($catalogItems->isNotEmpty()) {
+                    $query->whereIn('catalog_item_id', $catalogItems->pluck('id'));
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+
+                $query->orWhereNull('pattern_id');
+                if ($oldPatternId) {
+                    $query->orWhere('pattern_id', $oldPatternId);
+                }
+            })
+            ->get();
+
+        foreach ($plans as $plan) {
+            $values = $this->calculationValuesForPattern($pattern, $plan->calculation_values ?? []);
+            $plan->update([
+                'pattern_id' => $pattern->id,
+                'plan_type' => $pattern->key,
+                'calculation_values' => $values,
+                'pattern_snapshot' => $pattern->snapshot(),
+            ]);
+        }
+    }
+
+    private function calculationValuesForPattern(ExpensePattern $pattern, array $currentValues): array
+    {
+        $values = array_merge($pattern->defaultInputValues(), $currentValues);
+        $values['yearly_total'] = $pattern->calculateTotal($values);
+
+        return $values;
     }
 
     private function buildStructureFromDefaultRows(PlanningYear $planningYear): void

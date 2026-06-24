@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FinanceHead\Settings;
 use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\ExpenseCatalogItem;
+use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
@@ -169,6 +170,10 @@ class ExpenseDefaultRowAccountController extends Controller
 
     private function syncPlanRowsFromCatalogItem(ExpenseCatalogItem $catalogItem, string $oldItemName): void
     {
+        $pattern = $catalogItem->pattern_id
+            ? ExpensePattern::find($catalogItem->pattern_id)
+            : null;
+
         $plans = ExpensePlan::where('catalog_item_id', $catalogItem->id)
             ->orWhere(function ($query) use ($catalogItem, $oldItemName): void {
                 $query->where('subsection_id', $catalogItem->subsection_id)
@@ -180,14 +185,32 @@ class ExpenseDefaultRowAccountController extends Controller
             ->get();
 
         foreach ($plans as $plan) {
-            $plan->update([
+            $payload = [
                 'catalog_item_id' => $catalogItem->id,
                 'chart_of_account_id' => $catalogItem->chart_of_account_id,
                 'pattern_id' => $catalogItem->pattern_id ?: $plan->pattern_id,
                 'item_name' => $catalogItem->item_name,
                 'plan_detail' => $catalogItem->item_name,
-            ]);
+            ];
+
+            if ($pattern) {
+                $values = $this->calculationValuesForPattern($pattern, $plan->calculation_values ?? []);
+                $payload['pattern_id'] = $pattern->id;
+                $payload['plan_type'] = $pattern->key;
+                $payload['calculation_values'] = $values;
+                $payload['pattern_snapshot'] = $pattern->snapshot();
+            }
+
+            $plan->update($payload);
         }
+    }
+
+    private function calculationValuesForPattern(ExpensePattern $pattern, array $currentValues): array
+    {
+        $values = array_merge($pattern->defaultInputValues(), $currentValues);
+        $values['yearly_total'] = $pattern->calculateTotal($values);
+
+        return $values;
     }
 
     private function deletePlanRowsForCatalogItem(ExpenseCatalogItem $catalogItem): void

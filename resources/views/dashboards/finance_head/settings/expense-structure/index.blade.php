@@ -167,52 +167,70 @@
                         <h3>{{ $section->name }}</h3>
                         <p>{{ $section->subsections->count() }} ກຸ່ມຍ່ອຍ · {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} ເຊື່ອມບັນຊີ</p>
                     </div>
-                    @if($sectionDefaultRows->isNotEmpty())
-                        <span class="{{ $sectionDefaultRows->count() > $sectionLinkedDefaultRows ? 'es-pill is-warn' : 'es-pill is-ok' }}">
-                            {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} ເຊື່ອມແລ້ວ
-                        </span>
-                    @else
-                        <span class="es-pill">ຍັງບໍ່ມີລາຍການ</span>
-                    @endif
+                    <div class="es-section-title-actions">
+                        @if($sectionDefaultRows->isNotEmpty())
+                            <span class="{{ $sectionDefaultRows->count() > $sectionLinkedDefaultRows ? 'es-pill is-warn' : 'es-pill is-ok' }}">
+                                {{ $sectionLinkedDefaultRows }}/{{ $sectionDefaultRows->count() }} ເຊື່ອມແລ້ວ
+                            </span>
+                        @else
+                            <span class="es-pill">ຍັງບໍ່ມີລາຍການ</span>
+                        @endif
+
+                        <button type="button" class="es-section-edit-btn" data-open-section-edit-modal="{{ $section->id }}" aria-haspopup="dialog">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" />
+                            </svg>
+                            <span>ແກ້ໄຂ</span>
+                        </button>
+                    </div>
                 </div>
 
-                <details class="es-edit-section">
-                    <summary>
-                        <span>ແກ້ໄຂໝວດຫຼັກ</span>
-                        <span class="es-summary-action">ເປີດ</span>
-                    </summary>
-                    <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.update', $section) }}" class="js-autosave-form grid gap-3 md:grid-cols-[110px_1fr_120px_auto] md:items-end">
-                        @csrf
-                        @method('PATCH')
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
-                            <input name="code" value="{{ $section->code }}" class="fns-input" required>
+                <div class="es-modal-backdrop" data-section-edit-modal="{{ $section->id }}" hidden>
+                    <div class="es-modal" role="dialog" aria-modal="true" aria-labelledby="esEditSectionModalTitle{{ $section->id }}">
+                        <div class="es-modal-head">
+                            <div>
+                                <span>Expense Section</span>
+                                <h3 id="esEditSectionModalTitle{{ $section->id }}">ແກ້ໄຂໝວດຫຼັກ {{ $section->code }}</h3>
+                            </div>
+                            <button type="button" class="es-modal-close" data-close-section-edit-modal aria-label="Close">&times;</button>
                         </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
-                            <input name="name" value="{{ $section->name }}" class="fns-input" required>
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">ລຳດັບ</label>
-                            <input type="number" name="display_order" value="{{ $section->display_order }}" class="fns-input" min="0" max="999" required>
-                        </div>
-                        <label class="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                            <input type="checkbox" name="is_active" value="1" @checked($section->is_active) class="rounded border-slate-300">
-                            ໃຊ້ງານ
-                        </label>
-                        <div class="md:col-span-4">
-                            <textarea name="description" class="fns-input" rows="2" placeholder="ລາຍລະອຽດ">{{ $section->description }}</textarea>
-                            <div class="mt-3 flex flex-wrap gap-2">
+
+                        <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.sections.update', $section) }}" class="js-autosave-form es-section-modal-form">
+                            @csrf
+                            @method('PATCH')
+                            <div>
+                                <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
+                                <input name="code" value="{{ $section->code }}" class="fns-input" required data-section-edit-first>
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
+                                <input name="name" value="{{ $section->name }}" class="fns-input" required>
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-sm font-medium text-slate-700">ລຳດັບ</label>
+                                <input type="number" name="display_order" value="{{ $section->display_order }}" class="fns-input" min="0" max="999" required>
+                            </div>
+                            <label class="es-modal-check">
+                                <input type="checkbox" name="is_active" value="1" @checked($section->is_active) class="rounded border-slate-300">
+                                ໃຊ້ງານ
+                            </label>
+                            <div class="es-modal-wide">
+                                <label class="mb-1 block text-sm font-medium text-slate-700">ລາຍລະອຽດ</label>
+                                <textarea name="description" class="fns-input" rows="3" placeholder="ລາຍລະອຽດ">{{ $section->description }}</textarea>
+                            </div>
+                            <div class="es-modal-actions">
                                 <button type="button"
                                         class="fns-btn fns-btn-danger js-delete-setting"
                                         data-url="{{ route('head_of_finance.settings.expense-structure.sections.destroy', $section) }}"
                                         data-message="ລຶບໝວດນີ້?">
                                     ລຶບໝວດ
                                 </button>
+                                <button type="button" class="fns-btn fns-btn-secondary" data-close-section-edit-modal>ປິດ</button>
                             </div>
-                        </div>
-                    </form>
-                </details>
+                        </form>
+                    </div>
+                </div>
 
                 <div class="es-table-wrap">
                     <table class="es-table">
@@ -587,7 +605,6 @@
         box-shadow:0 0 0 3px rgba(210,161,18,.18);
     }
     .es-add-panel,
-    .es-edit-section,
     .es-account-panel {
         border:1px solid var(--fns-gray-200);
         border-radius:8px;
@@ -600,7 +617,6 @@
         box-shadow:0 1px 8px rgba(26,39,68,.04);
     }
     .es-add-panel-head,
-    .es-edit-section > summary,
     .es-account-panel > summary {
         display:flex;
         align-items:center;
@@ -616,7 +632,6 @@
     .es-add-panel-head {
         padding:.65rem .75rem .65rem 1rem;
     }
-    .es-edit-section > summary::-webkit-details-marker,
     .es-account-panel > summary::-webkit-details-marker { display:none; }
     .es-add-summary-copy {
         display:grid;
@@ -884,8 +899,50 @@
     }
     .es-section-title h3 { margin:0; color:var(--fns-navy); font-size:.95rem; font-weight:900; line-height:1.25; }
     .es-section-title p { margin:.15rem 0 0; color:var(--fns-gray-500); font-size:.74rem; }
-    .es-edit-section { margin:.75rem 1rem 0; background:#fcfdff; }
-    .es-edit-section form { padding:1rem; border-top:1px solid var(--fns-gray-200); }
+    .es-section-title-actions {
+        display:flex;
+        align-items:center;
+        justify-content:flex-end;
+        flex-wrap:wrap;
+        gap:.45rem;
+    }
+    .es-section-edit-btn {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:.4rem;
+        min-height:2rem;
+        border:1px solid #d8e0ea;
+        border-radius:999px;
+        background:#fff;
+        color:#13213b;
+        padding:.35rem .62rem;
+        font-size:.72rem;
+        font-weight:900;
+        line-height:1;
+        white-space:nowrap;
+        box-shadow:0 1px 2px rgba(15,23,42,.05);
+        transition:border-color .16s ease, box-shadow .16s ease, background .16s ease, transform .16s ease;
+    }
+    .es-section-edit-btn:hover {
+        border-color:#c29014;
+        background:#fff9e8;
+        box-shadow:0 6px 14px rgba(15,23,42,.08);
+        transform:translateY(-1px);
+    }
+    .es-section-edit-btn:focus-visible {
+        outline:3px solid rgba(194,144,20,.22);
+        outline-offset:2px;
+        border-color:#c29014;
+    }
+    .es-section-edit-btn svg {
+        width:.9rem;
+        height:.9rem;
+        stroke:currentColor;
+        stroke-width:2;
+        stroke-linecap:round;
+        stroke-linejoin:round;
+    }
     .es-table-wrap { overflow:auto; padding:1rem; }
     .es-table { width:100%; min-width:1120px; border-collapse:separate; border-spacing:0; font-size:.8rem; }
     .es-table thead th {
@@ -974,7 +1031,7 @@
         .es-section-tabs { grid-column:1 / -1; order:2; grid-template-columns:1fr; }
         .es-nav-btn { min-height:36px; }
         .es-section-title { grid-template-columns:auto 1fr; }
-        .es-section-title > .es-pill { grid-column:1 / -1; justify-self:start; }
+        .es-section-title-actions { grid-column:1 / -1; justify-content:flex-start; }
         .es-default-row { grid-template-columns:1fr; }
         .es-default-fields { grid-template-columns:1fr; }
         .es-default-actions { justify-content:flex-start; }
@@ -1010,6 +1067,29 @@ function closeSectionModal() {
     modal.hidden = true;
     document.body.style.overflow = '';
     document.querySelector('[data-open-section-modal]')?.focus();
+}
+
+function openSectionEditModal(sectionId) {
+    const modal = document.querySelector(`[data-section-edit-modal="${sectionId}"]`);
+    if (!modal) return;
+
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.querySelector('[data-section-edit-first]')?.focus(), 30);
+}
+
+async function closeSectionEditModal(modal = document.querySelector('[data-section-edit-modal]:not([hidden])')) {
+    if (!modal || modal.hidden) return;
+
+    const form = modal.querySelector('.js-autosave-form');
+    if (form && formHasAutosaveChanges(form)) {
+        await autosaveDirtyForms();
+    }
+
+    const sectionId = modal.dataset.sectionEditModal;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    document.querySelector(`[data-open-section-edit-modal="${sectionId}"]`)?.focus();
 }
 
 function syncExpenseStructureSectionNav() {
@@ -1301,7 +1381,7 @@ function queueAutosave(input) {
 
 document.querySelectorAll('.js-autosave-form, .js-autosave-row').forEach(snapshotAutosaveForm);
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
     if (event.target.closest('[data-open-section-modal]')) {
         openSectionModal();
         return;
@@ -1314,6 +1394,23 @@ document.addEventListener('click', (event) => {
 
     if (event.target.matches('[data-section-modal]')) {
         closeSectionModal();
+        return;
+    }
+
+    const editButton = event.target.closest('[data-open-section-edit-modal]');
+    if (editButton) {
+        openSectionEditModal(editButton.dataset.openSectionEditModal);
+        return;
+    }
+
+    const editCloseButton = event.target.closest('[data-close-section-edit-modal]');
+    if (editCloseButton) {
+        await closeSectionEditModal(editCloseButton.closest('[data-section-edit-modal]'));
+        return;
+    }
+
+    if (event.target.matches('[data-section-edit-modal]')) {
+        await closeSectionEditModal(event.target);
         return;
     }
 
@@ -1337,8 +1434,14 @@ document.addEventListener('submit', (event) => {
     autosaveDirtyForms();
 });
 
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', async (event) => {
     if (event.key === 'Escape') {
+        const editModal = document.querySelector('[data-section-edit-modal]:not([hidden])');
+        if (editModal) {
+            await closeSectionEditModal(editModal);
+            return;
+        }
+
         closeSectionModal();
         return;
     }

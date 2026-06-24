@@ -244,7 +244,7 @@ class PlanningYearReviewWorkflowTest extends TestCase
             ->assertDontSee('ປິດຮອບແລ້ວ');
     }
 
-    public function test_finance_head_can_delete_pending_review_plan(): void
+    public function test_finance_head_cannot_delete_pending_review_plan(): void
     {
         $roundId = $this->createPendingReview();
         $commentId = DB::table('planning_year_review_comments')->insertGetId([
@@ -262,14 +262,15 @@ class PlanningYearReviewWorkflowTest extends TestCase
 
         $this->actingAs($this->financeHead)
             ->delete(route('head_of_finance.manage-plan.destroy', 1))
-            ->assertRedirect(route('head_of_finance.manage-plan.index'));
+            ->assertRedirect(route('head_of_finance.manage-plan.index'))
+            ->assertSessionHas('error', 'ບໍ່ສາມາດລຶບແຜນທີ່ຢູ່ສະຖານະລໍຖ້າກວດໄດ້');
 
-        $this->assertDatabaseMissing('planning_years', ['id' => 1]);
-        $this->assertDatabaseMissing('planning_year_review_rounds', ['id' => $roundId]);
-        $this->assertDatabaseMissing('planning_year_review_comments', ['id' => $commentId]);
-        $this->assertDatabaseMissing('period_plan_overrides', ['planning_year_id' => 1]);
-        $this->assertDatabaseMissing('expense_plans', ['planning_year_id' => 1]);
-        $this->assertDatabaseHas('expense_sections', ['id' => 1, 'planning_year_id' => null]);
+        $this->assertDatabaseHas('planning_years', ['id' => 1, 'status' => PlanningYear::STATUS_PENDING_REVIEW]);
+        $this->assertDatabaseHas('planning_year_review_rounds', ['id' => $roundId]);
+        $this->assertDatabaseHas('planning_year_review_comments', ['id' => $commentId]);
+        $this->assertDatabaseHas('period_plan_overrides', ['planning_year_id' => 1]);
+        $this->assertDatabaseHas('expense_plans', ['planning_year_id' => 1]);
+        $this->assertDatabaseHas('expense_sections', ['id' => 1, 'planning_year_id' => 1]);
         $this->assertDatabaseHas('expense_subsections', ['id' => 1, 'section_id' => 1]);
         $this->assertDatabaseHas('expense_catalog_items', ['id' => 1, 'subsection_id' => 1, 'chart_of_account_id' => 123]);
     }

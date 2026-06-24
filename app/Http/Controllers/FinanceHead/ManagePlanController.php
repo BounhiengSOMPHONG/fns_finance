@@ -593,6 +593,12 @@ class ManagePlanController extends Controller
 
     public function destroy(PlanningYear $planningYear)
     {
+        if ($planningYear->isPendingReview()) {
+            return redirect()
+                ->route('head_of_finance.manage-plan.index')
+                ->with('error', 'ບໍ່ສາມາດລຶບແຜນທີ່ຢູ່ສະຖານະລໍຖ້າກວດໄດ້');
+        }
+
         $year = $planningYear->year;
 
         DB::transaction(function () use ($planningYear): void {

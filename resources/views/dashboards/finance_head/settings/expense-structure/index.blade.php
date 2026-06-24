@@ -252,8 +252,10 @@
                                     $defaultRowsForSubsection = $defaultRowsByCode->get($subsection->code, collect());
                                     $linkedRowsForSubsection = $defaultRowsForSubsection->whereNotNull('chart_of_account_id')->count();
                                     $missingLinksForSubsection = $linkedRowsForSubsection < $defaultRowsForSubsection->count();
+                                    $childSubsectionsCount = $subsection->children->count();
+                                    $hasChildSubsections = $childSubsectionsCount > 0;
                                 @endphp
-                                <tr class="js-autosave-row" data-url="{{ route('head_of_finance.settings.expense-structure.subsections.update', $subsection) }}">
+                                <tr class="js-autosave-row es-subsection-row {{ $hasChildSubsections ? 'is-parent' : '' }} {{ $subsection->parent_id ? 'is-child' : '' }}" data-url="{{ route('head_of_finance.settings.expense-structure.subsections.update', $subsection) }}">
                                     <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.subsections.update', $subsection) }}" class="js-autosave-source-form">
                                         @csrf
                                         @method('PATCH')
@@ -263,6 +265,9 @@
                                         <td class="py-2 pr-3">
                                             <input name="name" value="{{ $subsection->name }}" class="fns-input min-w-80" required>
                                             <input type="hidden" name="description" value="{{ $subsection->description }}">
+                                            @if($hasChildSubsections)
+                                                <span class="es-parent-marker">ຫົວຂໍ້ໃຫຍ່ · {{ $childSubsectionsCount }} ຫົວຂໍ້ຍ່ອຍ</span>
+                                            @endif
                                         </td>
                                         <td class="py-2 pr-3">
                                             <select name="parent_id" class="fns-input min-w-44">
@@ -287,7 +292,9 @@
                                             </select>
                                         </td>
                                         <td class="py-2 pr-3">
-                                            @if($defaultRowsForSubsection->isNotEmpty())
+                                            @if($hasChildSubsections)
+                                                <span class="es-pill is-parent">ບໍ່ມີ DEF</span>
+                                            @elseif($defaultRowsForSubsection->isNotEmpty())
                                                 <span class="js-default-subsection-badge es-pill {{ $missingLinksForSubsection ? 'is-warn' : 'is-ok' }}">
                                                     {{ $linkedRowsForSubsection }}/{{ $defaultRowsForSubsection->count() }} ເຊື່ອມແລ້ວ
                                                 </span>
@@ -311,6 +318,7 @@
                                         </td>
                                     </form>
                                 </tr>
+                                @unless($hasChildSubsections)
                                 <tr class="es-account-row">
                                     <td colspan="8" class="px-3 pb-4 pt-0">
                                         <details class="es-account-panel">
@@ -405,6 +413,7 @@
                                         </details>
                                     </td>
                                 </tr>
+                                @endunless
                             @endforeach
 
                             <tr class="es-add-subsection-row">
@@ -956,6 +965,38 @@
     }
     .es-table tbody td { border-bottom:1px solid #eef2f7; padding:.42rem .55rem; vertical-align:middle; }
     .es-table tbody tr:hover td { background:#fffdf6; }
+    .es-subsection-row.is-parent td {
+        border-top:1px solid #dbe4ef;
+        background:#f8fbff;
+    }
+    .es-subsection-row.is-parent:hover td { background:#f3f8ff; }
+    .es-subsection-row.is-parent .fns-input {
+        border-color:#cbd8e8;
+        background:#fff;
+        color:#13213b;
+        font-weight:900;
+    }
+    .es-subsection-row.is-child td:first-child {
+        box-shadow:inset 3px 0 0 #d2a112;
+    }
+    .es-parent-marker {
+        display:inline-flex;
+        align-items:center;
+        width:max-content;
+        max-width:100%;
+        margin-top:.28rem;
+        border-radius:999px;
+        background:#e8eef8;
+        color:#334155;
+        padding:.16rem .48rem;
+        font-size:.66rem;
+        font-weight:900;
+        line-height:1.2;
+    }
+    .es-pill.is-parent {
+        background:#eef2f7;
+        color:#475569;
+    }
     .es-account-row td { border-bottom:0 !important; background:#f8fafc; }
     .es-add-subsection-row td { background:#fbfcfe; }
     .es-account-panel { border-color:#dbe2ec; }

@@ -23,11 +23,10 @@
                 'order' => $field->display_order,
                 'required' => (bool) $field->is_required,
                 'calculated' => (bool) $field->is_calculated,
-                'active' => true,
+                'active' => (bool) $field->is_active,
                 'default_value' => $field->default_value,
             ];
-        })->filter(fn ($field) => $field['active'])
-          ->sortBy('order')
+        })->sortBy('order')
           ->values();
 
         return [$pattern->id => [
@@ -683,7 +682,7 @@ function currentExpenseTotal() {
     const visibleRowIds = new Set();
     const visibleTotal = [...document.querySelectorAll('.excel-saved-row')].reduce((sum, row) => {
         visibleRowIds.add(Number(row.dataset.row));
-        return sum + numberValue(row.querySelector('input[name="yearly_total"]')?.value);
+        return sum + totalForRenderedRow(row);
     }, 0);
 
     const storedTotal = ROWS
@@ -705,7 +704,7 @@ function fieldsForPattern(pattern) {
 }
 
 function visibleFields(pattern, subsection) {
-    return fieldsForPattern(pattern).filter(field => field.key !== 'reference');
+    return fieldsForPattern(pattern);
 }
 
 function rowDisplayValue(row, field) {
@@ -853,8 +852,7 @@ function renderSubsectionGroup(section, subsection) {
 function renderSubsection(section, subsection) {
     const pattern = PATTERNS[subsection.default_pattern_id] || Object.values(PATTERNS)[0];
     const fields = visibleFields(pattern, subsection);
-    const normalFields = fields.filter(field => field.key !== 'yearly_total');
-    const totalField = fields.find(field => field.key === 'yearly_total') || fields.find(field => field.calculated);
+    const totalFieldIndex = fields.findIndex(field => field.key === 'yearly_total' || field.calculated);
     const rows = rowsFor(section.id, subsection.id);
     const subtotal = totalFor(section.id, subsection.id);
     const isCollapsed = collapsedSubsections.has(Number(subsection.id));
@@ -882,19 +880,18 @@ function renderSubsection(section, subsection) {
                         <thead>
                             <tr>
                                 <th class="excel-seq">ລ/ດ</th>
-                                ${normalFields.map(field => `<th>${esc(field.label)}</th>`).join('')}
-                                ${totalField ? `<th>${esc(totalField.label)}</th>` : ''}
+                                ${fields.map(field => `<th>${esc(field.label)}</th>`).join('')}
                             </tr>
                         </thead>
                         <tbody>
-                            ${rows.length ? rows.map((row, index) => renderSavedRow(row, index + 1, normalFields, totalField)).join('') : `
-                                <tr><td colspan="${normalFields.length + (totalField ? 2 : 1)}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
+                            ${rows.length ? rows.map((row, index) => renderSavedRow(row, index + 1, fields)).join('') : `
+                                <tr><td colspan="${fields.length + 1}" class="excel-empty">ຍັງບໍ່ມີລາຍການ</td></tr>
                             `}
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="${normalFields.length + 1}" class="excel-number">ລວມ</td>
-                                ${totalField ? `<td class="excel-number excel-block-footer-total">${fmt.format(subtotal)}</td>` : ''}
+                                <td></td>
+                                ${renderSubtotalCells(fields, totalFieldIndex, subtotal)}
                             </tr>
                         </tfoot>
                     </table>
@@ -904,21 +901,34 @@ function renderSubsection(section, subsection) {
     `;
 }
 
-function renderSavedRow(row, index, normalFields, totalField) {
+function renderSavedRow(row, index, fields) {
     return `
         <tr class="excel-saved-row" data-row="${row.id}" data-section="${row.section_id}" data-subsection="${row.subsection_id}" data-pattern="${row.pattern_id}">
             <td class="excel-seq">${index}</td>
-            ${normalFields.map(field => `
+            ${fields.map(field => `
                 <td class="${field.type === 'number' ? 'excel-number' : field.key === 'item_name' ? 'excel-name' : ''}">
                     ${['item_name', 'reference'].includes(field.key)
                         ? renderLockedField(field, rowDisplayValue(row, field))
+                        : field.key === 'yearly_total' || field.calculated
+                            ? `<input class="excel-input excel-money-input" name="${esc(field.key)}" data-type="number" data-calculated="1" type="text" inputmode="decimal" value="${moneyInputValue(rowTotal(row))}" readonly>`
                         : `<input class="excel-input ${field.type === 'number' ? 'excel-money-input' : ''}" name="${esc(field.key)}" data-type="${esc(field.type)}" type="${field.type === 'number' ? 'text' : field.type === 'date' ? 'date' : 'text'}"
                                   inputmode="${field.type === 'number' ? 'decimal' : 'text'}" value="${esc(field.type === 'number' ? moneyInputValue(rowDisplayValue(row, field)) : rowDisplayValue(row, field))}" placeholder="${esc(field.label)}" ${field.required ? 'required' : ''}>`}
                 </td>
             `).join('')}
-            ${totalField ? `<td><input class="excel-input excel-money-input" name="${esc(totalField.key)}" data-type="number" data-calculated="1" type="text" inputmode="decimal" value="${moneyInputValue(rowTotal(row))}" readonly></td>` : ''}
         </tr>
     `;
+}
+
+function renderSubtotalCells(fields, totalFieldIndex, subtotal) {
+    if (!fields.length) return '';
+
+    return fields.map((field, index) => {
+        if (index === totalFieldIndex) {
+            return `<td class="excel-number excel-block-footer-total">${fmt.format(subtotal)}</td>`;
+        }
+
+        return `<td class="${index === 0 ? 'excel-number' : ''}">${index === 0 ? 'ລວມ' : ''}</td>`;
+    }).join('');
 }
 
 function renderLockedField(field, value = '') {
@@ -988,17 +998,25 @@ function lineValues(row) {
     return values;
 }
 
-function updateSourceTotal(block, row) {
-    if (!block || !row) return;
+function totalForRenderedRow(row) {
+    if (!row) return 0;
+    const block = row.closest('.excel-block');
+    if (!block) return 0;
     const sectionId = Number(block.dataset.section);
     const subsectionId = Number(row.dataset.subsection || block.dataset.subsection);
     const patternId = Number(row.dataset.pattern || block.dataset.pattern);
     const rule = activeRule(sectionId, subsectionId, patternId);
-    const values = lineValues(row);
+    const savedRow = ROWS.find(item => Number(item.id) === Number(row.dataset.row));
+    const values = {...(savedRow?.values || {}), ...lineValues(row)};
     const pattern = PATTERNS[patternId];
-    const total = rule
+
+    return rule
         ? calculateFormula(rule.formula, values)
         : calculatedTotalForPattern(pattern, values);
+}
+
+function updateSourceTotal(block, row) {
+    const total = totalForRenderedRow(row);
     const totalInput = row.querySelector('input[name="yearly_total"]');
     if (totalInput) totalInput.value = moneyInputValue(total);
 }
@@ -1017,8 +1035,8 @@ function updateLineTotal(row) {
 
 function refreshBlockSubtotal(block) {
     if (!block) return;
-    const subtotal = [...block.querySelectorAll('.excel-saved-row input[name="yearly_total"]')]
-        .reduce((sum, input) => sum + numberValue(input.value), 0);
+    const subtotal = [...block.querySelectorAll('.excel-saved-row')]
+        .reduce((sum, row) => sum + totalForRenderedRow(row), 0);
     block.querySelector('.excel-block-total-value').textContent = fmt.format(subtotal);
     const footerTotal = block.querySelector('.excel-block-footer-total');
     if (footerTotal) footerTotal.textContent = fmt.format(subtotal);
@@ -1029,7 +1047,8 @@ async function updateSavedRow(row) {
     updateLineTotal(row);
 
     const rowId = Number(row.dataset.row);
-    const values = lineValues(row);
+    const savedRow = ROWS.find(item => Number(item.id) === rowId);
+    const values = {...(savedRow?.values || {}), ...lineValues(row)};
     const planDetail = values.item_name || 'Expense row';
 
     const response = await fetch(`/head-of-finance/expense-plan-rows/${rowId}`, {

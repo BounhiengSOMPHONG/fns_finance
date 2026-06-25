@@ -116,6 +116,7 @@
                             <th class="py-2 pr-3">ປະເພດ</th>
                             <th class="py-2 pr-3">ລຳດັບ</th>
                             <th class="py-2 pr-3">ຄ່າຕັ້ງຕົ້ນ</th>
+                            <th class="py-2 pr-3">ໃຊ້ງານ</th>
                             <th class="py-2 pr-3">ຕ້ອງກອກ</th>
                             <th class="py-2 pr-3">ຄຳນວນ</th>
                             <th class="py-2 pr-3">ໃຊ້ລວມ</th>
@@ -147,6 +148,9 @@
                                     </td>
                                     <td class="py-2 pr-3">
                                         <input name="default_value" value="{{ $field->default_value }}" class="fns-input min-w-32">
+                                    </td>
+                                    <td class="py-2 pr-3 text-center">
+                                        <input type="checkbox" name="is_active" value="1" @checked($field->is_active) class="rounded border-slate-300">
                                     </td>
                                     <td class="py-2 pr-3 text-center">
                                         <input type="checkbox" name="is_required" value="1" @checked($field->is_required) class="rounded border-slate-300">
@@ -191,6 +195,9 @@
                                 </td>
                                 <td class="py-3 pr-3">
                                     <input name="default_value" class="fns-input min-w-32" placeholder="0">
+                                </td>
+                                <td class="py-3 pr-3 text-center">
+                                    <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
                                 </td>
                                 <td class="py-3 pr-3 text-center">
                                     <input type="checkbox" name="is_required" value="1" checked class="rounded border-slate-300">

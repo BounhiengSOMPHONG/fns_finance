@@ -72,6 +72,7 @@ class ExpensePatternController extends Controller
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
             'is_required' => ['nullable', 'boolean'],
             'is_calculated' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'include_in_formula' => ['nullable', 'boolean'],
             'default_value' => ['nullable', 'string', 'max:255'],
         ]);
@@ -88,6 +89,7 @@ class ExpensePatternController extends Controller
             'display_order' => $data['display_order'],
             'is_required' => $request->boolean('is_required'),
             'is_calculated' => $request->boolean('is_calculated'),
+            'is_active' => $request->boolean('is_active', true),
             'default_value' => $data['default_value'] ?? null,
         ]);
 
@@ -113,6 +115,7 @@ class ExpensePatternController extends Controller
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
             'is_required' => ['nullable', 'boolean'],
             'is_calculated' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'include_in_formula' => ['nullable', 'boolean'],
             'default_value' => ['nullable', 'string', 'max:255'],
         ]);
@@ -132,6 +135,7 @@ class ExpensePatternController extends Controller
                     'display_order' => $data['display_order'],
                     'is_required' => $request->boolean('is_required'),
                     'is_calculated' => $request->boolean('is_calculated'),
+                    'is_active' => $request->boolean('is_active'),
                     'default_value' => $data['default_value'] ?? null,
                 ]);
             });

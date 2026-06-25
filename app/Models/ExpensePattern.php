@@ -34,6 +34,7 @@ class ExpensePattern extends Model
                 'display_order' => (int) ($field['display_order'] ?? 0),
                 'is_required' => (bool) ($field['is_required'] ?? false),
                 'is_calculated' => (bool) ($field['is_calculated'] ?? false),
+                'is_active' => (bool) ($field['is_active'] ?? true),
                 'default_value' => $field['default_value'] ?? null,
             ])
             ->values();

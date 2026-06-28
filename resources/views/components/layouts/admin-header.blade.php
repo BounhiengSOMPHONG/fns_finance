@@ -29,7 +29,7 @@
         || request()->routeIs('head_of_finance.salary.*');
 @endphp
 
-<header class="fns-topnav" x-data="{ mobileOpen: false }">
+<header class="fns-topnav" x-data="{ mobileOpen: false }" @click.outside="mobileOpen = false" @keydown.escape.window="mobileOpen = false">
     <div class="fns-topnav-inner">
 
         {{-- ===== Brand ===== --}}
@@ -41,13 +41,13 @@
         </a>
 
         {{-- ===== Burger (mobile) ===== --}}
-        <button type="button" class="fns-topnav-burger" @click="mobileOpen = !mobileOpen" aria-label="ເມນູ">
+        <button type="button" class="fns-topnav-burger" @click="mobileOpen = !mobileOpen" :aria-expanded="mobileOpen" aria-controls="fns-mobile-nav" aria-label="ເມນູ">
             <svg x-show="!mobileOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             <svg x-show="mobileOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M6 6l12 12M18 6l-12 12"/></svg>
         </button>
 
         {{-- ===== Nav links ===== --}}
-        <nav class="fns-topnav-links" :class="{ 'is-open': mobileOpen }" @click.away="mobileOpen = false">
+        <nav id="fns-mobile-nav" class="fns-topnav-links" :class="{ 'is-open': mobileOpen }">
 
             @if($isHeadOfFinance)
                 <a href="{{ route('head_of_finance.home') }}"

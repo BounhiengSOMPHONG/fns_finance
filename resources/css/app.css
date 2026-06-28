@@ -275,63 +275,143 @@
     cursor: pointer;
     margin-left: auto;
 }
+.fns-topnav-burger[aria-expanded="true"] {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.22);
+    color: #fff;
+}
 .fns-topnav-burger svg { width: 20px; height: 20px; }
 
 /* === Mobile === */
 @media (max-width: 960px) {
-    .fns-topnav-inner { padding: 0 1rem; flex-wrap: wrap; }
-    .fns-topnav-burger { display: inline-flex; }
+    .fns-topnav-inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.75rem;
+        height: auto;
+        min-height: 60px;
+        padding: 0.8rem 1rem;
+    }
+    .fns-topnav-brand {
+        border-right: 0;
+        min-width: 0;
+        padding-right: 0;
+    }
+    .fns-topnav-burger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 38px;
+        width: 38px;
+        margin-left: 0;
+    }
 
     .fns-topnav-links,
     .fns-topnav-right {
         display: none;
-        flex-direction: column;
-        align-items: stretch;
+        grid-column: 1 / -1;
         width: 100%;
-        padding: 0.75rem 0;
-        gap: 0.25rem;
         border-top: 1px solid rgba(255,255,255,0.08);
     }
-    .fns-topnav-links.is-open,
+    .fns-topnav-links.is-open {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.55rem;
+        padding-top: 0.75rem;
+    }
     .fns-topnav-right.is-open {
         display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+        padding-top: 0.75rem;
     }
-    .fns-topnav-right.is-open { padding-top: 0.5rem; padding-bottom: 0.9rem; }
 
     .fns-topnav-item {
         width: 100%;
+        min-height: 42px;
         justify-content: flex-start;
-        padding: 0.65rem 0.85rem;
+        padding: 0.7rem 0.85rem;
+        background: rgba(255,255,255,0.045);
+        border-color: rgba(255,255,255,0.08);
+    }
+    .fns-topnav-item:hover {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.14);
     }
 
-    .fns-topnav-dropdown { width: 100%; }
+    .fns-topnav-dropdown {
+        width: 100%;
+    }
+    .fns-topnav-dropdown > .fns-topnav-item.active {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(201,153,26,0.22);
+        color: var(--fns-gold-light);
+    }
     .fns-topnav-menu {
         position: static;
-        background: rgba(255,255,255,0.04);
+        display: grid;
+        gap: 0.25rem;
+        background: rgba(4,11,24,0.28);
         border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
         box-shadow: none;
-        margin-top: 0.3rem;
-        padding: 0.3rem;
+        margin-top: 0.45rem;
+        padding: 0.4rem;
     }
     .fns-topnav-menu-item {
+        position: relative;
         color: rgba(255,255,255,0.78);
+        min-height: 38px;
+        background: transparent;
+        border: 1px solid transparent;
     }
     .fns-topnav-menu-item:hover {
         background: rgba(255,255,255,0.06);
         color: #fff;
     }
     .fns-topnav-menu-item.active {
-        background: rgba(201,153,26,0.18);
+        background: rgba(201,153,26,0.08);
+        border-color: rgba(201,153,26,0.18);
         color: var(--fns-gold-light);
+    }
+    .fns-topnav-menu-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0.35rem;
+        top: 0.55rem;
+        bottom: 0.55rem;
+        width: 2px;
+        border-radius: 999px;
+        background: var(--fns-gold-light);
     }
     .fns-topnav-menu-item svg { color: rgba(255,255,255,0.5); }
     .fns-topnav-menu-item.active svg { color: var(--fns-gold-light); }
 
     .fns-topnav-right {
-        flex-direction: row;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 0.6rem 0 0.9rem;
+    }
+    .fns-topnav-pill,
+    .fns-btn-logout {
+        min-height: 34px;
+    }
+}
+
+@media (max-width: 560px) {
+    .fns-topnav-links.is-open {
+        grid-template-columns: 1fr;
+    }
+    .fns-topnav-right.is-open {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    .fns-topnav-pill,
+    .fns-btn-logout {
+        justify-content: center;
+        width: 100%;
+    }
+    .logout-form {
+        display: contents;
     }
 }
 

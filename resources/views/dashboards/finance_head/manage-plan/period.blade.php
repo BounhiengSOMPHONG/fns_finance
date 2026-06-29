@@ -94,7 +94,7 @@
 
         <section class="period-paper" id="{{ $periodKey }}">
             <div class="period-print-header">
-                <img src="{{ asset('storage/Emblem_of_Laos.png') }}" alt="Lao emblem">
+                <img src="{{ asset('storage/Emblem_of_Laos.webp') }}" alt="Lao emblem">
                 <strong>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</strong>
                 <span>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນາຖາວອນ</span>
                 <small>-----xxxxx-----</small>

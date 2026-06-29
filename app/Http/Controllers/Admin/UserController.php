@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -208,10 +211,91 @@ class UserController extends Controller
                 ->with('error', 'ไม่สามารถลบบัญชีตัวเองได้');
         }
 
-        $user->delete();
+        $blockingReferences = $this->blockingUserReferences($user);
+
+        if ($blockingReferences !== []) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', 'ไม่สามารถลบผู้ใช้งานนี้ได้ เนื่องจากยังมีประวัติใช้งานในระบบ: ' . implode(', ', $blockingReferences) . ' กรุณาปิดใช้งานบัญชีแทน');
+        }
+
+        try {
+            $user->delete();
+        } catch (QueryException $exception) {
+            if ((string) $exception->getCode() !== '23000') {
+                throw $exception;
+            }
+
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', 'ไม่สามารถลบผู้ใช้งานนี้ได้ เนื่องจากยังมีข้อมูลธุรกรรมอ้างอิงอยู่ กรุณาปิดใช้งานบัญชีแทน');
+        }
 
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'ลบผู้ใช้งานสำเร็จ');
+    }
+
+    private function blockingUserReferences(User $user): array
+    {
+        return collect($this->protectedUserReferenceColumns())
+            ->filter(function (array $reference) use ($user): bool {
+                return Schema::hasTable($reference['table'])
+                    && Schema::hasColumn($reference['table'], $reference['column'])
+                    && DB::table($reference['table'])->where($reference['column'], $user->id)->exists();
+            })
+            ->pluck('label')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function protectedUserReferenceColumns(): array
+    {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return $this->fallbackProtectedUserReferenceColumns();
+        }
+
+        $references = DB::select(<<<'SQL'
+            SELECT
+                k.TABLE_NAME AS table_name,
+                k.COLUMN_NAME AS column_name,
+                k.CONSTRAINT_NAME AS constraint_name
+            FROM information_schema.KEY_COLUMN_USAGE k
+            JOIN information_schema.REFERENTIAL_CONSTRAINTS r
+                ON k.CONSTRAINT_SCHEMA = r.CONSTRAINT_SCHEMA
+                AND k.CONSTRAINT_NAME = r.CONSTRAINT_NAME
+            WHERE k.REFERENCED_TABLE_SCHEMA = DATABASE()
+                AND k.REFERENCED_TABLE_NAME = 'users'
+                AND r.DELETE_RULE IN ('NO ACTION', 'RESTRICT')
+            ORDER BY k.TABLE_NAME, k.COLUMN_NAME
+        SQL);
+
+        return collect($references)
+            ->map(fn (object $reference): array => [
+                'table' => $reference->table_name,
+                'column' => $reference->column_name,
+                'label' => $this->userReferenceLabel($reference->table_name, $reference->column_name),
+            ])
+            ->all();
+    }
+
+    private function fallbackProtectedUserReferenceColumns(): array
+    {
+        return [
+            ['table' => 'advance_requests', 'column' => 'requester_id', 'label' => 'คำขอเบิกล่วงหน้า'],
+            ['table' => 'request_workflow_logs', 'column' => 'user_id', 'label' => 'ประวัติการอนุมัติคำขอ'],
+            ['table' => 'treasury_reconciliation_items', 'column' => 'user_id', 'label' => 'รายการกระทบยอดการเงิน'],
+        ];
+    }
+
+    private function userReferenceLabel(string $table, string $column): string
+    {
+        $labels = collect($this->fallbackProtectedUserReferenceColumns())
+            ->mapWithKeys(fn (array $reference): array => [
+                $reference['table'] . '.' . $reference['column'] => $reference['label'],
+            ]);
+
+        return $labels->get($table . '.' . $column, $table . '.' . $column);
     }
 }

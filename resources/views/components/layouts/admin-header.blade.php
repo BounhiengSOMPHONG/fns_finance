@@ -34,7 +34,7 @@
 
         {{-- ===== Brand ===== --}}
         <a href="{{ $isHeadOfFinance ? route('head_of_finance.home') : '/' }}" class="fns-topnav-brand">
-            <img src="{{ asset('storage/NUOL-Logo-26_960x960.webp') }}" alt="NUOL">
+            <img src="{{ asset('storage/NUOL-Logo-192.webp') }}" alt="NUOL">
             <span class="fns-topnav-brand-text">
                 <strong>FNS</strong><span>Finance</span>
             </span>

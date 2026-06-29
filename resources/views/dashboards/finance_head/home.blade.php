@@ -45,7 +45,7 @@
         align-items: stretch;
         background:
             linear-gradient(135deg, rgba(26,39,68,0.97), rgba(36,50,87,0.93)),
-            url('{{ asset('storage/BG-login.webp') }}');
+            url('{{ asset('storage/BG-login-1920.webp') }}');
         background-size: cover;
         background-position: center 48%;
         color: #fff;

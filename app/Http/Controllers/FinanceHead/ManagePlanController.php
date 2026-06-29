@@ -20,6 +20,7 @@ use App\Services\PeriodPlanReportBuilder;
 use App\Services\PlanYearReportBuilder;
 use App\Services\SalaryReportBuilder;
 use App\Support\ExpenseStructureNames;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -83,6 +84,16 @@ class ManagePlanController extends Controller
             'reviewerUsers',
             'reviewContext',
         ));
+    }
+
+    public function previewView(PlanningYear $planningYear): RedirectResponse
+    {
+        return redirect()->route('head_of_finance.manage-plan.preview', $planningYear);
+    }
+
+    public function redirectAcademicIncomeIndex(): RedirectResponse
+    {
+        return redirect()->route('head_of_finance.manage-plan.index');
     }
 
     public function periodOneTwo(PlanningYear $planningYear, PeriodPlanReportBuilder $periodPlanReportBuilder)

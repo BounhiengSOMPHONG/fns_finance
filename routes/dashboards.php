@@ -27,7 +27,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         Route::get('manage-plan', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'index'])->name('manage-plan.index');
         Route::post('manage-plan', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'store'])->name('manage-plan.store');
         Route::get('manage-plan/{planningYear}/preview', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'preview'])->name('manage-plan.preview');
-        Route::get('manage-plan/{planningYear}/previewview', fn (\App\Models\PlanningYear $planningYear) => redirect()->route('head_of_finance.manage-plan.preview', $planningYear))->name('manage-plan.previewview');
+        Route::get('manage-plan/{planningYear}/previewview', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'previewView'])->name('manage-plan.previewview');
         Route::get('manage-plan/{planningYear}/period-1-2', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'periodOneTwo'])->name('manage-plan.period-1-2');
         Route::post('manage-plan/{planningYear}/period-1-2/save', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'savePeriodOneTwo'])->name('manage-plan.period-1-2.save');
         Route::patch('manage-plan/{planningYear}/period-1-2/overrides/{accountCode}', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'updatePeriodOneTwoOverride'])->name('manage-plan.period-1-2.override');
@@ -70,7 +70,7 @@ Route::middleware(['auth', 'check.active', 'role:head_of_finance'])
         });
 
         // Academic Income
-        Route::get('academic-income', fn () => redirect()->route('head_of_finance.manage-plan.index'));
+        Route::get('academic-income', [\App\Http\Controllers\FinanceHead\ManagePlanController::class, 'redirectAcademicIncomeIndex']);
         Route::resource('academic-income', \App\Http\Controllers\FinanceHead\AcademicIncomePlanController::class, ['parameters' => ['academic-income' => 'academicIncome']])->except(['index', 'edit', 'update']);
         Route::get('academic-income/{academicIncome}/evaluate', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'evaluate'])->name('academic-income.evaluate');
         Route::patch('academic-income/{academicIncome}/evaluate-field', [\App\Http\Controllers\FinanceHead\AcademicIncomeAssessmentController::class, 'saveField'])->name('academic-income.saveField');

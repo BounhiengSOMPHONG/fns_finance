@@ -7,8 +7,8 @@
 
     <title>@yield('title', 'Admin') — {{ config('app.name', 'FNS Finance') }}</title>
 
-    <link rel="icon" type="image/webp" href="{{ asset('storage/NUOL-Logo-26_960x960.webp') }}">
-    <link rel="apple-touch-icon" href="{{ asset('storage/NUOL-Logo-26_960x960.webp') }}">
+    <link rel="icon" type="image/webp" href="{{ asset('storage/NUOL-Logo-192.webp') }}">
+    <link rel="apple-touch-icon" href="{{ asset('storage/NUOL-Logo-192.webp') }}">
     <link rel="preload" href="{{ Vite::asset('resources/fonts/NotoSansLao-Regular.ttf') }}" as="font" type="font/ttf" crossorigin>
     <link rel="preload" href="{{ Vite::asset('resources/fonts/NotoSansLao-Bold.ttf') }}" as="font" type="font/ttf" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -58,7 +58,7 @@ class ChartOfAccountController extends Controller
 
         return redirect()
             ->route('admin.chart-of-accounts.index')
-            ->with('success', 'สร้างบัญชีสำเร็จ');
+            ->with('success', 'ສ້າງບັນຊີສຳເລັດ');
     }
 
     /**
@@ -106,7 +106,7 @@ class ChartOfAccountController extends Controller
 
         return redirect()
             ->route('admin.chart-of-accounts.index')
-            ->with('success', 'อัปเดตบัญชีสำเร็จ');
+            ->with('success', 'ອັບເດດບັນຊີສຳເລັດ');
     }
 
     /**
@@ -118,7 +118,7 @@ class ChartOfAccountController extends Controller
 
         return redirect()
             ->route('admin.chart-of-accounts.index')
-            ->with('success', 'ลบบัญชีสำเร็จ');
+            ->with('success', 'ລຶບບັນຊີສຳເລັດ');
     }
 
     private function parentWouldCreateCycle(ChartOfAccount $account, int $parentId): bool

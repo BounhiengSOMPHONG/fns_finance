@@ -62,7 +62,7 @@ class DepartmentController extends Controller
 
         return redirect()
             ->route('admin.departments.index')
-            ->with('success', 'สร้างแผนกสำเร็จ');
+            ->with('success', 'ສ້າງພະແນກສຳເລັດ');
     }
 
     /**
@@ -99,7 +99,7 @@ class DepartmentController extends Controller
 
         return redirect()
             ->route('admin.departments.index')
-            ->with('success', 'อัปเดตแผนกสำเร็จ');
+            ->with('success', 'ອັບເດດພະແນກສຳເລັດ');
     }
 
     /**
@@ -111,7 +111,7 @@ class DepartmentController extends Controller
         if ($department->users_count > 0 || $department->users()->count() > 0) {
             return redirect()
                 ->route('admin.departments.index')
-                ->with('error', 'ไม่สามารถลบแผนกนี้ได้เนื่องจากมีผู้ใช้งานอยู่');
+                ->with('error', 'ບໍ່ສາມາດລຶບພະແນກນີ້ໄດ້ ເນື່ອງຈາກຍັງມີຜູ້ໃຊ້ຢູ່');
         }
 
         $department->delete();
@@ -121,6 +121,6 @@ class DepartmentController extends Controller
 
         return redirect()
             ->route('admin.departments.index')
-            ->with('success', 'ลบแผนกสำเร็จ');
+            ->with('success', 'ລຶບພະແນກສຳເລັດ');
     }
 }

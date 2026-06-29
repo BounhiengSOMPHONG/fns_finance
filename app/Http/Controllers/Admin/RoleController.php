@@ -48,7 +48,7 @@ class RoleController extends Controller
 
         return redirect()
             ->route('admin.roles.index')
-            ->with('success', 'สร้างบทบาทสำเร็จ');
+            ->with('success', 'ສ້າງບົດບາດສຳເລັດ');
     }
 
     /**
@@ -84,7 +84,7 @@ class RoleController extends Controller
 
         return redirect()
             ->route('admin.roles.index')
-            ->with('success', 'อัปเดตบทบาทสำเร็จ');
+            ->with('success', 'ອັບເດດບົດບາດສຳເລັດ');
     }
 
     /**
@@ -96,13 +96,13 @@ class RoleController extends Controller
         if ($role->users()->count() > 0) {
             return redirect()
                 ->route('admin.roles.index')
-                ->with('error', 'ไม่สามารถลบบทบาทนี้ได้เนื่องจากมีผู้ใช้งานอยู่');
+                ->with('error', 'ບໍ່ສາມາດລຶບບົດບາດນີ້ໄດ້ ເນື່ອງຈາກຍັງມີຜູ້ໃຊ້ຢູ່');
         }
 
         $role->delete();
 
         return redirect()
             ->route('admin.roles.index')
-            ->with('success', 'ลบบทบาทสำเร็จ');
+            ->with('success', 'ລຶບບົດບາດສຳເລັດ');
     }
 }

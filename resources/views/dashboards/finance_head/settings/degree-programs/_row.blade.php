@@ -1,5 +1,5 @@
 @php
-    $displayName = $p->display_name ?? trim((string) preg_replace('/\s*(?:ປີ|ปี)\s*1\s*$/u', '', (string) $p->name));
+    $displayName = $p->display_name ?? trim((string) preg_replace('/\s*(?:ປີ|\x{0E1B}\x{0E35})\s*1\s*$/u', '', (string) $p->name));
     $displayName = $displayName !== '' ? $displayName : $p->name;
     $displayCode = $p->display_code ?? $p->code;
     $displayCodes = $p->display_codes ?? $p->code;

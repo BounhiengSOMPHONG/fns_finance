@@ -14,7 +14,7 @@
     $splitPct = fn ($value) => rtrim(rtrim(number_format((float) $value * 100, 2, '.', ''), '0'), '.');
     $displayProgramName = function (?string $name): string {
         $name = (string) ($name ?? '');
-        $display = trim((string) preg_replace('/\s*(?:ປີ|ปี)\s*1\s*$/u', '', $name));
+        $display = trim((string) preg_replace('/\s*(?:ປີ|\x{0E1B}\x{0E35})\s*1\s*$/u', '', $name));
 
         return $display !== '' ? $display : $name;
     };

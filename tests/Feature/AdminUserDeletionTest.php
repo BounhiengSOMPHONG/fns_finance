@@ -15,6 +15,8 @@ class AdminUserDeletionTest extends TestCase
         parent::setUp();
 
         Schema::dropIfExists('advance_requests');
+        Schema::dropIfExists('request_workflow_logs');
+        Schema::dropIfExists('treasury_reconciliation_items');
         Schema::dropIfExists('users');
         Schema::dropIfExists('roles');
 
@@ -37,9 +39,23 @@ class AdminUserDeletionTest extends TestCase
             $table->integer('id')->primary();
             $table->integer('requester_id');
         });
+
+        Schema::create('request_workflow_logs', function ($table): void {
+            $table->integer('id')->primary();
+            $table->integer('request_id');
+            $table->integer('user_id');
+            $table->string('action');
+        });
+
+        Schema::create('treasury_reconciliation_items', function ($table): void {
+            $table->integer('id')->primary();
+            $table->integer('transaction_id');
+            $table->date('reconciliation_date');
+            $table->integer('user_id');
+        });
     }
 
-    public function test_admin_cannot_delete_user_with_advance_requests(): void
+    public function test_admin_deletes_user_with_related_history(): void
     {
         $admin = $this->createUser(1, 'admin');
         $requester = $this->createUser(2, 'staff');
@@ -48,14 +64,35 @@ class AdminUserDeletionTest extends TestCase
             'id' => 1,
             'requester_id' => $requester->id,
         ]);
+        DB::table('request_workflow_logs')->insert([
+            'id' => 1,
+            'request_id' => 1,
+            'user_id' => $requester->id,
+            'action' => 'created',
+        ]);
+        DB::table('treasury_reconciliation_items')->insert([
+            'id' => 1,
+            'transaction_id' => 1,
+            'reconciliation_date' => '2026-06-30',
+            'user_id' => $requester->id,
+        ]);
 
         $this->actingAs($admin)
             ->delete(route('admin.users.destroy', $requester))
             ->assertRedirect(route('admin.users.index'))
-            ->assertSessionHas('error', fn (string $message): bool => str_contains($message, 'คำขอเบิกล่วงหน้า'));
+            ->assertSessionHas('success', 'ລຶບຜູ້ໃຊ້ ແລະ ຂໍ້ມູນປະຫວັດສຳເລັດ');
 
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseMissing('users', [
             'id' => $requester->id,
+        ]);
+        $this->assertDatabaseMissing('advance_requests', [
+            'requester_id' => $requester->id,
+        ]);
+        $this->assertDatabaseMissing('request_workflow_logs', [
+            'user_id' => $requester->id,
+        ]);
+        $this->assertDatabaseMissing('treasury_reconciliation_items', [
+            'user_id' => $requester->id,
         ]);
     }
 
@@ -67,7 +104,7 @@ class AdminUserDeletionTest extends TestCase
         $this->actingAs($admin)
             ->delete(route('admin.users.destroy', $user))
             ->assertRedirect(route('admin.users.index'))
-            ->assertSessionHas('success', 'ลบผู้ใช้งานสำเร็จ');
+            ->assertSessionHas('success', 'ລຶບຜູ້ໃຊ້ ແລະ ຂໍ້ມູນປະຫວັດສຳເລັດ');
 
         $this->assertDatabaseMissing('users', [
             'id' => $user->id,

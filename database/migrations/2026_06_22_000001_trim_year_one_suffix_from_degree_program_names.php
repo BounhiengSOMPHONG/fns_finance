@@ -12,12 +12,12 @@ return new class extends Migration
             ->where('study_year', 1)
             ->where(function ($query): void {
                 $query->where('name', 'like', '% ປີ 1')
-                    ->orWhere('name', 'like', '% ปี 1');
+                    ->orWhere('name', 'like', "% \u{0E1B}\u{0E35} 1");
             })
             ->get()
             ->each(function (DegreeProgram $program): void {
                 $program->forceFill([
-                    'name' => trim((string) preg_replace('/\s*(?:ປີ|ปี)\s*1\s*$/u', '', (string) $program->name)),
+                    'name' => trim((string) preg_replace('/\s*(?:ປີ|\x{0E1B}\x{0E35})\s*1\s*$/u', '', (string) $program->name)),
                 ])->save();
             });
     }

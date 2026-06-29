@@ -146,7 +146,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'สร้างผู้ใช้งานสำเร็จ');
+            ->with('success', 'ສ້າງຜູ້ໃຊ້ສຳເລັດ');
     }
 
     /**
@@ -196,7 +196,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'อัปเดตผู้ใช้งานสำเร็จ');
+            ->with('success', 'ອັບເດດຜູ້ໃຊ້ສຳເລັດ');
     }
 
     /**
@@ -208,19 +208,14 @@ class UserController extends Controller
         if (auth()->id() === $user->id) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', 'ไม่สามารถลบบัญชีตัวเองได้');
-        }
-
-        $blockingReferences = $this->blockingUserReferences($user);
-
-        if ($blockingReferences !== []) {
-            return redirect()
-                ->route('admin.users.index')
-                ->with('error', 'ไม่สามารถลบผู้ใช้งานนี้ได้ เนื่องจากยังมีประวัติใช้งานในระบบ: ' . implode(', ', $blockingReferences) . ' กรุณาปิดใช้งานบัญชีแทน');
+                ->with('error', 'ບໍ່ສາມາດລຶບບັນຊີຂອງຕົນເອງໄດ້');
         }
 
         try {
-            $user->delete();
+            DB::transaction(function () use ($user): void {
+                $this->deleteUserHistory($user);
+                $user->delete();
+            });
         } catch (QueryException $exception) {
             if ((string) $exception->getCode() !== '23000') {
                 throw $exception;
@@ -228,74 +223,26 @@ class UserController extends Controller
 
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', 'ไม่สามารถลบผู้ใช้งานนี้ได้ เนื่องจากยังมีข้อมูลธุรกรรมอ้างอิงอยู่ กรุณาปิดใช้งานบัญชีแทน');
+                ->with('error', 'ບໍ່ສາມາດລຶບຜູ້ໃຊ້ນີ້ໄດ້ ເນື່ອງຈາກຍັງມີຂໍ້ມູນອ້າງອີງຢູ່');
         }
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'ลบผู้ใช้งานสำเร็จ');
+            ->with('success', 'ລຶບຜູ້ໃຊ້ ແລະ ຂໍ້ມູນປະຫວັດສຳເລັດ');
     }
 
-    private function blockingUserReferences(User $user): array
+    private function deleteUserHistory(User $user): void
     {
-        return collect($this->protectedUserReferenceColumns())
-            ->filter(function (array $reference) use ($user): bool {
-                return Schema::hasTable($reference['table'])
-                    && Schema::hasColumn($reference['table'], $reference['column'])
-                    && DB::table($reference['table'])->where($reference['column'], $user->id)->exists();
-            })
-            ->pluck('label')
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    private function protectedUserReferenceColumns(): array
-    {
-        if (DB::connection()->getDriverName() !== 'mysql') {
-            return $this->fallbackProtectedUserReferenceColumns();
+        if (Schema::hasTable('request_workflow_logs') && Schema::hasColumn('request_workflow_logs', 'user_id')) {
+            DB::table('request_workflow_logs')->where('user_id', $user->id)->delete();
         }
 
-        $references = DB::select(<<<'SQL'
-            SELECT
-                k.TABLE_NAME AS table_name,
-                k.COLUMN_NAME AS column_name,
-                k.CONSTRAINT_NAME AS constraint_name
-            FROM information_schema.KEY_COLUMN_USAGE k
-            JOIN information_schema.REFERENTIAL_CONSTRAINTS r
-                ON k.CONSTRAINT_SCHEMA = r.CONSTRAINT_SCHEMA
-                AND k.CONSTRAINT_NAME = r.CONSTRAINT_NAME
-            WHERE k.REFERENCED_TABLE_SCHEMA = DATABASE()
-                AND k.REFERENCED_TABLE_NAME = 'users'
-                AND r.DELETE_RULE IN ('NO ACTION', 'RESTRICT')
-            ORDER BY k.TABLE_NAME, k.COLUMN_NAME
-        SQL);
+        if (Schema::hasTable('treasury_reconciliation_items') && Schema::hasColumn('treasury_reconciliation_items', 'user_id')) {
+            DB::table('treasury_reconciliation_items')->where('user_id', $user->id)->delete();
+        }
 
-        return collect($references)
-            ->map(fn (object $reference): array => [
-                'table' => $reference->table_name,
-                'column' => $reference->column_name,
-                'label' => $this->userReferenceLabel($reference->table_name, $reference->column_name),
-            ])
-            ->all();
-    }
-
-    private function fallbackProtectedUserReferenceColumns(): array
-    {
-        return [
-            ['table' => 'advance_requests', 'column' => 'requester_id', 'label' => 'คำขอเบิกล่วงหน้า'],
-            ['table' => 'request_workflow_logs', 'column' => 'user_id', 'label' => 'ประวัติการอนุมัติคำขอ'],
-            ['table' => 'treasury_reconciliation_items', 'column' => 'user_id', 'label' => 'รายการกระทบยอดการเงิน'],
-        ];
-    }
-
-    private function userReferenceLabel(string $table, string $column): string
-    {
-        $labels = collect($this->fallbackProtectedUserReferenceColumns())
-            ->mapWithKeys(fn (array $reference): array => [
-                $reference['table'] . '.' . $reference['column'] => $reference['label'],
-            ]);
-
-        return $labels->get($table . '.' . $column, $table . '.' . $column);
+        if (Schema::hasTable('advance_requests') && Schema::hasColumn('advance_requests', 'requester_id')) {
+            DB::table('advance_requests')->where('requester_id', $user->id)->delete();
+        }
     }
 }

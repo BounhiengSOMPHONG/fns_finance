@@ -16,12 +16,12 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $departments = [
-            ['department_name' => 'ฝ่ายบริหาร', 'department_type' => 'Management'],
-            ['department_name' => 'ฝ่ายการเงิน', 'department_type' => 'Finance'],
-            ['department_name' => 'ฝ่ายบัญชี', 'department_type' => 'Accounting'],
-            ['department_name' => 'ฝ่ายขาย', 'department_type' => 'Sales'],
-            ['department_name' => 'ฝ่ายจัดซื้อ', 'department_type' => 'Procurement'],
-            ['department_name' => 'ฝ่ายไอที', 'department_type' => 'IT'],
+            ['department_name' => 'ຝ່າຍບໍລິຫານ', 'department_type' => 'Management'],
+            ['department_name' => 'ຝ່າຍການເງິນ', 'department_type' => 'Finance'],
+            ['department_name' => 'ຝ່າຍບັນຊີ', 'department_type' => 'Accounting'],
+            ['department_name' => 'ຝ່າຍຂາຍ', 'department_type' => 'Sales'],
+            ['department_name' => 'ຝ່າຍຈັດຊື້', 'department_type' => 'Procurement'],
+            ['department_name' => 'ຝ່າຍໄອທີ', 'department_type' => 'IT'],
         ];
 
         foreach ($departments as $department) {

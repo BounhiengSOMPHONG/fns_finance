@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use App\Models\Category;
 
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         // $user->role is a belongsTo relationship returning a Role model.
         // The 'role_name' column values match exactly what's in DB (lowercase_underscores).
         Gate::define('admin', function ($user) {

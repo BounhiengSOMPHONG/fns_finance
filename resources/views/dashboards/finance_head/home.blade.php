@@ -45,7 +45,7 @@
         align-items: stretch;
         background:
             linear-gradient(135deg, rgba(26,39,68,0.97), rgba(36,50,87,0.93)),
-            url('{{ asset('storage/BG-login-1920.webp') }}');
+            url('{{ asset('storage/BG-login-768.webp') }}');
         background-size: cover;
         background-position: center 48%;
         color: #fff;
@@ -53,6 +53,26 @@
         padding: 1.35rem;
         box-shadow: 0 16px 36px rgba(26,39,68,0.18);
         overflow: hidden;
+    }
+
+    @media (min-width: 769px) {
+        .fh-hero {
+            background:
+                linear-gradient(135deg, rgba(26,39,68,0.97), rgba(36,50,87,0.93)),
+                url('{{ asset('storage/BG-login-1280.webp') }}');
+            background-size: cover;
+            background-position: center 48%;
+        }
+    }
+
+    @media (min-width: 1441px) {
+        .fh-hero {
+            background:
+                linear-gradient(135deg, rgba(26,39,68,0.97), rgba(36,50,87,0.93)),
+                url('{{ asset('storage/BG-login-1920.webp') }}');
+            background-size: cover;
+            background-position: center 48%;
+        }
     }
 
     .fh-hero-main {

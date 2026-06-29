@@ -10,6 +10,15 @@
 
     <link rel="icon" type="image/webp" href="{{ asset('storage/NUOL-Logo-192.webp') }}">
     <link rel="apple-touch-icon" href="{{ asset('storage/NUOL-Logo-192.webp') }}">
+    @if (request()->routeIs('head_of_finance.home'))
+        <link
+            rel="preload"
+            as="image"
+            href="{{ asset('storage/BG-login-768.webp') }}"
+            imagesrcset="{{ asset('storage/BG-login-768.webp') }} 768w, {{ asset('storage/BG-login-1280.webp') }} 1280w, {{ asset('storage/BG-login-1920.webp') }} 1920w"
+            imagesizes="100vw"
+        >
+    @endif
     <link rel="preload" href="{{ Vite::asset('resources/fonts/NotoSansLao-Regular.ttf') }}" as="font" type="font/ttf" crossorigin>
     <link rel="preload" href="{{ Vite::asset('resources/fonts/NotoSansLao-Bold.ttf') }}" as="font" type="font/ttf" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

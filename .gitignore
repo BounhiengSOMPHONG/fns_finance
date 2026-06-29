@@ -27,7 +27,6 @@ compose.yaml
 mysql.sql
 จบdata.sql
 uc-lao.md
-.dockerignore
 admin_usecase.md
 classes_attributes.md
 file (6).sql

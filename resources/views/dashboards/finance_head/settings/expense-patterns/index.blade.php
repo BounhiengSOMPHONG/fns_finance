@@ -229,7 +229,7 @@
 document.addEventListener('click', async (event) => {
     const button = event.target.closest('.js-delete-setting');
     if (!button) return;
-    if (!confirm(button.dataset.message || 'ລຶບລາຍການນີ້?')) return;
+    if (!await window.fnsConfirm(button.dataset.message || 'ລຶບລາຍການນີ້?')) return;
 
     const response = await fetch(button.dataset.url, {
         method: 'DELETE',

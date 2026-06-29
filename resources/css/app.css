@@ -946,3 +946,85 @@
 }
 .fns-grand-total-label  { font-size: 0.88rem; color: rgba(255,255,255,0.65); font-weight: 500; }
 .fns-grand-total-amount { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; color: var(--fns-gold-light); letter-spacing: 0.03em; }
+
+@layer components {
+    .swal2-container {
+        padding: 1rem;
+    }
+
+    .fns-swal-popup {
+        width: min(92vw, 28rem);
+        border-radius: 8px;
+        border: 1px solid rgba(26, 39, 68, 0.12);
+        background: #fffefa;
+        box-shadow: 0 24px 60px rgba(17, 27, 51, 0.22);
+        font-family: 'Noto Sans Lao', ui-sans-serif, system-ui;
+        padding: 1.5rem;
+    }
+
+    .fns-swal-title {
+        color: var(--fns-navy-deep);
+        font-size: 1.08rem;
+        font-weight: 700;
+        line-height: 1.45;
+        padding: 0;
+    }
+
+    .fns-swal-text {
+        color: var(--fns-gray-600);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin: 0.75rem 0 0;
+    }
+
+    .fns-swal-actions {
+        gap: 0.65rem;
+        margin-top: 1.35rem;
+    }
+
+    .fns-swal-btn {
+        min-width: 6.25rem;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        padding: 0.65rem 1rem;
+        font-family: 'Noto Sans Lao', ui-sans-serif, system-ui;
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.2;
+        transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .fns-swal-btn:focus-visible {
+        outline: 2px solid rgba(201, 153, 26, 0.45);
+        outline-offset: 2px;
+    }
+
+    .fns-swal-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .fns-swal-btn-primary,
+    .fns-swal-btn-danger {
+        background: var(--fns-navy-deep);
+        border-color: var(--fns-navy-deep);
+        color: white;
+        box-shadow: 0 10px 20px rgba(17, 27, 51, 0.18);
+    }
+
+    .fns-swal-btn-primary:hover,
+    .fns-swal-btn-danger:hover {
+        background: var(--fns-navy-mid);
+        border-color: var(--fns-navy-mid);
+    }
+
+    .fns-swal-btn-secondary {
+        background: white;
+        border-color: var(--fns-gray-200);
+        color: var(--fns-navy-deep);
+    }
+
+    .fns-swal-btn-secondary:hover {
+        border-color: var(--fns-gold);
+        color: var(--fns-navy-deep);
+    }
+}

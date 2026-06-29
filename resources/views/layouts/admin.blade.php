@@ -55,6 +55,118 @@
         </main>
     </div>
 
+    <script>
+        (function() {
+            function readConfirmMessage(attributeValue) {
+                if (!attributeValue) return null;
+
+                const match = attributeValue.match(/confirm\s*\(\s*(['"])([\s\S]*?)\1\s*\)/);
+
+                return match ? match[2] : null;
+            }
+
+            window.fnsAlert = function(message, options = {}) {
+                return Swal.fire({
+                    title: options.title || 'ແຈ້ງເຕືອນ',
+                    text: message,
+                    icon: options.icon || 'info',
+                    confirmButtonText: options.confirmButtonText || 'ຕົກລົງ',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'fns-swal-popup',
+                        title: 'fns-swal-title',
+                        htmlContainer: 'fns-swal-text',
+                        confirmButton: 'fns-swal-btn fns-swal-btn-primary',
+                    },
+                });
+            };
+
+            window.alert = function(message) {
+                window.fnsAlert(String(message));
+            };
+
+            window.fnsConfirm = function(message, options = {}) {
+                return Swal.fire({
+                    title: options.title || 'ຢືນຢັນການດຳເນີນການ',
+                    text: message,
+                    icon: options.icon || 'warning',
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    focusCancel: true,
+                    confirmButtonText: options.confirmButtonText || 'ຕົກລົງ',
+                    cancelButtonText: options.cancelButtonText || 'ຍົກເລີກ',
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'fns-swal-popup',
+                        title: 'fns-swal-title',
+                        htmlContainer: 'fns-swal-text',
+                        actions: 'fns-swal-actions',
+                        confirmButton: 'fns-swal-btn fns-swal-btn-danger',
+                        cancelButton: 'fns-swal-btn fns-swal-btn-secondary',
+                    },
+                }).then(result => result.isConfirmed);
+            };
+
+            document.addEventListener('submit', function(event) {
+                const form = event.target;
+                const isLogout = form.classList.contains('logout-form');
+                const message = isLogout
+                    ? 'ທ່ານຕ້ອງການອອກຈາກລະບົບບໍ່?'
+                    : readConfirmMessage(form.getAttribute('onsubmit'));
+
+                if (!message) return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
+                window.fnsConfirm(message, {
+                    title: isLogout ? 'ຢືນຢັນການອອກຈາກລະບົບ' : undefined,
+                }).then(confirmed => {
+                    if (!confirmed) return;
+
+                    if (!isLogout && form.hasAttribute('onsubmit')) {
+                        const originalHandler = form.getAttribute('onsubmit');
+
+                        form.removeAttribute('onsubmit');
+                        form.requestSubmit();
+
+                        setTimeout(() => form.setAttribute('onsubmit', originalHandler));
+                        return;
+                    }
+
+                    HTMLFormElement.prototype.submit.call(form);
+                });
+            }, true);
+
+            document.addEventListener('click', function(event) {
+                const button = event.target.closest('[onclick*="confirm("]');
+
+                if (!button) return;
+
+                const message = readConfirmMessage(button.getAttribute('onclick'));
+
+                if (!message) return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
+                window.fnsConfirm(message).then(confirmed => {
+                    if (!confirmed) return;
+
+                    const form = button.form;
+
+                    if (form && button.type === 'submit') {
+                        form.requestSubmit(button);
+                        return;
+                    }
+
+                    button.removeAttribute('onclick');
+                    button.click();
+                });
+            }, true);
+        })();
+    </script>
+
     @stack('scripts')
 
     <script>

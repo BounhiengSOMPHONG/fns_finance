@@ -92,15 +92,17 @@
 @endphp
 
 <div class="excel-plan">
-    <section class="excel-overview" id="overviewPage">
-        <div class="excel-overview-head">
-            <div>
-                <h2>ສະຫຼຸບລວມລາຍຈ່າຍ</h2>
-                <p>ລວມລາຍຈ່າຍແຕ່ລະພາກ ປະຈຳປີ {{ $planningYear->year }}</p>
+    <section class="excel-overview is-hidden" id="overviewPage" aria-hidden="true">
+        <div class="excel-overview-page">
+            <div class="excel-overview-head">
+                <div>
+                    <h2>ສະຫຼຸບລວມລາຍຈ່າຍ</h2>
+                    <p>ລວມລາຍຈ່າຍແຕ່ລະພາກ ປະຈຳປີ {{ $planningYear->year }}</p>
+                </div>
+                <strong id="overviewGrandTotal">0</strong>
             </div>
-            <strong id="overviewGrandTotal">0</strong>
+            <div id="overviewSummary" class="excel-summary-wrap"></div>
         </div>
-        <div id="overviewSummary" class="excel-summary-wrap"></div>
         <div id="overviewSectionSummaries" class="excel-preview-sections"></div>
     </section>
 
@@ -177,8 +179,14 @@
         background:#fff;
         border:1px solid var(--fns-gray-200);
         border-radius:8px;
-        overflow:hidden;
         box-shadow:0 2px 12px rgba(26,39,68,.05);
+    }
+    .excel-overview-page {
+        min-height:calc(100vh - 12.5rem);
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+        border-radius:8px 8px 0 0;
     }
     .excel-overview-head {
         display:flex;
@@ -198,7 +206,11 @@
         white-space:nowrap;
     }
     .excel-preview-sections { padding:1rem; display:flex; flex-direction:column; gap:1.1rem; }
-    .excel-preview-block { overflow:auto; }
+    .excel-preview-block {
+        overflow:auto;
+        break-inside:avoid;
+        page-break-inside:avoid;
+    }
     .excel-preview-title {
         margin:.2rem 0 .55rem;
         color:#061226;
@@ -299,7 +311,7 @@
     .excel-section-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; margin-left:auto; }
     .excel-section-total { text-align:right; min-width:160px; }
     .excel-section-total strong { color:var(--fns-navy); font-family:'Cinzel',serif; font-size:1.2rem; }
-    .excel-summary-wrap { padding:1rem 1rem 0; overflow:auto; }
+    .excel-summary-wrap { padding:1rem 1rem 0; overflow:auto; flex:1; }
     .excel-summary-table { width:100%; min-width:820px; border-collapse:collapse; font-size:.82rem; }
     .excel-summary-table th { background:#172642; color:#fff; border:1px solid #172642; padding:.45rem .55rem; text-align:center; font-weight:900; }
     .excel-summary-table td { border:1px solid #111827; padding:.35rem .45rem; background:#fff; }
@@ -421,6 +433,62 @@
         .excel-section-nav { grid-template-columns:auto auto; }
         .excel-tabs { grid-column:1 / -1; order:2; }
         .excel-nav-btn { min-height:34px; }
+    }
+    @media print {
+        @page { size:A4 portrait; margin:10mm; }
+        .expense-budget-summary,
+        .excel-section-nav {
+            display:none !important;
+        }
+        .excel-plan { gap:0; }
+        .excel-overview,
+        .excel-sheet {
+            border:0;
+            border-radius:0;
+            box-shadow:none;
+        }
+        .excel-overview-page {
+            min-height:auto;
+            overflow:visible;
+            break-after:page;
+            page-break-after:always;
+        }
+        .excel-preview-sections {
+            padding:0;
+            gap:0;
+        }
+        .excel-preview-block,
+        .excel-parent-block,
+        .excel-block {
+            overflow:visible;
+            break-inside:avoid;
+            page-break-inside:avoid;
+        }
+        .excel-preview-block {
+            break-before:page;
+            page-break-before:always;
+        }
+        .excel-preview-block:first-child {
+            break-before:auto;
+            page-break-before:auto;
+        }
+        .excel-summary-table,
+        .excel-table {
+            min-width:0;
+        }
+        .excel-summary-table thead,
+        .excel-table thead {
+            display:table-header-group;
+        }
+        .excel-summary-table tfoot,
+        .excel-table tfoot {
+            display:table-footer-group;
+        }
+        .excel-summary-table tr,
+        .excel-table tr {
+            break-inside:avoid;
+            page-break-inside:avoid;
+        }
     }
 </style>
 
@@ -609,7 +677,6 @@ function renderTabs() {
 }
 
 function selectedSectionIndex() {
-    if (selectedSectionId === 'overview') return SECTIONS.length;
     return SECTIONS.findIndex(section => Number(section.id) === Number(selectedSectionId));
 }
 
@@ -621,11 +688,11 @@ function syncSectionNavButtons() {
 
 function moveSection(direction) {
     const index = selectedSectionIndex();
-    const pages = [...SECTIONS.map(section => Number(section.id)), 'overview'];
+    const pages = SECTIONS.map(section => Number(section.id));
     const next = pages[index + direction];
     if (next === undefined) return;
 
-    if (selectedSectionId !== 'overview') lastInputSectionId = selectedSectionId;
+    lastInputSectionId = selectedSectionId;
     selectedSectionId = next;
     renderTabs();
     renderSheet();
@@ -714,20 +781,14 @@ function rowDisplayValue(row, field) {
 }
 
 function renderSheet() {
-    const isOverview = selectedSectionId === 'overview';
-    document.getElementById('overviewPage').classList.toggle('is-hidden', !isOverview);
-    document.querySelector('.excel-section-nav').classList.toggle('is-hidden', isOverview);
-    document.querySelector('.excel-sheet').classList.toggle('is-hidden', isOverview);
-    document.getElementById('backFromTotalPage')?.classList.toggle('is-hidden', !isOverview);
+    document.getElementById('overviewPage').classList.add('is-hidden');
+    document.getElementById('overviewPage').setAttribute('aria-hidden', 'true');
+    document.querySelector('.excel-section-nav').classList.remove('is-hidden');
+    document.querySelector('.excel-sheet').classList.remove('is-hidden');
+    document.getElementById('backFromTotalPage')?.classList.add('is-hidden');
 
-    if (isOverview) {
-        renderOverviewSummary();
-        const grandTotalEl = document.getElementById('grandTotal');
-        if (grandTotalEl) {
-            grandTotalEl.textContent = fmt.format(SECTIONS.reduce((sum, section) => sum + sectionSummaryValues(section).total, 0));
-        }
-        syncSectionNavButtons();
-        return;
+    if (!SECTIONS.some(item => Number(item.id) === Number(selectedSectionId))) {
+        selectedSectionId = SECTIONS[0]?.id || null;
     }
 
     const section = SECTIONS.find(item => Number(item.id) === Number(selectedSectionId));
@@ -1148,8 +1209,8 @@ document.getElementById('sectionTabs').addEventListener('click', event => {
 document.getElementById('prevSection').addEventListener('click', () => moveSection(-1));
 document.getElementById('nextSection').addEventListener('click', () => moveSection(1));
 document.getElementById('openTotalPage')?.addEventListener('click', () => {
-    if (selectedSectionId !== 'overview') lastInputSectionId = selectedSectionId;
-    selectedSectionId = 'overview';
+    lastInputSectionId = selectedSectionId;
+    selectedSectionId = SECTIONS[SECTIONS.length - 1]?.id || selectedSectionId;
     renderTabs();
     renderSheet();
     document.querySelector('.excel-plan')?.scrollIntoView({behavior: 'smooth', block: 'start'});

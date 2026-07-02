@@ -64,7 +64,7 @@ class AcademicIncomeProgramManagementTest extends TestCase
         $this->assertNotContains($hidden->id, $programIds);
     }
 
-    public function test_income_report_detail_rows_follow_department_order(): void
+    public function test_income_report_detail_rows_follow_year_then_department_order(): void
     {
         $plan = AcademicIncomePlan::create(['fiscal_year' => 2027, 'created_by' => 1]);
 
@@ -73,8 +73,9 @@ class AcademicIncomeProgramManagementTest extends TestCase
         $physics = $this->seedProgram('B-PHYS-Y2', 'ຟີຊິກທົ່ວໄປ', 2, 'physics', 20, true, 36);
         $chemistry = $this->seedProgram('B-CHEM-Y2', 'ເຄມີທົ່ວໄປ', 2, 'chemistry', 30, true, 36);
         $biology = $this->seedProgram('B-BIO-Y2', 'ຊີວະວິທະຍາທົ່ວໄປ', 2, 'biology', 40, true, 36);
+        $year3Math = $this->seedProgram('B-MATH-Y3', 'ຄະນິດທົ່ວໄປ', 3, 'math_stats', 10, true, 37);
 
-        foreach ([$computer, $math, $physics, $chemistry, $biology] as $program) {
+        foreach ([$computer, $year3Math, $math, $physics, $chemistry, $biology] as $program) {
             AcademicIncomeItem::create([
                 'plan_id' => $plan->id,
                 'section_code' => '1.1',
@@ -97,11 +98,29 @@ class AcademicIncomeProgramManagementTest extends TestCase
         $chemistryPosition = strpos($content, 'ປີ 2 ເຄມີທົ່ວໄປ');
         $biologyPosition = strpos($content, 'ປີ 2 ຊີວະວິທະຍາທົ່ວໄປ');
         $computerPosition = strpos($content, 'ປີ 2 ວິທະຍາສາດຄອມ');
+        $year3MathPosition = strpos($content, 'ປີ 3 ຄະນິດທົ່ວໄປ');
 
         $this->assertLessThan($physicsPosition, $mathPosition);
         $this->assertLessThan($chemistryPosition, $physicsPosition);
         $this->assertLessThan($biologyPosition, $chemistryPosition);
         $this->assertLessThan($computerPosition, $biologyPosition);
+        $this->assertLessThan($year3MathPosition, $computerPosition);
+
+        $reportNames = app(AcademicIncomeReportBuilder::class)
+            ->buildForPlans($plan->newCollection([$plan]))['detail_1_1']
+            ->take(6)
+            ->map(fn (AcademicIncomeItem $item): ?string => $item->degreeProgram?->name)
+            ->values()
+            ->all();
+
+        $this->assertSame([
+            'ຄະນິດທົ່ວໄປ',
+            'ຟີຊິກທົ່ວໄປ',
+            'ເຄມີທົ່ວໄປ',
+            'ຊີວະວິທະຍາທົ່ວໄປ',
+            'ວິທະຍາສາດຄອມ',
+            'ຄະນິດທົ່ວໄປ',
+        ], $reportNames);
     }
 
     public function test_settings_form_stores_department_and_planning_inclusion(): void

@@ -78,19 +78,10 @@ class AcademicIncomeReportBuilder
             'summaryRows' => $this->buildSummaryRows($sections),
             'summaryPlanTotal' => $this->summaryPlanTotal($sections),
             'detail_1_1' => $items->where('section_code', '1.1')
-                ->sortBy(fn (AcademicIncomeItem $item) => sprintf(
-                    '%02d-%s-%s',
-                    (int) ($item->degreeProgram?->study_year ?? 99),
-                    $item->degreeProgram?->level ?? '',
-                    $item->degreeProgram?->name ?? ''
-                ))
+                ->sortBy(fn (AcademicIncomeItem $item): string => $this->degreeProgramSortKey($item))
                 ->values(),
             'detail_1_3' => $items->where('section_code', '1.3')
-                ->sortBy(fn (AcademicIncomeItem $item) => sprintf(
-                    '%s-%s',
-                    $item->degreeProgram?->level === 'bachelor' ? 'A' : 'B',
-                    $item->degreeProgram?->name ?? ''
-                ))
+                ->sortBy(fn (AcademicIncomeItem $item): string => $this->degreeProgramSortKey($item))
                 ->values(),
             'feeYear2_4' => $feeYear2_4,
             'feeYear1' => $feeYear1,
@@ -230,6 +221,26 @@ class AcademicIncomeReportBuilder
         }
 
         return $items->concat($placeholders)->values();
+    }
+
+    private function degreeProgramSortKey(AcademicIncomeItem $item): string
+    {
+        $program = $item->degreeProgram;
+        $levelOrder = match ($program?->level) {
+            'bachelor' => 10,
+            'master' => 20,
+            'phd' => 30,
+            default => 90,
+        };
+
+        return sprintf(
+            '%03d|%03d|%03d|%s|%010d',
+            (int) ($program?->study_year ?? 99),
+            (int) ($program?->department_sort_order ?? DegreeProgram::departmentOrder($program?->academic_department)),
+            $levelOrder,
+            $program?->name ?? '',
+            (int) ($program?->id ?? 0),
+        );
     }
 
     private function pushPlaceholderIfMissing(

@@ -212,9 +212,9 @@ class AcademicIncomePlanController extends Controller
 
         return sprintf(
             '%03d|%03d|%03d|%s|%010d',
+            (int) ($program?->study_year ?? 99),
             (int) ($program?->department_sort_order ?? DegreeProgram::departmentOrder($program?->academic_department)),
             $levelOrder,
-            (int) ($program?->study_year ?? 99),
             $program?->name ?? '',
             (int) ($program?->id ?? 0),
         );

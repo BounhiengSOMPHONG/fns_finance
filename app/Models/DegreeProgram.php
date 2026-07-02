@@ -23,14 +23,12 @@ class DegreeProgram extends Model
         'name',
         'level',
         'study_year',
-        'is_active',
         'academic_department',
         'department_sort_order',
         'include_in_planning',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
         'include_in_planning' => 'boolean',
     ];
 

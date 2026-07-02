@@ -142,7 +142,6 @@ class DegreeProgramSeeder extends Seeder
             'name' => $name,
             'level' => $level,
             'study_year' => $studyYear,
-            'is_active' => true,
             'include_in_planning' => true,
             'academic_department' => $department,
             'department_sort_order' => $sortOrder,

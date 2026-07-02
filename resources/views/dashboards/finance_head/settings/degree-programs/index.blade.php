@@ -80,12 +80,6 @@
     background: #edf7ee; color: #166534; border: 1px solid #bbf7d0;
 }
 .dp-tag.off { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
-.dp-off-tag { font-size: 0.66rem; color: var(--fns-gray-400); margin-left: 0.35rem; }
-.dp-row.is-off .dp-name { color: var(--fns-gray-400); }
-.dp-row.is-off .dp-code { opacity: 0.55; }
-.dp-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 0.55rem; }
-.dp-dot.on  { background: #1a8f4a; box-shadow: 0 0 0 2px rgba(26,143,74,0.15); }
-.dp-dot.off { background: var(--fns-gray-400); box-shadow: 0 0 0 2px rgba(155,151,144,0.18); }
 
 /* compact icon actions */
 .dp-acts { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; margin-top: 0.08rem; }
@@ -209,7 +203,6 @@
                 @csrf
                 <input type="hidden" name="_method" id="dp-form-method" value="PUT" disabled>
                 <input type="hidden" name="group_ids" id="dp-group-ids">
-                <input type="hidden" name="is_active" value="0">
                 <input type="hidden" name="include_in_planning" value="0">
 
                 <div class="fns-form-group">
@@ -256,13 +249,6 @@
 
                 <div class="fns-form-group">
                     <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                        <input type="checkbox" name="is_active" value="1" id="dp-active" checked>
-                        ເປີດໃຊ້ງານ
-                    </label>
-                </div>
-
-                <div class="fns-form-group">
-                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
                         <input type="checkbox" name="include_in_planning" value="1" id="dp-planning" checked>
                         ນຳເຂົ້າລາຍການຂຶ້ນແຜນ
                     </label>
@@ -294,7 +280,6 @@
     const groupIds = document.getElementById('dp-group-ids');
     const yearGroup = document.getElementById('dp-year-group');
     const studyYears = Array.from(document.querySelectorAll('.dp-study-year'));
-    const active = document.getElementById('dp-active');
     const planning = document.getElementById('dp-planning');
     const department = document.getElementById('dp-department');
     const submit = document.getElementById('dp-submit');
@@ -359,7 +344,6 @@
         studyYears.forEach(input => {
             input.checked = selectedYears.includes(input.value);
         });
-        active.checked = data.active !== '0';
         planning.checked = data.planning !== '0';
         setStudyYearState();
 
@@ -386,7 +370,6 @@
                 level: edit.dataset.level,
                 studyYears: edit.dataset.studyYears,
                 groupIds: edit.dataset.groupIds,
-                active: edit.dataset.active,
                 planning: edit.dataset.planning,
                 department: edit.dataset.department,
             });

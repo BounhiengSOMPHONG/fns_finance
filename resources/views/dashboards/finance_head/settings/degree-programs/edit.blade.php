@@ -50,14 +50,6 @@
         </div>
 
         <div class="fns-form-group">
-            <input type="hidden" name="is_active" value="0">
-            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $degreeProgram->is_active))>
-                ເປີດໃຊ້ງານ
-            </label>
-        </div>
-
-        <div class="fns-form-group">
             <input type="hidden" name="include_in_planning" value="0">
             <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
                 <input type="checkbox" name="include_in_planning" value="1" @checked(old('include_in_planning', $degreeProgram->include_in_planning))>

@@ -51,7 +51,6 @@ class CourseCreditSeeder extends Seeder
                     'name' => $name,
                     'level' => 'bachelor',
                     'study_year' => 1,
-                    'is_active' => true,
                     'include_in_planning' => true,
                     'academic_department' => $department,
                     'department_sort_order' => $sortOrder,

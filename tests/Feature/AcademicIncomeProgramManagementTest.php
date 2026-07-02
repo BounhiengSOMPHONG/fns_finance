@@ -26,11 +26,11 @@ class AcademicIncomeProgramManagementTest extends TestCase
     public function test_assessment_uses_planning_inclusion_and_department_order(): void
     {
         $plan = AcademicIncomePlan::create(['fiscal_year' => 2027]);
-        $this->seedProgram('B-CSC-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ', 1, 'computer_science', 50, true, true, 37);
-        $this->seedProgram('B-CSC-EVE-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ', 1, 'computer_science', 50, true, true, 37);
-        $this->seedProgram('B-BIO-Y1', 'ຊີວະວິທະຍາ', 1, 'biology', 40, false, true, 37);
-        $this->seedProgram('B-MATH-Y1', 'ຄະນິດທົ່ວໄປ', 1, 'math_stats', 10, true, true, 37);
-        $this->seedProgram('B-HIDDEN-Y1', 'ບໍ່ຂຶ້ນແຜນ', 1, 'computer_science', 50, true, false, 37);
+        $this->seedProgram('B-CSC-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ', 1, 'computer_science', 50, true, 37);
+        $this->seedProgram('B-CSC-EVE-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ', 1, 'computer_science', 50, true, 37);
+        $this->seedProgram('B-BIO-Y1', 'ຊີວະວິທະຍາ', 1, 'biology', 40, true, 37);
+        $this->seedProgram('B-MATH-Y1', 'ຄະນິດທົ່ວໄປ', 1, 'math_stats', 10, true, 37);
+        $this->seedProgram('B-HIDDEN-Y1', 'ບໍ່ຂຶ້ນແຜນ', 1, 'computer_science', 50, false, 37);
 
         $response = $this->actingAs(User::findOrFail(1))
             ->get(route('head_of_finance.academic-income.evaluate', $plan))
@@ -49,8 +49,8 @@ class AcademicIncomeProgramManagementTest extends TestCase
     public function test_report_placeholders_use_planning_inclusion(): void
     {
         $plan = AcademicIncomePlan::create(['fiscal_year' => 2027]);
-        $visible = $this->seedProgram('B-VISIBLE-Y1', 'Visible planning program', 1, 'math_stats', 10, false, true, 37);
-        $hidden = $this->seedProgram('B-HIDDEN-Y1', 'Hidden planning program', 1, 'computer_science', 50, true, false, 37);
+        $visible = $this->seedProgram('B-VISIBLE-Y1', 'Visible planning program', 1, 'math_stats', 10, true, 37);
+        $hidden = $this->seedProgram('B-HIDDEN-Y1', 'Hidden planning program', 1, 'computer_science', 50, false, 37);
 
         $report = app(AcademicIncomeReportBuilder::class)->buildForPlans($plan->newCollection([$plan]));
         $programIds = $report['items']
@@ -68,11 +68,11 @@ class AcademicIncomeProgramManagementTest extends TestCase
     {
         $plan = AcademicIncomePlan::create(['fiscal_year' => 2027, 'created_by' => 1]);
 
-        $computer = $this->seedProgram('B-CS-Y2', 'ວິທະຍາສາດຄອມ', 2, 'computer_science', 50, true, true, 37);
-        $math = $this->seedProgram('B-MATH-Y2', 'ຄະນິດທົ່ວໄປ', 2, 'math_stats', 10, true, true, 37);
-        $physics = $this->seedProgram('B-PHYS-Y2', 'ຟີຊິກທົ່ວໄປ', 2, 'physics', 20, true, true, 36);
-        $chemistry = $this->seedProgram('B-CHEM-Y2', 'ເຄມີທົ່ວໄປ', 2, 'chemistry', 30, true, true, 36);
-        $biology = $this->seedProgram('B-BIO-Y2', 'ຊີວະວິທະຍາທົ່ວໄປ', 2, 'biology', 40, true, true, 36);
+        $computer = $this->seedProgram('B-CS-Y2', 'ວິທະຍາສາດຄອມ', 2, 'computer_science', 50, true, 37);
+        $math = $this->seedProgram('B-MATH-Y2', 'ຄະນິດທົ່ວໄປ', 2, 'math_stats', 10, true, 37);
+        $physics = $this->seedProgram('B-PHYS-Y2', 'ຟີຊິກທົ່ວໄປ', 2, 'physics', 20, true, 36);
+        $chemistry = $this->seedProgram('B-CHEM-Y2', 'ເຄມີທົ່ວໄປ', 2, 'chemistry', 30, true, 36);
+        $biology = $this->seedProgram('B-BIO-Y2', 'ຊີວະວິທະຍາທົ່ວໄປ', 2, 'biology', 40, true, 36);
 
         foreach ([$computer, $math, $physics, $chemistry, $biology] as $program) {
             AcademicIncomeItem::create([
@@ -112,7 +112,6 @@ class AcademicIncomeProgramManagementTest extends TestCase
                 'name' => 'New Program',
                 'level' => 'bachelor',
                 'study_years' => [1],
-                'is_active' => '0',
                 'include_in_planning' => '1',
                 'academic_department' => 'biology',
             ]);
@@ -122,11 +121,15 @@ class AcademicIncomeProgramManagementTest extends TestCase
         $this->assertDatabaseHas('degree_programs', [
             'code' => 'B-NEW-Y1',
             'name' => 'New Program',
-            'is_active' => false,
             'include_in_planning' => true,
             'academic_department' => 'biology',
             'department_sort_order' => 40,
         ]);
+
+        $this->actingAs(User::findOrFail(1))
+            ->get(route('head_of_finance.settings.degree-programs.index'))
+            ->assertOk()
+            ->assertDontSee('ເປີດໃຊ້ງານ');
     }
 
     private function seedSettings(): void
@@ -179,7 +182,6 @@ class AcademicIncomeProgramManagementTest extends TestCase
         int $studyYear,
         string $department,
         int $sortOrder,
-        bool $isActive,
         bool $includeInPlanning,
         int $credits
     ): DegreeProgram {
@@ -188,7 +190,6 @@ class AcademicIncomeProgramManagementTest extends TestCase
             'name' => $name,
             'level' => 'bachelor',
             'study_year' => $studyYear,
-            'is_active' => $isActive,
             'include_in_planning' => $includeInPlanning,
             'academic_department' => $department,
             'department_sort_order' => $sortOrder,
@@ -248,7 +249,6 @@ class AcademicIncomeProgramManagementTest extends TestCase
             $table->string('name');
             $table->string('level');
             $table->unsignedSmallInteger('study_year')->nullable();
-            $table->boolean('is_active')->default(true);
             $table->boolean('include_in_planning')->default(true);
             $table->string('academic_department')->nullable();
             $table->unsignedSmallInteger('department_sort_order')->default(90);

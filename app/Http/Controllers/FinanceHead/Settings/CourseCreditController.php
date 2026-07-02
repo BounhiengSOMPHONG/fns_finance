@@ -40,9 +40,7 @@ class CourseCreditController extends Controller
         $creditSplits = CourseCreditSplitSetting::orderByDesc('start_year')
             ->get()->groupBy('level')->map->first();
 
-        $programs = DegreeProgram::where('is_active', true)
-            ->planningOrder()
-            ->get();
+        $programs = DegreeProgram::planningOrder()->get();
         $displayPrograms = $this->displayPrograms($programs);
 
         $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
@@ -55,7 +53,7 @@ class CourseCreditController extends Controller
 
     public function create()
     {
-        $programs = DegreeProgram::where('is_active', true)->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
+        $programs = DegreeProgram::planningOrder()->get();
         $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
             ->get()->groupBy('level')->map(fn ($i) => (float) $i->first()->credit_unit_price);
 

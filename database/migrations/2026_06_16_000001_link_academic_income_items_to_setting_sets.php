@@ -84,7 +84,7 @@ return new class extends Migration
             DB::table('academic_income_setting_sets')->updateOrInsert(
                 ['fiscal_year' => (int) $year],
                 [
-                    'name' => 'ການຕັ້ງຄ່າລາຍຮັບວິຊາການ ' . (int) $year,
+                    'name' => 'ການຕັ້ງຄ່າລາຍຮັບວິຊາການ '.(int) $year,
                     'is_active' => true,
                     'updated_at' => now(),
                     'created_at' => now(),

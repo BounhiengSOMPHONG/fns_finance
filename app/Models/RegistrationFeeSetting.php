@@ -28,8 +28,8 @@ class RegistrationFeeSetting extends Model
     {
         return match ($type) {
             'year2_4' => 'ນ/ສ ປີ 2–4',
-            'year1'   => 'ນ/ສ ປີ 1 (ໃໝ່)',
-            default   => $type,
+            'year1' => 'ນ/ສ ປີ 1 (ໃໝ່)',
+            default => $type,
         };
     }
 }

@@ -42,7 +42,7 @@ class ExpensePlanController extends Controller
         $planningYear = DB::transaction(function () use ($data, $sourceYear) {
             $planningYear = PlanningYear::create([
                 'year' => $data['year'],
-                'name' => $data['name'] ?: 'Planning ' . $data['year'],
+                'name' => $data['name'] ?: 'Planning '.$data['year'],
                 'description' => $data['description'] ?? null,
                 'is_active' => true,
             ]);
@@ -169,7 +169,7 @@ class ExpensePlanController extends Controller
                 ->whereIn('subsection_id', $subsections->pluck('id')->filter()->values())
                 ->get(['subsection_id', 'item_name', 'plan_detail'])
                 ->mapWithKeys(fn (ExpensePlan $row) => [
-                    $row->subsection_id . '|' . trim((string) ($row->item_name ?: $row->plan_detail)) => true,
+                    $row->subsection_id.'|'.trim((string) ($row->item_name ?: $row->plan_detail)) => true,
                 ]);
 
             $planRows = [];
@@ -178,18 +178,18 @@ class ExpensePlanController extends Controller
 
             foreach ($subsections as $subsection) {
                 $catalogItems = $catalogItemsBySubsection->get($subsection->id);
-                if (!$catalogItems) {
+                if (! $catalogItems) {
                     continue;
                 }
 
                 foreach ($catalogItems as $catalogItem) {
                     $pattern = $catalogItem->pattern ?: $patternsById->get($catalogItem->pattern_id ?: $subsection->default_pattern_id);
-                    if (!$pattern) {
+                    if (! $pattern) {
                         continue;
                     }
 
                     $itemName = trim((string) $catalogItem->item_name);
-                    $rowKey = $subsection->id . '|' . $itemName;
+                    $rowKey = $subsection->id.'|'.$itemName;
 
                     if ($existingKeys->has($rowKey)) {
                         continue;
@@ -266,6 +266,7 @@ class ExpensePlanController extends Controller
                         if (! array_key_exists($key, $values) || $values[$key] === null || $values[$key] === '') {
                             $values[$key] = $defaultValue;
                             $changed = true;
+
                             continue;
                         }
 

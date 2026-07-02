@@ -27,8 +27,8 @@ final class SalaryPlanController extends Controller
     {
         $data = $request->validate([
             'fiscal_year' => 'required|integer|min:2000|max:2100',
-            'month'       => 'required|integer|min:1|max:12',
-            'notes'       => 'nullable|string|max:500',
+            'month' => 'required|integer|min:1|max:12',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $exists = SalaryPlan::where('fiscal_year', $data['fiscal_year'])
@@ -36,13 +36,13 @@ final class SalaryPlanController extends Controller
             ->exists();
 
         if ($exists) {
-            return back()->withInput()->with('error', 'ມີຂໍ້ມູນເງິນເດືອນເດືອນ ' . str_pad($data['month'], 2, '0', STR_PAD_LEFT) . '/' . $data['fiscal_year'] . ' ແລ້ວ');
+            return back()->withInput()->with('error', 'ມີຂໍ້ມູນເງິນເດືອນເດືອນ '.str_pad($data['month'], 2, '0', STR_PAD_LEFT).'/'.$data['fiscal_year'].' ແລ້ວ');
         }
 
         $planningYear = PlanningYear::firstOrCreate(
             ['year' => (int) $data['fiscal_year']],
             [
-                'name' => 'Planning ' . $data['fiscal_year'],
+                'name' => 'Planning '.$data['fiscal_year'],
                 'is_active' => true,
             ]
         );
@@ -56,13 +56,13 @@ final class SalaryPlanController extends Controller
         $plan = SalaryPlan::create([
             'planning_year_id' => $planningYear->id,
             'fiscal_year' => (int) $data['fiscal_year'],
-            'month'       => (int) $data['month'],
-            'notes'       => $data['notes'] ?? null,
-            'created_by'  => Auth::id(),
+            'month' => (int) $data['month'],
+            'notes' => $data['notes'] ?? null,
+            'created_by' => Auth::id(),
         ]);
 
         return redirect()->route('head_of_finance.salary.manage', $plan)
-            ->with('success', 'ສ້າງແຜນເງິນເດືອນ ເດືອນ ' . $plan->monthLabel() . ' ສຳເລັດ');
+            ->with('success', 'ສ້າງແຜນເງິນເດືອນ ເດືອນ '.$plan->monthLabel().' ສຳເລັດ');
     }
 
     public function manage(SalaryPlan $salaryPlan)
@@ -106,7 +106,7 @@ final class SalaryPlanController extends Controller
         $accountsByCode = $all->keyBy('account_code');
 
         $coa = $leafAccounts->sortBy('account_code')->values()->map(function ($a) use ($accountsByCode, $accountsById, $rootIdsLookup) {
-            $groupCode = substr((string) $a->account_code, 0, 3) . '00000';
+            $groupCode = substr((string) $a->account_code, 0, 3).'00000';
             $group = $accountsByCode->get($groupCode);
             $topic = $accountsById->get($a->parent_id);
 
@@ -119,7 +119,7 @@ final class SalaryPlanController extends Controller
             }
 
             return [
-                'id'   => $a->id,
+                'id' => $a->id,
                 'code' => $a->account_code,
                 'name' => $a->account_name,
                 'topic_code' => $topic?->account_code,
@@ -131,5 +131,4 @@ final class SalaryPlanController extends Controller
 
         return view('dashboards.finance_head.salary.manage', compact('salaryPlan', 'entries', 'coa'));
     }
-
 }

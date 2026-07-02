@@ -38,7 +38,7 @@ final class SalaryPlan extends Model
 
     public function monthLabel(): string
     {
-        return str_pad((string) $this->month, 2, '0', STR_PAD_LEFT) . '/' . $this->fiscal_year;
+        return str_pad((string) $this->month, 2, '0', STR_PAD_LEFT).'/'.$this->fiscal_year;
     }
 
     public function grandTotal(): float

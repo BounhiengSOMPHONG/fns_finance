@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Role;
 use App\Models\Department;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +19,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         // ດຶງ ID ຂອງ Admin role ແລະ Management department
-        $adminRole = Role::where('role_name', 'Admin')->first();
+        $adminRole = Role::where('role_name', 'admin')->first();
         $managementDept = Department::where('department_name', 'ຝ່າຍບໍລິຫານ')->first();
 
         if ($adminRole && $managementDept) {
@@ -42,7 +42,7 @@ class AdminUserSeeder extends Seeder
                     'username' => 'finance01',
                     'password' => Hash::make('password123'),
                     'full_name' => 'ພະນັກງານການເງິນ 1',
-                    'role_id' => Role::where('role_name', 'Finance')->first()?->id ?? $adminRole->id,
+                    'role_id' => Role::where('role_name', 'head_of_finance')->first()?->id ?? $adminRole->id,
                     'department_id' => Department::where('department_name', 'ຝ່າຍການເງິນ')->first()?->id ?? $managementDept->id,
                     'is_active' => true,
                 ]

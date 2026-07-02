@@ -17,10 +17,10 @@ class CreditUnitPriceController extends Controller
     public function update(Request $request, CreditUnitPriceSetting $creditUnitPrice)
     {
         $validated = $request->validate([
-            'level'             => 'required|in:bachelor,master,phd',
+            'level' => 'required|in:bachelor,master,phd',
             'credit_unit_price' => 'required|numeric|min:0',
-            'gov_doc_id'        => 'nullable|string|max:255',
-            'start_year'        => 'required|integer|min:2000|max:2100',
+            'gov_doc_id' => 'nullable|string|max:255',
+            'start_year' => 'required|integer|min:2000|max:2100',
         ]);
 
         $creditUnitPrice->update($validated);

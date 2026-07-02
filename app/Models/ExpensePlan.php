@@ -68,7 +68,7 @@ class ExpensePlan extends Model
     public function yearlyTotal(): float
     {
         if ($this->pattern_snapshot) {
-            $pattern = $this->pattern ?? new ExpensePattern();
+            $pattern = $this->pattern ?? new ExpensePattern;
 
             return $pattern->calculateTotal($this->calculation_values ?? [], $this->pattern_snapshot);
         }

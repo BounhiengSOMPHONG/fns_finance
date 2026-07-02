@@ -17,14 +17,14 @@ class NuolPctSettingController extends Controller
     public function update(Request $request, NuolPctSetting $nuolPct)
     {
         $validated = $request->validate([
-            'level'      => 'required|in:bachelor,master,phd',
+            'level' => 'required|in:bachelor,master,phd',
             'percentage' => 'required|numeric|min:0|max:100',
             'gov_doc_id' => 'nullable|string|max:255',
             'start_year' => 'required|integer|min:2000|max:2100',
         ]);
 
         $nuolPct->update([
-            'level'      => $validated['level'],
+            'level' => $validated['level'],
             'percentage' => $validated['percentage'] / 100,
             'gov_doc_id' => $validated['gov_doc_id'],
             'start_year' => $validated['start_year'],

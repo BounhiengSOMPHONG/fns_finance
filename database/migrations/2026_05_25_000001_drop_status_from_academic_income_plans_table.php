@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasColumn('academic_income_plans', 'status')) return;
+        if (! Schema::hasColumn('academic_income_plans', 'status')) {
+            return;
+        }
         Schema::table('academic_income_plans', function (Blueprint $table) {
             $table->dropColumn('status');
         });
@@ -16,7 +18,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasColumn('academic_income_plans', 'status')) return;
+        if (Schema::hasColumn('academic_income_plans', 'status')) {
+            return;
+        }
         Schema::table('academic_income_plans', function (Blueprint $table) {
             $table->enum('status', ['DRAFT', 'APPROVED'])->default('DRAFT')->after('fiscal_year');
         });

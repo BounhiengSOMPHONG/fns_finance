@@ -143,6 +143,7 @@ class AcademicIncomeReportBuilder
                 foreach ($totals as $key => $value) {
                     $totals[$key] = $value + (float) $section[$key];
                 }
+
                 continue;
             }
 

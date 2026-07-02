@@ -91,7 +91,7 @@ class ExpenseReportBuilder
         return [
             'number' => $number,
             'code' => $code,
-            'title' => $section?->name ?: 'ລາຍຈ່າຍ ' . $code,
+            'title' => $section?->name ?: 'ລາຍຈ່າຍ '.$code,
             'period_count' => $periodCount,
             'period_total' => $periodTotal,
             'total' => $total,
@@ -117,7 +117,7 @@ class ExpenseReportBuilder
 
         return [
             'code' => $subsection->code,
-            'title' => $subsection->name ?: 'ລາຍການ ' . $subsection->code,
+            'title' => $subsection->name ?: 'ລາຍການ '.$subsection->code,
             'columns' => $columns,
             'rows' => $rows,
             'total' => $total,
@@ -158,7 +158,7 @@ class ExpenseReportBuilder
     private function directSubsections(Collection $subsectionsByCode, string $sectionCode): Collection
     {
         return $subsectionsByCode
-            ->filter(fn (ExpenseSubsection $subsection) => str_starts_with($subsection->code, $sectionCode . '.')
+            ->filter(fn (ExpenseSubsection $subsection) => str_starts_with($subsection->code, $sectionCode.'.')
                 && $this->parentCode($subsection->code) === $sectionCode)
             ->sortBy(fn (ExpenseSubsection $subsection) => $this->codeSortKey($subsection->code))
             ->values();
@@ -168,7 +168,7 @@ class ExpenseReportBuilder
     {
         return $subsectionsByCode
             ->keys()
-            ->filter(fn (string $code) => $code === $rootCode || str_starts_with($code, $rootCode . '.'))
+            ->filter(fn (string $code) => $code === $rootCode || str_starts_with($code, $rootCode.'.'))
             ->sortBy(fn (string $code) => $this->codeSortKey($code))
             ->values();
     }

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -64,9 +64,9 @@ class DegreeProgram extends Model
     {
         return match ($this->level) {
             'bachelor' => 'ປ.ຕີ',
-            'master'   => 'ປ.ໂທ',
-            'phd'      => 'ປ.ເອກ',
-            default    => $this->level,
+            'master' => 'ປ.ໂທ',
+            'phd' => 'ປ.ເອກ',
+            default => $this->level,
         };
     }
 
@@ -96,9 +96,9 @@ class DegreeProgram extends Model
     {
         return match ($level) {
             'bachelor' => 'ປ.ຕີ (ປະລິນຍາຕີ)',
-            'master'   => 'ປ.ໂທ (ປະລິນຍາໂທ)',
-            'phd'      => 'ປ.ເອກ (ປະລິນຍາເອກ)',
-            default    => $level,
+            'master' => 'ປ.ໂທ (ປະລິນຍາໂທ)',
+            'phd' => 'ປ.ເອກ (ປະລິນຍາເອກ)',
+            default => $level,
         };
     }
 }

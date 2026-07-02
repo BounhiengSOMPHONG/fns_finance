@@ -19,11 +19,11 @@ class NuolPctSetting extends Model
     public static function levelLabel(string $level): string
     {
         return match ($level) {
-            'bachelor'   => 'ປ.ຕີ (ປະລິນຍາຕີ)',
-            'master'     => 'ປ.ໂທ (ປະລິນຍາໂທ)',
-            'phd'        => 'ປ.ເອກ (ປະລິນຍາເອກ)',
+            'bachelor' => 'ປ.ຕີ (ປະລິນຍາຕີ)',
+            'master' => 'ປ.ໂທ (ປະລິນຍາໂທ)',
+            'phd' => 'ປ.ເອກ (ປະລິນຍາເອກ)',
             'master_phd' => 'ປ.ໂທ / ປ.ເອກ', // legacy fallback
-            default      => $level,
+            default => $level,
         };
     }
 
@@ -31,5 +31,4 @@ class NuolPctSetting extends Model
     {
         return static::where('level', $level)->orderByDesc('start_year')->first();
     }
-
 }

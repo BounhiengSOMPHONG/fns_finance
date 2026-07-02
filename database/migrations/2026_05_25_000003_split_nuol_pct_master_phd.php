@@ -28,7 +28,7 @@ return new class extends Migration
 
             if (! $exists) {
                 DB::table('nuol_pct_settings')->insert([
-                    'level'      => 'phd',
+                    'level' => 'phd',
                     'percentage' => $row->percentage,
                     'gov_doc_id' => $row->gov_doc_id,
                     'start_year' => $row->start_year,

@@ -239,6 +239,6 @@ class ExpenseDefaultRowAccountController extends Controller
             $node = $node->parent;
         }
 
-        return $account->account_code . ' - ' . implode(' / ', $parts);
+        return $account->account_code.' - '.implode(' / ', $parts);
     }
 }

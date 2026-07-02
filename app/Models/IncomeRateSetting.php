@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class IncomeRateSetting extends Model
 {
@@ -29,9 +30,8 @@ class IncomeRateSetting extends Model
     /**
      * Get all 4 income rate settings keyed by their key column.
      */
-    public static function allKeyed(): \Illuminate\Support\Collection
+    public static function allKeyed(): Collection
     {
         return static::all()->keyBy('key');
     }
-
 }

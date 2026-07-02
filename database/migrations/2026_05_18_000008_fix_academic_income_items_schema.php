@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::table('academic_income_items', function (Blueprint $table) {
             // Make degree_program_id nullable (needed for sections 1.2 and 1.4)
-            if (!Schema::hasColumn('academic_income_items', 'snap_nuol_pct')) {
+            if (! Schema::hasColumn('academic_income_items', 'snap_nuol_pct')) {
                 $table->decimal('snap_nuol_pct', 5, 4)->nullable()->after('snap_registration_fee_rate');
             }
         });
@@ -26,7 +26,7 @@ return new class extends Migration
               AND TABLE_NAME = 'academic_income_items'
               AND COLUMN_NAME = 'degree_program_id'");
 
-        if (!empty($colInfo) && $colInfo[0]->IS_NULLABLE === 'NO') {
+        if (! empty($colInfo) && $colInfo[0]->IS_NULLABLE === 'NO') {
             DB::statement('ALTER TABLE academic_income_items DROP FOREIGN KEY academic_income_items_degree_program_id_foreign');
             DB::statement('ALTER TABLE academic_income_items MODIFY degree_program_id BIGINT UNSIGNED NULL');
             DB::statement('ALTER TABLE academic_income_items ADD CONSTRAINT academic_income_items_degree_program_id_foreign FOREIGN KEY (degree_program_id) REFERENCES degree_programs(id) ON DELETE CASCADE');

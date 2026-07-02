@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ChartOfAccountFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ChartOfAccount extends Model
 {
-    /** @use HasFactory<\Database\Factories\ChartOfAccountFactory> */
+    /** @use HasFactory<ChartOfAccountFactory> */
     use HasFactory;
 
     public $timestamps = false;
@@ -45,12 +46,13 @@ class ChartOfAccount extends Model
     public function lineage(): array
     {
         $names = [];
-        $node  = $this;
+        $node = $this;
         $guard = 0;
         while ($node && $guard++ < 10) {
             array_unshift($names, $node->account_name);
             $node = $node->parent;
         }
+
         return $names;
     }
 

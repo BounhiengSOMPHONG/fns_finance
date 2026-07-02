@@ -80,6 +80,7 @@ class ExpensePattern extends Model
                     $fieldDef = collect($schema)->firstWhere('field_key', $field);
                     $value = $fieldDef['default_value'] ?? 0;
                 }
+
                 return $carry * (float) $value;
             },
             1.0

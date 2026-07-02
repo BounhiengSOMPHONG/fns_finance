@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('academic_income_plans', function (Blueprint $table) {
-            $table->decimal('nuol_pct_bachelor',   5, 4)->default(0.1700)->after('status');
+            $table->decimal('nuol_pct_bachelor', 5, 4)->default(0.1700)->after('status');
             $table->decimal('nuol_pct_master_phd', 5, 4)->default(0.1000)->after('nuol_pct_bachelor');
         });
 

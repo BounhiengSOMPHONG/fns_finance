@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('academic_income_items')) return;
+        if (Schema::hasTable('academic_income_items')) {
+            return;
+        }
         Schema::create('academic_income_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('plan_id')->constrained('academic_income_plans')->cascadeOnDelete();

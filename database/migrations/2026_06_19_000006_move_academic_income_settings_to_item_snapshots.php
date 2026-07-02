@@ -18,7 +18,9 @@ return new class extends Migration
         $this->dropSettingSetColumn('income_rate_settings');
         $this->dropSettingSetColumn('nuol_pct_settings');
 
-        Schema::dropIfExists('academic_income_setting_sets');
+        if (DB::getDriverName() === 'mysql') {
+            Schema::dropIfExists('academic_income_setting_sets');
+        }
     }
 
     public function down(): void

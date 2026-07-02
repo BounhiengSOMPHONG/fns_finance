@@ -19,7 +19,7 @@ class CourseCreditController extends Controller
         $levelRank = ['bachelor' => 0, 'master' => 1, 'phd' => 2];
 
         $courseCredits = CourseCreditSetting::with('degreeProgram')->get()
-            ->sortBy(fn($s) => sprintf(
+            ->sortBy(fn ($s) => sprintf(
                 '%d-%02d-%02d-%s',
                 $levelRank[$s->degreeProgram?->level] ?? 9,
                 $s->degreeProgram?->department_sort_order ?? 90,
@@ -48,7 +48,7 @@ class CourseCreditController extends Controller
         $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
             ->get()
             ->groupBy('level')
-            ->map(fn($i) => (float) $i->first()->credit_unit_price);
+            ->map(fn ($i) => (float) $i->first()->credit_unit_price);
 
         return view('dashboards.finance_head.settings.course-credits.index', compact('courseCredits', 'displayCourseCredits', 'prices', 'nuolPcts', 'creditSplits', 'programs', 'displayPrograms', 'creditPrices'));
     }
@@ -57,7 +57,7 @@ class CourseCreditController extends Controller
     {
         $programs = DegreeProgram::where('is_active', true)->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
         $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
-            ->get()->groupBy('level')->map(fn($i) => (float) $i->first()->credit_unit_price);
+            ->get()->groupBy('level')->map(fn ($i) => (float) $i->first()->credit_unit_price);
 
         return view('dashboards.finance_head.settings.course-credits.create', compact('programs', 'creditPrices'));
     }
@@ -65,12 +65,12 @@ class CourseCreditController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'degree_program_id'  => 'required_without:course_credit_units|exists:degree_programs,id',
+            'degree_program_id' => 'required_without:course_credit_units|exists:degree_programs,id',
             'course_credit_unit' => 'required_without:course_credit_units|numeric|min:1|max:999',
             'course_credit_units' => 'nullable|array',
             'course_credit_units.*' => 'nullable|numeric|min:1|max:999',
-            'gov_doc_id'         => 'nullable|string|max:255',
-            'start_year'         => 'required|integer|min:2000|max:2100',
+            'gov_doc_id' => 'nullable|string|max:255',
+            'start_year' => 'required|integer|min:2000|max:2100',
         ]);
 
         if (! empty($validated['course_credit_units'])) {
@@ -110,7 +110,7 @@ class CourseCreditController extends Controller
     {
         $programs = DegreeProgram::orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('name')->get();
         $creditPrices = CreditUnitPriceSetting::orderByDesc('start_year')
-            ->get()->groupBy('level')->map(fn($i) => (float) $i->first()->credit_unit_price);
+            ->get()->groupBy('level')->map(fn ($i) => (float) $i->first()->credit_unit_price);
 
         return view('dashboards.finance_head.settings.course-credits.edit', compact('courseCredit', 'programs', 'creditPrices'));
     }
@@ -118,12 +118,12 @@ class CourseCreditController extends Controller
     public function update(Request $request, CourseCreditSetting $courseCredit)
     {
         $validated = $request->validate([
-            'degree_program_id'  => 'required_without:setting_units|exists:degree_programs,id',
+            'degree_program_id' => 'required_without:setting_units|exists:degree_programs,id',
             'course_credit_unit' => 'required_without:setting_units|numeric|min:1|max:999',
             'setting_units' => 'nullable|array',
             'setting_units.*' => 'nullable|numeric|min:1|max:999',
-            'gov_doc_id'         => 'nullable|string|max:255',
-            'start_year'         => 'required|integer|min:2000|max:2100',
+            'gov_doc_id' => 'nullable|string|max:255',
+            'start_year' => 'required|integer|min:2000|max:2100',
         ]);
 
         if (! empty($validated['setting_units'])) {
@@ -173,8 +173,8 @@ class CourseCreditController extends Controller
         $validated = $request->validate([
             'year1_percentage' => 'required|numeric|min:0|max:100',
             'year2_percentage' => 'required|numeric|min:0|max:100',
-            'gov_doc_id'       => 'nullable|string|max:255',
-            'start_year'       => 'required|integer|min:2000|max:2100',
+            'gov_doc_id' => 'nullable|string|max:255',
+            'start_year' => 'required|integer|min:2000|max:2100',
         ]);
 
         if (round((float) $validated['year1_percentage'] + (float) $validated['year2_percentage'], 2) !== 100.0) {

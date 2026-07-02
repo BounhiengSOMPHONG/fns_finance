@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('degree_programs', 'study_year')) return;
+        if (Schema::hasColumn('degree_programs', 'study_year')) {
+            return;
+        }
 
         Schema::table('degree_programs', function (Blueprint $table) {
             $table->unsignedSmallInteger('study_year')->nullable()->after('level');

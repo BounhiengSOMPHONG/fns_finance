@@ -87,7 +87,7 @@ return new class extends Migration
                 if (! $planningYearId) {
                     $planningYearId = DB::table('planning_years')->insertGetId([
                         'year' => $year,
-                        'name' => 'Planning ' . $year,
+                        'name' => 'Planning '.$year,
                         'is_active' => true,
                         'created_at' => now(),
                         'updated_at' => now(),

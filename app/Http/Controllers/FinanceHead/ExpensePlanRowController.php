@@ -83,7 +83,7 @@ class ExpensePlanRowController extends Controller
             'values' => 'required|array',
         ]);
 
-        $pattern = $expensePlan->pattern ?? new ExpensePattern();
+        $pattern = $expensePlan->pattern ?? new ExpensePattern;
         $values = $data['values'];
         $calculationValues = $this->calculationValues($pattern, $values, $expensePlan->pattern_snapshot);
 

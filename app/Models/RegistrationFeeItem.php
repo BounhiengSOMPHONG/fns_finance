@@ -10,7 +10,7 @@ class RegistrationFeeItem extends Model
     protected $fillable = ['fee_setting_id', 'sort_order', 'name', 'amount', 'nuol_pct'];
 
     protected $casts = [
-        'amount'   => 'decimal:2',
+        'amount' => 'decimal:2',
         'nuol_pct' => 'decimal:4',
     ];
 

@@ -20,9 +20,9 @@ class CreditUnitPriceSetting extends Model
     {
         return match ($level) {
             'bachelor' => 'ປ.ຕີ (ປະລິນຍາຕີ)',
-            'master'   => 'ປ.ໂທ (ປະລິນຍາໂທ)',
-            'phd'      => 'ປ.ເອກ (ປະລິນຍາເອກ)',
-            default    => $level,
+            'master' => 'ປ.ໂທ (ປະລິນຍາໂທ)',
+            'phd' => 'ປ.ເອກ (ປະລິນຍາເອກ)',
+            default => $level,
         };
     }
 }

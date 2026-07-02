@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class DepartmentController extends Controller
 {
@@ -31,7 +30,7 @@ class DepartmentController extends Controller
         }
 
         $departments = $query->withCount('users')->latest('id')->paginate(10)->withQueryString();
-        
+
         // Get unique department types for filter (cached for 1 hour)
         $departmentTypes = cache()->remember('department_types', 3600, function () {
             return Department::distinct()->pluck('department_type')->filter()->values();
@@ -115,7 +114,7 @@ class DepartmentController extends Controller
         }
 
         $department->delete();
-        
+
         // Clear cache when department is deleted
         cache()->forget('department_types');
 

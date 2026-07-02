@@ -7,8 +7,8 @@ namespace App\Http\Controllers\FinanceHead;
 use App\Http\Controllers\Controller;
 use App\Models\SalaryEntry;
 use App\Models\SalaryPlan;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class SalaryEntryController extends Controller

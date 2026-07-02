@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('credit_unit_price_settings')) return;
+        if (Schema::hasTable('credit_unit_price_settings')) {
+            return;
+        }
         Schema::create('credit_unit_price_settings', function (Blueprint $table) {
             $table->id();
             $table->enum('level', ['bachelor', 'master', 'phd']);

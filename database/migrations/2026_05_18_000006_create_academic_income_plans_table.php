@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('academic_income_plans')) return;
+        if (Schema::hasTable('academic_income_plans')) {
+            return;
+        }
         Schema::create('academic_income_plans', function (Blueprint $table) {
             $table->id();
             $table->unsignedSmallInteger('fiscal_year')->unique();

@@ -1,5 +1,8 @@
 <?php
 
+use App\Console\Commands\SyncExpenseAccountLinks;
+use App\Console\Commands\SyncExpenseNames;
+use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckUserActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -8,13 +11,13 @@ use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withCommands([
-        \App\Console\Commands\SyncExpenseNames::class,
-        \App\Console\Commands\SyncExpenseAccountLinks::class,
+        SyncExpenseNames::class,
+        SyncExpenseAccountLinks::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(
@@ -28,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'check.active' => CheckUserActive::class,
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role' => CheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

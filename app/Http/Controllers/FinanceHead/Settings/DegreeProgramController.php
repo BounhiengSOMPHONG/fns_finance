@@ -32,13 +32,13 @@ class DegreeProgramController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code'       => 'required|string|max:50',
-            'name'       => 'required|string|max:255',
-            'level'      => 'required|in:bachelor,master,phd',
+            'code' => 'required|string|max:50',
+            'name' => 'required|string|max:255',
+            'level' => 'required|in:bachelor,master,phd',
             'study_year' => 'nullable|integer|min:1|max:4',
             'study_years' => 'nullable|array',
             'study_years.*' => 'integer|min:1|max:4',
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
             'include_in_planning' => 'boolean',
             'academic_department' => ['required', 'string', Rule::in(array_keys(DegreeProgram::DEPARTMENTS))],
         ]);
@@ -105,14 +105,14 @@ class DegreeProgramController extends Controller
     public function update(Request $request, DegreeProgram $degreeProgram)
     {
         $validated = $request->validate([
-            'code'       => ['required', 'string', 'max:50'],
-            'name'       => 'required|string|max:255',
-            'level'      => 'required|in:bachelor,master,phd',
+            'code' => ['required', 'string', 'max:50'],
+            'name' => 'required|string|max:255',
+            'level' => 'required|in:bachelor,master,phd',
             'study_year' => 'nullable|integer|min:1|max:4',
             'study_years' => 'nullable|array',
             'study_years.*' => 'integer|min:1|max:4',
             'group_ids' => 'nullable|string',
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
             'include_in_planning' => 'boolean',
             'academic_department' => ['required', 'string', Rule::in(array_keys(DegreeProgram::DEPARTMENTS))],
         ]);

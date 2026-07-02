@@ -11,8 +11,7 @@ class PeriodPlanReportBuilder
 {
     public function __construct(
         private readonly PlanYearReportBuilder $planYearReportBuilder
-    ) {
-    }
+    ) {}
 
     public function buildForPlanningYear(PlanningYear $planningYear): array
     {

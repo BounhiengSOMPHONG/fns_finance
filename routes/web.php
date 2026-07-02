@@ -23,5 +23,5 @@ Route::middleware(['auth', 'check.active'])->group(function () {
 // ─────────────────────────────────────────────────────────────────
 // Role-specific routes (each in their own file)
 // ─────────────────────────────────────────────────────────────────
-require __DIR__ . '/auth.php';
-require __DIR__ . '/dashboards.php';
+require __DIR__.'/auth.php';
+require __DIR__.'/dashboards.php';

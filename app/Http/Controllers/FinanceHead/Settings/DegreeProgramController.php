@@ -13,20 +13,20 @@ class DegreeProgramController extends Controller
     public function index()
     {
         // All programs, ordered; grouping + filtering happens in the view (instant, client-side).
-        $programs = DegreeProgram::orderBy('level')
-            ->orderByRaw('study_year IS NULL')
-            ->orderBy('study_year')
-            ->orderBy('name')
+        $programs = DegreeProgram::planningOrder()
             ->get();
 
         $displayPrograms = $this->displayPrograms($programs);
+        $departments = DegreeProgram::departmentOptions();
 
-        return view('dashboards.finance_head.settings.degree-programs.index', compact('programs', 'displayPrograms'));
+        return view('dashboards.finance_head.settings.degree-programs.index', compact('programs', 'displayPrograms', 'departments'));
     }
 
     public function create()
     {
-        return view('dashboards.finance_head.settings.degree-programs.create');
+        $departments = DegreeProgram::departmentOptions();
+
+        return view('dashboards.finance_head.settings.degree-programs.create', compact('departments'));
     }
 
     public function store(Request $request)
@@ -39,9 +39,13 @@ class DegreeProgramController extends Controller
             'study_years' => 'nullable|array',
             'study_years.*' => 'integer|min:1|max:4',
             'is_active'  => 'boolean',
+            'include_in_planning' => 'boolean',
+            'academic_department' => ['required', 'string', Rule::in(array_keys(DegreeProgram::DEPARTMENTS))],
         ]);
 
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['include_in_planning'] = $request->boolean('include_in_planning', true);
+        $validated['department_sort_order'] = DegreeProgram::departmentOrder($validated['academic_department']);
 
         if ($validated['level'] === 'bachelor') {
             $years = $this->requestedStudyYears($request);
@@ -63,6 +67,9 @@ class DegreeProgramController extends Controller
                         'level' => 'bachelor',
                         'study_year' => $year,
                         'is_active' => $validated['is_active'],
+                        'include_in_planning' => $validated['include_in_planning'],
+                        'academic_department' => $validated['academic_department'],
+                        'department_sort_order' => $validated['department_sort_order'],
                     ]);
                 }
             });
@@ -77,6 +84,9 @@ class DegreeProgramController extends Controller
                 'level' => $validated['level'],
                 'study_year' => null,
                 'is_active' => $validated['is_active'],
+                'include_in_planning' => $validated['include_in_planning'],
+                'academic_department' => $validated['academic_department'],
+                'department_sort_order' => $validated['department_sort_order'],
             ]);
         }
 
@@ -87,7 +97,9 @@ class DegreeProgramController extends Controller
 
     public function edit(DegreeProgram $degreeProgram)
     {
-        return view('dashboards.finance_head.settings.degree-programs.edit', compact('degreeProgram'));
+        $departments = DegreeProgram::departmentOptions();
+
+        return view('dashboards.finance_head.settings.degree-programs.edit', compact('degreeProgram', 'departments'));
     }
 
     public function update(Request $request, DegreeProgram $degreeProgram)
@@ -101,9 +113,13 @@ class DegreeProgramController extends Controller
             'study_years.*' => 'integer|min:1|max:4',
             'group_ids' => 'nullable|string',
             'is_active'  => 'boolean',
+            'include_in_planning' => 'boolean',
+            'academic_department' => ['required', 'string', Rule::in(array_keys(DegreeProgram::DEPARTMENTS))],
         ]);
 
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['include_in_planning'] = $request->boolean('include_in_planning', true);
+        $validated['department_sort_order'] = DegreeProgram::departmentOrder($validated['academic_department']);
 
         if ($validated['level'] === 'bachelor') {
             $years = $this->requestedStudyYears($request);
@@ -134,6 +150,9 @@ class DegreeProgramController extends Controller
                         'level' => 'bachelor',
                         'study_year' => $year,
                         'is_active' => $years->contains((int) $year) ? $validated['is_active'] : false,
+                        'include_in_planning' => $years->contains((int) $year) ? $validated['include_in_planning'] : false,
+                        'academic_department' => $validated['academic_department'],
+                        'department_sort_order' => $validated['department_sort_order'],
                     ]);
                 }
 
@@ -148,6 +167,9 @@ class DegreeProgramController extends Controller
                         'level' => 'bachelor',
                         'study_year' => $year,
                         'is_active' => $validated['is_active'],
+                        'include_in_planning' => $validated['include_in_planning'],
+                        'academic_department' => $validated['academic_department'],
+                        'department_sort_order' => $validated['department_sort_order'],
                     ]);
                 }
             });
@@ -162,6 +184,9 @@ class DegreeProgramController extends Controller
                 'level' => $validated['level'],
                 'study_year' => null,
                 'is_active' => $validated['is_active'],
+                'include_in_planning' => $validated['include_in_planning'],
+                'academic_department' => $validated['academic_department'],
+                'department_sort_order' => $validated['department_sort_order'],
             ]);
         }
 
@@ -210,10 +235,14 @@ class DegreeProgramController extends Controller
                 $program->display_years = $years;
                 $program->display_count = $group->count();
                 $program->is_active = $group->contains(fn (DegreeProgram $item): bool => $item->is_active);
+                $program->include_in_planning = $group->contains(fn (DegreeProgram $item): bool => $item->include_in_planning);
+                $program->academic_department = $program->academic_department ?: 'other';
+                $program->department_sort_order = DegreeProgram::departmentOrder($program->academic_department);
 
                 return $program;
             })
             ->sortBy([
+                ['department_sort_order', 'asc'],
                 ['level', 'asc'],
                 ['name', 'asc'],
             ])
@@ -223,7 +252,7 @@ class DegreeProgramController extends Controller
     private function displayGroupKey(DegreeProgram $program): string
     {
         if ($program->level === 'bachelor') {
-            return implode('|', [$program->level, $program->name]);
+            return implode('|', [$program->level, $program->academic_department, $program->name]);
         }
 
         return implode('|', [$program->level, $program->id]);

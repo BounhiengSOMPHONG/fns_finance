@@ -157,6 +157,10 @@ return new class extends Migration
             return;
         }
 
+        if (! Schema::hasTable('expense_subsections')) {
+            return;
+        }
+
         Schema::create('expense_catalog_items', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('subsection_id')->constrained('expense_subsections')->cascadeOnDelete();
@@ -215,7 +219,7 @@ return new class extends Migration
 
     private function backfillCatalogItems(): void
     {
-        if (! Schema::hasTable('expense_catalog_items')) {
+        if (! Schema::hasTable('expense_catalog_items') || ! Schema::hasTable('expense_subsections')) {
             return;
         }
 
@@ -249,7 +253,7 @@ return new class extends Migration
 
     private function backfillExpensePlans(): void
     {
-        if (! Schema::hasTable('expense_plans')) {
+        if (! Schema::hasTable('expense_plans') || ! Schema::hasTable('expense_patterns')) {
             return;
         }
 

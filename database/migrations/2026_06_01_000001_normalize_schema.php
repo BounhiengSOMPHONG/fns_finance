@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // ──────────────────────────────────────────────
         // 1. salary_plans — fix fiscal_year type mismatch
         //    varchar(10) → smallint unsigned to match all other tables
@@ -53,6 +57,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // 3. Remove added FKs
         if (Schema::hasTable('expense_entries') && $this->foreignKeyExists('expense_entries', 'expense_entries_department_id_foreign')) {
             Schema::table('expense_entries', function (Blueprint $table) {
@@ -85,6 +93,10 @@ return new class extends Migration
 
     private function foreignKeyExists(string $table, string $constraint): bool
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return false;
+        }
+
         return DB::table('information_schema.TABLE_CONSTRAINTS')
             ->where('CONSTRAINT_SCHEMA', DB::getDatabaseName())
             ->where('TABLE_NAME', $table)

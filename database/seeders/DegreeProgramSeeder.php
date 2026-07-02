@@ -20,7 +20,12 @@ class DegreeProgramSeeder extends Seeder
             ['B-CS-Y2',    'ວິທະຍາສາດຄອມ'],
             ['B-PD-Y2',    'ພັດທະນາໂປຣແກຣມ'],
             ['B-WD-Y2',    'ພັດທະນາເວບໄຊ້'],
-            ['B-CSC-Y2',   'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ'],
+            ['B-CSC-Y2',   'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ'],
+            ['B-CSC-EVE-Y2', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'],
+            ['B-CS-EVE-Y2', 'ວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'],
+            ['B-PD-EVE-Y2', 'ການພັດທະນາໂປຣແກຣມ ພາກຄໍ່າ'],
+            ['B-WD-EVE-Y2', 'ການພັດທະນາເວບໄຊ້ ພາກຄໍ່າ'],
+            ['B-AI-Y2', 'ເອໄອ ແລະ ນະວັດຕະກໍາ'],
             ['B-MAA-Y2',   'ຄະນິດສາດນໍາໃຊ້'],
             ['B-MAE-Y2',   'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
             ['B-STAT-Y2',  'ຄະນິດສາດສະຖິຕິ'],
@@ -34,7 +39,7 @@ class DegreeProgramSeeder extends Seeder
             ['B-NPHY-Y2',  'ຟິຊິກນິວເຄຣຍ'],
         ];
         foreach ($year2 as [$code, $name]) {
-            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'bachelor', 'study_year' => 2, 'is_active' => true];
+            $programs[] = $this->programRow($code, $name, 'bachelor', 2);
         }
 
         // ─── Year 3 ────────────────────────────────────────────────────
@@ -42,6 +47,10 @@ class DegreeProgramSeeder extends Seeder
             ['B-CS-Y3',    'ວິທະຍາສາດຄອມ'],
             ['B-PD-Y3',    'ພັດທະນາໂປຣແກຣມ'],
             ['B-WD-Y3',    'ພັດທະນາເວບໄຊ້'],
+            ['B-CS-EVE-Y3', 'ວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'],
+            ['B-PD-EVE-Y3', 'ການພັດທະນາໂປຣແກຣມ ພາກຄໍ່າ'],
+            ['B-WD-EVE-Y3', 'ການພັດທະນາເວບໄຊ້ ພາກຄໍ່າ'],
+            ['B-AI-Y3', 'ເອໄອ ແລະ ນະວັດຕະກໍາ'],
             ['B-MATH-Y3',  'ຄະນິດທົ່ວໄປ'],
             ['B-MAE-Y3',   'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
             ['B-STAT-Y3',  'ຄະນິດສາດສະຖິຕິ'],
@@ -55,7 +64,7 @@ class DegreeProgramSeeder extends Seeder
             ['B-NPHY-Y3',  'ຟິຊິກນິວເຄຣຍ'],
         ];
         foreach ($year3 as [$code, $name]) {
-            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'bachelor', 'study_year' => 3, 'is_active' => true];
+            $programs[] = $this->programRow($code, $name, 'bachelor', 3);
         }
 
         // ─── Year 4 ────────────────────────────────────────────────────
@@ -63,6 +72,10 @@ class DegreeProgramSeeder extends Seeder
             ['B-CS-Y4',    'ວິທະຍາສາດຄອມ'],
             ['B-PD-Y4',    'ພັດທະນາໂປຣແກຣມ'],
             ['B-WD-Y4',    'ພັດທະນາເວບໄຊ້'],
+            ['B-CS-EVE-Y4', 'ວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'],
+            ['B-PD-EVE-Y4', 'ການພັດທະນາໂປຣແກຣມ ພາກຄໍ່າ'],
+            ['B-WD-EVE-Y4', 'ການພັດທະນາເວບໄຊ້ ພາກຄໍ່າ'],
+            ['B-AI-Y4', 'ເອໄອ ແລະ ນະວັດຕະກໍາ'],
             ['B-MATH-Y4',  'ຄະນິດທົ່ວໄປ'],
             ['B-MAE-Y4',   'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
             ['B-STAT-Y4',  'ຄະນິດສາດສະຖິຕິ'],
@@ -76,7 +89,7 @@ class DegreeProgramSeeder extends Seeder
             ['B-NPHY-Y4',  'ຟິຊິກນິວເຄຣຍ'],
         ];
         foreach ($year4 as [$code, $name]) {
-            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'bachelor', 'study_year' => 4, 'is_active' => true];
+            $programs[] = $this->programRow($code, $name, 'bachelor', 4);
         }
 
         // ─── Master (coursework) ───────────────────────────────────────
@@ -88,7 +101,7 @@ class DegreeProgramSeeder extends Seeder
             ['M-CS',    'ປະລິນຍາໂທວິທະຍາສາດຄອມພິວເຕີ'],
         ];
         foreach ($masters as [$code, $name]) {
-            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'master', 'study_year' => null, 'is_active' => true];
+            $programs[] = $this->programRow($code, $name, 'master', null);
         }
 
         // ─── Master (research format) ──────────────────────────────────
@@ -98,7 +111,7 @@ class DegreeProgramSeeder extends Seeder
             ['MR-BIO',   'ຊີວະວິທະຍາຮູບແບບຄົ້ນຄວ້າ'],
         ];
         foreach ($masterResearch as [$code, $name]) {
-            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'master', 'study_year' => null, 'is_active' => true];
+            $programs[] = $this->programRow($code, $name, 'master', null);
         }
 
         // ─── PhD ───────────────────────────────────────────────────────
@@ -107,7 +120,7 @@ class DegreeProgramSeeder extends Seeder
             ['D-BIO',   'ປະລີິນຍາເອກຊີວະວິທະຍາ'],
         ];
         foreach ($phd as [$code, $name]) {
-            $programs[] = ['code' => $code, 'name' => $name, 'level' => 'phd', 'study_year' => null, 'is_active' => true];
+            $programs[] = $this->programRow($code, $name, 'phd', null);
         }
 
         $now = now();
@@ -117,5 +130,49 @@ class DegreeProgramSeeder extends Seeder
         }
 
         DB::table('degree_programs')->insert($programs);
+    }
+
+    private function programRow(string $code, string $name, string $level, ?int $studyYear): array
+    {
+        [$department, $sortOrder] = $this->departmentForCode($code);
+
+        return [
+            'code' => $code,
+            'name' => $name,
+            'level' => $level,
+            'study_year' => $studyYear,
+            'is_active' => true,
+            'include_in_planning' => true,
+            'academic_department' => $department,
+            'department_sort_order' => $sortOrder,
+        ];
+    }
+
+    private function departmentForCode(string $code): array
+    {
+        $base = strtoupper($code);
+        $base = preg_replace('/^MR-/', 'M-', $base);
+        $base = preg_replace('/-EVE(?=-Y\d+$)/', '', $base);
+        $base = preg_replace('/-Y\d+$/', '', $base);
+
+        $department = match ($base) {
+            'B-MAA', 'B-MAE', 'B-STAT', 'B-MATH', 'M-MATH' => 'math_stats',
+            'B-PHYS', 'B-GPHY', 'B-MATS', 'B-NPHY', 'M-PHYS', 'D-PHYS' => 'physics',
+            'B-CHEM', 'B-ECHE', 'M-CHEM' => 'chemistry',
+            'B-BIO', 'B-BT', 'M-BIO', 'D-BIO' => 'biology',
+            'B-CS', 'B-PD', 'B-WD', 'B-CSC', 'B-AI', 'M-CS' => 'computer_science',
+            default => 'other',
+        };
+
+        $orders = [
+            'math_stats' => 10,
+            'physics' => 20,
+            'chemistry' => 30,
+            'biology' => 40,
+            'computer_science' => 50,
+            'other' => 90,
+        ];
+
+        return [$department, $orders[$department] ?? 90];
     }
 }

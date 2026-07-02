@@ -201,12 +201,9 @@ class AcademicIncomeReportBuilder
         }
 
         $itemsByKey = $items->keyBy(fn (AcademicIncomeItem $item): string => $this->itemKey($item->section_code, $item->degree_program_id));
-        $programs = DegreeProgram::where('is_active', true)
+        $programs = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
-            ->orderBy('level')
-            ->orderByRaw('study_year IS NULL')
-            ->orderBy('study_year')
-            ->orderBy('name')
+            ->planningOrder()
             ->get();
 
         $placeholders = collect();

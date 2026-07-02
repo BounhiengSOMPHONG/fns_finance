@@ -334,10 +334,36 @@
                 'label' => $label,
                 'search' => \Illuminate\Support\Str::lower($label . ' ' . $programs->pluck('name')->implode(' ') . ' ' . $base),
                 'names' => $programNames->skip(1)->implode(' · '),
+                'department' => $programs->first()->academic_department ?: 'other',
+                'departmentLabel' => $programs->first()->academic_department_label,
+                'departmentOrder' => (int) ($programs->first()->department_sort_order ?? \App\Models\DegreeProgram::departmentOrder($programs->first()->academic_department)),
                 'cells' => $cells,
             ];
         })
-        ->sortBy('label')
+        ->sortBy([
+            ['departmentOrder', 'asc'],
+            ['label', 'asc'],
+        ])
+        ->values();
+
+    $bachelorTables = $bachelorRows
+        ->groupBy('department')
+        ->map(function ($rows, string $department): array {
+            $first = $rows->first();
+
+            return [
+                'key' => 'bachelor-' . $department,
+                'level' => 'bachelor',
+                'label' => 'ປ.ຕີ · ' . ($first['departmentLabel'] ?? \App\Models\DegreeProgram::DEPARTMENTS['other']['label']),
+                'columns' => [
+                    ['key' => 'y1', 'label' => 'ປີ 1'],
+                    ['key' => 'y2', 'label' => 'ປີ 2'],
+                    ['key' => 'y3', 'label' => 'ປີ 3'],
+                    ['key' => 'y4', 'label' => 'ປີ 4'],
+                ],
+                'rows' => $rows->values()->all(),
+            ];
+        })
         ->values()
         ->all();
 
@@ -361,19 +387,7 @@
             ->all();
     };
 
-    $studentTables = [
-        [
-            'key' => 'bachelor',
-            'level' => 'bachelor',
-            'label' => 'ປ.ຕີ',
-            'columns' => [
-                ['key' => 'y1', 'label' => 'ປີ 1'],
-                ['key' => 'y2', 'label' => 'ປີ 2'],
-                ['key' => 'y3', 'label' => 'ປີ 3'],
-                ['key' => 'y4', 'label' => 'ປີ 4'],
-            ],
-            'rows' => $bachelorRows,
-        ],
+    $studentTables = array_merge($bachelorTables, [
         [
             'key' => 'master',
             'level' => 'master',
@@ -394,7 +408,7 @@
             ],
             'rows' => $graduateRows('phd'),
         ],
-    ];
+    ]);
 
     $items = [
         ['tag'=>'1.2', 'name'=>'students_1_2', 'title'=>'ຄ່າລົງທະບຽນ ນ/ສ ປີ 2-4 (ຄວທ)', 'key'=>'1.2_',
@@ -416,8 +430,8 @@
 @endphp
 
 <form method="POST"
-      action="{{ route('head_of_finance.academic-income.saveEvaluate', $academicIncome) }}"
-      data-autosave-url="{{ route('head_of_finance.academic-income.saveField', $academicIncome) }}"
+      action="{{ route('head_of_finance.academic-income.saveEvaluate', ['academicIncome' => $academicIncome->getKey()]) }}"
+      data-autosave-url="{{ route('head_of_finance.academic-income.saveField', ['academicIncome' => $academicIncome->getKey()]) }}"
       class="ai-wrap">
 @csrf
     <div class="ai-top">

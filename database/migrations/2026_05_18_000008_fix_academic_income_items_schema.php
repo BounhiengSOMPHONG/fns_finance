@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,6 +15,10 @@ return new class extends Migration
                 $table->decimal('snap_nuol_pct', 5, 4)->nullable()->after('snap_registration_fee_rate');
             }
         });
+
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
 
         // Alter degree_program_id to allow NULL (drop FK first, alter, re-add FK)
         $colInfo = DB::select("SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS

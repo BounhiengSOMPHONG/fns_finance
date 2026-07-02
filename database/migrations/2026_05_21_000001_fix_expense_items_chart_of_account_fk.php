@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('expense_items') || ! Schema::hasTable('chart_of_accounts')) {
+        if (DB::getDriverName() !== 'mysql' || ! Schema::hasTable('expense_items') || ! Schema::hasTable('chart_of_accounts')) {
             return;
         }
 
@@ -28,7 +28,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (! Schema::hasTable('expense_items')) {
+        if (DB::getDriverName() !== 'mysql' || ! Schema::hasTable('expense_items')) {
             return;
         }
 

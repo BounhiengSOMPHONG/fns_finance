@@ -51,9 +51,9 @@
 .dp-sublabel { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fns-gray-400); margin: 0.95rem 0 0.15rem; }
 
 /* clean divided rows in responsive columns */
-.dp-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); column-gap: 1.6rem; }
+.dp-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); column-gap: 1.6rem; }
 .dp-row {
-    display: flex; align-items: center; gap: 0.7rem;
+    display: flex; align-items: flex-start; gap: 0.7rem;
     padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--fns-gray-200);
     transition: background .12s;
 }
@@ -63,22 +63,32 @@
     font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em;
     color: var(--fns-navy); background: rgba(26,39,68,0.06); border-radius: 6px; padding: 0.2rem 0.45rem;
 }
-.dp-name { flex: 1; min-width: 0; font-size: 0.86rem; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-name {
+    flex: 1; min-width: 0; font-size: 0.86rem; line-height: 1.45; color: #374151;
+    white-space: normal; overflow-wrap: anywhere; word-break: normal;
+}
 .dp-years { display: inline-flex; flex-wrap: wrap; gap: .2rem; margin-left: .35rem; vertical-align: middle; }
 .dp-year-chip {
     display: inline-flex; align-items: center;
     border-radius: 999px; background: #eef2f7; color: #64748b;
     padding: .05rem .38rem; font-size: .62rem; font-weight: 800;
 }
+.dp-tags { display: inline-flex; align-items: center; gap: .25rem; margin-left: .35rem; vertical-align: middle; }
+.dp-tag {
+    display: inline-flex; align-items: center; border-radius: 999px;
+    padding: .05rem .42rem; font-size: .6rem; font-weight: 900;
+    background: #edf7ee; color: #166534; border: 1px solid #bbf7d0;
+}
+.dp-tag.off { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
 .dp-off-tag { font-size: 0.66rem; color: var(--fns-gray-400); margin-left: 0.35rem; }
 .dp-row.is-off .dp-name { color: var(--fns-gray-400); }
 .dp-row.is-off .dp-code { opacity: 0.55; }
-.dp-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; }
+.dp-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 0.55rem; }
 .dp-dot.on  { background: #1a8f4a; box-shadow: 0 0 0 2px rgba(26,143,74,0.15); }
 .dp-dot.off { background: var(--fns-gray-400); box-shadow: 0 0 0 2px rgba(155,151,144,0.18); }
 
 /* compact icon actions */
-.dp-acts { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; }
+.dp-acts { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; margin-top: 0.08rem; }
 .dp-act {
     display: inline-flex; align-items: center; justify-content: center;
     width: 1.75rem; height: 1.75rem; border-radius: 7px; cursor: pointer;
@@ -199,6 +209,8 @@
                 @csrf
                 <input type="hidden" name="_method" id="dp-form-method" value="PUT" disabled>
                 <input type="hidden" name="group_ids" id="dp-group-ids">
+                <input type="hidden" name="is_active" value="0">
+                <input type="hidden" name="include_in_planning" value="0">
 
                 <div class="fns-form-group">
                     <label class="fns-label">ລະຫັດສາຂາ <span style="color:red;">*</span></label>
@@ -220,6 +232,15 @@
                     </select>
                 </div>
 
+                <div class="fns-form-group">
+                    <label class="fns-label">ພາກວິຊາ <span style="color:red;">*</span></label>
+                    <select name="academic_department" id="dp-department" class="fns-input" required>
+                        @foreach($departments as $department)
+                            <option value="{{ $department['key'] }}">{{ $department['label'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="fns-form-group" id="dp-year-group">
                     <label class="fns-label">ຊັ້ນປີ (ສຳລັບ ປ.ຕີ)</label>
                     <div class="dp-year-options">
@@ -237,6 +258,13 @@
                     <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
                         <input type="checkbox" name="is_active" value="1" id="dp-active" checked>
                         ເປີດໃຊ້ງານ
+                    </label>
+                </div>
+
+                <div class="fns-form-group">
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                        <input type="checkbox" name="include_in_planning" value="1" id="dp-planning" checked>
+                        ນຳເຂົ້າລາຍການຂຶ້ນແຜນ
                     </label>
                 </div>
 
@@ -267,6 +295,8 @@
     const yearGroup = document.getElementById('dp-year-group');
     const studyYears = Array.from(document.querySelectorAll('.dp-study-year'));
     const active = document.getElementById('dp-active');
+    const planning = document.getElementById('dp-planning');
+    const department = document.getElementById('dp-department');
     const submit = document.getElementById('dp-submit');
     const createUrl = @json(route('head_of_finance.settings.degree-programs.store'));
     let activeLevel = '';
@@ -324,11 +354,13 @@
         code.value = data.code || '';
         name.value = data.name || '';
         level.value = data.level || '';
+        department.value = data.department || 'other';
         const selectedYears = (data.studyYears || '').split(',').filter(Boolean);
         studyYears.forEach(input => {
             input.checked = selectedYears.includes(input.value);
         });
         active.checked = data.active !== '0';
+        planning.checked = data.planning !== '0';
         setStudyYearState();
 
         modal.classList.add('is-open');
@@ -355,6 +387,8 @@
                 studyYears: edit.dataset.studyYears,
                 groupIds: edit.dataset.groupIds,
                 active: edit.dataset.active,
+                planning: edit.dataset.planning,
+                department: edit.dataset.department,
             });
             return;
         }

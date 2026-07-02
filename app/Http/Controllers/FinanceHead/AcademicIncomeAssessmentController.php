@@ -21,26 +21,26 @@ class AcademicIncomeAssessmentController extends Controller
     {
         $this->ensurePlanCanBeEdited($academicIncome);
 
-        $programs11 = DegreeProgram::where('is_active', true)
+        $programs11 = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->where(fn($q) => $q
                 ->where(fn($q2) => $q2->where('level', 'bachelor')->where('study_year', '>=', 2))
                 ->orWhereIn('level', ['master', 'phd'])
             )
-            ->orderBy('level')->orderByRaw('study_year IS NULL')->orderBy('study_year')->orderBy('id')
+            ->planningOrder()
             ->get();
 
-        $programs13_bach = DegreeProgram::where('is_active', true)
+        $programs13_bach = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->where('level', 'bachelor')
             ->where(fn($q) => $q->where('study_year', 1)->orWhereNull('study_year'))
-            ->orderBy('id')
+            ->planningOrder()
             ->get();
 
-        $programs13_master = DegreeProgram::where('is_active', true)
+        $programs13_master = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->whereIn('level', ['master', 'phd'])
-            ->orderBy('level')->orderBy('id')
+            ->planningOrder()
             ->get();
 
         $creditPrices = $this->creditPricesFor();
@@ -99,20 +99,20 @@ class AcademicIncomeAssessmentController extends Controller
         $nuolPhd      = (float) ($nuolSettings->get('phd')?->percentage ?? 0.10);
         $nuolByLevel  = ['bachelor' => $nuolBachelor, 'master' => $nuolMaster, 'phd' => $nuolPhd];
 
-        $programs11 = DegreeProgram::where('is_active', true)
+        $programs11 = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->where(fn($q) => $q
                 ->where(fn($q2) => $q2->where('level', 'bachelor')->where('study_year', '>=', 2))
                 ->orWhereIn('level', ['master', 'phd'])
             )->get()->keyBy('id');
 
-        $programs13_bach = DegreeProgram::where('is_active', true)
+        $programs13_bach = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->where('level', 'bachelor')
             ->where(fn($q) => $q->where('study_year', 1)->orWhereNull('study_year'))
             ->get()->keyBy('id');
 
-        $programs13_master = DegreeProgram::where('is_active', true)
+        $programs13_master = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->whereIn('level', ['master', 'phd'])
             ->get()->keyBy('id');
@@ -397,7 +397,7 @@ class AcademicIncomeAssessmentController extends Controller
 
     private function persistProgramItem(AcademicIncomePlan $academicIncome, string $inputPrefix, int $programId, int $count): ?AcademicIncomeItem
     {
-        $program = DegreeProgram::where('is_active', true)
+        $program = DegreeProgram::includedInPlanning()
             ->with('latestCourseCredit')
             ->findOrFail($programId);
 

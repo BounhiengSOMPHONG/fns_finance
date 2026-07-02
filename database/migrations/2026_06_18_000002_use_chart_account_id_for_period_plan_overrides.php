@@ -9,13 +9,17 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('period_plan_overrides')) {
+            return;
+        }
+
         Schema::table('period_plan_overrides', function (Blueprint $table): void {
             if (! Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
                 $table->unsignedInteger('chart_of_account_id')->nullable()->after('planning_year_id');
             }
         });
 
-        if (Schema::hasColumn('period_plan_overrides', 'account_code')) {
+        if (Schema::hasTable('chart_of_accounts') && Schema::hasColumn('period_plan_overrides', 'account_code')) {
             $accountsByCode = DB::table('chart_of_accounts')->pluck('id', 'account_code');
 
             DB::table('period_plan_overrides')
@@ -34,26 +38,32 @@ return new class extends Migration
                 });
         }
 
-        Schema::table('period_plan_overrides', function (Blueprint $table): void {
-            $table->unique(['planning_year_id', 'chart_of_account_id'], 'period_plan_overrides_year_chart_account_unique');
-            $table->foreign('chart_of_account_id', 'period_plan_overrides_chart_account_fk')
-                ->references('id')
-                ->on('chart_of_accounts')
-                ->cascadeOnDelete();
+        if (Schema::hasTable('chart_of_accounts')) {
+            Schema::table('period_plan_overrides', function (Blueprint $table): void {
+                $table->unique(['planning_year_id', 'chart_of_account_id'], 'period_plan_overrides_year_chart_account_unique');
+                $table->foreign('chart_of_account_id', 'period_plan_overrides_chart_account_fk')
+                    ->references('id')
+                    ->on('chart_of_accounts')
+                    ->cascadeOnDelete();
 
-            // Keep account_code as a legacy backup column so existing data is not removed.
-        });
+                // Keep account_code as a legacy backup column so existing data is not removed.
+            });
+        }
     }
 
     public function down(): void
     {
+        if (! Schema::hasTable('period_plan_overrides')) {
+            return;
+        }
+
         Schema::table('period_plan_overrides', function (Blueprint $table): void {
             if (! Schema::hasColumn('period_plan_overrides', 'account_code')) {
                 $table->string('account_code', 30)->nullable()->after('chart_of_account_id');
             }
         });
 
-        if (Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
+        if (Schema::hasTable('chart_of_accounts') && Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
             $codesById = DB::table('chart_of_accounts')->pluck('account_code', 'id');
 
             DB::table('period_plan_overrides')
@@ -73,8 +83,10 @@ return new class extends Migration
         }
 
         Schema::table('period_plan_overrides', function (Blueprint $table): void {
-            $table->dropForeign('period_plan_overrides_chart_account_fk');
-            $table->dropUnique('period_plan_overrides_year_chart_account_unique');
+            if (Schema::hasTable('chart_of_accounts')) {
+                $table->dropForeign('period_plan_overrides_chart_account_fk');
+                $table->dropUnique('period_plan_overrides_year_chart_account_unique');
+            }
 
             if (Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
                 $table->dropColumn('chart_of_account_id');

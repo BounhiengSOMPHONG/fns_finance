@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
+        if (DB::getDriverName() === 'mysql' && Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
             DB::statement('ALTER TABLE period_plan_overrides MODIFY chart_of_account_id INT UNSIGNED NOT NULL');
         }
     }
 
     public function down(): void
     {
-        if (Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
+        if (DB::getDriverName() === 'mysql' && Schema::hasColumn('period_plan_overrides', 'chart_of_account_id')) {
             DB::statement('ALTER TABLE period_plan_overrides MODIFY chart_of_account_id INT UNSIGNED NULL');
         }
     }

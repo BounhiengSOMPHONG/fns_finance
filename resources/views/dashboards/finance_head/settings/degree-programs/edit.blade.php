@@ -31,6 +31,16 @@
         </div>
 
         <div class="fns-form-group">
+            <label class="fns-label">ພາກວິຊາ <span style="color:red;">*</span></label>
+            <select name="academic_department" class="fns-input @error('academic_department') fns-input-error @enderror" required>
+                @foreach($departments as $department)
+                    <option value="{{ $department['key'] }}" @selected(old('academic_department', $degreeProgram->academic_department ?: 'other') === $department['key'])>{{ $department['label'] }}</option>
+                @endforeach
+            </select>
+            @error('academic_department')<p class="fns-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="fns-form-group">
             <label class="fns-label">ຊັ້ນປີ (ສຳລັບ ປ.ຕີ)</label>
             <input type="number" name="study_year" min="1" max="4"
                 value="{{ old('study_year', $degreeProgram->study_year) }}"
@@ -40,9 +50,18 @@
         </div>
 
         <div class="fns-form-group">
+            <input type="hidden" name="is_active" value="0">
             <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $degreeProgram->is_active))>
                 ເປີດໃຊ້ງານ
+            </label>
+        </div>
+
+        <div class="fns-form-group">
+            <input type="hidden" name="include_in_planning" value="0">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" name="include_in_planning" value="1" @checked(old('include_in_planning', $degreeProgram->include_in_planning))>
+                ນຳເຂົ້າລາຍການຂຶ້ນແຜນ
             </label>
         </div>
 

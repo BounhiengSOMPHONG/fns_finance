@@ -235,6 +235,10 @@ return new class extends Migration
             return;
         }
 
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         Schema::table($tableName, function (Blueprint $table) use ($tableName): void {
             if ($this->foreignKeyExists($tableName, "{$tableName}_setting_set_id_foreign")) {
                 $table->dropForeign("{$tableName}_setting_set_id_foreign");
@@ -261,6 +265,10 @@ return new class extends Migration
 
     private function foreignKeyExists(string $tableName, string $constraintName): bool
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return false;
+        }
+
         return DB::table('information_schema.TABLE_CONSTRAINTS')
             ->where('CONSTRAINT_SCHEMA', DB::getDatabaseName())
             ->where('TABLE_NAME', $tableName)

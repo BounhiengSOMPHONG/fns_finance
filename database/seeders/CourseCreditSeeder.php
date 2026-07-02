@@ -24,7 +24,12 @@ class CourseCreditSeeder extends Seeder
             ['B-CS-Y1',   'ວິທະຍາສາດຄອມ'],
             ['B-PD-Y1',   'ພັດທະນາໂປຣແກຣມ'],
             ['B-WD-Y1',   'ພັດທະນາເວບໄຊ້'],
-            ['B-CSC-Y1',  'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມ'],
+            ['B-CSC-Y1',  'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ'],
+            ['B-CSC-EVE-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'],
+            ['B-CS-EVE-Y1', 'ວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'],
+            ['B-PD-EVE-Y1', 'ການພັດທະນາໂປຣແກຣມ ພາກຄໍ່າ'],
+            ['B-WD-EVE-Y1', 'ການພັດທະນາເວບໄຊ້ ພາກຄໍ່າ'],
+            ['B-AI-Y1', 'ເອໄອ ແລະ ນະວັດຕະກໍາ'],
             ['B-MAA-Y1',  'ຄະນິດສາດນໍາໃຊ້'],
             ['B-MAE-Y1',  'ຄະນິດສາດສໍາຫຼັບເສດຖະສາດ'],
             ['B-STAT-Y1', 'ຄະນິດສາດສະຖິຕິ'],
@@ -39,9 +44,18 @@ class CourseCreditSeeder extends Seeder
         ];
 
         foreach ($year1Programs as [$code, $name]) {
-            DegreeProgram::firstOrCreate(
+            [$department, $sortOrder] = $this->departmentForCode($code);
+            DegreeProgram::updateOrCreate(
                 ['code' => $code],
-                ['name' => $name, 'level' => 'bachelor', 'study_year' => 1, 'is_active' => true]
+                [
+                    'name' => $name,
+                    'level' => 'bachelor',
+                    'study_year' => 1,
+                    'is_active' => true,
+                    'include_in_planning' => true,
+                    'academic_department' => $department,
+                    'department_sort_order' => $sortOrder,
+                ]
             );
         }
 
@@ -63,6 +77,10 @@ class CourseCreditSeeder extends Seeder
             'B-PD-Y1'   => 38,  // 1,330,000 / 35,000
             'B-WD-Y1'   => 38,  // 1,330,000 / 35,000
             'B-CSC-Y1'  => 37,  // 1,295,000 / 35,000
+            'B-CSC-EVE-Y1' => 37,
+            'B-CS-EVE-Y1' => 37,
+            'B-PD-EVE-Y1' => 38,
+            'B-WD-EVE-Y1' => 38,
             'B-MAA-Y1'  => 37,  // 1,295,000 / 35,000
             'B-MAE-Y1'  => 36,  // 1,260,000 / 35,000
             'B-STAT-Y1' => 36,  // 1,260,000 / 35,000
@@ -80,6 +98,10 @@ class CourseCreditSeeder extends Seeder
             'B-PD-Y2'   => 37,  // 1,295,000 / 35,000
             'B-WD-Y2'   => 37,  // 1,295,000 / 35,000
             'B-CSC-Y2'  => 27,  //   945,000 / 35,000
+            'B-CSC-EVE-Y2' => 27,
+            'B-CS-EVE-Y2' => 37,
+            'B-PD-EVE-Y2' => 37,
+            'B-WD-EVE-Y2' => 37,
             'B-MAA-Y2'  => 37,  // 1,295,000 / 35,000
             'B-MAE-Y2'  => 37,  // 1,295,000 / 35,000
             'B-STAT-Y2' => 37,  // 1,295,000 / 35,000
@@ -96,6 +118,9 @@ class CourseCreditSeeder extends Seeder
             'B-CS-Y3'   => 33,  // 1,155,000 / 35,000
             'B-PD-Y3'   => 38,  // 1,330,000 / 35,000
             'B-WD-Y3'   => 42,  // 1,470,000 / 35,000
+            'B-CS-EVE-Y3' => 33,
+            'B-PD-EVE-Y3' => 38,
+            'B-WD-EVE-Y3' => 42,
             'B-MATH-Y3' => 39,  // 1,365,000 / 35,000
             'B-MAE-Y3'  => 39,  // 1,365,000 / 35,000
             'B-STAT-Y3' => 37,  // 1,295,000 / 35,000
@@ -112,6 +137,9 @@ class CourseCreditSeeder extends Seeder
             'B-CS-Y4'   => 27,  //   945,000 / 35,000
             'B-PD-Y4'   => 30,  // 1,050,000 / 35,000
             'B-WD-Y4'   => 27,  //   945,000 / 35,000
+            'B-CS-EVE-Y4' => 27,
+            'B-PD-EVE-Y4' => 30,
+            'B-WD-EVE-Y4' => 27,
             'B-MATH-Y4' => 24,  //   840,000 / 35,000
             'B-MAE-Y4'  => 27,  //   945,000 / 35,000
             'B-STAT-Y4' => 27,  //   945,000 / 35,000
@@ -177,5 +205,33 @@ class CourseCreditSeeder extends Seeder
                 ]
             );
         }
+    }
+
+    private function departmentForCode(string $code): array
+    {
+        $base = strtoupper($code);
+        $base = preg_replace('/^MR-/', 'M-', $base);
+        $base = preg_replace('/-EVE(?=-Y\d+$)/', '', $base);
+        $base = preg_replace('/-Y\d+$/', '', $base);
+
+        $department = match ($base) {
+            'B-MAA', 'B-MAE', 'B-STAT', 'B-MATH', 'M-MATH' => 'math_stats',
+            'B-PHYS', 'B-GPHY', 'B-MATS', 'B-NPHY', 'M-PHYS', 'D-PHYS' => 'physics',
+            'B-CHEM', 'B-ECHE', 'M-CHEM' => 'chemistry',
+            'B-BIO', 'B-BT', 'M-BIO', 'D-BIO' => 'biology',
+            'B-CS', 'B-PD', 'B-WD', 'B-CSC', 'B-AI', 'M-CS' => 'computer_science',
+            default => 'other',
+        };
+
+        $orders = [
+            'math_stats' => 10,
+            'physics' => 20,
+            'chemistry' => 30,
+            'biology' => 40,
+            'computer_science' => 50,
+            'other' => 90,
+        ];
+
+        return [$department, $orders[$department] ?? 90];
     }
 }

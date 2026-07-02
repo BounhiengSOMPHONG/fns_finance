@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'ແກ້ໄຂສາຂາວິຊາ')
-@section('page-title', 'ແກ້ໄຂສາຂາວິຊາ')
+@section('title', 'ແກ້ໄຂຫຼັກສູດ')
+@section('page-title', 'ແກ້ໄຂຫຼັກສູດ')
 
 @section('content')
 <div class="fns-card" style="max-width:560px;">
@@ -15,7 +15,7 @@
         </div>
 
         <div class="fns-form-group">
-            <label class="fns-label">ຊື່ສາຂາວິຊາ <span style="color:red;">*</span></label>
+            <label class="fns-label">ຊື່ຫຼັກສູດ <span style="color:red;">*</span></label>
             <input type="text" name="name" value="{{ old('name', $degreeProgram->name) }}" class="fns-input @error('name') fns-input-error @enderror" required>
             @error('name')<p class="fns-error">{{ $message }}</p>@enderror
         </div>

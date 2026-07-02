@@ -146,7 +146,7 @@
         </div>
 
         <div id="cc-nores" class="erp-empty erp-empty-hidden">
-            ບໍ່ພົບສາຂາວິຊາທີ່ກົງກັບການຄົ້ນຫາ
+            ບໍ່ພົບຫຼັກສູດທີ່ກົງກັບການຄົ້ນຫາ
         </div>
     </section>
 </section>
@@ -314,9 +314,9 @@
 
             <div class="erp-modal-grid erp-modal-grid-wide">
                 <label class="erp-field">
-                    <span>ສາຂາວິຊາ <b>*</b></span>
+                    <span>ຫຼັກສູດ <b>*</b></span>
                     <div class="cc-program-picker" id="cc-program-picker">
-                        <input type="text" id="cc-program-search" class="erp-input" placeholder="ພິມລະຫັດ ຫຼື ຊື່ສາຂາວິຊາ..." autocomplete="off" aria-expanded="false" aria-controls="cc-program-list">
+                        <input type="text" id="cc-program-search" class="erp-input" placeholder="ພິມລະຫັດ ຫຼື ຊື່ຫຼັກສູດ..." autocomplete="off" aria-expanded="false" aria-controls="cc-program-list">
                         <input type="hidden" name="degree_program_id" id="cc-degree-program" required>
                         <div class="cc-program-list" id="cc-program-list" role="listbox"></div>
                     </div>
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .slice(0, 80);
 
         if (!matches.length) {
-            programList.innerHTML = '<div class="cc-program-empty">ບໍ່ພົບສາຂາວິຊາ</div>';
+            programList.innerHTML = '<div class="cc-program-empty">ບໍ່ພົບຫຼັກສູດ</div>';
         } else {
             programList.innerHTML = matches.map(program => `
                 <button type="button" class="cc-program-option" data-program-id="${program.id}" role="option">
@@ -803,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (degreeProgram.value) return;
         event.preventDefault();
         programSearch.focus();
-        programSearch.setCustomValidity('ກະລຸນາເລືອກສາຂາວິຊາຈາກລາຍການ');
+        programSearch.setCustomValidity('ກະລຸນາເລືອກຫຼັກສູດຈາກລາຍການ');
         programSearch.reportValidity();
         setTimeout(() => programSearch.setCustomValidity(''), 0);
     });

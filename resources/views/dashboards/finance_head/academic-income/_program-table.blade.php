@@ -3,7 +3,7 @@
     <thead>
         <tr>
             <th style="width:5rem;">ຊັ້ນປີ</th>
-            <th>ສາຂາວິຊາ</th>
+            <th>ຫຼັກສູດ</th>
             <th style="width:6rem;">ລະດັບ</th>
             <th class="col-num" style="width:8rem;">ຈຳນວນ ນ/ສ</th>
         </tr>
@@ -46,7 +46,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="4" style="text-align:center; padding:1.5rem; color:var(--fns-gray-400);">ບໍ່ມີສາຂາວິຊາ — ກະລຸນາຕັ້ງຄ່າ</td>
+            <td colspan="4" style="text-align:center; padding:1.5rem; color:var(--fns-gray-400);">ບໍ່ມີຫຼັກສູດ — ກະລຸນາຕັ້ງຄ່າ</td>
         </tr>
         @endforelse
     </tbody>

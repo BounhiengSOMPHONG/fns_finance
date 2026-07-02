@@ -8,10 +8,10 @@
 @endphp
 
 <div class="fns-form-group">
-    <label class="fns-label">ສາຂາວິຊາ <span style="color:red;">*</span></label>
+    <label class="fns-label">ຫຼັກສູດ <span style="color:red;">*</span></label>
     <select name="degree_program_id" id="degree_program_id"
         class="fns-input @error('degree_program_id') fns-input-error @enderror" required>
-        <option value="">-- ເລືອກສາຂາວິຊາ --</option>
+        <option value="">-- ເລືອກຫຼັກສູດ --</option>
         @foreach($programs as $p)
             <option value="{{ $p->id }}"
                 data-level="{{ $p->level }}"

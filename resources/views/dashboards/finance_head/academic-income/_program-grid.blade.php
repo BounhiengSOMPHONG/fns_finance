@@ -1,11 +1,11 @@
 @if(empty($table['rows']))
-    <div class="ai-empty">ບໍ່ມີສາຂາວິຊາ — ກະລຸນາຕັ້ງຄ່າກ່ອນ</div>
+    <div class="ai-empty">ບໍ່ມີຫຼັກສູດ — ກະລຸນາຕັ້ງຄ່າກ່ອນ</div>
 @else
     <section class="ai-degree-section" data-degree-section="{{ $table['level'] }}" data-table-key="{{ $table['key'] }}">
         <div class="ai-degree-head">
             <div>
                 <h3>{{ $table['label'] }}</h3>
-                <p>{{ count($table['rows']) }} ສາຂາ/ຫຼັກສູດ</p>
+                <p>{{ count($table['rows']) }} ຫຼັກສູດ</p>
             </div>
             <div class="ai-degree-total">
                 <span>ລວມສ່ວນນີ້</span>
@@ -17,7 +17,7 @@
             <table class="ai-program-table" data-program-table="{{ $table['key'] }}" data-level="{{ $table['level'] }}">
                 <thead>
                     <tr>
-                        <th class="ai-program-name-col">ສາຂາ / ຫຼັກສູດ</th>
+                        <th class="ai-program-name-col">ຫຼັກສູດ</th>
                         @foreach($table['columns'] as $column)
                             <th>{{ $column['label'] }}</th>
                         @endforeach

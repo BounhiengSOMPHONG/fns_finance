@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'ສາຂາວິຊາ')
-@section('page-title', 'ຈັດການສາຂາວິຊາ')
+@section('title', 'ຫຼັກສູດ')
+@section('page-title', 'ຈັດການຫຼັກສູດ')
 
 @section('content')
 
@@ -145,7 +145,7 @@
     <div class="dp-bar">
         <div class="dp-search">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.41 9.823l3.633 3.634a.75.75 0 1 0 1.06-1.06l-3.633-3.634A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/></svg>
-            <input type="text" id="dp-filter" placeholder="ຄົ້ນຫາ ລະຫັດ / ຊື່ສາຂາວິຊາ…" autocomplete="off">
+            <input type="text" id="dp-filter" placeholder="ຄົ້ນຫາ ລະຫັດ / ຊື່ຫຼັກສູດ…" autocomplete="off">
             <button type="button" class="dp-search-clear" id="dp-clear" title="ລ້າງ">&times;</button>
         </div>
         <div class="dp-chips" id="dp-chips">
@@ -156,7 +156,7 @@
         </div>
         <button type="button" class="fns-btn fns-btn-primary" id="dp-open-create">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:15px;height:15px;"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/></svg>
-            ເພີ່ມສາຂາວິຊາ
+            ເພີ່ມຫຼັກສູດ
         </button>
     </div>
 
@@ -182,20 +182,20 @@
     <div class="fns-card dp-card">
         <div class="dp-empty">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>
-            <p>ຍັງບໍ່ມີສາຂາວິຊາ</p>
+            <p>ຍັງບໍ່ມີຫຼັກສູດ</p>
         </div>
     </div>
     @endif
 
     {{-- shown when filter matches nothing --}}
-    <div class="dp-nores" id="dp-nores">ບໍ່ພົບສາຂາວິຊາທີ່ກົງກັບການຄົ້ນຫາ</div>
+    <div class="dp-nores" id="dp-nores">ບໍ່ພົບຫຼັກສູດທີ່ກົງກັບການຄົ້ນຫາ</div>
 
 </div>
 
 <div class="dp-modal" id="dp-modal" aria-hidden="true">
     <div class="dp-modal-panel" role="dialog" aria-modal="true" aria-labelledby="dp-modal-title">
         <div class="dp-modal-head">
-            <h2 id="dp-modal-title">ເພີ່ມສາຂາວິຊາ</h2>
+            <h2 id="dp-modal-title">ເພີ່ມຫຼັກສູດ</h2>
             <button type="button" class="dp-modal-close" data-dp-close>&times;</button>
         </div>
         <div class="dp-modal-body">
@@ -211,7 +211,7 @@
                 </div>
 
                 <div class="fns-form-group">
-                    <label class="fns-label">ຊື່ສາຂາວິຊາ <span style="color:red;">*</span></label>
+                    <label class="fns-label">ຊື່ຫຼັກສູດ <span style="color:red;">*</span></label>
                     <input type="text" name="name" id="dp-name" class="fns-input" required>
                 </div>
 
@@ -333,7 +333,7 @@
         form.action = mode === 'edit' ? data.url : createUrl;
         method.disabled = mode !== 'edit';
         groupIds.value = data.groupIds || '';
-        modalTitle.textContent = mode === 'edit' ? 'ແກ້ໄຂສາຂາວິຊາ' : 'ເພີ່ມສາຂາວິຊາ';
+        modalTitle.textContent = mode === 'edit' ? 'ແກ້ໄຂຫຼັກສູດ' : 'ເພີ່ມຫຼັກສູດ';
         submit.textContent = mode === 'edit' ? 'ອັບເດດ' : 'ບັນທຶກ';
 
         code.value = data.code || '';

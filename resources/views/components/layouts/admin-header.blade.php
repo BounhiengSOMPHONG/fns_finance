@@ -73,7 +73,7 @@
                     <div class="fns-topnav-menu" x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                         <a href="{{ route('head_of_finance.settings.degree-programs.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.degree-programs.*') ? 'active' : '' }}">
-                            <x-icons.building-office /> ສາຂາວິຊາ
+                            <x-icons.building-office /> ຫຼັກສູດ
                         </a>
                         <a href="{{ route('head_of_finance.settings.course-credits.index') }}"
                            class="fns-topnav-menu-item {{ request()->routeIs('head_of_finance.settings.course-credits.*') || request()->routeIs('head_of_finance.settings.credit-unit-price.*') || request()->routeIs('head_of_finance.settings.nuol-pct.*') ? 'active' : '' }}">

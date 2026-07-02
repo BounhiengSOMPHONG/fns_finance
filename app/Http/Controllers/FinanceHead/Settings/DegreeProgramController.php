@@ -88,7 +88,7 @@ class DegreeProgramController extends Controller
 
         return redirect()
             ->route('head_of_finance.settings.degree-programs.index')
-            ->with('success', 'ສ້າງສາຂາວິຊາສຳເລັດ');
+            ->with('success', 'ສ້າງຫຼັກສູດສຳເລັດ');
     }
 
     public function edit(DegreeProgram $degreeProgram)
@@ -183,7 +183,7 @@ class DegreeProgramController extends Controller
 
         return redirect()
             ->route('head_of_finance.settings.degree-programs.index')
-            ->with('success', 'ອັບເດດສາຂາວິຊາສຳເລັດ');
+            ->with('success', 'ອັບເດດຫຼັກສູດສຳເລັດ');
     }
 
     public function destroy(Request $request, DegreeProgram $degreeProgram)
@@ -193,7 +193,7 @@ class DegreeProgramController extends Controller
 
         return redirect()
             ->route('head_of_finance.settings.degree-programs.index')
-            ->with('success', 'ລຶບສາຂາວິຊາສຳເລັດ');
+            ->with('success', 'ລຶບຫຼັກສູດສຳເລັດ');
     }
 
     private function displayPrograms($programs)

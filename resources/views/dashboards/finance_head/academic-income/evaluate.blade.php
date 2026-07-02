@@ -476,7 +476,7 @@
                     @include('dashboards.finance_head.academic-income._program-grid', ['table' => $table])
                 @endforeach
             </div>
-            <div class="ai-nores" data-nores="1">ບໍ່ພົບສາຂາວິຊາທີ່ກົງກັບ “<span></span>”</div>
+            <div class="ai-nores" data-nores="1">ບໍ່ພົບຫຼັກສູດທີ່ກົງກັບ “<span></span>”</div>
         </div>
     </section>
 

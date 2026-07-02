@@ -20,8 +20,9 @@ class CourseCreditController extends Controller
 
         $courseCredits = CourseCreditSetting::with('degreeProgram')->get()
             ->sortBy(fn($s) => sprintf(
-                '%d-%02d-%s',
+                '%d-%02d-%02d-%s',
                 $levelRank[$s->degreeProgram?->level] ?? 9,
+                $s->degreeProgram?->department_sort_order ?? 90,
                 $s->degreeProgram?->study_year ?? 99,
                 $s->degreeProgram?->name
             ))
@@ -40,10 +41,7 @@ class CourseCreditController extends Controller
             ->get()->groupBy('level')->map->first();
 
         $programs = DegreeProgram::where('is_active', true)
-            ->orderBy('level')
-            ->orderByRaw('study_year IS NULL')
-            ->orderBy('study_year')
-            ->orderBy('name')
+            ->planningOrder()
             ->get();
         $displayPrograms = $this->displayPrograms($programs);
 
@@ -217,6 +215,8 @@ class CourseCreditController extends Controller
 
     private function displayCourseCredits($courseCredits)
     {
+        $levelRank = ['bachelor' => 0, 'master' => 1, 'phd' => 2];
+
         return $courseCredits
             ->groupBy(fn (CourseCreditSetting $setting): string => $this->displayGroupKey($setting))
             ->map(function ($group) {
@@ -241,6 +241,12 @@ class CourseCreditController extends Controller
 
                 return $setting;
             })
+            ->sortBy([
+                [fn (CourseCreditSetting $setting): int => $levelRank[$setting->degreeProgram?->level] ?? 9, 'asc'],
+                [fn (CourseCreditSetting $setting): int => (int) ($setting->degreeProgram?->department_sort_order ?? 90), 'asc'],
+                [fn (CourseCreditSetting $setting): string => (string) ($setting->degreeProgram?->name ?? ''), 'asc'],
+                [fn (CourseCreditSetting $setting): int => (int) ($setting->degreeProgram?->study_year ?? 99), 'asc'],
+            ])
             ->values();
     }
 
@@ -248,7 +254,7 @@ class CourseCreditController extends Controller
     {
         $program = $setting->degreeProgram;
         if ($program?->level === 'bachelor') {
-            return implode('|', [$program->level, $program->name]);
+            return implode('|', [$program->level, $program->academic_department, $program->name]);
         }
 
         return implode('|', [$program?->level ?? 'unknown', $program?->id ?? $setting->id]);
@@ -258,7 +264,7 @@ class CourseCreditController extends Controller
     {
         return $programs
             ->groupBy(fn (DegreeProgram $program): string => $program->level === 'bachelor'
-                ? implode('|', [$program->level, $program->name])
+                ? implode('|', [$program->level, $program->academic_department, $program->name])
                 : implode('|', [$program->level, $program->id]))
             ->map(function ($group) {
                 $program = clone $group->sortBy(fn (DegreeProgram $item): int => (int) ($item->study_year ?? 0))->first();

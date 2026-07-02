@@ -166,7 +166,7 @@
         <div class="fns-card dp-card" data-level="{{ $key }}">
             <div class="dp-glabel">
                 <span class="fns-badge {{ $meta['badge'] }}">{{ $meta['label'] }}</span>
-                <span class="dp-gcount">{{ $items->count() }} ສາຂາ</span>
+                <span class="dp-gcount">{{ $items->count() }} ຫຼັກສູດ</span>
             </div>
 
             <div class="dp-rows">
@@ -206,7 +206,7 @@
                 <input type="hidden" name="include_in_planning" value="0">
 
                 <div class="fns-form-group">
-                    <label class="fns-label">ລະຫັດສາຂາ <span style="color:red;">*</span></label>
+                    <label class="fns-label">ລະຫັດຫຼັກສູດ <span style="color:red;">*</span></label>
                     <input type="text" name="code" id="dp-code" class="fns-input" required>
                 </div>
 

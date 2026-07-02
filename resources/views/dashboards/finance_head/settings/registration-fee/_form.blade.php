@@ -33,7 +33,7 @@
             <tr>
                 <th>ລາຍການ</th>
                 <th style="width:140px;">ຈຳນວນ (ກີບ)</th>
-                <th style="width:120px;">% ມຊ (0–100)</th>
+                <th style="width:120px;">ອັດຕາຫັກ ມຊ (%)</th>
                 <th style="width:60px;"></th>
             </tr>
         </thead>

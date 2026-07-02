@@ -9,7 +9,7 @@
         @csrf @method('PUT')
 
         <div class="fns-form-group">
-            <label class="fns-label">ລະຫັດສາຂາ <span style="color:red;">*</span></label>
+            <label class="fns-label">ລະຫັດຫຼັກສູດ <span style="color:red;">*</span></label>
             <input type="text" name="code" value="{{ old('code', $degreeProgram->code) }}" class="fns-input @error('code') fns-input-error @enderror" required>
             @error('code')<p class="fns-error">{{ $message }}</p>@enderror
         </div>

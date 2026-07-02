@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'ລາຄາ & ໜ່ວຍກິດ & ມຊ%')
-@section('page-title', 'ການຕັ້ງລາຄາ & ໜ່ວຍກິດ & ມຊ%')
+@section('title', 'ຕັ້ງຄ່າຫຼັກສູດ')
+@section('page-title', 'ຕັ້ງຄ່າຫຼັກສູດ')
 
 @section('content')
 @php
@@ -24,28 +24,84 @@
 <section class="erp-shell">
     <div class="erp-topbar">
         <div>
-            <span class="erp-kicker">Finance settings</span>
-            <h2>ການຕັ້ງຄ່າທາງການເງິນ</h2>
-            <p>ຈັດການລາຄາໜ່ວຍກິດ, ມຊ%, ແລະ ໜ່ວຍກິດຫຼັກສູດຈາກໜ້າດຽວ.</p>
+            <span class="erp-kicker">ຕັ້ງຄ່າ</span>
+            <h2>ຕັ້ງຄ່າຫຼັກສູດ</h2>
+            <p>ກຳນົດລາຄາຕໍ່ໜ່ວຍກິດ, ອັດຕາຫັກ ມຊ, ສັດສ່ວນຄິດໜ່ວຍກິດ ແລະ ໜ່ວຍກິດລວມຂອງແຕ່ລະຫຼັກສູດ.</p>
         </div>
         <div class="erp-settings-actions">
             <button type="button" class="erp-settings-btn erp-setting-trigger" data-settings-modal="price-settings-modal">
                 ລາຄາຕໍ່ໜ່ວຍກິດ
             </button>
             <button type="button" class="erp-settings-btn erp-setting-trigger" data-settings-modal="nuol-settings-modal">
-                ມຊ%
+                ອັດຕາຫັກ ມຊ
             </button>
             <button type="button" class="erp-settings-btn erp-setting-trigger" data-settings-modal="split-settings-modal">
-                ສັດສ່ວນໜ່ວຍກິດ ປ.ໂທ / ປ.ເອກ
+                ສັດສ່ວນຄິດໜ່ວຍກິດ
             </button>
+            <a href="{{ route('head_of_finance.settings.registration-fee.index') }}" class="erp-settings-btn erp-settings-link">
+                ຄ່າລົງທະບຽນ
+            </a>
         </div>
     </div>
+
+    <section class="erp-summary-grid" aria-label="Program setting summary">
+        <article class="erp-summary-card">
+            <div class="erp-summary-head">
+                <span>01</span>
+                <strong>ລາຄາຕໍ່ໜ່ວຍກິດ</strong>
+            </div>
+            <div class="erp-summary-values">
+                @foreach($levelMeta as $key => $meta)
+                    @php $price = $prices->get($key); @endphp
+                    <span>{{ $meta['label'] }} <b>{{ $price ? number_format((float) $price->credit_unit_price, 0) : '-' }}</b></span>
+                @endforeach
+            </div>
+            <button type="button" class="erp-summary-action erp-setting-trigger" data-settings-modal="price-settings-modal">ແກ້ໄຂລາຄາ</button>
+        </article>
+
+        <article class="erp-summary-card">
+            <div class="erp-summary-head">
+                <span>02</span>
+                <strong>ອັດຕາຫັກ ມຊ</strong>
+            </div>
+            <div class="erp-summary-values">
+                @foreach($levelMeta as $key => $meta)
+                    @php $nuol = $nuolPcts->get($key); @endphp
+                    <span>{{ $meta['label'] }} <b>{{ $nuol ? $pct($nuol->percentage).'%' : '-' }}</b></span>
+                @endforeach
+            </div>
+            <button type="button" class="erp-summary-action erp-setting-trigger" data-settings-modal="nuol-settings-modal">ແກ້ໄຂ ມຊ</button>
+        </article>
+
+        <article class="erp-summary-card">
+            <div class="erp-summary-head">
+                <span>03</span>
+                <strong>ສັດສ່ວນຄິດໜ່ວຍກິດ</strong>
+            </div>
+            <div class="erp-summary-values">
+                @foreach(['master', 'phd'] as $level)
+                    @php $split = $creditSplits->get($level); @endphp
+                    <span>{{ $levelMeta[$level]['label'] }} <b>{{ $split ? $splitPct($split->year1_percentage).'/'.$splitPct($split->year2_percentage) : '60/40' }}</b></span>
+                @endforeach
+            </div>
+            <button type="button" class="erp-summary-action erp-setting-trigger" data-settings-modal="split-settings-modal">ແກ້ໄຂສັດສ່ວນ</button>
+        </article>
+
+        <article class="erp-summary-card erp-summary-card-link">
+            <div class="erp-summary-head">
+                <span>04</span>
+                <strong>ຄ່າລົງທະບຽນ</strong>
+            </div>
+            <p>ຄ່າລົງທະບຽນປີ 1 ແລະ ປີ 2-4 ຍັງຈັດການໃນໜ້າແຍກ.</p>
+            <a href="{{ route('head_of_finance.settings.registration-fee.index') }}" class="erp-summary-action">ໄປໜ້າຄ່າລົງທະບຽນ</a>
+        </article>
+    </section>
 
     <section class="erp-panel">
         <div class="erp-panel-head erp-table-head">
             <div>
                 <h3>ໜ່ວຍກິດຕາມຫຼັກສູດ</h3>
-                <p>ຄົ້ນຫາ ແລະ ແກ້ໄຂຈຳນວນໜ່ວຍກິດຂອງແຕ່ລະສາຂາ.</p>
+                <p>ຄົ້ນຫາ ແລະ ແກ້ໄຂຈຳນວນໜ່ວຍກິດລວມຂອງແຕ່ລະຫຼັກສູດ.</p>
             </div>
             <div class="erp-toolbar">
                 <div class="erp-search">
@@ -156,7 +212,7 @@
         <div class="cc-modal-head">
             <div>
                 <h2 id="price-settings-title">ລາຄາຕໍ່ໜ່ວຍກິດ</h2>
-                <p>ຕັ້ງລາຄາຕາມລະດັບການສຶກສາ.</p>
+                <p>ຕັ້ງລາຄາຕໍ່ໜ່ວຍກິດຕາມລະດັບການສຶກສາ.</p>
             </div>
             <button type="button" class="cc-modal-close" data-settings-close>&times;</button>
         </div>
@@ -174,7 +230,7 @@
                             @method('PUT')
                             <input type="hidden" name="level" value="{{ $key }}">
                             <label>
-                                <span>ລາຄາ / ໜ່ວຍ</span>
+                                <span>ລາຄາຕໍ່ໜ່ວຍກິດ</span>
                                 <input type="number" name="credit_unit_price" step="0.01" min="0" required value="{{ (float) $price->credit_unit_price }}" class="erp-input erp-input-num data-dirty">
                             </label>
                             <label>
@@ -200,8 +256,8 @@
     <div class="cc-modal-panel settings-modal-panel" role="dialog" aria-modal="true" aria-labelledby="nuol-settings-title">
         <div class="cc-modal-head">
             <div>
-                <h2 id="nuol-settings-title">ມຊ%</h2>
-                <p>ກຳນົດອັດຕາຫັກ ມຊ ຕາມລະດັບ.</p>
+                <h2 id="nuol-settings-title">ອັດຕາຫັກ ມຊ</h2>
+                <p>ກຳນົດເປີເຊັນສ່ວນແບ່ງຂອງ ມຊ ຕາມລະດັບ.</p>
             </div>
             <button type="button" class="cc-modal-close" data-settings-close>&times;</button>
         </div>
@@ -219,7 +275,7 @@
                             @method('PUT')
                             <input type="hidden" name="level" value="{{ $key }}">
                             <label>
-                                <span>% ມຊ</span>
+                                <span>ອັດຕາຫັກ ມຊ (%)</span>
                                 <input type="number" name="percentage" step="0.01" min="0" max="100" required value="{{ $pct($n->percentage) }}" class="erp-input erp-input-num data-dirty">
                             </label>
                             <label>
@@ -233,7 +289,7 @@
                             <button type="submit" class="erp-btn erp-btn-save btn-save">ບັນທຶກ</button>
                         </form>
                     @else
-                        <div class="erp-missing">ຍັງບໍ່ມີ % ມຊ ຂອງລະດັບນີ້</div>
+                        <div class="erp-missing">ຍັງບໍ່ມີອັດຕາຫັກ ມຊ ຂອງລະດັບນີ້</div>
                     @endif
                 </div>
             @endforeach
@@ -245,15 +301,15 @@
     <div class="cc-modal-panel settings-modal-panel" role="dialog" aria-modal="true" aria-labelledby="split-settings-title">
         <div class="cc-modal-head">
             <div>
-                <h2 id="split-settings-title">ສັດສ່ວນໜ່ວຍກິດ ປ.ໂທ / ປ.ເອກ</h2>
-                <p>ຕັ້ງຄ່າສັດສ່ວນປີ 1 ແລະ ປີ 2+.</p>
+                <h2 id="split-settings-title">ສັດສ່ວນຄິດໜ່ວຍກິດ ປ.ໂທ / ປ.ເອກ</h2>
+                <p>ກຳນົດວ່າໜ່ວຍກິດລວມຂອງ ປ.ໂທ/ປ.ເອກ ຈະຄິດເຂົ້າປີ 1 ແລະ ປີ 2+ ຢ່າງໃດ.</p>
             </div>
             <button type="button" class="cc-modal-close" data-settings-close>&times;</button>
         </div>
         <div class="settings-modal-body">
             <form method="POST" action="{{ route('head_of_finance.settings.course-credit-splits.reset-defaults') }}" class="settings-reset-form">
                 @csrf
-                <button type="submit" class="erp-btn erp-btn-save">Set ປ.ໂທ/ປ.ເອກ 60/40</button>
+                <button type="submit" class="erp-btn erp-btn-save">ຕັ້ງຄ່າ ປ.ໂທ/ປ.ເອກ 60/40</button>
             </form>
             <div class="erp-split-table">
                 <div class="erp-split-head">
@@ -262,7 +318,7 @@
                     <span>ປີ 2+ (%)</span>
                     <span>ເອກະສານ</span>
                     <span>ປີ</span>
-                    <span>Action</span>
+                    <span>ຈັດການ</span>
                 </div>
                 @foreach(['master', 'phd'] as $level)
                     @php
@@ -376,10 +432,40 @@
         display:inline-flex; align-items:center; justify-content:center; min-height:36px;
         border:1px solid #bfdbfe; border-radius:6px; background:#eff6ff; color:#1d4ed8;
         padding:0 .75rem; font-family:inherit; font-size:.78rem; font-weight:900;
-        cursor:pointer; white-space:nowrap;
+        cursor:pointer; white-space:nowrap; text-decoration:none;
     }
     .erp-settings-btn:hover { background:#2563eb; border-color:#2563eb; color:#fff; }
     .erp-settings-btn::after { content:"›"; margin-left:.38rem; font-size:1rem; line-height:1; }
+    .erp-summary-grid {
+        display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:.75rem;
+    }
+    .erp-summary-card {
+        display:grid; align-content:space-between; gap:.65rem;
+        min-height:148px; padding:.85rem; border:1px solid #e5e7eb; border-radius:8px;
+        background:#fff; box-shadow:0 1px 3px rgba(15,23,42,.05);
+    }
+    .erp-summary-head { display:flex; align-items:center; gap:.55rem; min-width:0; }
+    .erp-summary-head span {
+        display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+        width:28px; height:28px; border-radius:999px; background:#172642; color:#fff;
+        font-size:.68rem; font-weight:900; font-variant-numeric:tabular-nums;
+    }
+    .erp-summary-head strong { color:#172642; font-size:.86rem; font-weight:900; line-height:1.35; }
+    .erp-summary-values { display:grid; gap:.28rem; }
+    .erp-summary-values span {
+        display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+        color:#64748b; font-size:.73rem; font-weight:800;
+    }
+    .erp-summary-values b { color:#172642; font-variant-numeric:tabular-nums; }
+    .erp-summary-card p { margin:0; color:#64748b; font-size:.74rem; line-height:1.6; }
+    .erp-summary-action {
+        display:inline-flex; align-items:center; justify-content:center; justify-self:start;
+        min-height:32px; border:1px solid #f5d58b; border-radius:999px;
+        background:#fff8e5; color:#8a5a00; padding:0 .72rem;
+        font-family:inherit; font-size:.72rem; font-weight:900; text-decoration:none; cursor:pointer;
+    }
+    .erp-summary-action:hover { background:#f7c948; border-color:#f7c948; color:#172642; }
+    .erp-summary-card-link { background:#fffdf7; border-color:#fde7b0; }
     .erp-panel { overflow:hidden; }
     .erp-panel-head {
         display:flex; align-items:center; justify-content:space-between; gap:1rem;
@@ -565,6 +651,7 @@
     .cc-modal-actions { display:flex; justify-content:flex-end; gap:.5rem; padding-top:.2rem; }
     @media (max-width:900px) {
         .erp-topbar, .erp-panel-head { align-items:stretch; flex-direction:column; }
+        .erp-summary-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
         .erp-settings-actions { justify-content:flex-start; max-width:none; }
         .erp-split-head { display:none; }
         .erp-split-row { grid-template-columns:1fr; }
@@ -577,6 +664,7 @@
         .cc-credit-row .erp-actions { justify-content:flex-start; }
     }
     @media (max-width:640px) {
+        .erp-summary-grid { grid-template-columns:1fr; }
         .erp-modal-grid { grid-template-columns:1fr; }
     }
 </style>

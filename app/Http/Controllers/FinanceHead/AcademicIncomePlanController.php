@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\FinanceHead;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicIncomeItem;
 use App\Models\AcademicIncomePlan;
+use App\Models\DegreeProgram;
 use App\Models\PlanningYear;
 use App\Models\RegistrationFeeSetting;
 use Illuminate\Http\Request;
@@ -165,10 +167,10 @@ class AcademicIncomePlanController extends Controller
 
         // Detail data for sub-report tables (pages 2–5 of the PDF)
         $detail_1_1 = $items->where('section_code', '1.1')
-            ->sortBy(fn ($i) => ($i->degreeProgram?->study_year ?? 99).$i->degreeProgram?->name);
+            ->sortBy(fn (AcademicIncomeItem $item): string => $this->degreeProgramSortKey($item));
 
         $detail_1_3 = $items->where('section_code', '1.3')
-            ->sortBy(fn ($i) => ($i->degreeProgram?->level === 'bachelor' ? 'A' : 'B').$i->degreeProgram?->name);
+            ->sortBy(fn (AcademicIncomeItem $item): string => $this->degreeProgramSortKey($item));
 
         $feeYear2_4 = RegistrationFeeSetting::where('section_type', 'year2_4')
             ->with('items')->orderByDesc('start_year')->first();
@@ -196,5 +198,25 @@ class AcademicIncomePlanController extends Controller
         return redirect()
             ->route('head_of_finance.manage-plan.index')
             ->with('success', 'ລຶບແຜນລາຍຮັບວິຊາການສຳເລັດ');
+    }
+
+    private function degreeProgramSortKey(AcademicIncomeItem $item): string
+    {
+        $program = $item->degreeProgram;
+        $levelOrder = match ($program?->level) {
+            'bachelor' => 10,
+            'master' => 20,
+            'phd' => 30,
+            default => 90,
+        };
+
+        return sprintf(
+            '%03d|%03d|%03d|%s|%010d',
+            (int) ($program?->department_sort_order ?? DegreeProgram::departmentOrder($program?->academic_department)),
+            $levelOrder,
+            (int) ($program?->study_year ?? 99),
+            $program?->name ?? '',
+            (int) ($program?->id ?? 0),
+        );
     }
 }

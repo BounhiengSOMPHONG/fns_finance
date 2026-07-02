@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicIncomeItem;
 use App\Models\AcademicIncomePlan;
 use App\Models\DegreeProgram;
 use App\Models\Role;
@@ -61,6 +62,46 @@ class AcademicIncomeProgramManagementTest extends TestCase
 
         $this->assertContains($visible->id, $programIds);
         $this->assertNotContains($hidden->id, $programIds);
+    }
+
+    public function test_income_report_detail_rows_follow_department_order(): void
+    {
+        $plan = AcademicIncomePlan::create(['fiscal_year' => 2027, 'created_by' => 1]);
+
+        $computer = $this->seedProgram('B-CS-Y2', 'ວິທະຍາສາດຄອມ', 2, 'computer_science', 50, true, true, 37);
+        $math = $this->seedProgram('B-MATH-Y2', 'ຄະນິດທົ່ວໄປ', 2, 'math_stats', 10, true, true, 37);
+        $physics = $this->seedProgram('B-PHYS-Y2', 'ຟີຊິກທົ່ວໄປ', 2, 'physics', 20, true, true, 36);
+        $chemistry = $this->seedProgram('B-CHEM-Y2', 'ເຄມີທົ່ວໄປ', 2, 'chemistry', 30, true, true, 36);
+        $biology = $this->seedProgram('B-BIO-Y2', 'ຊີວະວິທະຍາທົ່ວໄປ', 2, 'biology', 40, true, true, 36);
+
+        foreach ([$computer, $math, $physics, $chemistry, $biology] as $program) {
+            AcademicIncomeItem::create([
+                'plan_id' => $plan->id,
+                'section_code' => '1.1',
+                'degree_program_id' => $program->id,
+                'student_count' => 1,
+                'snap_credit_unit_price' => 35000,
+                'snap_course_credit_unit' => 36,
+                'snap_nuol_pct' => 0.17,
+                'total_income' => 1045800,
+            ]);
+        }
+
+        $content = $this->actingAs(User::findOrFail(1))
+            ->get(route('head_of_finance.academic-income.show', $plan))
+            ->assertOk()
+            ->getContent();
+
+        $mathPosition = strpos($content, 'ປີ 2 ຄະນິດທົ່ວໄປ');
+        $physicsPosition = strpos($content, 'ປີ 2 ຟີຊິກທົ່ວໄປ');
+        $chemistryPosition = strpos($content, 'ປີ 2 ເຄມີທົ່ວໄປ');
+        $biologyPosition = strpos($content, 'ປີ 2 ຊີວະວິທະຍາທົ່ວໄປ');
+        $computerPosition = strpos($content, 'ປີ 2 ວິທະຍາສາດຄອມ');
+
+        $this->assertLessThan($physicsPosition, $mathPosition);
+        $this->assertLessThan($chemistryPosition, $physicsPosition);
+        $this->assertLessThan($biologyPosition, $chemistryPosition);
+        $this->assertLessThan($computerPosition, $biologyPosition);
     }
 
     public function test_settings_form_stores_department_and_planning_inclusion(): void

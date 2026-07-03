@@ -285,6 +285,15 @@
         return trim($name) ?: $name;
     };
 
+    $isEveningProgram = function ($programs): bool {
+        return $programs->contains(function ($program): bool {
+            $code = strtoupper((string) ($program->code ?? ''));
+
+            return (bool) preg_match('/(^|-)EVE($|-)/', $code)
+                || \Illuminate\Support\Str::contains((string) $program->name, ['ພາກຄໍ່າ', 'ພາກຄ່ຳ']);
+        });
+    };
+
     $makeCell = function ($program, string $inputPrefix, string $section, bool $year1Split = false) use ($creditPrices, $existingItems): array {
         $totalCreditUnit = $program->latestCourseCredit?->course_credit_unit;
         $creditUnit = $totalCreditUnit;
@@ -311,7 +320,7 @@
     $bachelorRows = $programs13_bach
         ->concat($programs11->where('level', 'bachelor'))
         ->groupBy(fn ($program) => $codeBase($program))
-        ->map(function ($programs, $base) use ($cleanName, $makeCell) {
+        ->map(function ($programs, $base) use ($cleanName, $isEveningProgram, $makeCell) {
             $cells = [];
             foreach ($programs as $program) {
                 $year = (int) ($program->study_year ?: 1);
@@ -337,11 +346,13 @@
                 'department' => $programs->first()->academic_department ?: 'other',
                 'departmentLabel' => $programs->first()->academic_department_label,
                 'departmentOrder' => (int) ($programs->first()->department_sort_order ?? \App\Models\DegreeProgram::departmentOrder($programs->first()->academic_department)),
+                'shiftOrder' => $isEveningProgram($programs) ? 1 : 0,
                 'cells' => $cells,
             ];
         })
         ->sortBy([
             ['departmentOrder', 'asc'],
+            ['shiftOrder', 'asc'],
             ['label', 'asc'],
         ])
         ->values();

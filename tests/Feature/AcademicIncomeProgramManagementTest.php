@@ -28,6 +28,8 @@ class AcademicIncomeProgramManagementTest extends TestCase
         $plan = AcademicIncomePlan::create(['fiscal_year' => 2027]);
         $this->seedProgram('B-CSC-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ', 1, 'computer_science', 50, true, 37);
         $this->seedProgram('B-CSC-EVE-Y1', 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ', 1, 'computer_science', 50, true, 37);
+        $this->seedProgram('B-WEB-Y1', 'ພັດທະນາເວັບ', 1, 'computer_science', 50, true, 37);
+        $this->seedProgram('B-WD-EVE-Y1', 'ອອກແບບເວັບ', 1, 'computer_science', 50, true, 37);
         $this->seedProgram('B-BIO-Y1', 'ຊີວະວິທະຍາ', 1, 'biology', 40, true, 37);
         $this->seedProgram('B-MATH-Y1', 'ຄະນິດທົ່ວໄປ', 1, 'math_stats', 10, true, 37);
         $this->seedProgram('B-HIDDEN-Y1', 'ບໍ່ຂຶ້ນແຜນ', 1, 'computer_science', 50, false, 37);
@@ -39,11 +41,15 @@ class AcademicIncomeProgramManagementTest extends TestCase
             ->assertSee('ຊີວະວິທະຍາ')
             ->assertSee('ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ')
             ->assertSee('ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ')
+            ->assertSee('ພັດທະນາເວັບ')
+            ->assertSee('ອອກແບບເວັບ')
             ->assertDontSee('ບໍ່ຂຶ້ນແຜນ');
 
         $content = $response->getContent();
         $this->assertLessThan(strpos($content, 'ຊີວະວິທະຍາ'), strpos($content, 'ຄະນິດທົ່ວໄປ'));
         $this->assertLessThan(strpos($content, 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກປົກກະຕິ'), strpos($content, 'ຊີວະວິທະຍາ'));
+        $this->assertLessThan(strpos($content, 'ຕໍ່ເນື່ອງວິທະຍາສາດຄອມພິວເຕີ ພາກຄໍ່າ'), strpos($content, 'ພັດທະນາເວັບ'));
+        $this->assertLessThan(strpos($content, 'ອອກແບບເວັບ'), strpos($content, 'ພັດທະນາເວັບ'));
     }
 
     public function test_report_placeholders_use_planning_inclusion(): void

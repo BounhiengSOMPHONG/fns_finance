@@ -11,7 +11,6 @@ class ExpensePlan extends Model
     protected $fillable = [
         'planning_year_id',
         'fiscal_year',
-        'status',
         'notes',
         'created_by',
         'updated_by',

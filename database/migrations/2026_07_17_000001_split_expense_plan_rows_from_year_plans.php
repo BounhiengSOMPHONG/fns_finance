@@ -41,12 +41,8 @@ return new class extends Migration
                 $table->unsignedSmallInteger('fiscal_year')->nullable()->after('planning_year_id');
             }
 
-            if (! Schema::hasColumn('expense_plans', 'status')) {
-                $table->string('status', 20)->default('DRAFT')->after('fiscal_year');
-            }
-
             if (! Schema::hasColumn('expense_plans', 'notes')) {
-                $table->text('notes')->nullable()->after('status');
+                $table->text('notes')->nullable()->after('fiscal_year');
             }
 
             if (! Schema::hasColumn('expense_plans', 'updated_by')) {
@@ -242,7 +238,6 @@ return new class extends Migration
                     ->where('id', $plan->id)
                     ->update([
                         'fiscal_year' => $plan->fiscal_year ?? $year,
-                        'status' => $plan->status ?? 'DRAFT',
                         'notes' => $plan->notes ?? null,
                         'updated_at' => now(),
                     ]);
@@ -279,7 +274,6 @@ return new class extends Migration
         return (int) DB::table('expense_plans')->insertGetId([
             'planning_year_id' => $legacyRow->planning_year_id,
             'fiscal_year' => $year,
-            'status' => 'DRAFT',
             'notes' => null,
             'created_by' => $legacyRow->created_by ?? null,
             'updated_by' => $legacyRow->updated_by ?? null,

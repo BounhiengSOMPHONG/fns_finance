@@ -23,6 +23,11 @@ final class SalaryPlanController extends Controller
         return view('dashboards.finance_head.salary.create');
     }
 
+    public function show(SalaryPlan $salaryPlan)
+    {
+        return redirect()->route('head_of_finance.salary.manage', $salaryPlan);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

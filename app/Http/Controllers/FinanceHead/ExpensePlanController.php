@@ -303,7 +303,6 @@ class ExpensePlanController extends Controller
             ['planning_year_id' => $planningYear->id],
             [
                 'fiscal_year' => $planningYear->year,
-                'status' => 'DRAFT',
                 'notes' => null,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),

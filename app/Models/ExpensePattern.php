@@ -8,6 +8,14 @@ use Illuminate\Support\Collection;
 
 class ExpensePattern extends Model
 {
+    public const SYSTEM_DEFAULT_KEYS = [
+        'monthly',
+        'unit_quantity',
+        'unit_quantity_frequency',
+        'frequency_based',
+        'event_based',
+    ];
+
     protected $fillable = ['key', 'name', 'description', 'fields_schema', 'formula_schema', 'is_active'];
 
     protected $casts = [
@@ -97,5 +105,25 @@ class ExpensePattern extends Model
         return $this->hasMany(ExpenseSubsection::class, 'default_pattern_id')
             ->whereDoesntHave('children')
             ->orderBy('code');
+    }
+
+    public function scopeSystemDefaults($query)
+    {
+        return $query->whereIn('key', self::SYSTEM_DEFAULT_KEYS);
+    }
+
+    public static function systemDefaultIdOrFallback(?int $patternId, ?int $fallbackId = null): ?int
+    {
+        $systemIds = self::systemDefaults()->pluck('id')->all();
+
+        if ($patternId && in_array($patternId, $systemIds, true)) {
+            return $patternId;
+        }
+
+        if ($fallbackId && in_array($fallbackId, $systemIds, true)) {
+            return $fallbackId;
+        }
+
+        return $systemIds[0] ?? null;
     }
 }

@@ -80,7 +80,8 @@ class ExpensePlanController extends Controller
             ->orderBy('display_order')
             ->get();
 
-        $patterns = ExpensePattern::where('is_active', true)
+        $patterns = ExpensePattern::systemDefaults()
+            ->where('is_active', true)
             ->orderBy('id')
             ->get();
 
@@ -189,7 +190,9 @@ class ExpensePlanController extends Controller
                 }
 
                 foreach ($catalogItems as $catalogItem) {
-                    $pattern = $catalogItem->pattern ?: $patternsById->get($catalogItem->pattern_id ?: $subsection->default_pattern_id);
+                    $pattern = $patternsById->get($catalogItem->pattern_id)
+                        ?: $patternsById->get($subsection->default_pattern_id)
+                        ?: $patterns->first();
                     if (! $pattern) {
                         continue;
                     }
@@ -435,7 +438,7 @@ class ExpensePlanController extends Controller
                     'code' => $sourceSubsection->code,
                     'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
-                    'default_pattern_id' => $sourceSubsection->default_pattern_id,
+                    'default_pattern_id' => ExpensePattern::systemDefaultIdOrFallback($sourceSubsection->default_pattern_id),
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,
                     'display_order' => $sourceSubsection->display_order,
                     'is_active' => $sourceSubsection->is_active,
@@ -466,7 +469,10 @@ class ExpensePlanController extends Controller
                         'subsection_id' => $targetSubsectionId,
                         'item_name' => $catalogItem->item_name,
                         'chart_of_account_id' => $catalogItem->chart_of_account_id,
-                        'pattern_id' => $catalogItem->pattern_id,
+                        'pattern_id' => ExpensePattern::systemDefaultIdOrFallback(
+                            $catalogItem->pattern_id,
+                            $subsection->default_pattern_id
+                        ),
                         'default_values' => $catalogItem->default_values,
                         'sort_order' => $catalogItem->sort_order,
                         'is_active' => $catalogItem->is_active,

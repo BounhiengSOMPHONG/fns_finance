@@ -47,8 +47,6 @@ class ExpenseStructureController extends Controller
             ->values();
         $catalogItemsCount = $yearSummaries->sum('items_count');
         $linkedCatalogItemsCount = $yearSummaries->sum('linked_items_count');
-        $patterns = ExpensePattern::orderBy('id')->get();
-
         return view('dashboards.finance_head.settings.expense-setup.index', [
             'yearSummaries' => $yearSummaries,
             'catalogYear' => $catalogYear,
@@ -56,9 +54,6 @@ class ExpenseStructureController extends Controller
             'catalogItemsCount' => $catalogItemsCount,
             'linkedCatalogItemsCount' => $linkedCatalogItemsCount,
             'unlinkedCatalogItemsCount' => max($catalogItemsCount - $linkedCatalogItemsCount, 0),
-            'activePatternsCount' => $patterns->where('is_active', true)->count(),
-            'patternsCount' => $patterns->count(),
-            'patternFieldsCount' => $patterns->sum(fn (ExpensePattern $pattern): int => $pattern->fields->count()),
         ]);
     }
 
@@ -118,7 +113,8 @@ class ExpenseStructureController extends Controller
             ->filter(fn (ExpenseCatalogItem $row): bool => $row->chart_of_account_id === null)
             ->values();
 
-        $patterns = ExpensePattern::where('is_active', true)
+        $patterns = ExpensePattern::systemDefaults()
+            ->where('is_active', true)
             ->orderBy('id')
             ->get();
 
@@ -233,7 +229,10 @@ class ExpenseStructureController extends Controller
             ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'default_pattern_id' => ['nullable', 'exists:expense_patterns,id'],
+            'default_pattern_id' => [
+                'nullable',
+                Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
+            ],
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -269,7 +268,10 @@ class ExpenseStructureController extends Controller
             ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'default_pattern_id' => ['nullable', 'exists:expense_patterns,id'],
+            'default_pattern_id' => [
+                'nullable',
+                Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
+            ],
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -343,7 +345,7 @@ class ExpenseStructureController extends Controller
             return;
         }
 
-        $pattern = ExpensePattern::find($newPatternId);
+        $pattern = ExpensePattern::systemDefaults()->find($newPatternId);
         if (! $pattern) {
             return;
         }
@@ -412,7 +414,7 @@ class ExpenseStructureController extends Controller
             return;
         }
 
-        $defaultPatternId = ExpensePattern::where('is_active', true)->orderBy('id')->value('id');
+        $defaultPatternId = ExpensePattern::systemDefaults()->where('is_active', true)->orderBy('id')->value('id');
         $sectionsByCode = [];
 
         $sectionCodes = $codes
@@ -487,7 +489,10 @@ class ExpenseStructureController extends Controller
                     'subsection_id' => $subsection->id,
                     'item_name' => $catalogItem->item_name,
                     'chart_of_account_id' => $catalogItem->chart_of_account_id,
-                    'pattern_id' => $catalogItem->pattern_id ?: $subsection->default_pattern_id,
+                    'pattern_id' => ExpensePattern::systemDefaultIdOrFallback(
+                        $catalogItem->pattern_id,
+                        $subsection->default_pattern_id
+                    ),
                     'default_values' => $catalogItem->default_values ?? [],
                     'sort_order' => $catalogItem->sort_order,
                     'is_active' => $catalogItem->is_active,
@@ -530,7 +535,7 @@ class ExpenseStructureController extends Controller
                     'code' => $sourceSubsection->code,
                     'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
-                    'default_pattern_id' => $sourceSubsection->default_pattern_id,
+                    'default_pattern_id' => ExpensePattern::systemDefaultIdOrFallback($sourceSubsection->default_pattern_id),
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,
                     'display_order' => $sourceSubsection->display_order,
                     'is_active' => $sourceSubsection->is_active,
@@ -543,7 +548,10 @@ class ExpenseStructureController extends Controller
                         'subsection_id' => $subsection->id,
                         'item_name' => $catalogItem->item_name,
                         'chart_of_account_id' => $catalogItem->chart_of_account_id,
-                        'pattern_id' => $catalogItem->pattern_id,
+                        'pattern_id' => ExpensePattern::systemDefaultIdOrFallback(
+                            $catalogItem->pattern_id,
+                            $subsection->default_pattern_id
+                        ),
                         'default_values' => $catalogItem->default_values ?? [],
                         'sort_order' => $catalogItem->sort_order,
                         'is_active' => $catalogItem->is_active,

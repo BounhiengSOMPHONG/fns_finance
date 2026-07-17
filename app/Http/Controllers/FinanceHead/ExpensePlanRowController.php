@@ -13,6 +13,7 @@ use App\Models\PlanningYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ExpensePlanRowController extends Controller
 {
@@ -23,7 +24,10 @@ class ExpensePlanRowController extends Controller
             'section_id' => 'required|exists:expense_sections,id',
             'subsection_id' => 'nullable|exists:expense_subsections,id',
             'catalog_item_id' => 'nullable|exists:expense_catalog_items,id',
-            'pattern_id' => 'required|exists:expense_patterns,id',
+            'pattern_id' => [
+                'required',
+                Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
+            ],
             'plan_detail' => 'required|string|max:255',
             'detail' => 'nullable|string|max:1000',
             'values' => 'required|array',
@@ -36,6 +40,7 @@ class ExpensePlanRowController extends Controller
         $subsection = $data['subsection_id'] ? ExpenseSubsection::findOrFail($data['subsection_id']) : null;
         $catalogItem = isset($data['catalog_item_id']) ? ExpenseCatalogItem::with(['chartOfAccount', 'pattern'])->find($data['catalog_item_id']) : null;
         $pattern = $catalogItem?->pattern ?: ExpensePattern::findOrFail($data['pattern_id']);
+        abort_if(! in_array($pattern->key, ExpensePattern::SYSTEM_DEFAULT_KEYS, true), 422);
 
         $values = $data['values'];
         $calculationValues = $this->calculationValues($pattern, $values);

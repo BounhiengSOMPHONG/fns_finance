@@ -19,13 +19,6 @@
             'route' => route('head_of_finance.settings.expense-default-rows.accounts.index', $expenseSetupQuery),
             'active' => request()->routeIs('head_of_finance.settings.expense-default-rows.*'),
         ],
-        [
-            'step' => '03',
-            'label' => 'ສູດຄຳນວນ',
-            'description' => 'ຊ່ອງກອກ ແລະ ຕົວຄູນ',
-            'route' => route('head_of_finance.settings.expense-patterns.index'),
-            'active' => request()->routeIs('head_of_finance.settings.expense-patterns.*'),
-        ],
     ];
 @endphp
 

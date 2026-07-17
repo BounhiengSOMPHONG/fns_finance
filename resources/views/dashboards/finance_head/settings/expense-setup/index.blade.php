@@ -9,7 +9,7 @@
         <div>
             <span class="ex-kicker">Expense Setup</span>
             <h2>ຕັ້ງຄ່າລາຍຈ່າຍໃນຈຸດດຽວ</h2>
-            <p>ເລີ່ມຈາກໂຄງສ້າງ DEF, ກວດລິ້ງບັນຊີ, ແລ້ວປັບສູດຄຳນວນຕາມວຽກທີ່ຕ້ອງເຮັດ.</p>
+            <p>ເລີ່ມຈາກໂຄງສ້າງ DEF ແຕ່ລະປີ ແລ້ວກວດກາລິ້ງ Chart of Account.</p>
         </div>
         <div class="ex-hero-metrics" aria-label="Expense setup summary">
             <span>
@@ -19,10 +19,6 @@
             <span>
                 <strong>{{ number_format($linkedCatalogItemsCount) }}</strong>
                 <small>ລິ້ງແລ້ວ</small>
-            </span>
-            <span>
-                <strong>{{ number_format($activePatternsCount) }}</strong>
-                <small>ສູດໃຊ້ງານ</small>
             </span>
         </div>
     </section>
@@ -89,21 +85,6 @@
             </div>
         </section>
 
-        <a href="{{ route('head_of_finance.settings.expense-patterns.index') }}" class="ex-card ex-card-formula">
-            <div class="ex-card-head">
-                <span class="ex-step">03</span>
-                <div>
-                    <h3>ສູດຄຳນວນ</h3>
-                    <p>ກຳນົດຊ່ອງກອກ ແລະຕົວຄູນທີ່ໃຊ້ຄິດຍອດລວມ.</p>
-                </div>
-            </div>
-            <div class="ex-formula-stat">
-                <strong>{{ number_format($activePatternsCount) }}</strong>
-                <span>ສູດທີ່ໃຊ້ງານ</span>
-            </div>
-            <p class="ex-muted">{{ number_format($patternsCount) }} ສູດທັງໝົດ · {{ number_format($patternFieldsCount) }} ຊ່ອງກອກ</p>
-            <span class="ex-open">ໄປສູດຄຳນວນ</span>
-        </a>
     </div>
 </div>
 
@@ -139,7 +120,7 @@
     .ex-card p { margin:.35rem 0 0; color:#64748b; font-size:.86rem; line-height:1.55; }
     .ex-hero-metrics {
         display:grid;
-        grid-template-columns:repeat(3,minmax(5.5rem,1fr));
+        grid-template-columns:repeat(2,minmax(5.5rem,1fr));
         gap:.45rem;
         min-width:23rem;
     }
@@ -156,7 +137,7 @@
     .ex-hero-metrics small { margin-top:.22rem; font-size:.68rem; font-weight:900; white-space:nowrap; }
     .ex-workflows {
         display:grid;
-        grid-template-columns:minmax(0,1.25fr) minmax(18rem,.85fr) minmax(18rem,.85fr);
+        grid-template-columns:minmax(0,1.15fr) minmax(18rem,.85fr);
         gap:1rem;
         align-items:stretch;
     }
@@ -172,7 +153,6 @@
     }
     .ex-card-def { border-top:4px solid #13213b; }
     .ex-card-link { border-top:4px solid #16a34a; }
-    .ex-card-formula { border-top:4px solid #c9991a; }
     .ex-card[href]:hover,
     .ex-link-year-row:hover {
         border-color:#d39b27;
@@ -220,8 +200,6 @@
         color:#64748b;
         text-align:center;
     }
-    .ex-formula-stat strong { color:#13213b; font-size:1.65rem; line-height:1; }
-    .ex-formula-stat span { color:#64748b; font-size:.8rem; font-weight:800; }
     .ex-link-years {
         display:grid;
         gap:.45rem;
@@ -264,20 +242,6 @@
         height:3px;
         min-width:.35rem;
         background:#16a34a;
-    }
-    .ex-formula-stat { display:flex; align-items:end; gap:.45rem; margin-top:auto; }
-    .ex-open {
-        display:inline-flex;
-        align-items:center;
-        width:max-content;
-        border-radius:999px;
-        background:#fff8df;
-        border:1px solid rgba(201,153,26,.28);
-        padding:.28rem .65rem;
-        margin-top:auto;
-        color:#8a5a00;
-        font-size:.8rem;
-        font-weight:900;
     }
     @media (max-width:1100px) {
         .ex-workflows { grid-template-columns:1fr; }

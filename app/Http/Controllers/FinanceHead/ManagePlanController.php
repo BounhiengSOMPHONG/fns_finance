@@ -781,7 +781,7 @@ class ManagePlanController extends Controller
             return;
         }
 
-        $defaultPatternId = ExpensePattern::where('is_active', true)->orderBy('id')->value('id');
+        $defaultPatternId = ExpensePattern::systemDefaults()->where('is_active', true)->orderBy('id')->value('id');
 
         $sectionCodes = $codes
             ->map(fn (string $code) => implode('.', array_slice(explode('.', $code), 0, 2)))
@@ -856,7 +856,10 @@ class ManagePlanController extends Controller
                     'subsection_id' => $subsection->id,
                     'item_name' => $catalogItem->item_name,
                     'chart_of_account_id' => $catalogItem->chart_of_account_id,
-                    'pattern_id' => $catalogItem->pattern_id ?: $subsection->default_pattern_id,
+                    'pattern_id' => ExpensePattern::systemDefaultIdOrFallback(
+                        $catalogItem->pattern_id,
+                        $subsection->default_pattern_id
+                    ),
                     'default_values' => $catalogItem->default_values ?? [],
                     'sort_order' => $catalogItem->sort_order,
                     'is_active' => $catalogItem->is_active,
@@ -909,7 +912,7 @@ class ManagePlanController extends Controller
                     'code' => $sourceSubsection->code,
                     'name' => $sourceSubsection->name,
                     'description' => $sourceSubsection->description,
-                    'default_pattern_id' => $sourceSubsection->default_pattern_id,
+                    'default_pattern_id' => ExpensePattern::systemDefaultIdOrFallback($sourceSubsection->default_pattern_id),
                     'summary_period_count' => $sourceSubsection->summary_period_count ?? 12,
                     'display_order' => $sourceSubsection->display_order,
                     'is_active' => $sourceSubsection->is_active,
@@ -922,7 +925,10 @@ class ManagePlanController extends Controller
                         'subsection_id' => $subsection->id,
                         'item_name' => $catalogItem->item_name,
                         'chart_of_account_id' => $catalogItem->chart_of_account_id,
-                        'pattern_id' => $catalogItem->pattern_id,
+                        'pattern_id' => ExpensePattern::systemDefaultIdOrFallback(
+                            $catalogItem->pattern_id,
+                            $subsection->default_pattern_id
+                        ),
                         'default_values' => $catalogItem->default_values ?? [],
                         'sort_order' => $catalogItem->sort_order,
                         'is_active' => $catalogItem->is_active,

@@ -190,19 +190,6 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
             ->assertRedirect();
 
         $this->actingAs($this->financeHead)
-            ->patch(route('head_of_finance.settings.expense-patterns.fields.update', [$pattern, 'yearly_total']), [
-                'default_label' => 'Yearly Total',
-                'data_type' => 'number',
-                'display_order' => 1,
-                'is_required' => '1',
-                'is_calculated' => '0',
-                'is_active' => '1',
-                'include_in_formula' => '0',
-                'default_value' => '0',
-            ])
-            ->assertRedirect();
-
-        $this->actingAs($this->financeHead)
             ->patch(route('head_of_finance.settings.course-credits.update', $courseCredit), [
                 'degree_program_id' => $program->id,
                 'course_credit_unit' => 36,
@@ -346,7 +333,33 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
             ]), false)
             ->assertSee(route('head_of_finance.settings.expense-default-rows.accounts.index', [
                 'planning_year_id' => $secondYear->id,
-            ]), false);
+            ]), false)
+            ->assertDontSee('ສູດຄຳນວນ');
+    }
+
+    public function test_expense_pattern_setup_page_is_hidden_and_locked(): void
+    {
+        [, , $pattern] = $this->seedExpenseStructure();
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-patterns.index'))
+            ->assertRedirect(route('head_of_finance.settings.expense-setup.index'));
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.settings.expense-patterns.store'), [
+                'key' => 'custom_total',
+                'name' => 'Custom Total',
+                'is_active' => '1',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($this->financeHead)
+            ->patch(route('head_of_finance.settings.expense-patterns.fields.update', [$pattern, 'yearly_total']), [
+                'default_label' => 'Yearly Total',
+                'data_type' => 'number',
+                'display_order' => 1,
+            ])
+            ->assertForbidden();
     }
 
     private function seedExpenseStructure(): array
@@ -362,8 +375,8 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
             'account_name' => 'Smoke Account',
         ]);
         $pattern = ExpensePattern::create([
-            'key' => 'smoke_total',
-            'name' => 'Smoke Total',
+            'key' => 'monthly',
+            'name' => 'ລາຍຈ່າຍປະຈຳເດືອນ',
             'description' => null,
             'fields_schema' => [[
                 'field_key' => 'yearly_total',

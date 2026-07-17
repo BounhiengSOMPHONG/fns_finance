@@ -11,6 +11,7 @@ use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ExpenseDefaultRowAccountController extends Controller
 {
@@ -82,7 +83,11 @@ class ExpenseDefaultRowAccountController extends Controller
             'subsection_id' => ['nullable', 'integer', 'exists:expense_subsections,id'],
             'item_name' => ['required', 'string', 'max:255'],
             'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
-            'pattern_id' => ['nullable', 'integer', 'exists:expense_patterns,id'],
+            'pattern_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
+            ],
             'sort_order' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
@@ -102,11 +107,13 @@ class ExpenseDefaultRowAccountController extends Controller
             ? ChartOfAccount::findOrFail($data['chart_of_account_id'])
             : null;
 
+        $patternId = ExpensePattern::systemDefaultIdOrFallback($data['pattern_id'] ?? null, $subsection->default_pattern_id);
+
         ExpenseCatalogItem::create([
             'subsection_id' => $subsection->id,
             'item_name' => $data['item_name'],
             'chart_of_account_id' => $account?->id,
-            'pattern_id' => $data['pattern_id'] ?? $subsection->default_pattern_id,
+            'pattern_id' => $patternId,
             'sort_order' => $data['sort_order'],
             'default_values' => [],
             'is_active' => true,
@@ -120,7 +127,11 @@ class ExpenseDefaultRowAccountController extends Controller
         $data = $request->validate([
             'item_name' => ['sometimes', 'required', 'string', 'max:255'],
             'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
-            'pattern_id' => ['nullable', 'integer', 'exists:expense_patterns,id'],
+            'pattern_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
+            ],
             'sort_order' => ['sometimes', 'required', 'integer', 'min:1', 'max:999'],
         ]);
 
@@ -174,7 +185,7 @@ class ExpenseDefaultRowAccountController extends Controller
     private function syncPlanRowsFromCatalogItem(ExpenseCatalogItem $catalogItem, string $oldItemName): void
     {
         $pattern = $catalogItem->pattern_id
-            ? ExpensePattern::find($catalogItem->pattern_id)
+            ? ExpensePattern::systemDefaults()->find($catalogItem->pattern_id)
             : null;
 
         $plans = ExpensePlanRow::where('catalog_item_id', $catalogItem->id)
@@ -191,7 +202,7 @@ class ExpenseDefaultRowAccountController extends Controller
             $payload = [
                 'catalog_item_id' => $catalogItem->id,
                 'chart_of_account_id' => $catalogItem->chart_of_account_id,
-                'pattern_id' => $catalogItem->pattern_id ?: $plan->pattern_id,
+                'pattern_id' => $pattern?->id ?: $plan->pattern_id,
                 'item_name' => $catalogItem->item_name,
                 'plan_detail' => $catalogItem->item_name,
             ];

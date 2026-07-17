@@ -22,6 +22,7 @@ return new class extends Migration
 
     public function up(): void
     {
+        $this->ensureExpenseStructureTables();
         $this->ensureExpensePatternJsonColumns();
         $this->backfillPatternSchemas();
         $this->createExpenseCatalogItems();
@@ -100,6 +101,56 @@ return new class extends Migration
                         $table->dropColumn($column);
                     }
                 }
+            });
+        }
+    }
+
+    private function ensureExpenseStructureTables(): void
+    {
+        if (! Schema::hasTable('expense_patterns')) {
+            Schema::create('expense_patterns', function (Blueprint $table): void {
+                $table->id();
+                $table->string('key', 50)->unique();
+                $table->string('name');
+                $table->text('description')->nullable();
+                $table->json('fields_schema')->nullable();
+                $table->json('formula_schema')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasTable('expense_sections')) {
+            Schema::create('expense_sections', function (Blueprint $table): void {
+                $table->id();
+                $table->foreignId('planning_year_id')->nullable()->constrained('planning_years')->nullOnDelete();
+                $table->string('code', 30);
+                $table->string('name');
+                $table->text('description')->nullable();
+                $table->unsignedSmallInteger('display_order')->default(0);
+                $table->decimal('summary_period_count', 8, 2)->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+
+                $table->unique(['planning_year_id', 'code']);
+            });
+        }
+
+        if (! Schema::hasTable('expense_subsections')) {
+            Schema::create('expense_subsections', function (Blueprint $table): void {
+                $table->id();
+                $table->foreignId('section_id')->constrained('expense_sections')->cascadeOnDelete();
+                $table->foreignId('parent_id')->nullable()->constrained('expense_subsections')->nullOnDelete();
+                $table->string('code', 30);
+                $table->string('name');
+                $table->text('description')->nullable();
+                $table->foreignId('default_pattern_id')->nullable()->constrained('expense_patterns')->nullOnDelete();
+                $table->decimal('summary_period_count', 8, 2)->nullable();
+                $table->unsignedSmallInteger('display_order')->default(0);
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+
+                $table->unique(['section_id', 'code']);
             });
         }
     }

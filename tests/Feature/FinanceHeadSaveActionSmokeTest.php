@@ -114,7 +114,8 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('entry.annual_amount', 1440);
+            ->assertJsonPath('entry.monthly_total', 240)
+            ->assertJsonPath('entry.annual_amount', 2880);
     }
 
     public function test_finance_head_settings_save_buttons_accept_valid_payloads(): void

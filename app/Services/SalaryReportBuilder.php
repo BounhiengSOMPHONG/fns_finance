@@ -90,13 +90,14 @@ class SalaryReportBuilder
                 || $account->id !== $entry->chart_of_account_id;
             $rows[$account->id]['person_count'] += (int) $entry->person_count;
 
+            $monthlyTotal = (float) $entry->monthly_total;
             if ($entry->payment_type === 'cash') {
                 $rows[$account->id]['cash_amount'] += (float) $entry->amount;
             } else {
                 $rows[$account->id]['transfer_amount'] += (float) $entry->amount;
             }
 
-            $rows[$account->id]['monthly_total'] += (float) $entry->monthly_total;
+            $rows[$account->id]['monthly_total'] += $monthlyTotal;
             $rows[$account->id]['annual_total'] += (float) $entry->annual_amount;
 
             $account = $account->parent_id ? $accountsById->get($account->parent_id) : null;

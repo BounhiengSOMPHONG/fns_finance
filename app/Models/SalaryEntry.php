@@ -27,7 +27,7 @@ final class SalaryEntry extends Model
         parent::boot();
 
         self::saving(function (self $entry): void {
-            $entry->monthly_total = (float) $entry->amount;
+            $entry->monthly_total = max(0, (int) $entry->person_count) * (float) $entry->amount;
             $entry->annual_amount = $entry->monthly_total * 12;
         });
     }

@@ -438,6 +438,13 @@
 
     function num(el) { return Number(rawMoney(el?.value)) || 0; }
 
+    function rowMonthlyTotal(row) {
+        const personCount = Number(row.querySelector('.smg-persons')?.value || 0) || 0;
+        const amount = num(row.querySelector('.smg-amount'));
+
+        return Math.max(0, personCount) * amount;
+    }
+
     function recalc(row) {
         // Per-row total/annual cells were removed; sticky-bar grand totals still recalc below.
         recalcTotals();
@@ -448,7 +455,7 @@
         const groupTotals = {};
 
         $body.querySelectorAll('.smg-row').forEach(r => {
-            const rowTotal = num(r.querySelector('.smg-amount'));
+            const rowTotal = rowMonthlyTotal(r);
             const group = r.dataset.group || 'coa-other';
 
             monthly += rowTotal;
@@ -592,6 +599,11 @@
             inp.addEventListener('change', () => {
                 if (inp.classList.contains('smg-payment-type')) {
                     saveRow(row);
+                }
+            });
+            inp.addEventListener('input', () => {
+                if (inp.classList.contains('smg-persons')) {
+                    recalc(row);
                 }
             });
             inp.addEventListener('blur', () => setTimeout(() => {

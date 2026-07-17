@@ -82,7 +82,7 @@ class ExpensePlanRowController extends Controller
 
     public function update(Request $request, int $expensePlanRow)
     {
-        $expensePlan = ExpensePlanRow::with(['pattern', 'chartOfAccount'])->findOrFail($expensePlanRow);
+        $expensePlan = ExpensePlanRow::with(['pattern', 'chartOfAccount', 'subsection.defaultPattern'])->findOrFail($expensePlanRow);
         $this->ensurePlanCanBeEdited($expensePlan->planningYear);
 
         $data = $request->validate([
@@ -91,14 +91,22 @@ class ExpensePlanRowController extends Controller
             'values' => 'required|array',
         ]);
 
-        $pattern = $expensePlan->pattern ?? new ExpensePattern;
+        $pattern = $expensePlan->subsection?->defaultPattern
+            ?: $expensePlan->pattern
+            ?: new ExpensePattern;
         $values = $data['values'];
-        $calculationValues = $this->calculationValues($pattern, $values, $expensePlan->pattern_snapshot);
+        $snapshot = (int) $expensePlan->pattern_id === (int) $pattern->id
+            ? $expensePlan->pattern_snapshot
+            : null;
+        $calculationValues = $this->calculationValues($pattern, $values, $snapshot);
 
-        DB::transaction(function () use ($expensePlan, $data, $calculationValues) {
+        DB::transaction(function () use ($expensePlan, $data, $calculationValues, $pattern, $snapshot) {
             $payload = [
+                'pattern_id' => $pattern->id,
+                'plan_type' => $pattern->key,
                 'detail' => $data['detail'] ?? null,
                 'calculation_values' => $calculationValues,
+                'pattern_snapshot' => $snapshot ?: $pattern->snapshot(),
                 'updated_by' => Auth::id(),
             ];
 

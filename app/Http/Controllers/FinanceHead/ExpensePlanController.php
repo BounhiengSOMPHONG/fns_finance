@@ -120,7 +120,7 @@ class ExpensePlanController extends Controller
             ->flatMap(fn ($section) => $section->subsections->pluck('code'))
             ->unique()
             ->values();
-        $defaultRows = ExpenseCatalogItem::with(['chartOfAccount', 'pattern', 'subsection'])
+        $defaultRows = ExpenseCatalogItem::with(['chartOfAccount', 'pattern', 'subsection.defaultPattern'])
             ->whereHas('subsection', fn ($query) => $query->whereIn('code', $subsectionCodes))
             ->where('is_active', true)
             ->orderBy('subsection_id')
@@ -128,7 +128,10 @@ class ExpensePlanController extends Controller
             ->get()
             ->groupBy(fn (ExpenseCatalogItem $item) => $item->subsection?->code)
             ->map(fn ($rows) => $rows->map(function ($row) use ($patterns) {
-                $pattern = $row->pattern ?: $patterns->firstWhere('id', $row->pattern_id ?: $row->subsection?->default_pattern_id);
+                $pattern = $row->subsection?->defaultPattern
+                    ?: $patterns->firstWhere('id', $row->subsection?->default_pattern_id)
+                    ?: $row->pattern
+                    ?: $patterns->firstWhere('id', $row->pattern_id);
                 $values = $pattern
                     ? $this->catalogDefaultValues($row, $pattern)
                     : $this->cleanExpenseValues($row->default_values ?? []);
@@ -190,8 +193,8 @@ class ExpensePlanController extends Controller
                 }
 
                 foreach ($catalogItems as $catalogItem) {
-                    $pattern = $patternsById->get($catalogItem->pattern_id)
-                        ?: $patternsById->get($subsection->default_pattern_id)
+                    $pattern = $patternsById->get($subsection->default_pattern_id)
+                        ?: $patternsById->get($catalogItem->pattern_id)
                         ?: $patterns->first();
                     if (! $pattern) {
                         continue;
@@ -259,18 +262,23 @@ class ExpensePlanController extends Controller
     {
         $patternsById = $patterns->keyBy('id');
 
-        ExpensePlanRow::with('pattern')
+        ExpensePlanRow::with(['catalogItem', 'subsection.defaultPattern', 'pattern'])
             ->where('planning_year_id', $planningYear->id)
             ->orderBy('id')
             ->chunkById(200, function (Collection $rows) use ($patternsById): void {
                 foreach ($rows as $row) {
-                    $pattern = $row->pattern ?: $patternsById->get($row->pattern_id);
+                    $pattern = $row->subsection?->defaultPattern
+                        ?: $patternsById->get($row->subsection?->default_pattern_id)
+                        ?: $patternsById->get($row->catalogItem?->pattern_id)
+                        ?: $row->pattern
+                        ?: $patternsById->get($row->pattern_id);
                     if (! $pattern) {
                         continue;
                     }
 
                     $values = $row->calculation_values ?? [];
-                    $changed = false;
+                    $changed = (int) $row->pattern_id !== (int) $pattern->id
+                        || ($row->plan_type ?? null) !== $pattern->key;
 
                     foreach ($pattern->defaultInputValues() as $key => $defaultValue) {
                         if (! array_key_exists($key, $values) || $values[$key] === null || $values[$key] === '') {
@@ -293,6 +301,8 @@ class ExpensePlanController extends Controller
                     $values['yearly_total'] = $pattern->calculateTotal($values);
 
                     $row->update([
+                        'pattern_id' => $pattern->id,
+                        'plan_type' => $pattern->key,
                         'calculation_values' => $values,
                         'pattern_snapshot' => $pattern->snapshot(),
                     ]);

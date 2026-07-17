@@ -36,7 +36,7 @@ class PlanYearReportBuilderTest extends TestCase
 
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             $this->expensePlanRow(1, 'Paper', 7, 100),
             $this->expensePlanRow(2, 'Fallback row', 7, 50),
             $this->expensePlanRow(3, 'Unlinked row', null, 25),
@@ -66,7 +66,7 @@ class PlanYearReportBuilderTest extends TestCase
         DB::table('planning_years')->insert(['id' => 1, 'year' => 2027, 'name' => 'Planning 2027']);
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             $this->expensePlanRow(1, 'Academic row', 7, 100),
             $this->expensePlanRow(2, 'Blocked row', 8, 80),
         ]);
@@ -102,7 +102,7 @@ class PlanYearReportBuilderTest extends TestCase
         DB::table('planning_years')->insert(['id' => 1, 'year' => 2027, 'name' => 'Planning 2027']);
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             $this->expensePlanRow(1, 'Academic row', 7, 100),
         ]);
         DB::table('period_plan_overrides')->insert([
@@ -141,7 +141,7 @@ class PlanYearReportBuilderTest extends TestCase
         DB::table('planning_years')->insert(['id' => 1, 'year' => 2027, 'name' => 'Planning 2027']);
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             $this->expensePlanRow(1, 'Academic row', 7, 100),
         ]);
         DB::table('period_plan_overrides')->insert([
@@ -197,7 +197,7 @@ class PlanYearReportBuilderTest extends TestCase
     {
         foreach ([
             'period_plan_overrides',
-            'expense_plans',
+            'expense_plan_rows',
             'expense_catalog_items',
             'expense_subsections',
             'expense_sections',
@@ -285,7 +285,7 @@ class PlanYearReportBuilderTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('expense_plans', function ($table): void {
+        Schema::create('expense_plan_rows', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedBigInteger('section_id');

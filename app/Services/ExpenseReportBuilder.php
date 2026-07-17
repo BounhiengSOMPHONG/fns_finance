@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
@@ -23,10 +23,10 @@ class ExpenseReportBuilder
             ->sortBy(fn (ExpenseSection $section) => $this->codeSortKey($section->code))
             ->values();
 
-        $plans = ExpensePlan::with(['pattern', 'section', 'subsection.defaultPattern', 'chartOfAccount'])
+        $plans = ExpensePlanRow::with(['pattern', 'section', 'subsection.defaultPattern', 'chartOfAccount'])
             ->where('planning_year_id', $planningYear->id)
             ->get()
-            ->sortBy(fn (ExpensePlan $plan) => sprintf(
+            ->sortBy(fn (ExpensePlanRow $plan) => sprintf(
                 '%s|%s|%08d',
                 $this->codeSortKey($plan->section?->code ?? ''),
                 $this->codeSortKey($plan->subsection?->code ?? ''),
@@ -37,8 +37,8 @@ class ExpenseReportBuilder
         $sectionsByCode = $sections->keyBy('code');
         $subsections = $sections->flatMap(fn (ExpenseSection $section) => $section->subsections)->values();
         $subsectionsByCode = $subsections->keyBy('code');
-        $plansBySection = $plans->groupBy(fn (ExpensePlan $plan) => $plan->section?->code ?: '');
-        $plansBySubsection = $plans->groupBy(fn (ExpensePlan $plan) => $plan->subsection?->code ?: '');
+        $plansBySection = $plans->groupBy(fn (ExpensePlanRow $plan) => $plan->section?->code ?: '');
+        $plansBySubsection = $plans->groupBy(fn (ExpensePlanRow $plan) => $plan->subsection?->code ?: '');
 
         $reportSectionCodes = collect(self::SECTION_CODES)
             ->merge($sections->pluck('code')->filter())
@@ -84,7 +84,7 @@ class ExpenseReportBuilder
             ->map(fn (ExpenseSubsection $subsection) => $this->buildDetailGroup($subsection, $subsectionsByCode, $plansBySubsection))
             ->values();
 
-        $total = (float) $sectionPlans->sum(fn (ExpensePlan $plan) => $this->yearlyTotal($plan));
+        $total = (float) $sectionPlans->sum(fn (ExpensePlanRow $plan) => $this->yearlyTotal($plan));
         $periodCount = (float) ($section?->summary_period_count ?? 12);
         $periodTotal = $periodCount > 0 ? $total / $periodCount : 0.0;
 
@@ -105,15 +105,15 @@ class ExpenseReportBuilder
         $subsectionCodes = $this->subtreeCodes($subsectionsByCode, $subsection->code);
         $plans = $subsectionCodes
             ->flatMap(fn (string $code) => $plansBySubsection->get($code, collect()))
-            ->sortBy(fn (ExpensePlan $plan) => sprintf('%s|%08d', $this->codeSortKey($plan->subsection?->code ?? ''), $plan->id))
+            ->sortBy(fn (ExpensePlanRow $plan) => sprintf('%s|%08d', $this->codeSortKey($plan->subsection?->code ?? ''), $plan->id))
             ->values();
 
         $plan = $plans->first();
         $columns = $this->columnsFor($plan?->pattern_snapshot['fields_schema'] ?? $plan?->pattern?->fields_schema ?? $subsection->defaultPattern?->fields_schema ?? []);
         $rows = $plans
-            ->map(fn (ExpensePlan $plan, int $index) => $this->buildRow($plan, $columns, $index + 1))
+            ->map(fn (ExpensePlanRow $plan, int $index) => $this->buildRow($plan, $columns, $index + 1))
             ->values();
-        $total = (float) $plans->sum(fn (ExpensePlan $plan) => $this->yearlyTotal($plan));
+        $total = (float) $plans->sum(fn (ExpensePlanRow $plan) => $this->yearlyTotal($plan));
 
         return [
             'code' => $subsection->code,
@@ -124,7 +124,7 @@ class ExpenseReportBuilder
         ];
     }
 
-    private function buildRow(ExpensePlan $plan, array $columns, int $number): array
+    private function buildRow(ExpensePlanRow $plan, array $columns, int $number): array
     {
         $values = $this->valuesByKey($plan);
         $total = $this->yearlyTotal($plan, $values);
@@ -173,7 +173,7 @@ class ExpenseReportBuilder
             ->values();
     }
 
-    private function valuesByKey(ExpensePlan $plan): array
+    private function valuesByKey(ExpensePlanRow $plan): array
     {
         return array_merge($plan->calculation_values ?? [], [
             'item_name' => $plan->item_name ?: $plan->plan_detail,
@@ -194,7 +194,7 @@ class ExpenseReportBuilder
         return $value === null || $value === '' ? null : (string) $value;
     }
 
-    private function yearlyTotal(ExpensePlan $plan, ?array $values = null): float
+    private function yearlyTotal(ExpensePlanRow $plan, ?array $values = null): float
     {
         return $plan->yearlyTotal();
     }

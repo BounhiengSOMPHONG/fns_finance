@@ -7,6 +7,7 @@ use App\Models\AcademicIncomePlan;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PeriodPlanOverride;
@@ -33,9 +34,9 @@ class ManagePlanController extends Controller
         $plans = PlanningYear::with([
             'academicIncomePlans.items',
             'salaryPlans.entries',
-            'expensePlans.pattern',
+            'expensePlanRows.pattern',
         ])
-            ->withCount('expensePlans')
+            ->withCount(['expensePlanRows as expense_plans_count'])
             ->orderByDesc('year')
             ->paginate(12);
 
@@ -642,6 +643,11 @@ class ManagePlanController extends Controller
                 DB::table('salary_plans')->whereIn('id', $salaryPlanIds)->delete();
             }
 
+            $expensePlanRowIds = $planningYear->expensePlanRows()->pluck('id');
+            if ($expensePlanRowIds->isNotEmpty()) {
+                DB::table('expense_plan_rows')->whereIn('id', $expensePlanRowIds)->delete();
+            }
+
             $expensePlanIds = $planningYear->expensePlans()->pluck('id');
             if ($expensePlanIds->isNotEmpty()) {
                 DB::table('expense_plans')->whereIn('id', $expensePlanIds)->delete();
@@ -688,6 +694,17 @@ class ManagePlanController extends Controller
                 'created_by' => Auth::id(),
             ]
         )->update(['planning_year_id' => $planningYear->id]);
+
+        ExpensePlan::firstOrCreate(
+            ['planning_year_id' => $planningYear->id],
+            [
+                'fiscal_year' => $planningYear->year,
+                'status' => 'DRAFT',
+                'notes' => null,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]
+        )->update(['planning_year_id' => $planningYear->id, 'fiscal_year' => $planningYear->year]);
     }
 
     private function deleteExpenseStructureForYear(PlanningYear $planningYear): void
@@ -713,7 +730,7 @@ class ManagePlanController extends Controller
         $subsectionIds = ExpenseSubsection::whereIn('section_id', $sectionIds)->pluck('id');
 
         if ($subsectionIds->isNotEmpty()) {
-            ExpensePlan::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpensePlanRow::whereIn('subsection_id', $subsectionIds)->delete();
             ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
             ExpenseSubsection::whereIn('id', $subsectionIds)->delete();
         }

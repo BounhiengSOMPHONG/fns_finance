@@ -7,6 +7,7 @@ use App\Models\ChartOfAccount;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
@@ -51,6 +52,8 @@ class ExpensePlanController extends Controller
                 $this->copyYearStructure($sourceYear, $planningYear);
             }
 
+            $this->ensureExpensePlan($planningYear);
+
             return $planningYear;
         });
 
@@ -85,10 +88,11 @@ class ExpensePlanController extends Controller
 
         $rules = collect();
 
+        $expensePlan = $this->ensureExpensePlan($planningYear);
         $this->ensureCatalogExpenseRows($planningYear, $sections, $patterns);
         $this->syncRowsWithPatternDefaults($planningYear, $patterns);
 
-        $expenseRows = ExpensePlan::with(['section', 'subsection', 'pattern', 'chartOfAccount'])
+        $expenseRows = ExpensePlanRow::with(['section', 'subsection', 'pattern', 'chartOfAccount'])
             ->where('planning_year_id', $planningYear->id)
             ->orderBy('section_id')
             ->orderBy('subsection_id')
@@ -100,7 +104,7 @@ class ExpensePlanController extends Controller
             ->get()
             ->sum(fn ($plan) => $plan->items->sum('total_income'));
 
-        $expenseTotal = (float) $expenseRows->sum(fn (ExpensePlan $row) => $row->yearlyTotal());
+        $expenseTotal = (float) $expenseRows->sum(fn (ExpensePlanRow $row) => $row->yearlyTotal());
         $budgetSummary = [
             'income_total' => $academicIncomeTotal,
             'expense_total' => $expenseTotal,
@@ -141,6 +145,7 @@ class ExpensePlanController extends Controller
             'patterns' => $patterns,
             'fieldSettings' => $fieldSettings,
             'rules' => $rules,
+            'expensePlan' => $expensePlan,
             'expenseRows' => $expenseRows,
             'chartAccounts' => $chartAccounts,
             'defaultRows' => $defaultRows,
@@ -165,10 +170,11 @@ class ExpensePlanController extends Controller
         $patternsById = $patterns->keyBy('id');
 
         DB::transaction(function () use ($planningYear, $subsections, $catalogItemsBySubsection, $patternsById): void {
-            $existingKeys = ExpensePlan::where('planning_year_id', $planningYear->id)
+            $expensePlan = $this->ensureExpensePlan($planningYear);
+            $existingKeys = ExpensePlanRow::where('planning_year_id', $planningYear->id)
                 ->whereIn('subsection_id', $subsections->pluck('id')->filter()->values())
                 ->get(['subsection_id', 'item_name', 'plan_detail'])
-                ->mapWithKeys(fn (ExpensePlan $row) => [
+                ->mapWithKeys(fn (ExpensePlanRow $row) => [
                     $row->subsection_id.'|'.trim((string) ($row->item_name ?: $row->plan_detail)) => true,
                 ]);
 
@@ -199,6 +205,7 @@ class ExpensePlanController extends Controller
                     $values['yearly_total'] = $pattern->calculateTotal($values);
 
                     $planRows[] = [
+                        'expense_plan_id' => $expensePlan->id,
                         'planning_year_id' => $planningYear->id,
                         'section_id' => $subsection->section_id,
                         'subsection_id' => $subsection->id,
@@ -226,7 +233,7 @@ class ExpensePlanController extends Controller
             }
 
             foreach (array_chunk($planRows, 200) as $chunk) {
-                ExpensePlan::insert($chunk);
+                ExpensePlanRow::insert($chunk);
             }
         });
     }
@@ -249,7 +256,7 @@ class ExpensePlanController extends Controller
     {
         $patternsById = $patterns->keyBy('id');
 
-        ExpensePlan::with('pattern')
+        ExpensePlanRow::with('pattern')
             ->where('planning_year_id', $planningYear->id)
             ->orderBy('id')
             ->chunkById(200, function (Collection $rows) use ($patternsById): void {
@@ -288,6 +295,20 @@ class ExpensePlanController extends Controller
                     ]);
                 }
             });
+    }
+
+    private function ensureExpensePlan(PlanningYear $planningYear): ExpensePlan
+    {
+        return ExpensePlan::firstOrCreate(
+            ['planning_year_id' => $planningYear->id],
+            [
+                'fiscal_year' => $planningYear->year,
+                'status' => 'DRAFT',
+                'notes' => null,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]
+        );
     }
 
     private function shouldReplaceLegacyDefaultValue(string $key, mixed $currentValue, mixed $defaultValue, array $values): bool

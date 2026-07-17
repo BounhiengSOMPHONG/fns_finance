@@ -25,7 +25,7 @@ class SyncExpenseAccountLinksCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->assertNull(DB::table('expense_catalog_items')->where('id', 1)->value('chart_of_account_id'));
-        $this->assertNull(DB::table('expense_plans')->where('id', 1)->value('chart_of_account_id'));
+        $this->assertNull(DB::table('expense_plan_rows')->where('id', 1)->value('chart_of_account_id'));
     }
 
     public function test_sync_fills_missing_links_and_preserves_user_customized_links(): void
@@ -36,7 +36,7 @@ class SyncExpenseAccountLinksCommandTest extends TestCase
 
         $this->assertSame(1, (int) DB::table('expense_catalog_items')->where('id', 1)->value('chart_of_account_id'));
         $this->assertSame(2, (int) DB::table('expense_catalog_items')->where('id', 2)->value('chart_of_account_id'));
-        $this->assertSame(1, (int) DB::table('expense_plans')->where('id', 1)->value('chart_of_account_id'));
+        $this->assertSame(1, (int) DB::table('expense_plan_rows')->where('id', 1)->value('chart_of_account_id'));
     }
 
     private function seedRows(): void
@@ -74,7 +74,7 @@ class SyncExpenseAccountLinksCommandTest extends TestCase
                 'updated_at' => now(),
             ],
         ]);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             ['id' => 1, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'catalog_item_id' => 1, 'chart_of_account_id' => null, 'item_name' => 'Special teaching', 'plan_detail' => 'Special teaching'],
             ['id' => 2, 'planning_year_id' => 1, 'section_id' => 1, 'subsection_id' => 1, 'catalog_item_id' => 2, 'chart_of_account_id' => 2, 'item_name' => 'User customized row', 'plan_detail' => 'User customized row'],
         ]);
@@ -83,7 +83,7 @@ class SyncExpenseAccountLinksCommandTest extends TestCase
     private function createTables(): void
     {
         foreach ([
-            'expense_plans',
+            'expense_plan_rows',
             'expense_catalog_items',
             'expense_subsections',
             'expense_sections',
@@ -125,7 +125,7 @@ class SyncExpenseAccountLinksCommandTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('expense_plans', function ($table): void {
+        Schema::create('expense_plan_rows', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedBigInteger('section_id');

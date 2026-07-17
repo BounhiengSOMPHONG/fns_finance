@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\ChartOfAccount;
-use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\PlanningYear;
 use App\Models\SalaryEntry;
 use Illuminate\Support\Collection;
@@ -79,7 +79,7 @@ class PlanYearReportBuilder
         Collection $accountsByCode,
         array &$warnings
     ): void {
-        $plans = ExpensePlan::with(['chartOfAccount', 'subsection', 'pattern'])
+        $plans = ExpensePlanRow::with(['chartOfAccount', 'subsection', 'pattern'])
             ->where('planning_year_id', $planningYear->id)
             ->get();
 

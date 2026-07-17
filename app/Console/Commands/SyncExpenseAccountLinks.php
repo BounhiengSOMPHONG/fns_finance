@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\ChartOfAccount;
 use App\Models\ExpenseCatalogItem;
-use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Support\ExpenseAccountLinkCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -88,7 +88,7 @@ class SyncExpenseAccountLinks extends Command
 
     private function syncPlanRowsFromDefaultRow(ExpenseCatalogItem $defaultRow): void
     {
-        ExpensePlan::where('catalog_item_id', $defaultRow->id)
+        ExpensePlanRow::where('catalog_item_id', $defaultRow->id)
             ->orWhere(function ($query) use ($defaultRow): void {
                 $query->where('subsection_id', $defaultRow->subsection_id)
                     ->where(function ($nested) use ($defaultRow): void {
@@ -97,7 +97,7 @@ class SyncExpenseAccountLinks extends Command
                     });
             })
             ->get()
-            ->each(function (ExpensePlan $plan) use ($defaultRow): void {
+            ->each(function (ExpensePlanRow $plan) use ($defaultRow): void {
                 $plan->update([
                     'catalog_item_id' => $defaultRow->id,
                     'chart_of_account_id' => $defaultRow->chart_of_account_id,

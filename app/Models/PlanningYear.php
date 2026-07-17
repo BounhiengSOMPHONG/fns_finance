@@ -48,6 +48,11 @@ class PlanningYear extends Model
         return $this->hasMany(ExpensePlan::class);
     }
 
+    public function expensePlanRows(): HasMany
+    {
+        return $this->hasMany(ExpensePlanRow::class);
+    }
+
     public function academicIncomePlans(): HasMany
     {
         return $this->hasMany(AcademicIncomePlan::class);
@@ -137,9 +142,9 @@ class PlanningYear extends Model
 
     public function totalAmount(): float
     {
-        return (float) $this->expensePlans()
+        return (float) $this->expensePlanRows()
             ->with('pattern')
             ->get()
-            ->sum(fn (ExpensePlan $plan): float => $plan->yearlyTotal());
+            ->sum(fn (ExpensePlanRow $plan): float => $plan->yearlyTotal());
     }
 }

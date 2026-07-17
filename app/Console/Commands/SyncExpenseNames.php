@@ -51,13 +51,13 @@ class SyncExpenseNames extends Command
             }
 
             foreach ($changes['plan_details'] as $change) {
-                DB::table('expense_plans')
+                DB::table('expense_plan_rows')
                     ->where('id', $change['id'])
                     ->update(['plan_detail' => $change['new'], 'updated_at' => $now]);
             }
 
             foreach ($changes['plan_item_names'] as $change) {
-                DB::table('expense_plans')
+                DB::table('expense_plan_rows')
                     ->where('id', $change['id'])
                     ->update(['item_name' => $change['new'], 'updated_at' => $now]);
             }
@@ -188,16 +188,16 @@ class SyncExpenseNames extends Command
                     continue;
                 }
 
-                $plans = DB::table('expense_plans')
-                    ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_plans.subsection_id')
+                $plans = DB::table('expense_plan_rows')
+                    ->join('expense_subsections', 'expense_subsections.id', '=', 'expense_plan_rows.subsection_id')
                     ->where('expense_subsections.code', $code)
-                    ->whereIn('expense_plans.plan_detail', $candidates)
-                    ->orderBy('expense_plans.id')
+                    ->whereIn('expense_plan_rows.plan_detail', $candidates)
+                    ->orderBy('expense_plan_rows.id')
                     ->get([
-                        'expense_plans.id',
-                        'expense_plans.item_name',
-                        'expense_plans.plan_detail',
-                        'expense_plans.subsection_id',
+                        'expense_plan_rows.id',
+                        'expense_plan_rows.item_name',
+                        'expense_plan_rows.plan_detail',
+                        'expense_plan_rows.subsection_id',
                     ]);
 
                 foreach ($plans as $plan) {

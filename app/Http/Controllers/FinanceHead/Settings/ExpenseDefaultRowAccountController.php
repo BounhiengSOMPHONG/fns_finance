@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
-use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
 use Illuminate\Http\Request;
@@ -174,7 +174,7 @@ class ExpenseDefaultRowAccountController extends Controller
             ? ExpensePattern::find($catalogItem->pattern_id)
             : null;
 
-        $plans = ExpensePlan::where('catalog_item_id', $catalogItem->id)
+        $plans = ExpensePlanRow::where('catalog_item_id', $catalogItem->id)
             ->orWhere(function ($query) use ($catalogItem, $oldItemName): void {
                 $query->where('subsection_id', $catalogItem->subsection_id)
                     ->where(function ($nested) use ($oldItemName): void {
@@ -215,7 +215,7 @@ class ExpenseDefaultRowAccountController extends Controller
 
     private function deletePlanRowsForCatalogItem(ExpenseCatalogItem $catalogItem): void
     {
-        $plans = ExpensePlan::where('catalog_item_id', $catalogItem->id)
+        $plans = ExpensePlanRow::where('catalog_item_id', $catalogItem->id)
             ->orWhere(function ($query) use ($catalogItem): void {
                 $query->where('subsection_id', $catalogItem->subsection_id)
                     ->where(function ($nested) use ($catalogItem): void {
@@ -225,7 +225,7 @@ class ExpenseDefaultRowAccountController extends Controller
             })
             ->get();
 
-        ExpensePlan::whereIn('id', $plans->pluck('id'))->delete();
+        ExpensePlanRow::whereIn('id', $plans->pluck('id'))->delete();
     }
 
     private function accountLabel(ChartOfAccount $account): string

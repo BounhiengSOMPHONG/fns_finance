@@ -46,6 +46,6 @@ class ExpenseCatalogItem extends Model
 
     public function plans(): HasMany
     {
-        return $this->hasMany(ExpensePlan::class, 'catalog_item_id');
+        return $this->hasMany(ExpensePlanRow::class, 'catalog_item_id');
     }
 }

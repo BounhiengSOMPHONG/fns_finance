@@ -4,7 +4,7 @@ namespace App\Http\Controllers\FinanceHead\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExpensePattern;
-use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -158,7 +158,7 @@ class ExpensePatternController extends Controller
 
     public function destroyField(ExpensePattern $expensePattern, string $fieldKey)
     {
-        $hasPlanValues = ExpensePlan::where('pattern_id', $expensePattern->id)
+        $hasPlanValues = ExpensePlanRow::where('pattern_id', $expensePattern->id)
             ->where(function ($query) use ($fieldKey): void {
                 $query->whereNotNull("calculation_values->{$fieldKey}")
                     ->orWhereNotNull('pattern_snapshot');

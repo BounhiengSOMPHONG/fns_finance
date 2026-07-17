@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
-use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
@@ -205,7 +205,7 @@ class ExpenseStructureController extends Controller
         DB::transaction(function () use ($expenseSection): void {
             $subsectionIds = ExpenseSubsection::where('section_id', $expenseSection->id)->pluck('id');
 
-            ExpensePlan::where('section_id', $expenseSection->id)->delete();
+            ExpensePlanRow::where('section_id', $expenseSection->id)->delete();
 
             if ($subsectionIds->isNotEmpty()) {
                 ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
@@ -307,7 +307,7 @@ class ExpenseStructureController extends Controller
                 ->unique()
                 ->values();
 
-            ExpensePlan::whereIn('subsection_id', $subsectionIds)->delete();
+            ExpensePlanRow::whereIn('subsection_id', $subsectionIds)->delete();
             ExpenseCatalogItem::whereIn('subsection_id', $subsectionIds)->delete();
             ExpenseSubsection::whereIn('id', $subsectionIds)->delete();
         });
@@ -363,7 +363,7 @@ class ExpenseStructureController extends Controller
             ]);
         }
 
-        $plans = ExpensePlan::where('subsection_id', $subsection->id)
+        $plans = ExpensePlanRow::where('subsection_id', $subsection->id)
             ->where(function ($query) use ($catalogItems, $oldPatternId): void {
                 if ($catalogItems->isNotEmpty()) {
                     $query->whereIn('catalog_item_id', $catalogItems->pluck('id'));

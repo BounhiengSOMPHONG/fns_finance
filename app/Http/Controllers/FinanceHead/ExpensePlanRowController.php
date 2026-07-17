@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExpenseCatalogItem;
 use App\Models\ExpensePattern;
 use App\Models\ExpensePlan;
+use App\Models\ExpensePlanRow;
 use App\Models\ExpenseSection;
 use App\Models\ExpenseSubsection;
 use App\Models\PlanningYear;
@@ -40,7 +41,9 @@ class ExpensePlanRowController extends Controller
         $calculationValues = $this->calculationValues($pattern, $values);
 
         $expensePlan = DB::transaction(function () use ($data, $planningYear, $section, $subsection, $catalogItem, $pattern, $calculationValues) {
-            $expensePlan = ExpensePlan::create([
+            $plan = $this->ensureExpensePlan($planningYear);
+            $expensePlan = ExpensePlanRow::create([
+                'expense_plan_id' => $plan->id,
                 'planning_year_id' => $planningYear->id,
                 'section_id' => $section->id,
                 'subsection_id' => $subsection?->id,
@@ -74,7 +77,7 @@ class ExpensePlanRowController extends Controller
 
     public function update(Request $request, int $expensePlanRow)
     {
-        $expensePlan = ExpensePlan::with(['pattern', 'chartOfAccount'])->findOrFail($expensePlanRow);
+        $expensePlan = ExpensePlanRow::with(['pattern', 'chartOfAccount'])->findOrFail($expensePlanRow);
         $this->ensurePlanCanBeEdited($expensePlan->planningYear);
 
         $data = $request->validate([
@@ -110,7 +113,7 @@ class ExpensePlanRowController extends Controller
 
     public function destroy(Request $request, int $expensePlanRow)
     {
-        $expensePlan = ExpensePlan::find($expensePlanRow);
+        $expensePlan = ExpensePlanRow::find($expensePlanRow);
         if ($expensePlan) {
             $this->ensurePlanCanBeEdited($expensePlan->planningYear);
         }
@@ -148,7 +151,21 @@ class ExpensePlanRowController extends Controller
         return $calculationValues;
     }
 
-    private function serializePlan(ExpensePlan $expensePlan): array
+    private function ensureExpensePlan(PlanningYear $planningYear): ExpensePlan
+    {
+        return ExpensePlan::firstOrCreate(
+            ['planning_year_id' => $planningYear->id],
+            [
+                'fiscal_year' => $planningYear->year,
+                'status' => 'DRAFT',
+                'notes' => null,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]
+        );
+    }
+
+    private function serializePlan(ExpensePlanRow $expensePlan): array
     {
         return [
             'id' => $expensePlan->id,

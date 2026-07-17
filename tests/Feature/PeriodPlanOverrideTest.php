@@ -381,7 +381,7 @@ class PeriodPlanOverrideTest extends TestCase
             'account_name' => 'Printing',
             'parent_id' => 3,
         ]);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             'id' => 3,
             'planning_year_id' => 1,
             'section_id' => 1,
@@ -610,7 +610,7 @@ class PeriodPlanOverrideTest extends TestCase
         ]);
         DB::table('expense_sections')->insert(['id' => 1, 'planning_year_id' => 1, 'code' => '2.1', 'name' => 'Expense']);
         DB::table('expense_subsections')->insert(['id' => 1, 'section_id' => 1, 'code' => '2.1.1', 'name' => 'Office']);
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             $this->expensePlanRow(1, 'Academic row', 4, 100),
             $this->expensePlanRow(2, 'Blocked row', 1, 80),
         ]);
@@ -637,7 +637,7 @@ class PeriodPlanOverrideTest extends TestCase
     {
         foreach ([
             'period_plan_overrides',
-            'expense_plans',
+            'expense_plan_rows',
             'expense_patterns',
             'expense_catalog_items',
             'expense_subsections',
@@ -758,7 +758,7 @@ class PeriodPlanOverrideTest extends TestCase
             $table->json('formula_schema')->nullable();
         });
 
-        Schema::create('expense_plans', function ($table): void {
+        Schema::create('expense_plan_rows', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedBigInteger('section_id');

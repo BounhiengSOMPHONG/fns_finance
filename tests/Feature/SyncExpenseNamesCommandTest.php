@@ -124,7 +124,7 @@ class SyncExpenseNamesCommandTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        DB::table('expense_plans')->insert([
+        DB::table('expense_plan_rows')->insert([
             [
                 'id' => 40,
                 'planning_year_id' => 13,
@@ -162,16 +162,16 @@ class SyncExpenseNamesCommandTest extends TestCase
         $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_catalog_items')->where('id', 30)->value('item_name'));
         $this->assertSame(123, DB::table('expense_catalog_items')->where('id', 30)->value('chart_of_account_id'));
         $this->assertSame(['yearly_total' => 999], json_decode(DB::table('expense_catalog_items')->where('id', 30)->value('default_values'), true));
-        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plans')->where('id', 40)->value('plan_detail'));
-        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plans')->where('id', 40)->value('item_name'));
-        $this->assertSame('custom user text', DB::table('expense_plans')->where('id', 41)->value('plan_detail'));
-        $this->assertSame('custom user text', DB::table('expense_plans')->where('id', 41)->value('item_name'));
-        $this->assertSame('keep note', DB::table('expense_plans')->where('id', 40)->value('detail'));
+        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plan_rows')->where('id', 40)->value('plan_detail'));
+        $this->assertSame('ອຸປະກອນທົດລອງຟິຊິກສາດ', DB::table('expense_plan_rows')->where('id', 40)->value('item_name'));
+        $this->assertSame('custom user text', DB::table('expense_plan_rows')->where('id', 41)->value('plan_detail'));
+        $this->assertSame('custom user text', DB::table('expense_plan_rows')->where('id', 41)->value('item_name'));
+        $this->assertSame('keep note', DB::table('expense_plan_rows')->where('id', 40)->value('detail'));
     }
 
     private function createExpenseSyncTables(): void
     {
-        Schema::dropIfExists('expense_plans');
+        Schema::dropIfExists('expense_plan_rows');
         Schema::dropIfExists('expense_catalog_items');
         Schema::dropIfExists('expense_subsections');
         Schema::dropIfExists('expense_sections');
@@ -205,7 +205,7 @@ class SyncExpenseNamesCommandTest extends TestCase
             $table->timestamp('updated_at')->nullable();
         });
 
-        Schema::create('expense_plans', function ($table): void {
+        Schema::create('expense_plan_rows', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('planning_year_id');
             $table->unsignedBigInteger('section_id');

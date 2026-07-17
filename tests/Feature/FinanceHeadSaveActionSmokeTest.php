@@ -363,6 +363,29 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_expense_structure_requires_a_calculation_pattern(): void
+    {
+        [$year, , , $section, $subsection] = $this->seedExpenseStructure();
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $year->id,
+            ]))
+            ->assertOk()
+            ->assertDontSee('ບໍ່ມີແບບຄຳນວນ');
+
+        $this->actingAs($this->financeHead)
+            ->patch(route('head_of_finance.settings.expense-structure.subsections.update', $subsection), [
+                'parent_id' => null,
+                'code' => $subsection->code,
+                'name' => $subsection->name,
+                'description' => '',
+                'display_order' => 1,
+                'is_active' => '1',
+            ])
+            ->assertSessionHasErrors('default_pattern_id');
+    }
+
     private function seedExpenseStructure(): array
     {
         $year = PlanningYear::create([

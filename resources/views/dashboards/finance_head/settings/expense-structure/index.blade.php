@@ -283,7 +283,6 @@
                                         </td>
                                         <td class="py-2 pr-3">
                                             <select name="default_pattern_id" class="fns-input min-w-44">
-                                                <option value="">ບໍ່ມີແບບຄຳນວນ</option>
                                                 @foreach($patterns as $pattern)
                                                     <option value="{{ $pattern->id }}" @selected($subsection->default_pattern_id === $pattern->id)>
                                                         {{ $pattern->name }}
@@ -455,7 +454,6 @@
                                     </td>
                                     <td class="py-3 pr-3">
                                         <select name="default_pattern_id" class="fns-input min-w-44">
-                                            <option value="">ບໍ່ມີແບບຄຳນວນ</option>
                                             @foreach($patterns as $pattern)
                                                 <option value="{{ $pattern->id }}">{{ $pattern->name }}</option>
                                             @endforeach

@@ -230,7 +230,7 @@ class ExpenseStructureController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'default_pattern_id' => [
-                'nullable',
+                'required',
                 Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
             ],
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],
@@ -269,7 +269,7 @@ class ExpenseStructureController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'default_pattern_id' => [
-                'nullable',
+                'required',
                 Rule::exists('expense_patterns', 'id')->whereIn('key', ExpensePattern::SYSTEM_DEFAULT_KEYS),
             ],
             'display_order' => ['required', 'integer', 'min:0', 'max:999'],

@@ -1,17 +1,22 @@
 @php
+    $expenseSetupQuery = request()->filled('planning_year_id')
+        ? ['planning_year_id' => request()->integer('planning_year_id')]
+        : [];
     $expenseSetupTabs = [
         [
             'step' => '01',
             'label' => 'DEF ແຕ່ລະປີ',
             'description' => 'ໝວດ, ກຸ່ມ, ລາຍການຕາມສົກປີ',
-            'route' => route('head_of_finance.settings.expense-setup.index'),
+            'route' => request()->filled('planning_year_id')
+                ? route('head_of_finance.settings.expense-structure.index', $expenseSetupQuery)
+                : route('head_of_finance.settings.expense-setup.index'),
             'active' => request()->routeIs('head_of_finance.settings.expense-setup.*') || request()->routeIs('head_of_finance.settings.expense-structure.*'),
         ],
         [
             'step' => '02',
             'label' => 'ລາຍການລິ້ງບັນຊີ',
             'description' => 'ຄົ້ນຫາ ແລະ ເຊື່ອມ Chart of Account',
-            'route' => route('head_of_finance.settings.expense-default-rows.accounts.index'),
+            'route' => route('head_of_finance.settings.expense-default-rows.accounts.index', $expenseSetupQuery),
             'active' => request()->routeIs('head_of_finance.settings.expense-default-rows.*'),
         ],
         [

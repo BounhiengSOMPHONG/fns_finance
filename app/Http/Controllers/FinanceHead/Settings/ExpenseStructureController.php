@@ -42,17 +42,17 @@ class ExpenseStructureController extends Controller
         });
 
         $catalogYear = $years->firstWhere('is_active', true) ?? $years->first();
-        $catalogItemsQuery = ExpenseCatalogItem::query()
-            ->when($catalogYear, fn ($query) => $query
-                ->whereHas('subsection.section', fn ($sectionQuery) => $sectionQuery
-                    ->where('planning_year_id', $catalogYear->id)));
-
-        $catalogItemsCount = (clone $catalogItemsQuery)->count();
-        $linkedCatalogItemsCount = (clone $catalogItemsQuery)->whereNotNull('chart_of_account_id')->count();
+        $accountLinkYearSummaries = $yearSummaries
+            ->filter(fn (array $summary): bool => $summary['items_count'] > 0)
+            ->values();
+        $catalogItemsCount = $yearSummaries->sum('items_count');
+        $linkedCatalogItemsCount = $yearSummaries->sum('linked_items_count');
         $patterns = ExpensePattern::orderBy('id')->get();
 
         return view('dashboards.finance_head.settings.expense-setup.index', [
             'yearSummaries' => $yearSummaries,
+            'catalogYear' => $catalogYear,
+            'accountLinkYearSummaries' => $accountLinkYearSummaries,
             'catalogItemsCount' => $catalogItemsCount,
             'linkedCatalogItemsCount' => $linkedCatalogItemsCount,
             'unlinkedCatalogItemsCount' => max($catalogItemsCount - $linkedCatalogItemsCount, 0),

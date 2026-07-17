@@ -59,7 +59,7 @@
                     @endif
                 </span>
             </div>
-            <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="fns-btn fns-btn-secondary">
+            <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index', ['planning_year_id' => $planningYear->id]) }}" class="fns-btn fns-btn-secondary">
                 ໄປລິ້ງບັນຊີ
             </a>
         </section>
@@ -375,7 +375,7 @@
                                                                 <span>ລຳດັບ</span>
                                                                 <input type="number" name="sort_order" value="{{ $defaultRow->sort_order }}" class="fns-input" min="1" max="999" required>
                                                             </label>
-                                                            <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index', ['q' => $defaultRow->item_name]) }}"
+                                                            <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index', ['planning_year_id' => $planningYear->id, 'q' => $defaultRow->item_name]) }}"
                                                                class="fns-btn fns-btn-secondary fns-btn-sm">
                                                                 ໄປລິ້ງບັນຊີ
                                                             </a>

@@ -17,10 +17,11 @@ class ExpenseDefaultRowAccountController extends Controller
     public function index(Request $request)
     {
         $query = trim((string) $request->query('q', ''));
-        $planningYear = PlanningYear::where('is_active', true)
-            ->orderByDesc('year')
-            ->first()
-            ?? PlanningYear::orderByDesc('year')->first();
+        $years = PlanningYear::orderByDesc('year')->get();
+        $planningYear = $request->filled('planning_year_id')
+            ? $years->firstWhere('id', (int) $request->integer('planning_year_id'))
+            : $years->firstWhere('is_active', true);
+        $planningYear ??= $years->first();
 
         $rows = ExpenseCatalogItem::with(['chartOfAccount.parent', 'subsection.section.planningYear'])
             ->when($planningYear, function ($builder) use ($planningYear): void {
@@ -67,6 +68,8 @@ class ExpenseDefaultRowAccountController extends Controller
         return view('dashboards.finance_head.settings.expense-default-rows.index', [
             'rows' => $rows,
             'query' => $query,
+            'years' => $years,
+            'planningYear' => $planningYear,
             'subsectionLabels' => $subsectionLabels,
             'accountOptions' => $accountOptions,
         ]);

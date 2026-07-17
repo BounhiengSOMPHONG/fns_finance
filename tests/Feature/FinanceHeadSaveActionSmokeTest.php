@@ -253,6 +253,102 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
         $this->assertSame($year->id, $section->planning_year_id);
     }
 
+    public function test_account_link_page_uses_selected_planning_year_rows(): void
+    {
+        [$targetYear, $account, $pattern] = $this->seedExpenseStructure();
+        $targetYear->update(['is_active' => false]);
+
+        $activeYear = PlanningYear::create([
+            'year' => 2028,
+            'name' => 'Planning 2028',
+            'is_active' => true,
+            'status' => PlanningYear::STATUS_DRAFT,
+        ]);
+        $activeSection = ExpenseSection::create([
+            'planning_year_id' => $activeYear->id,
+            'code' => '7.21',
+            'name' => 'Active Section',
+            'description' => null,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+        $activeSubsection = ExpenseSubsection::create([
+            'section_id' => $activeSection->id,
+            'code' => '7.21.1',
+            'name' => 'Active Subsection',
+            'description' => null,
+            'default_pattern_id' => $pattern->id,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+        ExpenseCatalogItem::create([
+            'subsection_id' => $activeSubsection->id,
+            'item_name' => 'Active Year Only Item',
+            'chart_of_account_id' => $account->id,
+            'pattern_id' => $pattern->id,
+            'default_values' => [],
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-default-rows.accounts.index', [
+                'planning_year_id' => $targetYear->id,
+            ]))
+            ->assertOk()
+            ->assertSee('Smoke Catalog Item')
+            ->assertDontSee('Active Year Only Item');
+    }
+
+    public function test_expense_setup_account_link_card_lists_each_planning_year(): void
+    {
+        [$firstYear, $account, $pattern] = $this->seedExpenseStructure();
+        $secondYear = PlanningYear::create([
+            'year' => 2028,
+            'name' => 'Planning 2028',
+            'is_active' => true,
+            'status' => PlanningYear::STATUS_DRAFT,
+        ]);
+        $secondSection = ExpenseSection::create([
+            'planning_year_id' => $secondYear->id,
+            'code' => '7.21',
+            'name' => 'Second Section',
+            'description' => null,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+        $secondSubsection = ExpenseSubsection::create([
+            'section_id' => $secondSection->id,
+            'code' => '7.21.1',
+            'name' => 'Second Subsection',
+            'description' => null,
+            'default_pattern_id' => $pattern->id,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+        ExpenseCatalogItem::create([
+            'subsection_id' => $secondSubsection->id,
+            'item_name' => 'Second Year Item',
+            'chart_of_account_id' => $account->id,
+            'pattern_id' => $pattern->id,
+            'default_values' => [],
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-setup.index'))
+            ->assertOk()
+            ->assertSee('2027')
+            ->assertSee('2028')
+            ->assertSee(route('head_of_finance.settings.expense-default-rows.accounts.index', [
+                'planning_year_id' => $firstYear->id,
+            ]), false)
+            ->assertSee(route('head_of_finance.settings.expense-default-rows.accounts.index', [
+                'planning_year_id' => $secondYear->id,
+            ]), false);
+    }
+
     private function seedExpenseStructure(): array
     {
         $year = PlanningYear::create([

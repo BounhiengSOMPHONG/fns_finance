@@ -4,10 +4,6 @@
 @section('page-title', 'ຕັ້ງລາຍຈ່າຍ')
 
 @section('content')
-@php
-    $linkPercent = $catalogItemsCount > 0 ? round(($linkedCatalogItemsCount / $catalogItemsCount) * 100) : 0;
-@endphp
-
 <div class="ex-setup">
     <section class="ex-hero">
         <div>
@@ -64,26 +60,34 @@
             </div>
         </section>
 
-        <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="ex-card ex-card-link">
+        <section class="ex-card ex-card-link">
             <div class="ex-card-head">
                 <span class="ex-step">02</span>
                 <div>
                     <h3>ລາຍການລິ້ງບັນຊີ</h3>
-                    <p>ເຊື່ອມລາຍການລາຍຈ່າຍກັບ Chart of Account.</p>
+                    <p>ເຊື່ອມລາຍການລາຍຈ່າຍກັບ Chart of Account ແຍກຕາມສົກປີ.</p>
                 </div>
             </div>
-            <div class="ex-progress">
-                <div>
-                    <strong>{{ number_format($linkedCatalogItemsCount) }}</strong>
-                    <span>/ {{ number_format($catalogItemsCount) }} ເຊື່ອມແລ້ວ</span>
-                </div>
-                <small>{{ number_format($unlinkedCatalogItemsCount) }} ລາຍການຍັງບໍ່ເຊື່ອມ</small>
-                <span class="ex-progress-bar">
-                    <i style="width: {{ $linkPercent }}%"></i>
-                </span>
+            <div class="ex-link-years">
+                @forelse($accountLinkYearSummaries as $summary)
+                    @php
+                        $year = $summary['year'];
+                        $yearPercent = $summary['items_count'] > 0 ? round(($summary['linked_items_count'] / $summary['items_count']) * 100) : 0;
+                    @endphp
+                    <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index', ['planning_year_id' => $year->id]) }}"
+                       class="ex-link-year-row">
+                        <span>
+                            <strong>{{ $year->year }}</strong>
+                            <small>{{ number_format($summary['unlinked_items_count']) }} ລາຍການຍັງບໍ່ເຊື່ອມ</small>
+                        </span>
+                        <span>{{ number_format($summary['linked_items_count']) }}/{{ number_format($summary['items_count']) }}</span>
+                        <i style="width: {{ $yearPercent }}%"></i>
+                    </a>
+                @empty
+                    <div class="ex-empty">ຍັງບໍ່ມີ DEF ສຳລັບລິ້ງບັນຊີ.</div>
+                @endforelse
             </div>
-            <span class="ex-open">ໄປລິ້ງບັນຊີ</span>
-        </a>
+        </section>
 
         <a href="{{ route('head_of_finance.settings.expense-patterns.index') }}" class="ex-card ex-card-formula">
             <div class="ex-card-head">
@@ -169,7 +173,8 @@
     .ex-card-def { border-top:4px solid #13213b; }
     .ex-card-link { border-top:4px solid #16a34a; }
     .ex-card-formula { border-top:4px solid #c9991a; }
-    .ex-card[href]:hover {
+    .ex-card[href]:hover,
+    .ex-link-year-row:hover {
         border-color:#d39b27;
         box-shadow:0 12px 26px rgba(15,23,42,.10);
         transform:translateY(-1px);
@@ -215,24 +220,49 @@
         color:#64748b;
         text-align:center;
     }
-    .ex-progress { display:grid; gap:.45rem; margin-top:auto; }
-    .ex-progress strong,
     .ex-formula-stat strong { color:#13213b; font-size:1.65rem; line-height:1; }
-    .ex-progress span,
     .ex-formula-stat span { color:#64748b; font-size:.8rem; font-weight:800; }
-    .ex-progress small { color:#9a3412; font-size:.76rem; font-weight:900; }
-    .ex-progress-bar {
-        display:block;
-        height:.55rem;
-        overflow:hidden;
-        border-radius:999px;
-        background:#e2e8f0;
+    .ex-link-years {
+        display:grid;
+        gap:.45rem;
     }
-    .ex-progress-bar i {
+    .ex-link-year-row {
+        position:relative;
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:.65rem;
+        align-items:center;
+        overflow:hidden;
+        border:1px solid #e2e8f0;
+        border-radius:8px;
+        background:#f8fafc;
+        padding:.65rem .75rem;
+        color:#172033;
+        text-decoration:none;
+        transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+    .ex-link-year-row strong,
+    .ex-link-year-row > span:last-of-type {
+        position:relative;
+        z-index:1;
+        font-size:.88rem;
+        font-weight:900;
+        font-variant-numeric:tabular-nums;
+    }
+    .ex-link-year-row small {
+        position:relative;
+        z-index:1;
         display:block;
-        height:100%;
+        margin-top:.12rem;
+        color:#64748b;
+        font-size:.68rem;
+        font-weight:800;
+    }
+    .ex-link-year-row i {
+        position:absolute;
+        inset:auto auto 0 0;
+        height:3px;
         min-width:.35rem;
-        border-radius:999px;
         background:#16a34a;
     }
     .ex-formula-stat { display:flex; align-items:end; gap:.45rem; margin-top:auto; }

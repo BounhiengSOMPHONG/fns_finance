@@ -24,13 +24,23 @@
                 <h2 class="text-lg font-semibold text-slate-900">ລາຍການລິ້ງບັນຊີ</h2>
                 <p class="mt-1 text-sm text-slate-500">
                     ຄົ້ນຫາລາຍການລາຍຈ່າຍ ແລະ ເລືອກ Chart of Account ໃຫ້ຖືກ.
+                    @if($planningYear)
+                        <span class="font-semibold text-slate-700">ສົກປີ {{ $planningYear->year }}</span>
+                    @endif
                 </p>
             </div>
             <form method="GET" action="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="flex min-w-72 flex-1 justify-end gap-2">
+                <select name="planning_year_id" class="fns-input max-w-56" onchange="this.form.submit()">
+                    @foreach($years as $year)
+                        <option value="{{ $year->id }}" @selected($planningYear?->id === $year->id)>
+                            {{ $year->year }} - {{ $year->name }}
+                        </option>
+                    @endforeach
+                </select>
                 <input name="q" value="{{ $query }}" class="fns-input max-w-md" placeholder="ຄົ້ນຫາລາຍການ, ກຸ່ມ ຫຼື ລະຫັດບັນຊີ...">
                 <button type="submit" class="fns-btn fns-btn-primary">ຄົ້ນຫາ</button>
                 @if($query !== '')
-                    <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index') }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
+                    <a href="{{ route('head_of_finance.settings.expense-default-rows.accounts.index', $planningYear ? ['planning_year_id' => $planningYear->id] : []) }}" class="fns-btn fns-btn-secondary">ລ້າງ</a>
                 @endif
             </form>
         </div>

@@ -366,7 +366,7 @@
                 </tr>
                 <tr class="plan-year-budget-row">
                     <th>ລວມ</th>
-                    <th>ງົບລັດ</th>
+                    <th>ປົກກະຕິ</th>
                     <th>ວິຊາການ</th>
                 </tr>
             </thead>

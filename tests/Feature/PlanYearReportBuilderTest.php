@@ -58,7 +58,7 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertCount(1, $report['warnings']['unlinked_expenses']);
     }
 
-    public function test_salary_report_keeps_payment_channel_amounts_and_multiplies_monthly_total(): void
+    public function test_salary_report_keeps_payment_channel_amounts_and_uses_amount_as_monthly_total(): void
     {
         $this->seedAccounts();
         DB::table('planning_years')->insert(['id' => 1, 'year' => 2027, 'name' => 'Planning 2027']);
@@ -70,8 +70,8 @@ class PlanYearReportBuilderTest extends TestCase
             'person_count' => 2,
             'payment_type' => 'transfer',
             'amount' => 100,
-            'monthly_total' => 200,
-            'annual_amount' => 2400,
+            'monthly_total' => 100,
+            'annual_amount' => 1200,
         ]);
 
         $report = app(SalaryReportBuilder::class)->buildForPlanningYear(PlanningYear::findOrFail(1));
@@ -80,10 +80,10 @@ class PlanYearReportBuilderTest extends TestCase
         $this->assertSame(2, $rows->get('60100100')['person_count']);
         $this->assertSame(100.0, $rows->get('60100100')['transfer_amount']);
         $this->assertSame(0.0, $rows->get('60100100')['cash_amount']);
-        $this->assertSame(200.0, $rows->get('60100100')['monthly_total']);
-        $this->assertSame(2400.0, $rows->get('60100100')['annual_total']);
+        $this->assertSame(100.0, $rows->get('60100100')['monthly_total']);
+        $this->assertSame(1200.0, $rows->get('60100100')['annual_total']);
         $this->assertSame(100.0, $report['totals']['transfer_amount']);
-        $this->assertSame(2400.0, $report['totals']['annual_total']);
+        $this->assertSame(1200.0, $report['totals']['annual_total']);
     }
 
     public function test_period_report_defaults_to_quarter_amounts_and_excludes_non_academic_accounts(): void

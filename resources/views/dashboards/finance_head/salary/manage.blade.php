@@ -439,10 +439,7 @@
     function num(el) { return Number(rawMoney(el?.value)) || 0; }
 
     function rowMonthlyTotal(row) {
-        const personCount = Number(row.querySelector('.smg-persons')?.value || 0) || 0;
-        const amount = num(row.querySelector('.smg-amount'));
-
-        return Math.max(0, personCount) * amount;
+        return num(row.querySelector('.smg-amount'));
     }
 
     function recalc(row) {

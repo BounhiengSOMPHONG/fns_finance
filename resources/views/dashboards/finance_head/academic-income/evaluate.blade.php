@@ -97,6 +97,15 @@
 .ai-degree-total { text-align:right; flex-shrink:0; }
 .ai-degree-total span { display:block; color:#64748b; font-size:.66rem; font-weight:900; }
 .ai-degree-total b { display:block; color:var(--fns-navy); font-family:'Cinzel', serif; font-size:1rem; line-height:1.1; }
+.ai-degree-total em,
+.ai-row-total em,
+.ai-program-table tfoot em,
+.ai-cell-money,
+.ai-item-money,
+.ai-tally-money {
+    display:block; margin-top:.12rem; color:#1a4a2e; font-style:normal; font-size:.68rem; font-weight:900;
+    font-variant-numeric:tabular-nums; line-height:1.2;
+}
 .ai-table-scroll {
     width:100%; overflow:visible; background:#fff;
 }
@@ -140,7 +149,7 @@
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .ai-row {
-    display:flex; align-items:center; justify-content:flex-end; gap:.35rem; min-height:38px;
+    display:flex; align-items:center; justify-content:flex-end; gap:.35rem; min-height:48px;
     border:1px solid transparent; border-radius:7px; background:transparent; cursor:text;
     transition:background .14s, border-color .14s, box-shadow .14s;
 }
@@ -164,6 +173,11 @@
     padding:.42rem .55rem; color:var(--fns-navy); background:#fff; font-family:'Cinzel', serif;
     font-size:.98rem; font-weight:900; outline:none; -moz-appearance:textfield;
 }
+.ai-cell-input {
+    display:grid;
+    justify-items:end;
+    gap:.1rem;
+}
 .ai-num::-webkit-outer-spin-button, .ai-num::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .ai-num:focus { border-color:var(--fns-navy); box-shadow:0 0 0 3px rgba(46,63,110,.12); }
 .ai-row.is-zero .ai-num { color:#9ca3af; background:#f8fafc; }
@@ -179,6 +193,8 @@
     background:#f8fafc; color:var(--fns-navy); font-weight:900; text-align:right;
     font-variant-numeric:tabular-nums;
 }
+.ai-row-total span,
+.ai-program-table tfoot span { display:block; }
 .ai-program-table tfoot th {
     position:sticky; left:0; z-index:3; text-align:left; background:#f8fafc;
 }
@@ -208,6 +224,8 @@
 .ai-item-rate { color:#475569; font-size:.72rem; line-height:1.4; }
 .ai-item-rate b { color:var(--fns-navy); }
 .ai-item-rate.warn { color:#b45309; }
+.ai-item-money { font-size:.74rem; color:#1a4a2e; }
+.ai-tally-money { display:inline-block; margin-left:.45rem; font-size:.82rem; }
 .ai-item-side { display:flex; align-items:center; justify-content:flex-end; gap:.42rem; min-width:0; }
 .ai-item-side .ai-num { width:5.1rem; min-width:5.1rem; padding:.44rem .55rem; }
 .ai-eq {
@@ -294,7 +312,21 @@
         });
     };
 
-    $makeCell = function ($program, string $inputPrefix, string $section, bool $year1Split = false) use ($creditPrices, $existingItems): array {
+    $nuolByLevel = [
+        'bachelor' => (float) ($nuolSettings->get('bachelor')?->percentage ?? 0.17),
+        'master' => (float) ($nuolSettings->get('master')?->percentage ?? 0.10),
+        'phd' => (float) ($nuolSettings->get('phd')?->percentage ?? 0.10),
+    ];
+
+    $weightedNuol = function ($setting): float {
+        if (! $setting || $setting->total_rate <= 0) {
+            return 0.0;
+        }
+
+        return (float) ($setting->items->sum(fn ($item) => $item->amount * $item->nuol_pct) / $setting->total_rate);
+    };
+
+    $makeCell = function ($program, string $inputPrefix, string $section, bool $year1Split = false) use ($creditPrices, $existingItems, $nuolByLevel): array {
         $totalCreditUnit = $program->latestCourseCredit?->course_credit_unit;
         $creditUnit = $totalCreditUnit;
         if ($totalCreditUnit && in_array($program->level, ['master', 'phd'], true)) {
@@ -305,6 +337,7 @@
         $price = $creditPrices[$program->level]?->credit_unit_price ?? null;
         $existing = $existingItems->get($section . '_' . $program->id);
         $value = (int) old($inputPrefix . '.' . $program->id, $existing?->student_count ?? 0);
+        $amountRate = (float) ($creditUnit ?? 0) * (float) ($price ?? 0) * (1 - ($nuolByLevel[$program->level] ?? $nuolByLevel['bachelor']));
 
         return [
             'programId' => $program->id,
@@ -313,6 +346,8 @@
             'name' => $program->name,
             'search' => \Illuminate\Support\Str::lower(($program->code ?? '') . ' ' . $program->name),
             'value' => $value,
+            'amount' => (float) ($existing?->total_income ?? ($value * $amountRate)),
+            'amountRate' => $amountRate,
             'warn' => ! $creditUnit || ! $price,
         ];
     };
@@ -421,21 +456,27 @@
         ],
     ]);
 
+    $feeYear2_4AmountRate = (float) ($feeYear2_4?->total_rate ?? 0) * (1 - $weightedNuol($feeYear2_4));
+    $feeYear1AmountRate = (float) ($feeYear1?->total_rate ?? 0) * (1 - $weightedNuol($feeYear1));
+    $flatExisting = fn (string $key) => $existingItems->get($key);
+
     $items = [
         ['tag'=>'1.2', 'name'=>'students_1_2', 'title'=>'ຄ່າລົງທະບຽນ ນ/ສ ປີ 2-4 (ຄວທ)', 'key'=>'1.2_',
          'rate'=> $feeYear2_4 ? number_format($feeYear2_4->total_rate,0).' ກີບ' : null,
+         'amountRate'=>$feeYear2_4AmountRate,
          'warn'=>'ຍັງບໍ່ໄດ້ຕັ້ງຄ່າລົງທະບຽນ ປີ 2-4', 'eq'=>false],
         ['tag'=>'1.4', 'name'=>'students_1_4', 'title'=>'ຄ່າລົງທະບຽນ ນ/ສ ປີ 1 (ຄວທ)', 'key'=>'1.4_',
          'rate'=> $feeYear1 ? number_format($feeYear1->total_rate,0).' ກີບ' : null,
+         'amountRate'=>$feeYear1AmountRate,
          'warn'=>'ຍັງບໍ່ໄດ້ຕັ້ງຄ່າລົງທະບຽນ ປີ 1', 'eq'=>false],
         ['tag'=>'3', 'name'=>'students_2_1', 'title'=>$incomeRates->get('item3_rate')?->label ?? 'ລາຍການ 3', 'key'=>'2.1_',
-         'rateField'=>'item3_rate', 'rateVal'=>(float)($incomeRates->get('item3_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>false],
+         'rateField'=>'item3_rate', 'rateVal'=>(float)($incomeRates->get('item3_rate')?->rate ?? 0), 'amountRate'=>(float)($incomeRates->get('item3_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>false],
         ['tag'=>'4', 'name'=>'students_2_2', 'title'=>$incomeRates->get('item4_rate')?->label ?? 'ລາຍການ 4', 'key'=>'2.2_',
-         'rateField'=>'item4_rate', 'rateVal'=>(float)($incomeRates->get('item4_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>true],
+         'rateField'=>'item4_rate', 'rateVal'=>(float)($incomeRates->get('item4_rate')?->rate ?? 0), 'amountRate'=>(float)($incomeRates->get('item4_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>true],
         ['tag'=>'5', 'name'=>'students_2_3', 'title'=>$incomeRates->get('item5_rate')?->label ?? 'ລາຍການ 5', 'key'=>'2.3_',
-         'rateField'=>'item5_rate', 'rateVal'=>(float)($incomeRates->get('item5_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>true],
+         'rateField'=>'item5_rate', 'rateVal'=>(float)($incomeRates->get('item5_rate')?->rate ?? 0), 'amountRate'=>(float)($incomeRates->get('item5_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>true],
         ['tag'=>'6', 'name'=>'students_2_4', 'title'=>$incomeRates->get('item6_rate')?->label ?? 'ລາຍການ 6', 'key'=>'2.4_',
-         'rateField'=>'item6_rate', 'rateVal'=>(float)($incomeRates->get('item6_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>false],
+         'rateField'=>'item6_rate', 'rateVal'=>(float)($incomeRates->get('item6_rate')?->rate ?? 0), 'amountRate'=>(float)($incomeRates->get('item6_rate')?->rate ?? 0), 'warn'=>null, 'eq'=>false],
     ];
     $rateItems = collect($items)->filter(fn($it) => !empty($it['rateField']));
 @endphp
@@ -472,7 +513,10 @@
     <section class="ai-step-panel is-active" data-step-panel="1">
         <div class="ai-panel-body">
             <div class="ai-section-note">
-                <span class="ai-tally">ລວມນັກສຶກສາ: <b data-grand-program-total>0</b> ຄົນ</span>
+                <span class="ai-tally">
+                    ລວມນັກສຶກສາ: <b data-grand-program-total>0</b> ຄົນ
+                    <span class="ai-tally-money">ລວມເງິນ: <b data-grand-program-amount>0</b> ກີບ</span>
+                </span>
             </div>
             <div class="ai-table-tools">
                 <div class="ai-filter-group" aria-label="ຕົວກອງ">
@@ -495,15 +539,24 @@
         <div class="ai-panel-body">
             <div class="ai-section-note">
                 <span>ປຸ່ມ <b>= 1.2+1.4</b> ຈະໃສ່ຈຳນວນລວມຈາກຄ່າລົງທະບຽນປີ 1 ແລະ ປີ 2-4.</span>
-                <span class="ai-tally">ລວມລາຍການນີ້: <b data-tally="items">0</b> ຄົນ</span>
+                <span class="ai-tally">
+                    ລວມລາຍການນີ້: <b data-tally="items">0</b> ຄົນ
+                    <span class="ai-tally-money">ລວມເງິນ: <b data-amount-tally="items">0</b> ກີບ</span>
+                </span>
             </div>
             <div class="ai-fee-grid">
                 @foreach($items as $it)
-                    @php $val = (int) old($it['name'], $existingItems->get($it['key'])?->student_count ?? 0); @endphp
+                    @php
+                        $existingFlatItem = $flatExisting($it['key']);
+                        $val = (int) old($it['name'], $existingFlatItem?->student_count ?? 0);
+                        $amount = (float) ($existingFlatItem?->total_income ?? ($val * (float) ($it['amountRate'] ?? 0)));
+                    @endphp
                     <label class="ai-row ai-item @if($val<=0) is-zero @endif"
                            data-name="{{ \Illuminate\Support\Str::lower($it['title']) }}"
                            data-save-kind="count"
-                           data-item-name="{{ $it['name'] }}">
+                           data-item-name="{{ $it['name'] }}"
+                           @if(!empty($it['rateField'])) data-rate-field="{{ $it['rateField'] }}" @endif
+                           data-amount-rate="{{ $it['amountRate'] ?? 0 }}">
                         <span class="ai-row-name">
                             <span class="ai-item-title"><span class="ai-item-tag">{{ $it['tag'] }}</span> <span class="ai-row-txt" title="{{ $it['title'] }}">{{ $it['title'] }}</span></span>
                             @if(!empty($it['rateField']))
@@ -513,13 +566,14 @@
                             @else
                                 <span class="ai-item-rate warn">{{ $it['warn'] }}</span>
                             @endif
+                            <span class="ai-item-money">ລວມເງິນ: <b data-item-amount>{{ number_format($amount, 0) }}</b> ກີບ</span>
                         </span>
                         <span class="ai-item-side">
                             @if($it['eq'])
                                 <button type="button" class="ai-eq" data-eq title="ໃສ່ຈຳນວນ ນ/ສ ທັງໝົດ (1.2 + 1.4)">= 1.2+1.4</button>
                             @endif
                             <input type="number" name="{{ $it['name'] }}" min="0" inputmode="numeric" required
-                                value="{{ $val }}" class="ai-num" data-sec="items" data-initial="{{ $val }}">
+                                value="{{ $val }}" class="ai-num" data-sec="items" data-amount-rate="{{ $it['amountRate'] ?? 0 }}" data-income-amount="{{ $amount }}" data-initial="{{ $val }}">
                         </span>
                     </label>
                 @endforeach
@@ -729,16 +783,21 @@
 
     function recalc() {
         const secSum = {};
+        const amountSum = {};
         let grand = 0;
         let filled = 0;
         let programGrand = 0;
+        let programAmountGrand = 0;
         nums.forEach(el => {
             const value = parseInt(el.value, 10) || 0;
+            const amount = value * (parseFloat(el.dataset.amountRate || '0') || 0);
             const sec = el.dataset.sec;
             secSum[sec] = (secSum[sec] || 0) + value;
+            amountSum[sec] = (amountSum[sec] || 0) + amount;
             grand += value;
             if (el.dataset.level) {
                 programGrand += value;
+                programAmountGrand += amount;
             }
             if (value > 0) {
                 filled++;
@@ -750,14 +809,21 @@
         document.querySelectorAll('.ai-program-table').forEach(table => {
             const colSum = {};
             let tableTotal = 0;
+            let tableAmountTotal = 0;
             table.querySelectorAll('tbody .ai-table-row').forEach(row => {
                 let rowTotal = 0;
+                let rowAmountTotal = 0;
                 let rowDirty = false;
                 row.querySelectorAll('.ai-num').forEach(input => {
                     const value = parseInt(input.value, 10) || 0;
+                    const amount = value * (parseFloat(input.dataset.amountRate || '0') || 0);
                     rowTotal += value;
+                    rowAmountTotal += amount;
                     tableTotal += value;
+                    tableAmountTotal += amount;
                     colSum[input.dataset.col] = (colSum[input.dataset.col] || 0) + value;
+                    const amountCell = input.closest('.ai-row')?.querySelector('[data-cell-amount]');
+                    if (amountCell) amountCell.textContent = `${fmt.format(amount)} ກີບ`;
                     if (String(input.value || '0') !== String(input.dataset.initial || '0')) {
                         rowDirty = true;
                     }
@@ -766,15 +832,30 @@
                 row.dataset.filterState = rowDirty ? 'dirty' : (rowTotal <= 0 ? 'zero' : 'filled');
                 const totalCell = row.querySelector('[data-row-total]');
                 if (totalCell) totalCell.textContent = fmt.format(rowTotal);
+                const rowAmount = row.querySelector('[data-row-amount]');
+                if (rowAmount) rowAmount.textContent = `${fmt.format(rowAmountTotal)} ກີບ`;
             });
             table.querySelectorAll('[data-col-total]').forEach(cell => {
                 cell.textContent = fmt.format(colSum[cell.dataset.colTotal] || 0);
             });
             table.querySelector('[data-table-total]').textContent = fmt.format(tableTotal);
+            const tableAmount = table.querySelector('[data-table-amount]');
+            if (tableAmount) tableAmount.textContent = `${fmt.format(tableAmountTotal)} ກີບ`;
             document.querySelector(`[data-degree-total="${table.dataset.programTable}"]`).textContent = fmt.format(tableTotal);
+            const degreeAmount = document.querySelector(`[data-degree-amount="${table.dataset.programTable}"]`);
+            if (degreeAmount) degreeAmount.textContent = `${fmt.format(tableAmountTotal)} ກີບ`;
         });
         document.querySelectorAll('[data-tally]').forEach(el => {
             el.textContent = fmt.format(secSum[el.dataset.tally] || 0);
+        });
+        document.querySelectorAll('[data-amount-tally]').forEach(el => {
+            el.textContent = fmt.format(amountSum[el.dataset.amountTally] || 0);
+        });
+        document.querySelectorAll('.ai-item').forEach(row => {
+            const input = row.querySelector('.ai-num');
+            const amount = (parseInt(input?.value || '0', 10) || 0) * (parseFloat(input?.dataset.amountRate || row.dataset.amountRate || '0') || 0);
+            const amountEl = row.querySelector('[data-item-amount]');
+            if (amountEl) amountEl.textContent = fmt.format(amount);
         });
         const grandEl = document.getElementById('ai-grand');
         const filledEl = document.getElementById('ai-filled');
@@ -783,6 +864,8 @@
         if (filledEl) filledEl.textContent = filled;
         if (totalEl) totalEl.textContent = nums.length;
         document.querySelector('[data-grand-program-total]').textContent = fmt.format(programGrand);
+        const programAmountEl = document.querySelector('[data-grand-program-amount]');
+        if (programAmountEl) programAmountEl.textContent = fmt.format(programAmountGrand);
         applyStepFilter(1);
     }
 
@@ -858,6 +941,12 @@
         input.addEventListener('input', () => {
             const preview = document.querySelector(`[data-rate-preview="${input.dataset.rateInput}"]`);
             if (preview) preview.textContent = fmt.format(parseFloat(input.value) || 0);
+            document.querySelectorAll(`[data-rate-field="${input.dataset.rateInput}"]`).forEach(row => {
+                row.dataset.amountRate = parseFloat(input.value) || 0;
+                const num = row.querySelector('.ai-num');
+                if (num) num.dataset.amountRate = parseFloat(input.value) || 0;
+            });
+            recalc();
         });
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
@@ -901,6 +990,15 @@
             const data = await res.json();
             target.classList.remove('row-saving');
             if (!res.ok || !data.success) throw new Error(data.message || 'Error');
+            if (data.item && Object.prototype.hasOwnProperty.call(data.item, 'total_income')) {
+                const input = target.querySelector?.('.ai-num');
+                if (input) input.dataset.incomeAmount = Number(data.item.total_income || 0);
+                const cellAmount = target.querySelector?.('[data-cell-amount]');
+                if (cellAmount) cellAmount.textContent = `${fmt.format(Number(data.item.total_income || 0))} ກີບ`;
+                const itemAmount = target.querySelector?.('[data-item-amount]');
+                if (itemAmount) itemAmount.textContent = fmt.format(Number(data.item.total_income || 0));
+            }
+            recalc();
 
             target.classList.add('row-saved');
             setTimeout(() => target.classList.remove('row-saved'), 900);

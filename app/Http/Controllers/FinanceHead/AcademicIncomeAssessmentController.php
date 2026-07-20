@@ -55,11 +55,12 @@ class AcademicIncomeAssessmentController extends Controller
         $existingItems = $academicIncome->items->keyBy(fn ($item) => $item->section_code.'_'.$item->degree_program_id);
 
         $incomeRates = $this->incomeRatesFor();
+        $nuolSettings = $this->nuolSettingsFor();
 
         return view('dashboards.finance_head.academic-income.evaluate', compact(
             'academicIncome', 'programs11', 'programs13_bach', 'programs13_master',
             'creditPrices', 'feeYear2_4', 'feeYear1', 'existingItems',
-            'incomeRates'
+            'incomeRates', 'nuolSettings'
         ));
     }
 

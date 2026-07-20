@@ -241,6 +241,76 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
         $this->assertSame($year->id, $section->planning_year_id);
     }
 
+    public function test_expense_structure_creation_keeps_the_created_section_active(): void
+    {
+        [$year, , $pattern] = $this->seedExpenseStructure();
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.settings.expense-structure.sections.store'), [
+                'planning_year_id' => $year->id,
+                'code' => '6.22',
+                'name' => 'Created Section',
+                'description' => '',
+                'display_order' => 2,
+                'is_active' => '1',
+            ])
+            ->assertRedirect();
+
+        $createdSection = ExpenseSection::where('code', '6.22')->firstOrFail();
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.settings.expense-structure.subsections.store', $createdSection), [
+                'parent_id' => null,
+                'code' => '6.22.1',
+                'name' => 'Created Subsection',
+                'description' => '',
+                'default_pattern_id' => $pattern->id,
+                'display_order' => 1,
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $year->id,
+                'active_section' => $createdSection->id,
+            ]));
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $year->id,
+                'active_section' => $createdSection->id,
+            ]))
+            ->assertOk()
+            ->assertSee('class="es-section-tab is-active"'.PHP_EOL.'                                data-section-target="'.$createdSection->id.'"', false)
+            ->assertSee('class="es-section-card js-section-panel is-active" data-section-panel="'.$createdSection->id.'"', false);
+    }
+
+    public function test_expense_default_row_creation_reopens_the_same_default_modal(): void
+    {
+        [$year, , , $section, $subsection] = $this->seedExpenseStructure();
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.settings.expense-default-rows.store'), [
+                'subsection_code' => $subsection->code,
+                'subsection_id' => $subsection->id,
+                'item_name' => 'New Modal Row',
+                'sort_order' => 2,
+            ])
+            ->assertRedirect(route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $year->id,
+                'active_section' => $section->id,
+                'active_default' => $subsection->id,
+            ]));
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $year->id,
+                'active_section' => $section->id,
+                'active_default' => $subsection->id,
+            ]))
+            ->assertOk()
+            ->assertSee('const EXPENSE_STRUCTURE_ACTIVE_DEFAULT_MODAL = "'.$subsection->id.'";', false)
+            ->assertSee('New Modal Row');
+    }
+
     public function test_account_link_page_uses_selected_planning_year_rows(): void
     {
         [$targetYear, $account, $pattern] = $this->seedExpenseStructure();
@@ -286,6 +356,41 @@ class FinanceHeadSaveActionSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Smoke Catalog Item')
             ->assertDontSee('Active Year Only Item');
+    }
+
+    public function test_expense_account_pickers_exclude_salary_accounts(): void
+    {
+        [$year, $expenseAccount] = $this->seedExpenseStructure();
+        ChartOfAccount::create([
+            'account_code' => '60100101',
+            'account_name' => 'Salary Account 60',
+        ]);
+        ChartOfAccount::create([
+            'account_code' => '61400100',
+            'account_name' => 'Salary Account 61',
+        ]);
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-default-rows.accounts.index', [
+                'planning_year_id' => $year->id,
+            ]))
+            ->assertOk()
+            ->assertSee($expenseAccount->account_code)
+            ->assertDontSee('60100101')
+            ->assertDontSee('61400100')
+            ->assertDontSee('Salary Account 60')
+            ->assertDontSee('Salary Account 61');
+
+        $this->actingAs($this->financeHead)
+            ->get(route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $year->id,
+            ]))
+            ->assertOk()
+            ->assertSee($expenseAccount->account_code)
+            ->assertDontSee('60100101')
+            ->assertDontSee('61400100')
+            ->assertDontSee('Salary Account 60')
+            ->assertDontSee('Salary Account 61');
     }
 
     public function test_expense_setup_account_link_card_lists_each_planning_year(): void

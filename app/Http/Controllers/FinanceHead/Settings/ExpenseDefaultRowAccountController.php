@@ -55,6 +55,7 @@ class ExpenseDefaultRowAccountController extends Controller
             ->keyBy('code');
 
         $accounts = ChartOfAccount::with('parent')
+            ->expenseSelectable()
             ->whereDoesntHave('children')
             ->orderBy('account_code')
             ->get();
@@ -119,7 +120,13 @@ class ExpenseDefaultRowAccountController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Catalog item added.');
+        return redirect()
+            ->route('head_of_finance.settings.expense-structure.index', [
+                'planning_year_id' => $subsection->section?->planning_year_id,
+                'active_section' => $subsection->section_id,
+                'active_default' => $subsection->id,
+            ])
+            ->with('success', 'Catalog item added.');
     }
 
     public function update(Request $request, ExpenseCatalogItem $expenseCatalogItem)

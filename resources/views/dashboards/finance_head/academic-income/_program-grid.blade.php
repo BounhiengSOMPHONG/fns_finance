@@ -10,6 +10,7 @@
             <div class="ai-degree-total">
                 <span>ລວມສ່ວນນີ້</span>
                 <b data-degree-total="{{ $table['key'] }}">0</b>
+                <em data-degree-amount="{{ $table['key'] }}">0 ກີບ</em>
             </div>
         </div>
 
@@ -56,14 +57,20 @@
                                                    data-col="{{ $column['key'] }}"
                                                    data-table-key="{{ $table['key'] }}"
                                                    data-level="{{ $table['level'] }}"
+                                                   data-amount-rate="{{ $cell['amountRate'] }}"
+                                                   data-income-amount="{{ $cell['amount'] }}"
                                                    data-initial="{{ $cell['value'] }}">
+                                            <span class="ai-cell-money" data-cell-amount>{{ number_format((float) $cell['amount'], 0) }} ກີບ</span>
                                         </label>
                                     @else
                                         <span class="ai-empty-cell">—</span>
                                     @endif
                                 </td>
                             @endforeach
-                            <td class="ai-row-total" data-row-total>0</td>
+                            <td class="ai-row-total">
+                                <span data-row-total>0</span>
+                                <em data-row-amount>0 ກີບ</em>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -73,7 +80,10 @@
                         @foreach($table['columns'] as $column)
                             <td data-col-total="{{ $column['key'] }}">0</td>
                         @endforeach
-                        <td data-table-total>0</td>
+                        <td>
+                            <span data-table-total>0</span>
+                            <em data-table-amount>0 ກີບ</em>
+                        </td>
                     </tr>
                 </tfoot>
             </table>

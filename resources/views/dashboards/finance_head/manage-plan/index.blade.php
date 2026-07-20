@@ -30,6 +30,7 @@
                 $incomeTotal = $plan->academicIncomePlans->sum(fn ($income) => $income->items->sum('total_income'));
                 $salaryTotal = $plan->salaryPlans->sum(fn ($salary) => $salary->entries->sum('annual_amount'));
                 $expenseTotal = $plan->expensePlanRows->sum(fn ($expense) => $expense->yearlyTotal());
+                $balanceTotal = (float) $incomeTotal - (float) $expenseTotal;
                 $isCurrent = (int) $plan->year === $currentYear;
                 $canEditPlan = $plan->canBeEdited();
                 $isSavedPlan = $plan->status === \App\Models\PlanningYear::STATUS_SAVED;
@@ -70,6 +71,10 @@
                     <div>
                         <span>ເງິນເດືອນ</span>
                         <strong>{{ $salaryPlan ? number_format((float) $salaryTotal, 0) . ' ກີບ' : 'ຍັງບໍ່ມີ' }}</strong>
+                    </div>
+                    <div class="mp-balance {{ $balanceTotal < 0 ? 'is-negative' : 'is-positive' }}">
+                        <span>ດຸນດ່ຽງລາຍຮັບ ແລະ ລາຍຈ່າຍວິຊາການ</span>
+                        <strong>{{ number_format($balanceTotal, 0) }} ກີບ</strong>
                     </div>
                 </div>
 
@@ -217,7 +222,7 @@
     .mp-card-title p { margin:.2rem 0 0; color:var(--fns-gray-600); font-size:.8rem; line-height:1.4; }
     .mp-pill { align-self:center; border-radius:999px; background:rgba(201,153,26,.16); color:#8a6410; padding:.28rem .58rem; font-size:.72rem; font-weight:900; white-space:nowrap; }
     .mp-pill-muted { background:#eef2f7; color:#64748b; }
-    .mp-status { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:.55rem; margin:.85rem 0; }
+    .mp-status { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:.55rem; margin:.85rem 0; }
     .mp-status div { border:1px solid #e2e8f0; border-radius:8px; padding:.6rem .7rem; background:#fbfdff; }
     .mp-status span { display:block; color:#64748b; font-size:.72rem; font-weight:900; }
     .mp-status strong {
@@ -229,6 +234,12 @@
         overflow-wrap:anywhere;
         line-height:1.25;
     }
+    .mp-status .mp-balance.is-positive { border-color:#bfdbc5; background:#f5fbf6; }
+    .mp-status .mp-balance.is-positive span,
+    .mp-status .mp-balance.is-positive strong { color:var(--fns-green); }
+    .mp-status .mp-balance.is-negative { border-color:#fecaca; background:#fff5f5; }
+    .mp-status .mp-balance.is-negative span,
+    .mp-status .mp-balance.is-negative strong { color:#b91c1c; }
     .mp-actions {
         display:flex; flex-wrap:wrap; gap:.45rem; align-items:center;
         padding-top:.85rem; border-top:1px solid #eef2f7;

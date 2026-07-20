@@ -112,7 +112,8 @@ class ExpensePlanController extends Controller
             'remaining_total' => $academicIncomeTotal - $expenseTotal,
         ];
 
-        $chartAccounts = ChartOfAccount::whereDoesntHave('children')
+        $chartAccounts = ChartOfAccount::expenseSelectable()
+            ->whereDoesntHave('children')
             ->orderBy('account_code')
             ->get(['id', 'account_code', 'account_name']);
 

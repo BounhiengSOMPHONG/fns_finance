@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\ChartOfAccountFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,13 @@ class ChartOfAccount extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    public function scopeExpenseSelectable(Builder $query): Builder
+    {
+        return $query
+            ->where('account_code', 'not like', '60%')
+            ->where('account_code', 'not like', '61%');
     }
 
     /**

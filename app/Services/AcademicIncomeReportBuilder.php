@@ -166,7 +166,7 @@ class AcademicIncomeReportBuilder
             ['number' => 2, 'title' => 'ຄ່າໜ່ວຍກິດລະບົບຈ່າຍເງິນ ປີທີ 2-4 (ປ.ຕີ, ປ.ໂທ)', 'planned' => $creditYear2Plus['fns_income']],
             ['number' => 3, 'title' => 'ຄ່າທະບຽນນັກສຶກສາ ປີທີ 1 ລະບົບຈ່າຍເງິນ', 'planned' => $sections['s1']['rows']['1.1']['fns_income']],
             ['number' => 4, 'title' => 'ຄ່າທະບຽນນັກສຶກສາ ປີທີ 2-4', 'planned' => $sections['s1']['rows']['1.2']['fns_income']],
-            ['number' => 5, 'title' => 'ຄ່າໜ່ວຍກິດຮຽນເທີມ', 'planned' => $sections['s3']['fns_income']],
+            ['number' => 5, 'title' => 'ຄ່າໜ່ວຍກິດຮຽນເທີມສາມ', 'planned' => $sections['s3']['fns_income']],
             ['number' => 6, 'title' => 'ຄ່າບຳລຸງຮັກສາຄອມພິວເຕີ', 'planned' => $sections['s4']['fns_income']],
             ['number' => 7, 'title' => 'ບຳລຸງຫ້ອງທົດລອງ', 'planned' => $sections['s5']['fns_income']],
             ['number' => 8, 'title' => 'ຄ່າບໍລິການວິຊາການ ແລະ ຄ່າບໍລິການອື່ນໆ', 'planned' => $sections['s6']['fns_income']],

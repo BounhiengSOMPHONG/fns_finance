@@ -91,6 +91,10 @@
                 ຕ້ອງບັນທຶກແຜນກ່ອນ ຈຶ່ງຈະປ້ອນຍອດງວດໄດ້. ຖ້າແຜນຢູ່ໃນສະຖານະກວດສອບ ຈະສາມາດເບິ່ງຍອດໄດ້ເທົ່ານັ້ນ.
             </div>
         @endif
+        <div class="period-feedback is-hidden" data-period-feedback role="alert" aria-live="polite">
+            <strong>ບັນທຶກບໍ່ໄດ້</strong>
+            <span data-period-feedback-message></span>
+        </div>
 
         <section class="period-paper" id="{{ $periodKey }}">
             <div class="period-print-header">
@@ -526,6 +530,32 @@
         font-weight: 700;
     }
 
+    .period-feedback {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-left: 4px solid #dc2626;
+        border-radius: 8px;
+        color: #991b1b;
+        display: grid;
+        gap: .18rem;
+        padding: .75rem .9rem;
+    }
+
+    .period-feedback.is-hidden {
+        display: none;
+    }
+
+    .period-feedback strong {
+        font-size: .86rem;
+        font-weight: 900;
+    }
+
+    .period-feedback span {
+        font-size: .82rem;
+        font-weight: 800;
+        line-height: 1.45;
+    }
+
     .period-paper {
         overflow: hidden;
         padding: 1rem;
@@ -784,7 +814,8 @@
         .fns-alert,
         .fns-page-title,
         .period-toolbar,
-        .period-lock-note {
+        .period-lock-note,
+        .period-feedback {
             display: none !important;
         }
 
@@ -1011,6 +1042,8 @@
             const saveForm = document.querySelector('[data-save-period-form]');
             const saveButton = document.querySelector('[data-save-period-button]');
             const periodRowsPayload = document.querySelector('[data-period-rows-payload]');
+            const periodFeedback = document.querySelector('[data-period-feedback]');
+            const periodFeedbackMessage = document.querySelector('[data-period-feedback-message]');
             const periodKey = @json($periodKey);
             const canEdit = @json($canEditPeriod);
             const csrfToken = @json(csrf_token());
@@ -1084,6 +1117,28 @@
                     cell.classList.toggle('period-total-invalid', isInvalid);
                 }
             };
+            const hidePeriodFeedback = () => {
+                if (periodFeedback) {
+                    periodFeedback.classList.add('is-hidden');
+                }
+            };
+            const showPeriodFeedback = (message, row = null) => {
+                if (periodFeedbackMessage) {
+                    periodFeedbackMessage.textContent = message;
+                }
+
+                if (periodFeedback) {
+                    periodFeedback.classList.remove('is-hidden');
+                    periodFeedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                if (row) {
+                    row.classList.add('period-invalid');
+                    setTimeout(() => {
+                        row.querySelector('[data-period-input]')?.focus({ preventScroll: true });
+                    }, 260);
+                }
+            };
             const updatePeriodBalanceState = (totals) => {
                 if (periodKey !== 'period-3-4') {
                     return true;
@@ -1094,10 +1149,6 @@
                 setTotalInvalid('[data-total-average-decrease]', ! averageBalanced);
                 setTotalInvalid('[data-total-requested-increase]', false);
                 setTotalInvalid('[data-total-requested-decrease]', false);
-
-                if (saveButton && canEdit) {
-                    saveButton.disabled = ! averageBalanced;
-                }
 
                 return averageBalanced;
             };
@@ -1253,11 +1304,20 @@
                 const invalidFirstHalf = p1 < 0 || p2 < 0 || first > yearly;
                 const invalidSecondHalfAmounts = averageIncrease < 0 || averageDecrease < 0 || decrease < 0 || increase < 0 || p3 < 0 || p4 < 0 || adjusted < 0;
                 const unbalancedSecondHalf = Math.abs(p34 - adjusted) > 0.01;
-                row.classList.toggle('period-invalid', periodKey === 'period-3-4' ? (invalidSecondHalfAmounts || unbalancedSecondHalf) : invalidFirstHalf);
+                const invalidRow = periodKey === 'period-3-4' ? (invalidSecondHalfAmounts || unbalancedSecondHalf) : invalidFirstHalf;
+                row.classList.toggle('period-invalid', invalidRow);
+                row.dataset.periodError = '';
+                if (invalidFirstHalf) {
+                    row.dataset.periodError = 'ຍອດງວດ 1 ແລະ ງວດ 2 ຕ້ອງບໍ່ເກີນແຜນປີ';
+                } else if (invalidSecondHalfAmounts) {
+                    row.dataset.periodError = 'ຍອດໃນງວດ 3-4 ຕ້ອງບໍ່ຕິດລົບ';
+                } else if (unbalancedSecondHalf) {
+                    row.dataset.periodError = 'ແຜນງວດ 3 ແລະ ແຜນງວດ 4 ຕ້ອງລວມເທົ່າກັບແຜນດັດແກ້ 6 ເດືອນທ້າຍປີ';
+                }
                 updateTotals();
 
                 if (periodKey === 'period-3-4') {
-                    if (invalidSecondHalfAmounts) {
+                    if (invalidSecondHalfAmounts || unbalancedSecondHalf) {
                         return null;
                     }
 
@@ -1338,6 +1398,7 @@
                     normalizeMoneyInput(input);
 
                     input.addEventListener('input', () => {
+                        hidePeriodFeedback();
                         window.clearTimeout(saveTimer);
                         normalizeMoneyInput(input);
                         const payload = recalculate(row, input.dataset.periodInput);
@@ -1363,6 +1424,7 @@
                     event.preventDefault();
                     const totals = updateTotals();
                     if (periodKey === 'period-3-4' && ! updatePeriodBalanceState(totals)) {
+                        showPeriodFeedback('ຍອດເພີ່ມ ແລະ ຍອດຫຼຸດ ໃນແຜນດັດແກ້ສະເລ່ຍຕ້ອງເທົ່າກັນ ກະລຸນາກວດຄືນກ່ອນບັນທຶກ.');
                         return;
                     }
 
@@ -1374,6 +1436,10 @@
                     const editableRows = rows.filter((row) => ! isGroup(row) && row.querySelector('[data-period-input]'));
                     const rowPayloads = collectRowPayloads(editableRows);
                     if (rowPayloads.length !== editableRows.length) {
+                        const firstInvalidRow = editableRows.find((row) => row.classList.contains('period-invalid'));
+                        const rowName = firstInvalidRow?.querySelector('.period-row-title')?.textContent?.trim();
+                        const reason = firstInvalidRow?.dataset.periodError || 'ຂໍ້ມູນບາງແຖວຍັງບໍ່ຖືກຕ້ອງ';
+                        showPeriodFeedback(rowName ? `${reason}: ${rowName}` : reason, firstInvalidRow);
                         if (saveButton) {
                             saveButton.disabled = false;
                             saveButton.textContent = @json('ບັນທຶກ' . $periodTitle);

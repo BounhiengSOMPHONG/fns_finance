@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ManagePlanController extends Controller
 {
@@ -527,6 +528,10 @@ class ManagePlanController extends Controller
             return back()->with('error', 'ສາມາດສົ່ງຂໍຄວາມເຫັນໄດ້ຈາກສະຖານະ Draft ຫຼື Modifying ເທົ່ານັ້ນ');
         }
 
+        if ($message = $this->balanceBlockingMessage($planningYear)) {
+            return back()->with('error', $message);
+        }
+
         $reviewRound = DB::transaction(function () use ($planningYear, $reviewers, $data): PlanningYearReviewRound {
             $roundNumber = ((int) $planningYear->reviewRounds()->max('round_number')) + 1;
 
@@ -578,6 +583,10 @@ class ManagePlanController extends Controller
             return back()->with('error', 'ແຜນນີ້ຖືກບັນທຶກ ຫຼື ຢູ່ໃນສະຖານະກວດສອບແລ້ວ');
         }
 
+        if ($message = $this->balanceBlockingMessage($planningYear)) {
+            return back()->with('error', $message);
+        }
+
         $planningYear->update([
             'status' => PlanningYear::STATUS_SAVED,
             'current_review_round_id' => null,
@@ -586,6 +595,46 @@ class ManagePlanController extends Controller
         ]);
 
         return back()->with('success', 'ບັນທຶກແຜນປີ '.$planningYear->year.' ສຳເລັດ');
+    }
+
+    private function balanceBlockingMessage(PlanningYear $planningYear): ?string
+    {
+        $incomeTotal = $this->academicIncomeTotal($planningYear);
+        $expenseTotal = $this->academicExpenseTotal($planningYear);
+        $balanceTotal = $incomeTotal - $expenseTotal;
+
+        if ($balanceTotal >= -0.01) {
+            return null;
+        }
+
+        return 'ບໍ່ສາມາດບັນທຶກ ຫຼື ສົ່ງຂໍຄວາມເຫັນໄດ້: ລາຍຮັບວິຊາການຕ້ອງບໍ່ນ້ອຍກວ່າລາຍຈ່າຍວິຊາການໃນແຜນງົບປະມານດຸນດ່ຽງ';
+    }
+
+    private function academicIncomeTotal(PlanningYear $planningYear): float
+    {
+        if (! Schema::hasTable('academic_income_items') || ! Schema::hasColumn('academic_income_items', 'total_income')) {
+            return 0.0;
+        }
+
+        $planIds = AcademicIncomePlan::where('planning_year_id', $planningYear->id)->pluck('id');
+        if ($planIds->isEmpty()) {
+            return 0.0;
+        }
+
+        return (float) DB::table('academic_income_items')
+            ->whereIn('plan_id', $planIds)
+            ->sum('total_income');
+    }
+
+    private function academicExpenseTotal(PlanningYear $planningYear): float
+    {
+        if (! Schema::hasTable('expense_plan_rows')) {
+            return 0.0;
+        }
+
+        return (float) ExpensePlanRow::where('planning_year_id', $planningYear->id)
+            ->get()
+            ->sum(fn (ExpensePlanRow $row): float => $row->yearlyTotal());
     }
 
     public function sync(PlanningYear $planningYear)

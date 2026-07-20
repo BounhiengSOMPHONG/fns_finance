@@ -84,6 +84,33 @@ class PlanningYearReviewWorkflowTest extends TestCase
         $this->assertFalse($planningYear->canBeEdited());
     }
 
+    public function test_negative_income_expense_balance_blocks_plan_save(): void
+    {
+        $this->seedNegativeAcademicBalance();
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.save', 1))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame(PlanningYear::STATUS_DRAFT, PlanningYear::findOrFail(1)->status);
+    }
+
+    public function test_negative_income_expense_balance_blocks_review_request(): void
+    {
+        $this->seedNegativeAcademicBalance();
+
+        $this->actingAs($this->financeHead)
+            ->post(route('head_of_finance.manage-plan.request-review', 1), [
+                'reviewer_ids' => [$this->reviewer->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, DB::table('planning_year_review_rounds')->count());
+        $this->assertSame(PlanningYear::STATUS_DRAFT, PlanningYear::findOrFail(1)->status);
+    }
+
     public function test_only_selected_current_reviewer_can_comment_while_pending(): void
     {
         $this->createPendingReview();
@@ -372,6 +399,17 @@ class PlanningYearReviewWorkflowTest extends TestCase
         ]);
     }
 
+    private function seedNegativeAcademicBalance(): void
+    {
+        DB::table('expense_plan_rows')->insert([
+            'id' => 1,
+            'planning_year_id' => 1,
+            'calculation_values' => json_encode(['yearly_total' => 100]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     private function seedUsers(): void
     {
         $financeRole = Role::create(['id' => 1, 'role_name' => 'head_of_finance']);
@@ -415,6 +453,7 @@ class PlanningYearReviewWorkflowTest extends TestCase
     {
         foreach ([
             'period_plan_overrides',
+            'expense_plan_rows',
             'expense_plan_values',
             'expense_plans',
             'expense_catalog_items',
@@ -496,6 +535,15 @@ class PlanningYearReviewWorkflowTest extends TestCase
         Schema::create('academic_income_items', function ($table): void {
             $table->id();
             $table->unsignedBigInteger('plan_id');
+            $table->decimal('total_income', 15, 2)->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('expense_plan_rows', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('planning_year_id');
+            $table->json('calculation_values')->nullable();
+            $table->json('pattern_snapshot')->nullable();
             $table->timestamps();
         });
 

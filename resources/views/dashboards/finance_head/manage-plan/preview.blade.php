@@ -95,6 +95,8 @@
     $balanceExpenseMonthly = (float) $expenseReport['periodTotal'];
     $balanceYearly = $balanceIncomeYearly - $balanceExpenseYearly;
     $balanceMonthly = $balanceIncomeMonthly - $balanceExpenseMonthly;
+    $balanceCanFinalize = $balanceYearly >= -0.01;
+    $balanceBlockingMessage = 'ລາຍຮັບວິຊາການຕ້ອງບໍ່ນ້ອຍກວ່າລາຍຈ່າຍວິຊາການ ຈຶ່ງຈະບັນທຶກ ຫຼື ສົ່ງຂໍຄວາມເຫັນໄດ້';
     $reviewContext = $reviewContext ?? [
         'mode' => 'finance',
         'can_manage_review' => true,
@@ -141,9 +143,11 @@
             </button>
         @endif
 
-        <button type="button" class="review-primary-btn" data-print-plan>
-            ພິມ
-        </button>
+        @if($reviewContext['can_manage_review'])
+            <button type="button" class="review-primary-btn" data-print-plan>
+                ພິມ
+            </button>
+        @endif
 
         @if($reviewContext['can_manage_review'] && $planningYear->canBeEdited())
             @if(! empty($planYearWarnings['unlinked_expenses']))
@@ -155,15 +159,19 @@
                 </a>
             @endif
 
-            <form method="POST" action="{{ route('head_of_finance.manage-plan.save', $planningYear) }}">
-                @csrf
-                <button type="submit" class="review-save-btn" onclick="return confirm('ບັນທຶກແຜນ ແລະ ປິດການແກ້ໄຂລາຍຮັບ, ລາຍຈ່າຍ, ເງິນເດືອນ?')">
-                    ບັນທຶກແຜນ
-                </button>
-            </form>
+            @if($balanceCanFinalize)
+                <form method="POST" action="{{ route('head_of_finance.manage-plan.save', $planningYear) }}">
+                    @csrf
+                    <button type="submit" class="review-save-btn" onclick="return confirm('ບັນທຶກແຜນ ແລະ ປິດການແກ້ໄຂລາຍຮັບ, ລາຍຈ່າຍ, ເງິນເດືອນ?')">
+                        ບັນທຶກແຜນ
+                    </button>
+                </form>
+            @else
+                <span class="review-balance-lock" title="{{ $balanceBlockingMessage }}">ດຸນດ່ຽງຕິດລົບ</span>
+            @endif
         @endif
 
-        @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
+        @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview() && $balanceCanFinalize)
             <button type="button" class="review-primary-btn" data-open-review-modal>
                 ສົ່ງຂໍຄວາມເຫັນ
             </button>
@@ -179,6 +187,23 @@
         @endif
     </div>
 </div>
+
+@if($reviewContext['can_manage_review'] && ! $balanceCanFinalize)
+    <div class="review-balance-alert">
+        <strong>ຍັງບັນທຶກແຜນ ຫຼື ສົ່ງຂໍຄວາມເຫັນບໍ່ໄດ້</strong>
+        <span>{{ $balanceBlockingMessage }}. ດຸນດ່ຽງປີນີ້: {{ $money($balanceYearly) }}</span>
+    </div>
+@endif
+
+<nav class="preview-topic-nav" aria-label="ເລືອກຫົວຂໍ້ລາຍງານ">
+    <span>ເລືອກຫົວຂໍ້</span>
+    <div>
+        <a href="#period-1-2" class="preview-topic-link is-active" data-preview-topic-link="plan-year" title="ລາຍຈ່າຍງົບປະມານປີ">ແຜນປີ</a>
+        <a href="#preview-income" class="preview-topic-link" data-preview-topic-link="income">ລາຍຮັບ</a>
+        <a href="#preview-expense" class="preview-topic-link" data-preview-topic-link="expense">ລາຍຈ່າຍ</a>
+        <a href="#preview-salary" class="preview-topic-link" data-preview-topic-link="salary">ເງິນເດືອນ</a>
+    </div>
+</nav>
 
 @if($reviewContext['can_manage_review'] && $planningYear->canRequestReview())
     <div class="review-modal-backdrop" data-review-modal hidden>
@@ -303,7 +328,7 @@
 @endif
 
 <div class="income-preview">
-    <section class="paper plan-year-paper" id="period-1-2">
+    <section class="paper plan-year-paper" id="period-1-2" data-preview-topic="plan-year">
         <div class="official-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -482,7 +507,7 @@
         <div class="balance-page-number" aria-hidden="true"></div>
     </section>
 
-    <section class="paper paper-summary income-summary-paper">
+    <section class="paper paper-summary income-summary-paper" id="preview-income" data-preview-topic="income">
         <h2 class="plan-year-report-title">1. ແຜນງົບປະມານລາຍຮັບວິຊາການຂອງ ຄວທ ສົກ {{ $planningYear->year }}</h2>
 
         <div class="income-summary-org">
@@ -793,7 +818,7 @@
         <div class="plan-year-page-number" aria-hidden="true"></div>
     </section>
 
-    <section class="paper paper-summary expense-paper expense-summary-paper">
+    <section class="paper paper-summary expense-paper expense-summary-paper" id="preview-expense" data-preview-topic="expense">
         <h2 class="expense-summary-title">2. ງົບປະມານລາຍຈ່າຍບໍລິຫານ ແລະ ວິຊາການຂອງ ຄວທ ປະຈຳສົກປີ {{ $planningYear->year }}</h2>
 
         <div class="expense-org">
@@ -956,7 +981,8 @@
         </section>
     @endforeach
 
-    <section class="paper salary-paper" id="period-3-4">
+    <span id="preview-salary" class="preview-topic-anchor" aria-hidden="true"></span>
+    <section class="paper salary-paper" id="period-3-4" data-preview-topic="salary">
         <div class="official-header salary-header">
             <div class="org-left">
                 <strong>ມະຫາວິທະຍາໄລແຫ່ງຊາດ</strong>
@@ -1202,6 +1228,46 @@
         background: var(--fns-green);
         border: 1px solid var(--fns-green);
         color: #fff;
+    }
+
+    .review-balance-lock {
+        align-items: center;
+        background: #fff7df;
+        border: 1px solid #e2b846;
+        border-radius: 8px;
+        color: #815500;
+        display: inline-flex;
+        font-size: .82rem;
+        font-weight: 900;
+        min-height: 2.55rem;
+        padding: .48rem .8rem;
+        white-space: nowrap;
+    }
+
+    .review-balance-alert {
+        align-items: flex-start;
+        background: #fff8e7;
+        border: 1px solid #e7c35b;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(17, 27, 51, .06);
+        color: #6f4b05;
+        display: flex;
+        flex-direction: column;
+        gap: .18rem;
+        margin: -0.35rem 0 1rem;
+        padding: .8rem 1rem;
+    }
+
+    .review-balance-alert strong {
+        color: #4b3400;
+        font-size: .9rem;
+        font-weight: 900;
+    }
+
+    .review-balance-alert span {
+        font-size: .82rem;
+        font-weight: 700;
+        line-height: 1.45;
     }
 
     .review-drawer-toggle {
@@ -1550,6 +1616,78 @@
         color: var(--fns-green);
     }
 
+    .preview-topic-nav {
+        position: fixed;
+        left: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 45;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .45rem;
+        margin: 0;
+        border: 1px solid #d9e1ec;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .18);
+        padding: .42rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .preview-topic-nav > span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .preview-topic-nav > div {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: .35rem;
+    }
+
+    .preview-topic-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.35rem;
+        border: 1px solid #d8e0ea;
+        border-radius: 999px;
+        background: #fff;
+        color: #13213b;
+        padding: .42rem 1rem;
+        font-size: .86rem;
+        font-weight: 900;
+        text-decoration: none;
+        transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+    }
+
+    .preview-topic-link:hover {
+        border-color: #c29014;
+        background: #fff8e7;
+        color: #111827;
+    }
+
+    .preview-topic-link.is-active {
+        border-color: #13213b;
+        background: #13213b;
+        color: #fff;
+        box-shadow: 0 7px 18px rgba(19, 33, 59, .18);
+    }
+
+    [data-preview-topic],
+    .preview-topic-anchor {
+        scroll-margin-top: 5.75rem;
+    }
+
+    .preview-topic-anchor {
+        display: block;
+        height: 0;
+    }
+
     .review-empty {
         border: 1px dashed var(--fns-gray-200);
         border-radius: 8px;
@@ -1566,6 +1704,25 @@
             right: 1rem;
             width: auto;
         }
+
+        .preview-topic-nav {
+            left: .75rem;
+            right: .75rem;
+            bottom: 4.7rem;
+            border-radius: 14px;
+        }
+
+        .preview-topic-nav > div {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            width: 100%;
+        }
+
+        .preview-topic-link {
+            width: 100%;
+            padding-left: .35rem;
+            padding-right: .35rem;
+        }
     }
 
     .income-preview {
@@ -1574,6 +1731,7 @@
         gap: 1.25rem;
         color: #111827;
         font-family: 'Noto Sans Lao', ui-sans-serif, system-ui, sans-serif;
+        padding-bottom: 5.25rem;
     }
 
     .paper {
@@ -2420,6 +2578,7 @@
         .fns-alert,
         .fns-page-title,
         .review-toolbar,
+        .preview-topic-nav,
         .review-panel,
         .review-drawer-backdrop,
         .review-modal-backdrop,
@@ -2439,6 +2598,7 @@
 
         .income-preview {
             gap: 1.25rem;
+            padding-bottom: 0;
             width: 100%;
             zoom: 0.74;
         }
@@ -2533,6 +2693,43 @@
             printButton.addEventListener('click', function () {
                 window.print();
             });
+        }
+
+        const topicLinks = Array.from(document.querySelectorAll('[data-preview-topic-link]'));
+        const topicSections = Array.from(document.querySelectorAll('[data-preview-topic]'));
+        const setActiveTopic = (topic) => {
+            topicLinks.forEach((link) => {
+                link.classList.toggle('is-active', link.dataset.previewTopicLink === topic);
+            });
+        };
+
+        topicLinks.forEach((link) => {
+            link.addEventListener('click', function (event) {
+                const target = document.querySelector(link.getAttribute('href'));
+                if (!target) return;
+
+                event.preventDefault();
+                target.scrollIntoView({behavior: 'smooth', block: 'start'});
+                setActiveTopic(link.dataset.previewTopicLink);
+                history.replaceState(null, '', link.getAttribute('href'));
+            });
+        });
+
+        if (topicSections.length) {
+            const observer = new IntersectionObserver((entries) => {
+                const visible = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+                if (visible?.target?.dataset.previewTopic) {
+                    setActiveTopic(visible.target.dataset.previewTopic);
+                }
+            }, {
+                rootMargin: '-18% 0px -60% 0px',
+                threshold: [0.02, 0.1, 0.25, 0.5],
+            });
+
+            topicSections.forEach((section) => observer.observe(section));
         }
 
         const modal = document.querySelector('[data-review-modal]');

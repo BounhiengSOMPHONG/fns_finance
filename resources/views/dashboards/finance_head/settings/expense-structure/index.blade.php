@@ -10,6 +10,35 @@
     $linkedDefaultRowTotal = $defaultRowsByCode->reduce(fn ($total, $rows) => $total + $rows->whereNotNull('chart_of_account_id')->count(), 0);
     $unlinkedAccountWarnings = $accountWarnings->filter(fn ($row) => $row->chart_of_account_id === null)->values();
     $unlinkedDefaultRowTotal = max($defaultRowTotal - $linkedDefaultRowTotal, 0);
+    $codeParts = fn (?string $code) => collect(explode('.', trim((string) $code)))
+        ->filter(fn (string $part): bool => $part !== '' && ctype_digit($part))
+        ->map(fn (string $part): int => (int) $part)
+        ->values();
+    $nextChildCode = function (string $baseCode, $existingCodes) use ($codeParts): string {
+        $baseParts = $codeParts($baseCode);
+        $nextNumber = collect($existingCodes)
+            ->map(fn (?string $code) => $codeParts($code))
+            ->filter(fn ($parts): bool => $parts->count() === $baseParts->count() + 1
+                && $parts->take($baseParts->count())->values()->all() === $baseParts->all())
+            ->map(fn ($parts): int => (int) $parts->last())
+            ->max();
+
+        return $baseParts->push(((int) $nextNumber) + 1)->implode('.');
+    };
+    $nextSectionCode = (function () use ($sections, $codeParts): string {
+        $sectionCodes = $sections
+            ->pluck('code')
+            ->map(fn (?string $code) => $codeParts($code))
+            ->filter(fn ($parts): bool => $parts->count() >= 2);
+
+        $root = (int) ($sectionCodes->first()?->first() ?? 2);
+        $nextNumber = $sectionCodes
+            ->filter(fn ($parts): bool => (int) $parts->first() === $root)
+            ->map(fn ($parts): int => (int) $parts->get(1))
+            ->max();
+
+        return $root.'.'.(((int) $nextNumber) + 1);
+    })();
 @endphp
 
 <div class="es-page">
@@ -95,7 +124,7 @@
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">ລະຫັດ</label>
-                        <input name="code" class="fns-input" placeholder="2.7" required data-section-modal-first>
+                        <input name="code" class="fns-input" value="{{ $nextSectionCode }}" placeholder="2.1" required data-section-modal-first>
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">ຊື່ໝວດ</label>
@@ -135,7 +164,7 @@
                             $navLinkedRows = $navDefaultRows->whereNotNull('chart_of_account_id')->count();
                         @endphp
                         <button type="button"
-                                class="es-section-tab {{ $loop->first ? 'is-active' : '' }}"
+                                class="es-section-tab {{ (int) $activeSectionId === (int) $navSection->id ? 'is-active' : '' }}"
                                 data-section-target="{{ $navSection->id }}">
                             <span class="es-section-tab-code">{{ $navSection->code }}</span>
                             <span class="es-section-tab-copy">
@@ -159,8 +188,9 @@
                 $parentOptions = $section->subsections->whereNull('parent_id');
                 $sectionDefaultRows = $section->subsections->flatMap(fn ($subsection) => $defaultRowsByCode->get($subsection->code, collect()));
                 $sectionLinkedDefaultRows = $sectionDefaultRows->whereNotNull('chart_of_account_id')->count();
+                $nextSubsectionCode = $nextChildCode($section->code, $section->subsections->pluck('code'));
             @endphp
-            <section class="es-section-card js-section-panel {{ $loop->first ? 'is-active' : '' }}" data-section-panel="{{ $section->id }}">
+            <section class="es-section-card js-section-panel {{ (int) $activeSectionId === (int) $section->id ? 'is-active' : '' }}" data-section-panel="{{ $section->id }}">
                 <div class="es-section-title">
                     <div class="es-section-code">{{ $section->code }}</div>
                     <div class="min-w-0">
@@ -438,7 +468,7 @@
                                 <form method="POST" action="{{ route('head_of_finance.settings.expense-structure.subsections.store', $section) }}">
                                     @csrf
                                     <td class="py-3 pr-3">
-                                        <input name="code" class="fns-input min-w-28" placeholder="{{ $section->code }}.1" required>
+                                        <input name="code" class="fns-input min-w-28" value="{{ $nextSubsectionCode }}" placeholder="{{ $section->code }}.1" required>
                                     </td>
                                     <td class="py-3 pr-3">
                                         <input name="name" class="fns-input min-w-80" placeholder="ຊື່ກຸ່ມຍ່ອຍ" required>
@@ -1220,6 +1250,7 @@
 <script>
 const EXPENSE_STRUCTURE_ACCOUNT_OPTIONS = @json($accountOptions->values());
 const EXPENSE_STRUCTURE_CSRF = document.querySelector('meta[name="csrf-token"]').content;
+const EXPENSE_STRUCTURE_ACTIVE_DEFAULT_MODAL = @json($activeDefaultModalId ? (string) $activeDefaultModalId : null);
 let activeExpenseStructureSection = document.querySelector('.es-section-tab.is-active')?.dataset.sectionTarget || null;
 let activeAccountFilter = 'all';
 
@@ -1714,6 +1745,9 @@ document.addEventListener('click', (event) => {
 document.getElementById('esPrevSection')?.addEventListener('click', () => moveExpenseStructureSection(-1));
 document.getElementById('esNextSection')?.addEventListener('click', () => moveExpenseStructureSection(1));
 syncExpenseStructureSectionNav();
+if (EXPENSE_STRUCTURE_ACTIVE_DEFAULT_MODAL) {
+    openDefaultModal(EXPENSE_STRUCTURE_ACTIVE_DEFAULT_MODAL);
+}
 </script>
 @endpush
 @endsection

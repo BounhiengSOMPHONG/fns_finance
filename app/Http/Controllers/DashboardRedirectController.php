@@ -14,7 +14,7 @@ class DashboardRedirectController extends Controller
             'admin' => redirect()->route('admin.home'),
             'head_of_finance' => redirect()->route('head_of_finance.home'),
             'accountant' => redirect()->route('accountant.home'),
-            'deputy_head_of_faculty' => redirect()->route('deputy_head_of_faculty.home'),
+            'deputy_head_of_faculty' => redirect()->route('reviews.planning-years.index'),
             'head_of_faculty' => redirect()->route('head_of_faculty.home'),
             default => abort(403, 'ບໍ່ພົບບົດບາດຂອງທ່ານ'),
         };

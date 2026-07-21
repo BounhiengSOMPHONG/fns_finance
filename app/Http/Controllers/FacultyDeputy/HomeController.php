@@ -8,6 +8,6 @@ class HomeController extends Controller
 {
     public function index()
     {
-        return view('dashboards.faculty_deputy.home');
+        return redirect()->route('reviews.planning-years.index');
     }
 }

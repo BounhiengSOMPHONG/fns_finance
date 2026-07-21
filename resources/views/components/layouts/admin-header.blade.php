@@ -1,6 +1,7 @@
 @php
     $isAdmin         = auth()->user()?->can('admin');
     $isHeadOfFinance = auth()->user()?->can('head_of_finance');
+    $isReviewerRole = auth()->user()?->role?->role_name === 'deputy_head_of_faculty';
     $reviewAssignmentCount = auth()->check()
         ? \App\Models\PlanningYearReviewRound::with('planningYear')
             ->whereHas('planningYear', fn ($query) => $query->where('status', 'PENDING_REVIEW'))
@@ -32,7 +33,7 @@
     <div class="fns-topnav-inner">
 
         {{-- ===== Brand ===== --}}
-        <a href="{{ $isHeadOfFinance ? route('head_of_finance.home') : '/' }}" class="fns-topnav-brand">
+        <a href="{{ $isHeadOfFinance ? route('head_of_finance.home') : ($isReviewerRole ? route('reviews.planning-years.index') : '/') }}" class="fns-topnav-brand">
             <img src="{{ asset('storage/NUOL-Logo-192.webp') }}" alt="NUOL">
             <span class="fns-topnav-brand-text">
                 <strong>FNS</strong><span>Finance</span>
@@ -120,12 +121,14 @@
                 </div>
             @endif
 
-            @if($reviewAssignmentCount > 0)
+            @if($isReviewerRole || $reviewAssignmentCount > 0)
                 <a href="{{ route('reviews.planning-years.index') }}"
                    class="fns-topnav-item {{ request()->routeIs('reviews.planning-years.*') ? 'active' : '' }}">
                     <x-icons.book-open />
                     Review
-                    <span class="fns-topnav-badge">{{ $reviewAssignmentCount }}</span>
+                    @if($reviewAssignmentCount > 0)
+                        <span class="fns-topnav-badge">{{ $reviewAssignmentCount }}</span>
+                    @endif
                 </a>
             @endif
         </nav>

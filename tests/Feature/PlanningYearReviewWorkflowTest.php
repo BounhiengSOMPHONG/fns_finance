@@ -271,6 +271,37 @@ class PlanningYearReviewWorkflowTest extends TestCase
             ->assertDontSee('ປິດຮອບແລ້ວ');
     }
 
+    public function test_deputy_head_lands_on_review_inbox_as_main_page(): void
+    {
+        $deputyRole = Role::create(['id' => 3, 'role_name' => 'deputy_head_of_faculty']);
+        $deputy = User::create([
+            'id' => 4,
+            'username' => 'deputy',
+            'password' => 'password',
+            'full_name' => 'Deputy Reviewer',
+            'role_id' => $deputyRole->id,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($deputy)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('reviews.planning-years.index'));
+
+        $this->actingAs($deputy)
+            ->get(route('deputy_head_of_faculty.home'))
+            ->assertRedirect(route('reviews.planning-years.index'));
+    }
+
+    public function test_review_inbox_shows_no_plan_available_when_empty(): void
+    {
+        $this->withoutVite();
+
+        $this->actingAs($this->reviewer)
+            ->get(route('reviews.planning-years.index'))
+            ->assertOk()
+            ->assertSee('No plan available');
+    }
+
     public function test_finance_head_cannot_delete_pending_review_plan(): void
     {
         $roundId = $this->createPendingReview();

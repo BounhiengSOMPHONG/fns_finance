@@ -31,7 +31,7 @@
         @endif
     @empty
         <div class="review-inbox-empty">
-            <strong>ຍັງບໍ່ມີແຜນທີ່ຕ້ອງກວດ</strong>
+            <strong>No plan available</strong>
             <span>ເມື່ອ Head of Finance ສົ່ງຂໍຄວາມເຫັນ ລາຍການຈະສະແດງຢູ່ນີ້.</span>
         </div>
     @endforelse
